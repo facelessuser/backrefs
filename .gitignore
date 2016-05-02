@@ -67,3 +67,4 @@ site/*
 # Unicode temp
 tools/unicodedata/*
 backrefs/uniprops/unidata/*
+*-sdist/*

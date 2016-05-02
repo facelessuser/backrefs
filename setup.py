@@ -82,11 +82,15 @@ Backrefs is a library that wraps the default Python re module or the third party
 to add additional back refrences.
 It should work for Python Markdown versions 2.6.0 and greater.
 You can check out the list of available extensions and learn more about them by `reading the docs`_.
+
 .. _`reading the docs`: http://facelessuser.github.io/backrefs/
+
 Support
 =======
+
 Help and support is available here at the repository's `bug tracker`_.
 Please read about `support and contributing`_ before creating issues.
+
 .. _`bug tracker`: https://github.com/facelessuser/backrefs/issues
 .. _`support and contributing`: http://facelessuser.github.io/backrefs/contributing/
 '''
