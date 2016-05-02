@@ -1,0 +1,7 @@
+[run]
+omit=
+    backrefs/uniprops/unidata/*
+
+[report]
+omit=
+    backrefs/uniprops/unidata/*

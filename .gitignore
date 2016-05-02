@@ -60,3 +60,10 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+# Mkdocs
+site/*
+
+# Unicode temp
+tools/unicodedata/*
+backrefs/uniprops/unidata/*

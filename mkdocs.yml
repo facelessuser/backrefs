@@ -1,0 +1,27 @@
+site_name: Backrefs Documentation
+repo_url: https://github.com/facelessuser/backrefs
+site_description: A library to add additional backrefs to regular expressions.
+pages:
+  - About Backrefs: index.md
+  - Installation: installation.md
+  - Usage: usage.md
+  - Contributing &amp; Support: contributing.md
+  - License: license.md
+theme: readthedocs
+theme_dir: doc_theme
+markdown_extensions:
+  - markdown.extensions.toc
+  - markdown.extensions.admonition
+  - markdown.extensions.smarty
+  - markdown.extensions.codehilite:
+      guess_lang: false
+  - pymdownx.extra
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.tilde
+  - pymdownx.caret
+  - pymdownx.smartsymbols
+  - pymdownx.githubemoji
+  - pymdownx.tasklist
+  - pymdownx.progressbar
+  - pymdownx.headeranchor

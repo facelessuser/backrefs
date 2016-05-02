@@ -1,0 +1,10 @@
+recursive-include docs *
+recursive-include tests *.py
+recursive-include tools *.py
+include setup.py
+include tox.ini
+include .coveragerc
+include LICENSE.md
+include README.md
+include MANIFEST.in
+prune backrefs/uniprops/unidata
