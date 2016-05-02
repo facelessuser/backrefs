@@ -3,7 +3,7 @@
 [![Coverage][codecov-image]][codecov-link]
 [![Requirements Status][requires-image]][requires-link]
 ![License][license-image]
-# Backrefs {: .doctitle}
+# Backrefs
 A library to add additional backrefs to regular expressions.
 ---
 
