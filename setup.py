@@ -80,7 +80,6 @@ generate_unicode_table()
 LONG_DESC = '''
 Backrefs is a library that wraps the default Python re module or the third party regex module in order
 to add additional back refrences.
-It should work for Python Markdown versions 2.6.0 and greater.
 You can check out the list of available extensions and learn more about them by `reading the docs`_.
 
 .. _`reading the docs`: http://facelessuser.github.io/backrefs/
@@ -115,7 +114,13 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ]
 )
