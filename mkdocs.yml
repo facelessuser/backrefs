@@ -6,6 +6,7 @@ pages:
   - Installation: installation.md
   - Usage: usage.md
   - Contributing &amp; Support: contributing.md
+  - Changelog: changelog.md
   - License: license.md
 theme: readthedocs
 theme_dir: doc_theme
