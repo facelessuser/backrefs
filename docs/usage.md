@@ -6,7 +6,7 @@ Detailed usage for backrefs.
 ## Overview
 Backrefs is a wrapper around Python's built-in **re** and/or the 3rd party **regex** library.  Backrefs adds various additional back references that are known to some regex engines, but not to Python's **re** or **regex**.  The supported back references actually vary depending on the regular expression engine being used as the engine may already have support for some.
 
-### Using Backrefs
+## Using Backrefs
 
 Depending on which regular expression engine you are using (re or regex), you can import the appropriate module.
 
@@ -58,7 +58,7 @@ if m:
 ```
 
 
-### Search Back References
+## Search Back References
 
 For **re**:
 
@@ -79,7 +79,7 @@ For **regex**:
 | ---------------------|-------------|
 | `\Q...\E`            | Quotes (escapes) text for regex.  `\E` signifies the end of the quoting. Will be ignored in character classes `[]`. |
 
-### Replace Back References
+## Replace Back References
 None of the replace back references can be used in character classes `[]`.  These apply to both **re** and **regex**.
 
 | Back&nbsp;References | Description |
@@ -96,7 +96,7 @@ None of the replace back references can be used in character classes `[]`.  Thes
     - `\c\LTEST\E` --> `Test`
     - `\L\cTEST \cTEST\E` --> `Test Test`
 
-### Unicode Properties
+## Unicode Properties
 There are quite a few properties that are also supported and an exhaustive list is not currently provided. This documentation will only briefly touch on `General_Category`, `Block`, `Script`, and binary properties.
 
 Unicode properties can be used with the format: `\p{property=value}`, `\p{property:value}`, `\p{value}`, `\p{^property=value}`, `\p{^value}`.  Though you don't have to specify the `UNICODE` flag, the search pattern must be a Unicode string and the search buffer must also be Unicode.
@@ -121,7 +121,7 @@ When installed, the Unicode version that comes with the Python it is installed u
 
     If you are using a wide build, you should have access to all Unicode values.
 
-#### General Category
+### General Category
 General categories can be specified in one of three ways: `\p{gc: value}`, `\p{General_Category: value}`, `\p{value}` etc.  Again, case is not important.  See the table below to see all the Unicode category properties that can be used.
 
 | Verbose&nbsp;Property&nbsp;Form | Terse&nbsp;Property&nbsp;Form |
@@ -165,19 +165,19 @@ General categories can be specified in one of three ways: `\p{gc: value}`, `\p{G
 | Line_Separator | Zl |
 | Paragraph_Separator | Z |
 
-#### Blocks
+### Blocks
 There are a number of Unicode blocks and also aliases for blocks (they won't be listed here), but they can be specified in two ways: `\p{Block: Basic_Latin}` or `\p{InBasic_Latin}`.
 
-#### Scripts
+### Scripts
 There are a number of Unicode scripts and also aliases for scripts (they won't be listed here), but they can be specified in two ways: `\p{Script: Latin}` or `\p{IsLatin}`.
 
-#### Binary
+### Binary
 There are a number of binary properties and even aliases for some of the binary properties.  Comprehensive lists are available on the web, but they are specified in the following way: `\p{Alphabetic}`.  Normal just specifying inverse via `\P{value}` or `\p{^value}` should be enough, but for completeness the form `\p{Alphabetic: Y}` and `\p{Alphabetic: N}` along with all the variants (Yes|No|T|F|True|False).
 
-#### Posix
+### Posix
 A number of posix property names are also available.  In general, when used in the `\p{}` form, they are aliases for existing Unicode properties with the same name. There are some posix names that aren't used in the current Unicode properties such as `alnum`, `xdigit`, etc.  If you want to force the posix form inside `\p{}` you can use their name prefixed with `posix`: `\p{Punct}` --> `\p{PosixPunct}` (these `posix` prefixed properties are treated as binary properties)  Currently when using posix values in `\p{}` they will be forced into their Unicode form (see [Posix Style Properties](#posix-style-properties) for more info).
 
-### Posix Style Properties
+## Posix Style Properties
 Posix properties in the form of `[:posix:]` and the inverse `[:^posix:]` are available.  These character classes are only available inside a character group `[]`.  If needed, you can use the alternate form of `\p{Posix}` to use inside and outside a character group.
 
 !!! caution "Posix Values in `p{}`"
