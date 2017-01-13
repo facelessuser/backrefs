@@ -1,28 +1,54 @@
 site_name: Backrefs Documentation
 repo_url: https://github.com/facelessuser/backrefs
 site_description: A library to add additional backrefs to regular expressions.
+copyright: Copyright &copy; 2015 - 2017 <a href="https://github.com/facelessuser">Isaac Muse</a>
+
+theme: material
+theme_dir: doc_theme
+
 pages:
-  - About Backrefs: index.md
+  - Using Backrefs: index.md
   - Installation: installation.md
-  - Usage: usage.md
   - Contributing &amp; Support: contributing.md
   - Changelog: changelog.md
   - License: license.md
-theme: readthedocs
-theme_dir: doc_theme
+
 markdown_extensions:
-  - markdown.extensions.toc
-  - markdown.extensions.admonition
-  - markdown.extensions.smarty
+  - markdown.extensions.toc:
+      slugify: !!python/name:pymdownx.slugs.uslugify
+      permalink: 
+  - markdown.extensions.admonition:
+  - markdown.extensions.smarty:
+      smart_quotes: false
+  - markdown.extensions.nl2br:
   - markdown.extensions.codehilite:
       guess_lang: false
-  - pymdownx.extra
-  - pymdownx.inlinehilite
-  - pymdownx.magiclink
-  - pymdownx.tilde
-  - pymdownx.caret
-  - pymdownx.smartsymbols
-  - pymdownx.githubemoji
-  - pymdownx.tasklist
-  - pymdownx.progressbar
-  - pymdownx.headeranchor
+  - pymdownx.extra:
+  - pymdownx.inlinehilite:
+  - pymdownx.magiclink:
+  - pymdownx.tilde:
+  - pymdownx.caret:
+  - pymdownx.smartsymbols:
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+  - pymdownx.escapeall:
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.progressbar:
+  - pymdownx.plainhtml:
+      strip_attributes: ''
+  - pymdownx.snippets:
+      base_path: docs/snippets
+
+extra:
+  palette:
+    primary: blue
+    accent: cyan
+  font:
+    text: Roboto
+    code: Roboto Mono
+  social:
+    - type: github
+      link: https://github.com/facelessuser
+extra_css:
+  - extra.css

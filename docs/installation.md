@@ -1,8 +1,3 @@
-# Installation {: .doctitle}
-Installing Backrefs.
-
----
-
 ## Overview
 Backrefs doesn't have any required external dependencies.  If desired, you can install the optional [regex module](https://pypi.python.org/pypi/regex) and use backrefs with either Python's re module or the regex module.
 
