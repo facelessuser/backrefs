@@ -9,3 +9,5 @@ There are a couple of recommended ways to install Backrefs.  If you would like t
 2. Install locally from source via `#!bash python setup.py build` and `#!bash python setup.py install`.
 
 3. If developing Backrefs, you can install via `#!bash pip install --editable .`.  This method will allow you to instantly see your changes without reinstalling which is great for developing.
+
+--8<-- "links.md"
