@@ -620,7 +620,23 @@ class SearchTemplate(object):
         try:
             t = next(i)
             while t != self._nl:
-                parts.append(t)
+                # We find one of our back references in a comment,
+                # escape it. Python 3.6+ will choke on the unexpected
+                # invalid backrefs.
+                c = t[1:]
+                if (
+                    c.startswith(self._uni_prop) or
+                    c.startswith(self._inverse_uni_prop) or
+                    c == self._lc or
+                    c == self._lc_span or
+                    c == self._uc or
+                    c == self._uc_span or
+                    c == self._quote or
+                    c == self._end
+                ):
+                    parts.append(self._b_slash + t)
+                else:
+                    parts.append(t)
                 t = next(i)
             parts.append(self._nl)
         except StopIteration:
