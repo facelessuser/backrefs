@@ -1,6 +1,6 @@
 site_name: Backrefs Documentation
 repo_url: https://github.com/facelessuser/backrefs
-site_description: A library to add additional backrefs to regular expressions.
+site_description: A library to add additional back references to regular expressions.
 copyright: Copyright &copy; 2015 - 2017 <a href="https://github.com/facelessuser">Isaac Muse</a>
 
 theme: material
@@ -20,7 +20,6 @@ markdown_extensions:
   - markdown.extensions.admonition:
   - markdown.extensions.smarty:
       smart_quotes: false
-  - markdown.extensions.nl2br:
   - markdown.extensions.codehilite:
       guess_lang: false
   - pymdownx.extra:
@@ -32,9 +31,13 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_generator: !!python/name:pymdownx.emoji.to_svg
   - pymdownx.escapeall:
+      hardbreak: True
+      nbsp: True
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.progressbar:
+  - pymdownx.arithmatex:
+  - pymdownx.mark:
   - pymdownx.plainhtml:
       strip_attributes: ''
   - pymdownx.snippets:
@@ -43,7 +46,7 @@ markdown_extensions:
 extra:
   palette:
     primary: blue
-    accent: cyan
+    accent: purple
   font:
     text: Roboto
     code: Roboto Mono
