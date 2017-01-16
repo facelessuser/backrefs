@@ -436,7 +436,7 @@ class TestSearchTemplate(unittest.TestCase):
         if PY3_FUTURE:
             def no_unicode():
                 """Should fail on Unicode back reference."""
-                pattern = bre.compile_search(br'EX\p{Lu}MPLE')
+                bre.compile_search(br'EX\p{Lu}MPLE')
 
             # Python3.6+ fails on invalid back references (which ours are)
             # Since this one is not valid in a bytes string, it shouldn't
