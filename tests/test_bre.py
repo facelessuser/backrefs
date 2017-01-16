@@ -7,6 +7,7 @@ import re
 import sys
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
+PY3_FUTURE = (3, 6) <= sys.version_info < (4, 0)
 
 if PY3:
     binary_type = bytes  # noqa
@@ -430,10 +431,21 @@ class TestSearchTemplate(unittest.TestCase):
 
     def test_binary_unicode_ignore(self):
         r"""Binary patterns should not process \p references."""
+        import sre_constants
 
-        pattern = bre.compile_search(br'EX\p{Lu}MPLE')
-        m = pattern.match(br'EXp{Lu}MPLE')
-        self.assertTrue(m is not None)
+        if PY3_FUTURE:
+            def no_unicode():
+                """Should fail on Unicode back reference."""
+                pattern = bre.compile_search(br'EX\p{Lu}MPLE')
+
+            # Python3.6+ fails on invalid back references (which ours are)
+            # Since this one is not valid in a bytes string, it shouldn't
+            # be used.  It is okay that Python fails on this.
+            self.assertRaises(sre_constants.error, no_unicode)
+        else:
+            pattern = bre.compile_search(br'EX\p{Lu}MPLE')
+            m = pattern.match(br'EXp{Lu}MPLE')
+            self.assertTrue(m is not None)
 
     def test_unicode_and_verbose_flag(self):
         """Test that VERBOSE and UNICODE togethter come through."""
@@ -457,11 +469,11 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(
             pattern.pattern,
             r'''(?x)
-            This is a # \Qcomment\E
+            This is a # \\Qcomment\\E
             This is not a \# comment
             This is not a [#\ ] comment
             This is not a [\#] comment
-            This\ is\ a # \Qcomment\E
+            This\ is\ a # \\Qcomment\\E
             '''
         )
 
@@ -481,11 +493,11 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(
             pattern.pattern,
             r'''
-            This is a # \Qcomment\E
+            This is a # \\Qcomment\\E
             This is not a \# comment
             This is not a [#\ ] comment
             This is not a [\#] comment
-            This\ is\ a # \Qcomment\E (?x)
+            This\ is\ a # \\Qcomment\\E (?x)
             '''
         )
 
@@ -555,11 +567,11 @@ class TestSearchTemplate(unittest.TestCase):
             pattern.pattern,
             r'''
             (?ixu)
-            This is a # \Qcomment\E
+            This is a # \\Qcomment\\E
             This is not a \# comment
             This is not a [#\ ] comment
             This is not a [\#] comment
-            This\ is\ a # \Qcomment\E
+            This\ is\ a # \\Qcomment\\E
             '''
         )
 
@@ -652,11 +664,11 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(
             pattern.pattern,
             r'''
-            This is a # \Qcomment\E
+            This is a # \\Qcomment\\E
             This is not a \# comment
             This is not a [#\ ] comment
             This is not a [\#] comment
-            This\ is\ a # \Qcomment\E
+            This\ is\ a # \\Qcomment\\E
             '''
         )
 
@@ -697,7 +709,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(
             pattern.pattern,
             r'''(?x)
-            This \bis a # \Qcomment\E
+            This \bis a # \\Qcomment\\E
             This is\w+ not a \# comment
             '''
         )
