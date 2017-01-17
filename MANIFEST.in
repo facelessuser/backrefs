@@ -1,6 +1,7 @@
 recursive-include docs *
 recursive-include tests *.py
 recursive-include tools *.py
+recursive-exclude site *
 include setup.py
 include tox.ini
 include .coveragerc
