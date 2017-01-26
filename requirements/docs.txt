@@ -1,5 +1,5 @@
 mkdocs
 mkdocs-material
 pymdown-extensions
-https://github.com/waylan/Python-Markdown/archive/dda33114ad36e2b1ca4d526f71787ba3414b9da7.zip
+Markdown
 Pygments

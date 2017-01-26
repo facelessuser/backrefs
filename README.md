@@ -2,21 +2,21 @@
 [![Code Health][landscape-image]][landscape-link]
 [![Coverage][codecov-image]][codecov-link]
 [![Requirements Status][requires-image]][requires-link]
+[![pypi-version][pypi-image]][pypi-link]
 ![License][license-image]
 # Backrefs
-A library to add additional backrefs to regular expressions.
----
 
-## Overview
-Backrefs is a wrapper around Python's built-in **re** and/or the 3rd party **regex** library.  Backrefs adds various additional back references that are known to some regex engines, but not to Python's **re** or **regex**.  The supported back references actually vary depending on the regular expression engine being used as the engine may already have support for some.
+Backrefs is a wrapper around Python's built-in **re** and the 3rd party **regex** library.  Backrefs adds various additional back references that are known to some regex engines, but not to Python's **re**, and (to a much lesser degree) **regex**.  The supported back references actually vary depending on the regular expression engine being used as **regex** already has most of them.
 
 # Documentation
+
 http://facelessuser.github.io/backrefs/
 
 # License
+
 Released under the MIT license.
 
-Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2015 - 2017 Isaac Muse <isaacmuse@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -33,3 +33,5 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 [codecov-link]: http://codecov.io/github/facelessuser/backrefs?branch=master
 [requires-image]: https://img.shields.io/requires/github/facelessuser/backrefs/master.svg
 [requires-link]: https://requires.io/github/facelessuser/backrefs/requirements/?branch=master
+[pypi-image]: https://img.shields.io/pypi/v/backrefs.svg
+[pypi-link]: https://pypi.python.org/pypi/backrefs
