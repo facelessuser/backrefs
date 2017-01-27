@@ -121,7 +121,7 @@ When installed, the Unicode version that comes with the Python it is installed u
 !!! caution "Narrow Python Builds"
     If you are using a narrow python build, your max Unicode value will be `\uffff`.  Unicode blocks above that limit will not be available.  Also Unicode values above the limit will not be available in character classes either.
 
-    If you are using a wide build, you should have access to all Unicode values. If you are on a narrow build and need full Unicode ranges, you should consider using the **regex** module.
+    If you are using a wide build, you should have access to all Unicode values. If you are on a narrow build and need full Unicode ranges, you should consider using the Regex module.
 
 ### General Category
 
