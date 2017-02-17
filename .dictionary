@@ -5,6 +5,7 @@ EmojiOne
 GitHub
 MkDocs
 namespaced
+NONINFRINGEMENT
 plugin
 Posix
 posix
@@ -14,4 +15,5 @@ PyMdown
 Regex
 Regex's
 requesters
+sublicense
 Tox
