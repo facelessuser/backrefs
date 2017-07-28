@@ -15,16 +15,38 @@ matrix:
     - python: 2.7
       env: TOXENV=lint
     - python: 2.7
-      env: TOXENV=spelling
-install:
-  - pip install tox
-  - pip install codecov
+      env: TOXENV=documents
 addons:
   apt:
     packages:
       - aspell
       - aspell-en
+install:
+  - pip install tox
+  - pip install codecov
 script:
   - tox
 after_success:
   - codecov
+deploy:
+  - provider: pypi
+    user: facelessuser
+    server: https://upload.pypi.org/legacy/
+    password:
+      secure: XSa6xOsbBThL9qtMapcnvtMuYFoeB3c5BtZCjZjNlIdxZEYk4F5b49TS7o6Tknk8t4K77rUl5OBQ//D/BMzK8q0M9Ho0zhMAFOrxT9vsjNBXdJ6X3Gb70Hi0RIL5RxrjlF2H8S0GESoYf9WkRch34njTM8vWxlFLM3caag098ktUG6bLpgoujVRcq7wMwrmQdIq8GvUlwBfqfbKkIQqASZ4m/qAafjSy45zvMWWsJktGwM3YgqAiVXUtwBLg3E7c44ZMIC++x3ltFVQuY4JAK3FWmEdMM+tZFlI2VQrrdDzuDJdXHNiplGyr9IPaqJGjFWPiJTYGGqMNXlQBsxmFnwhjCnzh47xLmPF7X7RdOU0rzurMJ0ubxbqNPRxEh/M74wH8jqo9YDIX8MzT81AzOvJ0Y5MzQVh7qguDdxM6CLS9DiX/xOwH1secdxeykbMEZoq3l+6yANNdi1sRQntHCSkzeqXwxW9IqLXn1GzcUiJel2Lrk8KTXhqC5iGUlV2xIv4d6NuFO1m11aPH9KR8P8KfIGWEl61/1MAzAtL0/ihJUeHCxopfQskm2CAs8wgg/dJao3AO0/S9WX0Wnq5piAeaIXp4XT10Ss0UFCxC9QqOYwngMjTzQgKX9VYq36/h6zWj58E8NbQI6FGILvRXuTqMnT8oozf4LjYS0ITwUtY=
+    distributions: "sdist"
+    skip_upload_docs: true
+    on:
+      tags: true
+      repo: facelessuser/backrefs
+      condition: "$TOXENV = documents"
+  - provider: pages
+    github_token: $GITHUB_TOKEN
+    name: $GITHUB_USER
+    email: $GITHUB_EMAIL
+    skip_cleanup: true
+    local_dir: site
+    on:
+      tags: true
+      repo: facelessuser/backrefs
+      condition: "$TOXENV = documents"
