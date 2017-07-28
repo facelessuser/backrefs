@@ -1,13 +1,16 @@
 site_name: Backrefs Documentation
+site_url: https://facelessuser.github.io/backrefs
 repo_url: https://github.com/facelessuser/backrefs
+edit_uri: tree/master/docs/src/markdown
 site_description: A library to add additional back references to regular expressions.
 copyright: Copyright &copy; 2015 - 2017 <a href="https://github.com/facelessuser">Isaac Muse</a>
 
 theme: material
-theme_dir: doc_theme
+docs_dir: docs/src/markdown
+theme_dir: docs/theme
 
 pages:
-  - Using Backrefs: index.md
+  - User Guide: index.md
   - Installation: installation.md
   - Contributing &amp; Support: contributing.md
   - Changelog: changelog.md
@@ -16,7 +19,7 @@ pages:
 markdown_extensions:
   - markdown.extensions.toc:
       slugify: !!python/name:pymdownx.slugs.uslugify
-      permalink: 
+      permalink: "\ue157"
   - markdown.extensions.admonition:
   - markdown.extensions.smarty:
       smart_quotes: false
@@ -27,15 +30,14 @@ markdown_extensions:
   - markdown.extensions.abbr:
   - pymdownx.extrarawhtml:
   - pymdownx.superfences:
-      css_class: codehilite
   - pymdownx.highlight:
+      css_class: codehilite
       extend_pygments_lang:
         - name: php-inline
           lang: php
           options:
             startinline: true
   - pymdownx.inlinehilite:
-      css_class: codehilite
   - pymdownx.magiclink:
       repo_url_shortener: true
       base_repo_url: https://github.com/facelessuser/backrefs
@@ -43,7 +45,7 @@ markdown_extensions:
   - pymdownx.caret:
   - pymdownx.smartsymbols:
   - pymdownx.emoji:
-      emoji_generator: !!python/name:pymdownx.emoji.to_svg
+      emoji_generator: !!python/name:pymdownx.emoji.to_png
   - pymdownx.escapeall:
       hardbreak: True
       nbsp: True
@@ -55,12 +57,15 @@ markdown_extensions:
   - pymdownx.plainhtml:
       strip_attributes: ''
   - pymdownx.snippets:
-      base_path: docs/snippets
+      base_path: docs/src/markdown/_snippets
+  - pymdownx.keys:
+      separator: "\uff0b"
+  - pymdownx.details:
 
 extra:
   palette:
     primary: blue
-    accent: purple
+    accent: blue
   font:
     text: Roboto
     code: Roboto Mono
@@ -68,4 +73,6 @@ extra:
     - type: github
       link: https://github.com/facelessuser
 extra_css:
-  - extra.css
+  - extra-9b4c72abee.css
+extra_javascript:
+  - extra-2aceccb07f.js

@@ -1,3 +1,5 @@
+# License
+
 MIT license.
 
 Copyright (c) 2015 - 2017 Isaac Muse <isaacmuse@gmail.com>
