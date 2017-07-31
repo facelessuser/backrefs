@@ -530,7 +530,7 @@ if REGEX_SUPPORT:
             count, flags, pos, endpos, concurrent, **kwargs
         )
 
-    def subf(pattern, format, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):
+    def subf(pattern, format, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):  # noqa B002
         """Wrapper for subf."""
 
         return regex.subf(
@@ -547,7 +547,7 @@ if REGEX_SUPPORT:
             count, flags, pos, endpos, concurrent, **kwargs
         )
 
-    def subfn(pattern, format, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):
+    def subfn(pattern, format, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):  # noqa B002
         """Wrapper for subfn."""
 
         return regex.subfn(
