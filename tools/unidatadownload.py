@@ -41,20 +41,27 @@ def download_unicodedata(version, output=HOME):
         'extracted/DerivedJoiningGroup.txt',
         'extracted/DerivedCombiningClass.txt'
     )
-    url = 'http://www.unicode.org/Public/%s/ucd/' % version
+    http_url = 'http://www.unicode.org/Public/%s/ucd/' % version
+    ftp_url = 'ftp://ftp.unicode.org/Public/%s/ucd/' % version
 
     destination = os.path.join(output, 'unicodedata', version)
     if not os.path.exists(destination):
         os.makedirs(destination)
     for f in files:
-        furl = url + f
         file_location = os.path.join(destination, os.path.basename(f))
         if not os.path.exists(file_location):
-            print('Downloading: %s --> %s' % (furl, file_location))
-            response = urlopen(furl)
-            data = response.read()
-            with open(file_location, 'w') as uf:
-                uf.write(data.decode('utf-8'))
+            for url in (http_url, ftp_url):
+                furl = url + f
+                try:
+                    print('Downloading: %s --> %s' % (furl, file_location))
+                    response = urlopen(furl, timeout=60)
+                    data = response.read()
+                except Exception:
+                    print('Failed: %s' % url)
+                    continue
+                with open(file_location, 'w') as uf:
+                    uf.write(data.decode('utf-8'))
+                break
         else:
             print('Skipping: found %s' % file_location)
 
