@@ -54,7 +54,7 @@ def download_unicodedata(version, output=HOME):
                 furl = url + f
                 try:
                     print('Downloading: %s --> %s' % (furl, file_location))
-                    response = urlopen(furl, timeout=60)
+                    response = urlopen(furl, timeout=30)
                     data = response.read()
                 except Exception:
                     print('Failed: %s' % url)
