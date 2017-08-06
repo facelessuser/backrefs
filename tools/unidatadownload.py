@@ -50,7 +50,7 @@ def download_unicodedata(version, output=HOME):
     for f in files:
         file_location = os.path.join(destination, os.path.basename(f))
         if not os.path.exists(file_location):
-            for url in (http_url, ftp_url):
+            for url in (ftp_url, http_url):
                 furl = url + f
                 try:
                     print('Downloading: %s --> %s' % (furl, file_location))
