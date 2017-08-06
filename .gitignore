@@ -65,6 +65,6 @@ target/
 site/*
 
 # Unicode temp
-tools/unicodedata/*
+tools/unicodedata/*/*.txt
 backrefs/uniprops/unidata/*
 *-sdist/*

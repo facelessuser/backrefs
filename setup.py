@@ -30,7 +30,7 @@ def get_version():
         fp.close()
 
 
-def download_unicodedata():
+def get_unicodedata():
     """Download the unicodedata version for the given Python version."""
 
     import unicodedata
@@ -40,14 +40,14 @@ def download_unicodedata():
     fp, pathname, desc = imp.find_module('unidatadownload', [path])
     try:
         unidatadownload = imp.load_module('unidatadownload', fp, pathname, desc)
-        unidatadownload.download_unicodedata(unicodedata.unidata_version)
+        unidatadownload.get_unicodedata(unicodedata.unidata_version, no_zip=True)
     except Exception:
         print(traceback.format_exc())
         fail = True
     finally:
         fp.close()
 
-    assert not fail, "Failed to download unicodedata!"
+    assert not fail, "Failed to obtain unicodedata!"
 
 
 def generate_unicode_table():
@@ -74,7 +74,7 @@ def generate_unicode_table():
 
 
 VER, DEVSTATUS = get_version()
-download_unicodedata()
+get_unicodedata()
 generate_unicode_table()
 
 LONG_DESC = '''
