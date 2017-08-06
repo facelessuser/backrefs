@@ -2,7 +2,7 @@
 
 ## 1.0.2
 
-Aug XX, 2017
+Aug 06, 2017
 
 - **FIX**: Issues related to downloading Unicode data and Unicode table generation. Include Unicode data in release.
 
