@@ -1,6 +1,6 @@
 recursive-include docs *
 recursive-include tests *.py
-recursive-include tools *.py
+recursive-include tools *.py *.zip LICENSE
 recursive-exclude site *
 include setup.py
 include tox.ini
