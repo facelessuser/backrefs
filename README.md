@@ -1,4 +1,5 @@
 [![Unix Build Status][travis-image]][travis-link]
+[![Windows Build Status][appveyor-image]][appveyor-link]
 [![Code Health][landscape-image]][landscape-link]
 [![Coverage][codecov-image]][codecov-link]
 [![Requirements Status][requires-image]][requires-link]
@@ -26,6 +27,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 [travis-image]: https://img.shields.io/travis/facelessuser/backrefs/master.svg?label=Unix%20Build
 [travis-link]: https://travis-ci.org/facelessuser/backrefs
+[appveyor-image]: https://img.shields.io/appveyor/ci/facelessuser/backrefs/master.svg?label=Windows%20Build
+[appveyor-link]: https://ci.appveyor.com/project/facelessuser/backrefs
 [license-image]: https://img.shields.io/badge/license-MIT-blue.svg
 [landscape-image]: https://landscape.io/github/facelessuser/backrefs/master/landscape.svg?style=flat
 [landscape-link]: https://landscape.io/github/facelessuser/backrefs/master
