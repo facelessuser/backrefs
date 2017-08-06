@@ -101,7 +101,7 @@ setup(
     description='A wrapper around re and regex that adds additional back references.',
     long_description=LONG_DESC,
     author='Isaac Muse',
-    author_email='Isaac.Muse [at] gmail.com',
+    author_email='Isaac.Muse@gmail.com',
     url='https://github.com/facelessuser/backrefs',
     packages=find_packages(exclude=['tools', 'tests']),
     install_requires=[],
