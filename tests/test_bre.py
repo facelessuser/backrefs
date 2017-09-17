@@ -774,6 +774,56 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual('This is a test for lowercase!', results)
 
+    def test_single_stacked_case(self):
+        """Test stacked casing of non-spans."""
+
+        text = "This is a test for stacking!"
+        pattern = re.compile(r"(.*?)(stacking)(!)")
+        expand = bre.compile_replace(pattern, r'\1\c\l\2\3')
+        results = expand(pattern.match(text))
+
+        self.assertEqual('This is a test for Stacking!', results)
+
+    def test_span_stacked_case(self):
+        """Test stacked casing of non-spans in and out of a span."""
+
+        text = "This is a test for STACKING!"
+        pattern = re.compile(r"(.*?)(STACKING)(!)")
+        expand = bre.compile_replace(pattern, r'\1\c\L\l\2\E\3')
+        results = expand(pattern.match(text))
+
+        self.assertEqual('This is a test for Stacking!', results)
+
+    def test_single_case_followed_by_bslash(self):
+        """Test single backslash following a single case reference."""
+
+        text = "This is a test!"
+        pattern = re.compile(r"(.*?)(test)(!)")
+        expand = bre.compile_replace(pattern, r'\1\c\\\2\3')
+        results = expand(pattern.match(text))
+
+        self.assertEqual('This is a \\test!', results)
+
+    def test_span_case_followed_by_bslash(self):
+        """Test single backslash following a span case reference."""
+
+        text = "This is a test!"
+        pattern = re.compile(r"(.*?)(test)(!)")
+        expand = bre.compile_replace(pattern, r'\1\C\\\2\E\3')
+        results = expand(pattern.match(text))
+
+        self.assertEqual('This is a \\TEST!', results)
+
+    def test_single_span_stacked_literal(self):
+        """Test single backslash before a single case reference before a literal."""
+
+        text = "This is a test!"
+        pattern = re.compile(r"(.*?)(test)(!)")
+        expand = bre.compile_replace(pattern, r'Test \l\Cstacked\E\3')
+        results = expand(pattern.match(text))
+
+        self.assertEqual('Test sTACKED!', results)
+
     def test_extraneous_end_char(self):
         """Test for extraneous end characters."""
 
@@ -994,20 +1044,6 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual(r'\\test: \This is a test of escaped slash backrefs!', results)
 
-    def test_normal_escaping(self):
-        """Test normal escaped slash."""
-
-        text = "This is a test of normal escaping!"
-        pattern = re.compile(r"(.*)")
-        repl_pattern = r'\e \\e \\\e \\\\e \\\\\e'
-        expand = bre.compile_replace(pattern, repl_pattern)
-        m = pattern.match(text)
-        results = expand(m)
-        results2 = pattern.sub(repl_pattern, text)
-
-        self.assertEqual(results2, results)
-        self.assertEqual('\e \\e \\\e \\\\e \\\\\e', results)
-
     def test_escaped_slash_at_eol(self):
         """Test escaped slash at end of line."""
 
@@ -1016,17 +1052,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(pattern, r'\\\\')
         results = expand(pattern.match(text))
 
-        self.assertEqual(r'\\\\', results)
-
-    def test_unrecognized_backrefs(self):
-        """Test unrecognized backrefs, or literal backslash before a char."""
-
-        text = "This is a test of unrecognized backrefs!"
-        pattern = re.compile(r"(.*)")
-        expand = bre.compile_replace(pattern, r'\k\1')
-        results = expand(pattern.match(text))
-
-        self.assertEqual(r'\kThis is a test of unrecognized backrefs!', results)
+        self.assertEqual('\\\\', results)
 
     def test_ignore_group(self):
         """Test that backrefs inserted by matching groups are passed over."""
