@@ -1016,7 +1016,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(pattern, r'\\\\')
         results = expand(pattern.match(text))
 
-        self.assertEqual(r'\\\\', results)
+        self.assertEqual('\\\\', results)
 
     def test_unrecognized_backrefs(self):
         """Test unrecognized backrefs, or literal backslash before a char."""

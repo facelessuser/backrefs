@@ -36,6 +36,17 @@ utokens = {
         )
         '''
     ),
+    "re_replace_group_ref": re.compile(
+        r'''(?x)
+        (\\)+
+        (
+            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>
+        )? |
+        (
+            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>
+        )
+        '''
+    ),
     "unicode_flag": 'u'
 }
 
@@ -71,8 +82,16 @@ btokens = {
         )
         '''
     ),
-    "re_flags": re.compile(
-        br'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'
+    "re_replace_group_ref": re.compile(
+        br'''(?x)
+        (\\)+
+        (
+            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9])>
+        )? |
+        (
+            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9])>
+        )
+        '''
     ),
     "unicode_flag": b'u'
 }

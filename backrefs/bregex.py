@@ -29,7 +29,6 @@ Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import unicode_literals
 import re
-from . import bre
 from . import compat
 from . import common_tokens as ctok
 import functools
@@ -78,6 +77,10 @@ if REGEX_SUPPORT:
     REGEX_TYPE = type(regex.compile('', 0))
     escape = regex.escape
     purge = regex.purge
+
+    # Case upper or lower
+    _UPPER = 0
+    _LOWER = 1
 
     utokens = {
         "regex_flags": re.compile(
@@ -186,6 +189,91 @@ if REGEX_SUPPORT:
                     else:
                         char += m.group(3)
 
+            self.index += len(char)
+            self.current = char
+            return self.current
+
+    # Break apart template patterns into char tokens
+    class RegexReplaceTokens(compat.Tokens):
+        """Tokens."""
+
+        def __init__(self, string, boundaries):
+            """Initialize."""
+
+            if isinstance(string, compat.binary_type):
+                ctokens = ctok.btokens
+            else:
+                ctokens = ctok.utokens
+
+            self.string = string
+            self._b_slash = ctokens["b_slash"]
+            self._re_replace_ref = ctokens["re_replace_ref"]
+            self.max_index = len(string) - 1
+            self.index = 0
+            self.last = 0
+            self.current = None
+            self.boundaries = boundaries
+            self.boundary = self.boundaries.pop(0) if boundaries else (self.max_index + 1, self.max_index + 1)
+
+        def _in_boundary(self, index):
+            """Check if index is in current boundary."""
+
+            return (
+                self.boundary and
+                (
+                    self.boundary[0] <= index < self.boundary[1] or
+                    self.boundary[0] == index == self.boundary[1]
+                )
+            )
+
+        def in_boundary(self):
+            """Check if last/current index is in current boundary (public)."""
+            return self._in_boundary(self.last)
+
+        def _update_boundary(self):
+            """Update to next boundary."""
+            if self.boundaries:
+                self.boundary = self.boundaries.pop(0)
+            else:
+                self.boundary = (self.max_index + 1, self.max_index + 1)
+
+        def _out_of_boundary(self, index):
+            """Return if the index has exceeded the right boundary."""
+
+            return self.boundary is not None and index >= self.boundary[1]
+
+        def __iter__(self):
+            """Iterate."""
+
+            return self
+
+        def iternext(self):
+            """
+            Iterate through characters of the string.
+
+            Count escaped l, L, c, C, E and backslash as a single char.
+            """
+
+            if self.index > self.max_index:
+                raise StopIteration
+
+            if self._out_of_boundary(self.index):
+                self._update_boundary()
+
+            if not self._in_boundary(self.index):
+                char = self.string[self.index:self.index + 1]
+                if char == self._b_slash:
+                    m = self._re_replace_ref.match(self.string[self.index + 1:self.boundary[0]])
+                    if m:
+                        if m.group(1):
+                            if m.group(2):
+                                self.index += 1
+                        else:
+                            char += m.group(3)
+            else:
+                char = self.string[self.boundary[0]:self.boundary[1]]
+
+            self.last = self.index
             self.index += len(char)
             self.current = char
             return self.current
@@ -424,8 +512,26 @@ if REGEX_SUPPORT:
 
             return self._empty.join(self.extended)
 
-    class RegexReplaceTemplate(bre.ReplaceTemplate):
-        """Replace template for the regex module."""
+    class RegexReplaceTemplate(object):
+        """Replace template."""
+
+        def __init__(self, pattern, template):
+            """Initialize."""
+
+            if isinstance(template, compat.binary_type):
+                self.binary = True
+                ctokens = ctok.btokens
+            else:
+                self.binary = False
+                ctokens = ctok.utokens
+
+            self._original = template
+            self._back_ref = set()
+            self._b_slash = ctokens["b_slash"]
+            self._empty = ctokens["empty"]
+            self._add_back_references(ctokens["replace_tokens"])
+            self._template = self._escape_template(template)
+            self.parse_template(pattern)
 
         def parse_template(self, pattern):
             """
@@ -449,6 +555,228 @@ if REGEX_SUPPORT:
                     self.literals.append(part)
                 count += 1
 
+        def get_base_template(self):
+            """Return the unmodified template before expansion."""
+
+            return self._original
+
+        def _escape_template(self, template):
+            """
+            Escape backreferences.
+
+            Because the new backreferences are recognized by python
+            we need to escape them so they come out okay.
+            """
+
+            new_template = []
+            slash_count = 0
+            for c in compat.iterstring(template):
+                if c == self._b_slash:
+                    slash_count += 1
+                elif c != self._b_slash:
+                    if slash_count > 1 and c in self._back_ref:
+                        new_template.append(self._b_slash * (slash_count - 1))
+                    slash_count = 0
+                new_template.append(c)
+            if slash_count > 1:
+                # End of line slash
+                new_template.append(self._b_slash * (slash_count))
+                slash_count = 0
+            return self._empty.join(new_template)
+
+        def _add_back_references(self, args):
+            """
+            Add new backreferences.
+
+            Only add if they don't interfere with existing ones.
+            """
+
+            for arg in args:
+                if isinstance(arg, compat.binary_type if self.binary else compat.string_type) and len(arg) == 1:
+                    self._back_ref.add(arg)
+
+        def get_group_index(self, index):
+            """Find and return the appropriate group index."""
+
+            g_index = None
+            for group in self.groups:
+                if group[0] == index:
+                    g_index = group[1]
+                    break
+            return g_index
+
+    class RegexReplaceTemplateExpander(object):
+        """Backrefereces."""
+
+        def __init__(self, match, template):
+            """Initialize."""
+
+            if template.binary:
+                ctokens = ctok.btokens
+            else:
+                ctokens = ctok.utokens
+
+            self.template = template
+            self._esc_end = ctokens["esc_end"]
+            self._end = ctokens["end"]
+            self._lc = ctokens["lc"]
+            self._lc_span = ctokens["lc_span"]
+            self._uc = ctokens["uc"]
+            self._uc_span = ctokens["uc_span"]
+            self.index = -1
+            self.end_found = False
+            self.parent_span = []
+            self._expand_string(match)
+
+        def span_case(self, i, case):
+            """Uppercase or lowercase the next range of characters until end marker is found."""
+
+            attr = "lower" if case == _LOWER else "upper"
+            parts = []
+            try:
+                t = next(i)
+                in_boundary = i.in_boundary()
+                while t != self._esc_end or in_boundary:
+                    if in_boundary:
+                        parts.append(getattr(t, attr)())
+                    elif len(t) > 1:
+                        c = t[1:]
+                        if c == self._uc:
+                            self.parent_span.append(case)
+                            parts.extend(self.single_case(i, _UPPER))
+                            self.parent_span.pop()
+                        elif c == self._lc:
+                            self.parent_span.append(case)
+                            parts.extend(self.single_case(i, _LOWER))
+                            self.parent_span.pop()
+                        elif c == self._uc_span:
+                            self.parent_span.append(case)
+                            parts.extend(self.span_case(i, _UPPER))
+                            self.parent_span.pop()
+                        elif c == self._lc_span:
+                            self.parent_span.append(case)
+                            parts.extend(self.span_case(i, _LOWER))
+                            self.parent_span.pop()
+                    else:
+                        parts.append(getattr(t, attr)())
+                    if self.end_found:
+                        self.end_found = False
+                        break
+                    t = next(i)
+                    in_boundary = i.in_boundary()
+            except StopIteration:
+                pass
+            return parts
+
+        def single_case(self, i, case):
+            """Uppercase or lowercase the next character."""
+
+            attr = "lower" if case == _LOWER else "upper"
+            parts = []
+            try:
+                t = next(i)
+                in_boundary = i.in_boundary()
+                if in_boundary:
+                    # Because this is a group the parent hasn't seen it yet,
+                    # we need to first pass over it with the parent's conversion first
+                    # then follow up with the single.
+                    if self.parent_span:
+                        t = getattr(t, "lower" if self.parent_span[-1] else "upper")()
+                    parts.append(getattr(t[0:1], attr)() + t[1:])
+                elif len(t) > 1:
+                    # Escaped char; just append.
+                    c = t[1:]
+                    chars = []
+                    if c == self._uc:
+                        chars = self.single_case(i, _UPPER)
+                    elif c == self._lc:
+                        chars = self.single_case(i, _LOWER)
+                    elif c == self._uc_span:
+                        chars = self.span_case(i, _UPPER)
+                    elif c == self._lc_span:
+                        chars = self.span_case(i, _LOWER)
+                    elif c == self._end:
+                        self.end_found = True
+                    if chars:
+                        chars[0] = getattr(chars[0][0:1], attr)() + chars[0][1:]
+                        parts.extend(chars)
+                else:
+                    parts.append(getattr(t, attr)())
+            except StopIteration:
+                pass
+            return parts
+
+        def _expand_string(self, match):
+            """
+            Using the template, expand the string.
+
+            Keep track of the match group boundaries for later.
+            """
+
+            self.sep = match.string[:0]
+            self.text = []
+            self.group_boundaries = []
+            # Expand string
+            char_index = 0
+            for x in range(0, len(self.template.literals)):
+                index = x
+                l = self.template.literals[x]
+                if l is None:
+                    g_index = self.template.get_group_index(index)
+                    l = match.group(g_index)
+                    start = char_index
+                    char_index += len(l)
+                    self.group_boundaries.append((start, char_index))
+                    self.text.append(l)
+                else:
+                    start = char_index
+                    char_index += len(l)
+                    self.text.append(l)
+
+        def expand(self):
+            """
+            Expand with backreferences.
+
+            Walk the expanded template string and process
+            the new added backreferences and apply the associated
+            action.
+            """
+
+            # Handle backreferences
+            i = RegexReplaceTokens(self.sep.join(self.text), self.group_boundaries)
+            iter(i)
+            result = []
+            for t in i:
+                in_boundary = i.in_boundary()
+
+                # Backreference has been found
+                # This is for the neutral state
+                # (currently applying no title cases)
+
+                if in_boundary:
+                    result.append(t)
+                elif len(t) > 1:
+                    c = t[1:]
+                    if c == self._lc:
+                        result.extend(self.single_case(i, _LOWER))
+                    elif c == self._lc_span:
+                        result.extend(self.span_case(i, _LOWER))
+                    elif c == self._uc:
+                        result.extend(self.single_case(i, _UPPER))
+                    elif c == self._uc_span:
+                        result.extend(self.span_case(i, _UPPER))
+                    elif c == self._end:
+                        # This is here just as a reminder that \E is ignored
+                        pass
+                else:
+                    result.append(t)
+
+                # Handle extraneous end
+                if self.end_found:
+                    self.end_found = False
+
+            return self.sep.join(result)
+
     def _apply_replace_backrefs(m, repl=None):
         """Expand with either the RegexReplaceTemplate or the user function, compile on the fly, or return None."""
 
@@ -456,9 +784,9 @@ if REGEX_SUPPORT:
             if hasattr(repl, '__call__'):
                 return repl(m)
             elif isinstance(repl, RegexReplaceTemplate):
-                return bre.ReplaceTemplateExpander(m, repl).expand()
+                return RegexReplaceTemplateExpander(m, repl).expand()
             elif isinstance(repl, (compat.string_type, compat.binary_type)):
-                return bre.ReplaceTemplateExpander(m, RegexReplaceTemplate(m.re, repl)).expand()
+                return RegexReplaceTemplateExpander(m, RegexReplaceTemplate(m.re, repl)).expand()
 
     def _apply_search_backrefs(pattern, flags=0):
         """Apply the search backrefs to the search pattern."""
