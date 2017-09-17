@@ -409,6 +409,7 @@ class ReplaceTemplate(object):
                     elif c == self._lc_span:
                         self.span_case(i, _LOWER)
                     else:
+                        self.get_single_stack()
                         self.result.append(t)
                 elif self.single_stack:
                     single = self.get_single_stack()
@@ -447,6 +448,7 @@ class ReplaceTemplate(object):
                 elif c == self._end:
                     self.end_found = True
                 else:
+                    self.get_single_stack()
                     self.result.append(t)
             else:
                 self.result.append(getattr(t, self.get_single_stack())())
