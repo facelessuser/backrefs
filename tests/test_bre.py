@@ -1044,6 +1044,20 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual(r'\\test: \This is a test of escaped slash backrefs!', results)
 
+    def test_normal_escaping(self):
+        """Test normal escaped slash."""
+
+        text = "This is a test of normal escaping!"
+        pattern = re.compile(r"(.*)")
+        repl_pattern = r'\t \\t \\\t \\\\t \\\\\t'
+        expand = bre.compile_replace(pattern, repl_pattern)
+        m = pattern.match(text)
+        results = expand(m)
+        results2 = pattern.sub(repl_pattern, text)
+
+        self.assertEqual(results2, results)
+        self.assertEqual('\t \\t \\\t \\\\t \\\\\t', results)
+
     def test_escaped_slash_at_eol(self):
         """Test escaped slash at end of line."""
 
