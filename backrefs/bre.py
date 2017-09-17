@@ -338,24 +338,7 @@ class ReplaceTemplate(object):
             if len(t) > 1:
                 c = t[1:]
                 if c[0:1].isdigit() or c[0:1] == self._group:
-                    if len(self.result) > 1:
-                        self.literal_slots.append(self._empty.join(self.result))
-                        self.literal_slots.append(t)
-                        del self.result[:]
-                        self.result.append(self._empty)
-                        self.slot += 1
-                    else:
-                        self.literal_slots.append(t)
-                    self.group_slots.append(
-                        (
-                            self.slot,
-                            (
-                                self.span_stack[-1] if self.span_stack else None,
-                                self.single_stack[-1] if self.single_stack else None
-                            )
-                        )
-                    )
-                    self.slot += 1
+                    self.handle_group(t)
                 elif c == self._lc:
                     self.single_case(i, _LOWER)
                 elif c == self._lc_span:
@@ -392,31 +375,7 @@ class ReplaceTemplate(object):
                 if len(t) > 1:
                     c = t[1:]
                     if c[0:1].isdigit() or c[0:1] == self._group:
-                        if len(self.result) > 1:
-                            self.literal_slots.append(self._empty.join(self.result))
-                            self.literal_slots.append(t)
-                            del self.result[:]
-                            self.result.append(self._empty)
-                            self.slot += 1
-                        else:
-                            self.literal_slots.append(t)
-
-                        single = None
-                        while self.single_stack:
-                            single = self.single_stack.pop()
-
-                        self.group_slots.append(
-                            (
-                                self.slot,
-                                (
-                                    self.span_stack[-1] if self.span_stack else None,
-                                    single
-                                )
-                            )
-                        )
-                        if self.single_stack:
-                            self.single_stack[-1] = None
-                        self.slot += 1
+                        self.handle_group(t)
                     elif c == self._uc:
                         self.single_case(i, _UPPER)
                     elif c == self._lc:
@@ -428,9 +387,7 @@ class ReplaceTemplate(object):
                     else:
                         self.result.append(t)
                 elif self.single_stack:
-                    single = None
-                    while self.single_stack:
-                        single = self.single_stack.pop()
+                    single = self.get_single_stack()
                     text = getattr(t, attr)()
                     if single is not None:
                         self.result.append(getattr(text[0:1], single)() + text[1:])
@@ -454,29 +411,7 @@ class ReplaceTemplate(object):
             if len(t) > 1:
                 c = t[1:]
                 if c[0:1].isdigit() or c[0:1] == self._group:
-                    if len(self.result) > 1:
-                        self.literal_slots.append(self._empty.join(self.result))
-                        self.literal_slots.append(t)
-                        del self.result[:]
-                        self.result.append(self._empty)
-                        self.slot += 1
-                    else:
-                        self.literal_slots.append(t)
-
-                    single = None
-                    while self.single_stack:
-                        single = self.single_stack.pop()
-
-                    self.group_slots.append(
-                        (
-                            self.slot,
-                            (
-                                self.span_stack[-1] if self.span_stack else None,
-                                single
-                            )
-                        )
-                    )
-                    self.slot += 1
+                    self.handle_group(t)
                 elif c == self._uc:
                     self.single_case(i, _UPPER)
                 elif c == self._lc:
@@ -490,13 +425,43 @@ class ReplaceTemplate(object):
                 else:
                     self.result.append(t)
             else:
-                single = None
-                while self.single_stack:
-                    single = self.single_stack.pop()
-                self.result.append(getattr(t, single)())
+                self.result.append(getattr(t, self.get_single_stack())())
 
         except StopIteration:
             pass
+
+    def get_single_stack(self):
+        """Get the correct single stack item to use."""
+
+        single = None
+        while self.single_stack:
+            single = self.single_stack.pop()
+        return single
+
+    def handle_group(self, text):
+        """Handle groups."""
+
+        if len(self.result) > 1:
+            self.literal_slots.append(self._empty.join(self.result))
+            self.literal_slots.append(text)
+            del self.result[:]
+            self.result.append(self._empty)
+            self.slot += 1
+        else:
+            self.literal_slots.append(text)
+
+        single = self.get_single_stack()
+
+        self.group_slots.append(
+            (
+                self.slot,
+                (
+                    self.span_stack[-1] if self.span_stack else None,
+                    single
+                )
+            )
+        )
+        self.slot += 1
 
     def get_base_template(self):
         """Return the unmodified template before expansion."""
@@ -868,21 +833,10 @@ class ReplaceTemplateExpander(object):
                 g_case = self.template.get_group_case(index)
                 l = self.match.group(g_index)
                 if g_case[0] is not None:
-                    attr = g_case[0]
-                    l = getattr(l, attr)()
+                    l = getattr(l, g_case[0])()
                 if g_case[1] is not None:
-                    attr = g_case[1]
-                    applied = False
-                    new = []
-                    for c in compat.iterstring(l):
-                        if not applied:
-                            c = getattr(c, attr)()
-                            applied = True
-                        new.append(c)
-                    l = self.sep.join(new)
-                self.text.append(l)
-            else:
-                self.text.append(l)
+                    l = getattr(l[0:1], g_case[1])() + l[1:]
+            self.text.append(l)
 
         return self.sep.join(self.text)
 
