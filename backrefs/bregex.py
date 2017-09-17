@@ -108,6 +108,17 @@ if REGEX_SUPPORT:
             )
             '''
         ),
+        "re_replace_ref": re.compile(
+            r'''(?x)
+            (\\)+
+            (
+                [cClLE]
+            )? |
+            (
+                [cClLE]
+            )
+            '''
+        ),
         "v0": 'V0',
         "v1": 'V1'
     }
@@ -135,6 +146,17 @@ if REGEX_SUPPORT:
             )? |
             (
                 [EQ#]
+            )
+            '''
+        ),
+        "re_replace_ref": re.compile(
+            br'''(?x)
+            (\\)+
+            (
+                [cClLE]
+            )? |
+            (
+                [cClLE]
             )
             '''
         ),
@@ -201,13 +223,15 @@ if REGEX_SUPPORT:
             """Initialize."""
 
             if isinstance(string, compat.binary_type):
+                tokens = btokens
                 ctokens = ctok.btokens
             else:
+                tokens = utokens
                 ctokens = ctok.utokens
 
             self.string = string
             self._b_slash = ctokens["b_slash"]
-            self._re_replace_ref = ctokens["re_replace_ref"]
+            self._re_replace_ref = tokens["re_replace_ref"]
             self.max_index = len(string) - 1
             self.index = 0
             self.last = 0

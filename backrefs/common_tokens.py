@@ -4,7 +4,6 @@ Common tokens shared between the different regex modules.
 Licensed under MIT
 Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
 """
-import re
 
 # Unicode string related references
 utokens = {
@@ -25,28 +24,6 @@ utokens = {
     "nl": '\n',
     "negate": '^',
     "verbose_flag": 'x',
-    "re_replace_ref": re.compile(
-        r'''(?x)
-        (\\)+
-        (
-            [cClLE]
-        )? |
-        (
-            [cClLE]
-        )
-        '''
-    ),
-    "re_replace_group_ref": re.compile(
-        r'''(?x)
-        (\\)+
-        (
-            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>
-        )? |
-        (
-            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>
-        )
-        '''
-    ),
     "unicode_flag": 'u'
 }
 
@@ -71,27 +48,5 @@ btokens = {
     "nl": b'\n',
     "negate": b'^',
     "verbose_flag": b'x',
-    "re_replace_ref": re.compile(
-        br'''(?x)
-        (\\)+
-        (
-            [cClLE]
-        )? |
-        (
-            [cClLE]
-        )
-        '''
-    ),
-    "re_replace_group_ref": re.compile(
-        br'''(?x)
-        (\\)+
-        (
-            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9])>
-        )? |
-        (
-            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9])>
-        )
-        '''
-    ),
     "unicode_flag": b'u'
 }

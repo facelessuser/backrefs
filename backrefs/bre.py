@@ -136,6 +136,17 @@ utokens = {
     "re_flags": re.compile(
         r'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else r'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'
     ),
+    "re_replace_group_ref": re.compile(
+        r'''(?x)
+        (\\)+
+        (
+            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>
+        )? |
+        (
+            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>
+        )
+        '''
+    ),
     "ascii_flag": "a",
     "group": "g"
 }
@@ -181,6 +192,17 @@ btokens = {
     "re_flags": re.compile(
         br'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else br'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'
     ),
+    "re_replace_group_ref": re.compile(
+        br'''(?x)
+        (\\)+
+        (
+            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9])>
+        )? |
+        (
+            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9])>
+        )
+        '''
+    ),
     "ascii_flag": b"a",
     "group": b"g"
 }
@@ -194,12 +216,14 @@ class ReplaceTokens(compat.Tokens):
         """Initialize."""
 
         if isinstance(string, compat.binary_type):
+            tokens = btokens
             ctokens = ctok.btokens
         else:
+            tokens = utokens
             ctokens = ctok.utokens
 
         self.string = string
-        self.re_replace_group_ref = ctokens["re_replace_group_ref"]
+        self.re_replace_group_ref = tokens["re_replace_group_ref"]
         self._b_slash = ctokens["b_slash"]
         self.max_index = len(string) - 1
         self.index = 0
