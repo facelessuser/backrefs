@@ -794,18 +794,8 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual('This is a test for Stacking!', results)
 
-    def test_span_stacked_case(self):
-        """Test stacked casing of non-spans in and out of a span."""
-
-        text = "This is a test for STACKING!"
-        pattern = re.compile(r"(.*?)(STACKING)(!)")
-        expand = bre.compile_replace(pattern, r'\1\c\L\l\2\E\3')
-        results = expand(pattern.match(text))
-
-        self.assertEqual('This is a test for Stacking!', results)
-
     def test_single_case_followed_by_bslash(self):
-        """Test stacked casing of non-spans in and out of a span."""
+        """Test single backslash following a single case reference."""
 
         text = "This is a test!"
         pattern = re.compile(r"(.*?)(test)(!)")
@@ -815,7 +805,7 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual('This is a \\test!', results)
 
     def test_span_case_followed_by_bslash(self):
-        """Test stacked casing of non-spans in and out of a span."""
+        """Test single backslash following a span case reference."""
 
         text = "This is a test!"
         pattern = re.compile(r"(.*?)(test)(!)")
@@ -824,8 +814,8 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual('This is a \\TEST!', results)
 
-    def test_single_span_stacked(self):
-        """Test stacked casing of non-spans in and out of a span."""
+    def test_single_span_stacked_literal(self):
+        """Test single backslash before a single case reference before a literal."""
 
         text = "This is a test!"
         pattern = re.compile(r"(.*?)(test)(!)")
