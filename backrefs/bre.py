@@ -400,12 +400,17 @@ class ReplaceTemplate(object):
                             self.slot += 1
                         else:
                             self.literal_slots.append(t)
+
+                        single = None
+                        while self.single_stack:
+                            single = self.single_stack.pop()
+
                         self.group_slots.append(
                             (
                                 self.slot,
                                 (
                                     self.span_stack[-1] if self.span_stack else None,
-                                    self.single_stack[-1] if self.single_stack else None
+                                    single
                                 )
                             )
                         )
@@ -422,6 +427,13 @@ class ReplaceTemplate(object):
                         self.span_case(i, _LOWER)
                     else:
                         self.result.append(t)
+                elif self.single_stack:
+                    single = None
+                    while self.single_stack:
+                        single = self.single_stack.pop()
+                    text = getattr(t, attr)()
+                    if single is not None:
+                        self.result.append(getattr(text[0:1], single)() + text[1:])
                 else:
                     self.result.append(getattr(t, attr)())
                 if self.end_found:
@@ -441,7 +453,6 @@ class ReplaceTemplate(object):
             t = next(i)
             if len(t) > 1:
                 c = t[1:]
-                chars = []
                 if c[0:1].isdigit() or c[0:1] == self._group:
                     if len(self.result) > 1:
                         self.literal_slots.append(self._empty.join(self.result))
@@ -451,36 +462,41 @@ class ReplaceTemplate(object):
                         self.slot += 1
                     else:
                         self.literal_slots.append(t)
+
+                    single = None
+                    while self.single_stack:
+                        single = self.single_stack.pop()
+
                     self.group_slots.append(
                         (
                             self.slot,
                             (
                                 self.span_stack[-1] if self.span_stack else None,
-                                self.single_stack[-1] if self.single_stack else None
+                                single
                             )
                         )
                     )
                     self.slot += 1
                 elif c == self._uc:
-                    chars = self.single_case(i, _UPPER)
+                    self.single_case(i, _UPPER)
                 elif c == self._lc:
-                    chars = self.single_case(i, _LOWER)
+                    self.single_case(i, _LOWER)
                 elif c == self._uc_span:
-                    chars = self.span_case(i, _UPPER)
+                    self.span_case(i, _UPPER)
                 elif c == self._lc_span:
-                    chars = self.span_case(i, _LOWER)
+                    self.span_case(i, _LOWER)
                 elif c == self._end:
                     self.end_found = True
                 else:
                     self.result.append(t)
-                if chars:
-                    chars[0] = getattr(chars[0][0:1], attr)() + chars[0][1:]
-                    self.result.extend(chars)
             else:
-                self.result.append(getattr(t, attr)())
+                single = None
+                while self.single_stack:
+                    single = self.single_stack.pop()
+                self.result.append(getattr(t, single)())
+
         except StopIteration:
             pass
-        self.single_stack.pop()
 
     def get_base_template(self):
         """Return the unmodified template before expansion."""

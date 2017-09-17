@@ -517,6 +517,26 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual('This is a test for lowercase!', results)
 
+    def test_single_stacked_case(self):
+        """Test stacked casing of non-spans."""
+
+        text = "This is a test for stacking!"
+        pattern = regex.compile(r"(.*?)(stacking)(!)")
+        expand = bregex.compile_replace(pattern, r'\1\c\l\2\3')
+        results = expand(pattern.match(text))
+
+        self.assertEqual('This is a test for Stacking!', results)
+
+    def test_span_stacked_case(self):
+        """Test stacked casing of non-spans in and out of a span."""
+
+        text = "This is a test for STACKING!"
+        pattern = regex.compile(r"(.*?)(STACKING)(!)")
+        expand = bregex.compile_replace(pattern, r'\1\c\L\l\2\E\3')
+        results = expand(pattern.match(text))
+
+        self.assertEqual('This is a test for Stacking!', results)
+
     def test_extraneous_end_char(self):
         """Test for extraneous end characters."""
 
