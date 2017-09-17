@@ -578,10 +578,6 @@ if REGEX_SUPPORT:
                         new_template.append(self._b_slash * (slash_count - 1))
                     slash_count = 0
                 new_template.append(c)
-            if slash_count > 1:
-                # End of line slash
-                new_template.append(self._b_slash * (slash_count))
-                slash_count = 0
             return self._empty.join(new_template)
 
         def _add_back_references(self, args):
