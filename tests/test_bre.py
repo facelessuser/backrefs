@@ -994,20 +994,6 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual(r'\\test: \This is a test of escaped slash backrefs!', results)
 
-    def test_normal_escaping(self):
-        """Test normal escaped slash."""
-
-        text = "This is a test of normal escaping!"
-        pattern = re.compile(r"(.*)")
-        repl_pattern = r'\e \\e \\\e \\\\e \\\\\e'
-        expand = bre.compile_replace(pattern, repl_pattern)
-        m = pattern.match(text)
-        results = expand(m)
-        results2 = pattern.sub(repl_pattern, text)
-
-        self.assertEqual(results2, results)
-        self.assertEqual('\e \\e \\\e \\\\e \\\\\e', results)
-
     def test_escaped_slash_at_eol(self):
         """Test escaped slash at end of line."""
 
@@ -1017,16 +1003,6 @@ class TestReplaceTemplate(unittest.TestCase):
         results = expand(pattern.match(text))
 
         self.assertEqual('\\\\', results)
-
-    def test_unrecognized_backrefs(self):
-        """Test unrecognized backrefs, or literal backslash before a char."""
-
-        text = "This is a test of unrecognized backrefs!"
-        pattern = re.compile(r"(.*)")
-        expand = bre.compile_replace(pattern, r'\k\1')
-        results = expand(pattern.match(text))
-
-        self.assertEqual(r'\kThis is a test of unrecognized backrefs!', results)
 
     def test_ignore_group(self):
         """Test that backrefs inserted by matching groups are passed over."""
