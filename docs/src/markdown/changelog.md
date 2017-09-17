@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+
+- **NEW**: Rework algorithm to handle replace casing back references in Python 3.7 development builds in preparation for Python 3.7 release.
+- **FIX**: Fix issue dealing with trailing backslashes in replace templates.
+
 ## 1.0.2
 
 Aug 06, 2017
