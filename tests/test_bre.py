@@ -1058,6 +1058,20 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(results2, results)
         self.assertEqual('\t \\t \\\t \\\\t \\\\\t', results)
 
+    def test_binary_normal_escaping(self):
+        """Test binary normal escaped slash."""
+
+        text = b"This is a test of normal escaping!"
+        pattern = re.compile(br"(.*)")
+        repl_pattern = br'\t \\t \\\t \\\\t \\\\\t'
+        expand = bre.compile_replace(pattern, repl_pattern)
+        m = pattern.match(text)
+        results = expand(m)
+        results2 = pattern.sub(repl_pattern, text)
+
+        self.assertEqual(results2, results)
+        self.assertEqual(b'\t \\t \\\t \\\\t \\\\\t', results)
+
     def test_escaped_slash_at_eol(self):
         """Test escaped slash at end of line."""
 
