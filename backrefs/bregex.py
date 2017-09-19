@@ -86,39 +86,9 @@ if REGEX_SUPPORT:
         "regex_flags": re.compile(
             r'(?s)(\\.)|\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]|(.)'
         ),
-        "regex_search_ref": re.compile(
-            r'''(?x)
-            (\\)+
-            (
-                [(EQ]
-            )? |
-            (
-                [(EQ]
-            )
-            '''
-        ),
-        "regex_search_ref_verbose": re.compile(
-            r'''(?x)
-            (\\)+
-            (
-                [(EQ#]
-            )? |
-            (
-                [(EQ#]
-            )
-            '''
-        ),
-        "re_replace_ref": re.compile(
-            r'''(?x)
-            (\\)+
-            (
-                [cClLE]
-            )? |
-            (
-                [cClLE]
-            )
-            '''
-        ),
+        "regex_search_ref": re.compile(r'(\\)|([(EQ])'),
+        "regex_search_ref_verbose": re.compile(r'(\\)|([(EQ#])'),
+        "re_replace_ref": re.compile(r'(\\+)?([cClLE])|(\\)'),
         "v0": 'V0',
         "v1": 'V1'
     }
@@ -127,39 +97,9 @@ if REGEX_SUPPORT:
         "regex_flags": re.compile(
             br'(?s)(\\.)|\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]|(.)'
         ),
-        "regex_search_ref": re.compile(
-            br'''(?x)
-            (\\)+
-            (
-                [EQ]
-            )? |
-            (
-                [EQ]
-            )
-            '''
-        ),
-        "regex_search_ref_verbose": re.compile(
-            br'''(?x)
-            (\\)+
-            (
-                [EQ#]
-            )? |
-            (
-                [EQ#]
-            )
-            '''
-        ),
-        "re_replace_ref": re.compile(
-            br'''(?x)
-            (\\)+
-            (
-                [cClLE]
-            )? |
-            (
-                [cClLE]
-            )
-            '''
-        ),
+        "regex_search_ref": re.compile(br'(\\)|([EQ])'),
+        "regex_search_ref_verbose": re.compile(br'(\\)|([EQ#])'),
+        "re_replace_ref": re.compile(br'(\\+)?([cClLE])|(\\)'),
         "v0": b'V0',
         "v1": b'V1'
     }
@@ -179,9 +119,9 @@ if REGEX_SUPPORT:
 
             self.string = string
             if verbose:
-                self._re_search_ref = tokens["regex_search_ref_verbose"]
+                self._regex_search_ref = tokens["regex_search_ref_verbose"]
             else:
-                self._re_search_ref = tokens["regex_search_ref"]
+                self._regex_search_ref = tokens["regex_search_ref"]
             self._b_slash = ctokens["b_slash"]
             self.max_index = len(string) - 1
             self.index = 0
@@ -204,12 +144,9 @@ if REGEX_SUPPORT:
 
             char = self.string[self.index:self.index + 1]
             if char == self._b_slash:
-                m = self._re_search_ref.match(self.string[self.index + 1:])
+                m = self._regex_search_ref.match(self.string[self.index + 1:])
                 if m:
-                    if m.group(1):
-                        char += self._b_slash
-                    else:
-                        char += m.group(3)
+                    char += m.group(1) if m.group(1) else m.group(2)
 
             self.index += len(char)
             self.current = char
@@ -290,10 +227,9 @@ if REGEX_SUPPORT:
                     m = self._re_replace_ref.match(self.string[self.index + 1:self.boundary[0]])
                     if m:
                         if m.group(1):
-                            if m.group(2):
-                                self.index += 1
-                        else:
-                            char += m.group(3)
+                            self.index += 1
+                        elif not m.group(3):
+                            char += m.group(2)
             else:
                 char = self.string[self.boundary[0]:self.boundary[1]]
 
