@@ -1018,6 +1018,32 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
+    def test_switch_from_format_auto(self):
+        """Test a switch from auto to manual format."""
+
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = regex.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.compile_replace(
+                pattern, r'{}{}{manual}', use_format=True
+            )
+
+        assert "Cannot switch to manual format during auto format!" in str(excinfo.value)
+
+    def test_switch_from_format_manual(self):
+        """Test a switch from manual to auto format."""
+
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = regex.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.compile_replace(
+                pattern, r'{manual}{}{}', use_format=True
+            )
+
+        assert "Cannot switch to auto format during manual format!" in str(excinfo.value)
+
 
 class TestConvenienceFunctions(unittest.TestCase):
     """Test convenience functions."""

@@ -656,6 +656,7 @@ if REGEX_SUPPORT:
         def handle_format_group(self, text):
             """Handle groups."""
 
+            # Handle auto or manual format
             if text == self._empty:
                 if self.auto:
                     text = self.string_convert(self.auto_index)
@@ -664,8 +665,12 @@ if REGEX_SUPPORT:
                     self.auto = True
                     text = self.string_convert(self.auto_index)
                     self.auto_index += 1
+                else:
+                    raise ValueError("Cannot switch to auto format during manual format!")
             elif not self.manual and not self.auto:
                 self.manual = True
+            elif not self.manual:
+                raise ValueError("Cannot switch to manual format during auto format!")
 
             if len(self.result) > 1:
                 self.literal_slots.append(self._empty.join(self.result))
