@@ -1293,6 +1293,38 @@ class TestReplaceTemplate(unittest.TestCase):
             )
 
         assert "Cannot switch to auto format during manual format!" in str(excinfo.value)
+        
+    def test_format_captures(self):
+        """Test format capture indexing."""
+
+        text = "abababab"
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'{1[0]}{1[-1]}{1[0]}', use_format=True
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'bbb',
+            results
+        )
+
+    def test_format_auto_captures(self):
+        """Test format auto capture indexing."""
+
+        text = "abababab"
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'{[-1]}{[0]}', use_format=True
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'ababababb',
+            results
+        )
 
 
 class TestConvenienceFunctions(unittest.TestCase):

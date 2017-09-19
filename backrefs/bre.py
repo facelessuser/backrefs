@@ -423,7 +423,7 @@ class ReplaceTemplate(object):
         try:
             index = text.index(self._ls_bracket)
             capture = int(text[index + 1:-1])
-            text = text[:0]
+            text = text[:index]
         except ValueError:
             pass
 
