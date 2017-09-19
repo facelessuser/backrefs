@@ -463,6 +463,7 @@ if REGEX_SUPPORT:
             self._esc_end = ctokens["esc_end"]
             self._end = ctokens["end"]
             self._lc = ctokens["lc"]
+            self._ls_bracket = ctokens["ls_bracket"]
             self._lc_bracket = ctokens["lc_bracket"]
             self._lc_span = ctokens["lc_span"]
             self._uc = ctokens["uc"]
@@ -632,6 +633,14 @@ if REGEX_SUPPORT:
         def handle_format_group(self, text):
             """Handle groups."""
 
+            capture = -1
+            try:
+                index = text.index(self._ls_bracket)
+                capture = int(text[index + 1:-1])
+                text = text[:0]
+            except ValueError:
+                pass
+
             # Handle auto or manual format
             if text == self._empty:
                 if self.auto:
@@ -664,7 +673,8 @@ if REGEX_SUPPORT:
                     self.slot,
                     (
                         self.span_stack[-1] if self.span_stack else None,
-                        single
+                        single,
+                        capture
                     )
                 )
             )
@@ -689,7 +699,8 @@ if REGEX_SUPPORT:
                     self.slot,
                     (
                         self.span_stack[-1] if self.span_stack else None,
-                        single
+                        single,
+                        -1
                     )
                 )
             )
@@ -710,10 +721,10 @@ if REGEX_SUPPORT:
                     break
             return g_index
 
-        def get_group_case(self, index):
+        def get_group_attributes(self, index):
             """Find and return the appropriate group case."""
 
-            g_case = (None, None)
+            g_case = (None, None, -1)
             for group in self.group_slots:
                 if group[0] == index:
                     g_case = group[1]
@@ -755,12 +766,12 @@ if REGEX_SUPPORT:
                 l = self.template.literals[x]
                 if l is None:
                     g_index = self.template.get_group_index(index)
-                    g_case = self.template.get_group_case(index)
-                    l = self.match.group(g_index)
-                    if g_case[0] is not None:
-                        l = getattr(l, g_case[0])()
-                    if g_case[1] is not None:
-                        l = getattr(l[0:1], g_case[1])() + l[1:]
+                    span_case, single_case, capture = self.template.get_group_attributes(index)
+                    l = self.match.captures(g_index)[capture]
+                    if span_case is not None:
+                        l = getattr(l, span_case)()
+                    if single_case is not None:
+                        l = getattr(l[0:1], single_case)() + l[1:]
                 self.text.append(l)
 
             return self.sep.join(self.text)
