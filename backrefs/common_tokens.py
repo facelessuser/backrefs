@@ -4,6 +4,7 @@ Common tokens shared between the different regex modules.
 Licensed under MIT
 Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
 """
+import re
 
 # Unicode string related references
 utokens = {
@@ -25,7 +26,16 @@ utokens = {
     "negate": '^',
     "verbose_flag": 'x',
     "unicode_flag": 'u',
-    "group": "g"
+    "group": "g",
+    "lc_bracket": "{",
+    "rc_bracket": "}",
+    "group_start": r"\g<",
+    "group_end": ">",
+    "replace_group_ref": re.compile(
+        r'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'
+    ),
+    "format_replace_ref": re.compile(r'(\\)|([cClLE])'),
+    "format_replace_group": re.compile(r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)?\})')
 }
 
 # Byte string related references
@@ -50,5 +60,14 @@ btokens = {
     "negate": b'^',
     "verbose_flag": b'x',
     "unicode_flag": b'u',
-    "group": b"g"
+    "group": b"g",
+    "lc_bracket": b"{",
+    "rc_bracket": b"}",
+    "group_start": br"\g<",
+    "group_end": b">",
+    "replace_group_ref": re.compile(
+        br'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'
+    ),
+    "format_replace_ref": re.compile(br'(\\)|([cClLE])'),
+    "format_replace_group": re.compile(br'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)?\})')
 }

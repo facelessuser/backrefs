@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Test critic lib."""
+"""Test bre lib."""
 from __future__ import unicode_literals
 import unittest
 from backrefs import bre
 import re
 import sys
+import pytest
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY3_FUTURE = (3, 6) <= sys.version_info < (4, 0)
@@ -1199,6 +1200,100 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
+    def test_numeric_format_groups(self):
+        """Test numeric format capture groups."""
+
+        text = "this is a test for numeric capture groups!"
+        text_pattern = r"(this )(.*?)(numeric capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', use_format=True)
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
+            results
+        )
+
+    def test_escaped_format_groups(self):
+        """Test escaping of format capture groups."""
+
+        text = "this is a test for format capture groups!"
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', use_format=True
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            '{0001}{IS A TEST FOR }Format capture GROUPS!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
+            results
+        )
+
+    def test_bad_left_format_bracket(self):
+        """Test bad left format bracket."""
+
+        text_pattern = r"(Bad )(format)!"
+        pattern = re.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, r'Bad format { test', use_format=True)
+
+        assert "Single '{'" in str(excinfo.value)
+
+    def test_bad_right_format_bracket(self):
+        """Test bad right format bracket."""
+
+        text_pattern = r"(Bad )(format)!"
+        pattern = re.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, r'Bad format } test', use_format=True)
+
+        assert "Single '}'" in str(excinfo.value)
+
+    def test_format_auto(self):
+        """Test auto format capture groups."""
+
+        text = "this is a test for format capture groups!"
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', use_format=True
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\ntHIS iS A TEST FOR Format capture GROUPS!{}',
+            results
+        )
+
+    def test_switch_from_format_auto(self):
+        """Test a switch from auto to manual format."""
+
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(
+                pattern, r'{}{}{manual}', use_format=True
+            )
+
+        assert "Cannot switch to manual format during auto format!" in str(excinfo.value)
+
+    def test_switch_from_format_manual(self):
+        """Test a switch from manual to auto format."""
+
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(
+                pattern, r'{manual}{}{}', use_format=True
+            )
+
+        assert "Cannot switch to auto format during manual format!" in str(excinfo.value)
+
 
 class TestConvenienceFunctions(unittest.TestCase):
     """Test convenience functions."""
@@ -1239,6 +1334,22 @@ class TestConvenienceFunctions(unittest.TestCase):
             ('This is a test for subn! This is a test for subn!', 2)
         )
 
+    def test_subf(self):
+        """Test that subf works."""
+
+        self.assertEqual(
+            bre.subf(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subf!'),
+            "This is a test for subf!"
+        )
+
+    def test_subfn(self):
+        """Test that subfn works."""
+
+        self.assertEqual(
+            bre.subfn(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
+            ('This is a test for subfn! This is a test for subfn!', 2)
+        )
+
     def test_findall(self):
         """Test that findall works."""
 
@@ -1262,5 +1373,14 @@ class TestConvenienceFunctions(unittest.TestCase):
         m = bre.match(r'(This is a test for )(m[\l]+!)', "This is a test for match!")
         self.assertEqual(
             bre.expand(m, r'\1\C\2\E'),
+            'This is a test for MATCH!'
+        )
+
+    def test_expandf(self):
+        """Test that expandf works."""
+
+        m = bre.match(r'(This is a test for )(match!)', "This is a test for match!")
+        self.assertEqual(
+            bre.expandf(m, r'{1}\C{2}\E'),
             'This is a test for MATCH!'
         )

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test critic lib."""
+"""Test bregex lib."""
 from __future__ import unicode_literals
 import unittest
 from backrefs import bregex
@@ -1100,7 +1100,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_subf(self):
-        """Test that sub works."""
+        """Test that subf works."""
 
         self.assertEqual(
             bregex.subf(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subf!'),
@@ -1108,7 +1108,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_subfn(self):
-        """Test that subn works."""
+        """Test that subfn works."""
 
         self.assertEqual(
             bregex.subfn(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
@@ -1142,7 +1142,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_expandf(self):
-        """Test that expand works."""
+        """Test that expandf works."""
 
         m = bregex.match(r'(This is a test for )(match!)', "This is a test for match!")
         self.assertEqual(

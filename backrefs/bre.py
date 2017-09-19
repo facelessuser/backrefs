@@ -110,7 +110,6 @@ utokens = {
     "re_search_ref": re.compile(r'(\\)|([lLcCEQ]|%(uni_prop)s)' % {"uni_prop": _UPROP}),
     "re_search_ref_verbose": re.compile(r'(\\)|([lLcCEQ#]|%(uni_prop)s)' % {"uni_prop": _UPROP}),
     "re_flags": re.compile(r'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else r'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
-    "re_replace_group_ref": re.compile(r'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'),
     "ascii_flag": "a"
 }
 
@@ -133,7 +132,6 @@ btokens = {
     "re_search_ref": re.compile(br'(\\)|([lLcCEQ])'),
     "re_search_ref_verbose": re.compile(br'(\\)|([lLcCEQ#])'),
     "re_flags": re.compile(br'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else br'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
-    "re_replace_group_ref": re.compile(br'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'),
     "ascii_flag": b"a"
 }
 
@@ -142,18 +140,23 @@ btokens = {
 class ReplaceTokens(compat.Tokens):
     """Preprocess replace tokens."""
 
-    def __init__(self, string):
+    def __init__(self, string, use_format=False):
         """Initialize."""
 
         if isinstance(string, compat.binary_type):
-            tokens = btokens
             ctokens = ctok.btokens
         else:
-            tokens = utokens
             ctokens = ctok.utokens
 
         self.string = string
-        self.re_replace_group_ref = tokens["re_replace_group_ref"]
+        self.use_format = use_format
+        if use_format:
+            self._replace_ref = ctokens["format_replace_ref"]
+        else:
+            self._replace_ref = ctokens["replace_group_ref"]
+        self._format_replace_group = ctokens["format_replace_group"]
+        self._lc_bracket = ctokens["lc_bracket"]
+        self._rc_bracket = ctokens["rc_bracket"]
         self._b_slash = ctokens["b_slash"]
         self.max_index = len(string) - 1
         self.index = 0
@@ -176,9 +179,18 @@ class ReplaceTokens(compat.Tokens):
 
         char = self.string[self.index:self.index + 1]
         if char == self._b_slash:
-            m = self.re_replace_group_ref.match(self.string[self.index + 1:])
+            m = self._replace_ref.match(self.string[self.index + 1:])
             if m:
                 char += m.group(1) if m.group(1) else m.group(2)
+        elif self.use_format and char in (self._lc_bracket, self._rc_bracket):
+            m = self._format_replace_group.match(self.string[self.index:])
+            if m:
+                if m.group(2):
+                    char = m.group(2)
+                else:
+                    self.index += 1
+            else:
+                raise ValueError("Single '%s'" % compat.ustr(char))
 
         self.index += len(char)
         self.current = char
@@ -244,7 +256,7 @@ class SearchTokens(compat.Tokens):
 class ReplaceTemplate(object):
     """Pre-replace template."""
 
-    def __init__(self, pattern, template):
+    def __init__(self, pattern, template, use_format=False):
         """Initialize."""
 
         if isinstance(template, compat.binary_type):
@@ -254,15 +266,20 @@ class ReplaceTemplate(object):
             self.binary = False
             ctokens = ctok.utokens
 
+        self.string_convert = compat.bstr if self.binary else compat.ustr
         self._original = template
+        self.use_format = use_format
         self._esc_end = ctokens["esc_end"]
         self._end = ctokens["end"]
         self._lc = ctokens["lc"]
+        self._lc_bracket = ctokens["lc_bracket"]
         self._lc_span = ctokens["lc_span"]
         self._uc = ctokens["uc"]
         self._uc_span = ctokens["uc_span"]
         self._group = ctokens["group"]
         self._empty = ctokens["empty"]
+        self._group_start = ctokens["group_start"]
+        self._group_end = ctokens["group_end"]
         self.end_found = False
         self.group_slots = []
         self.literal_slots = []
@@ -270,34 +287,40 @@ class ReplaceTemplate(object):
         self.span_stack = []
         self.single_stack = []
         self.slot = 0
+        self.manual = False
+        self.auto = False
+        self.auto_index = 0
 
         self.parse_template(pattern)
 
     def parse_template(self, pattern):
         """Parse template."""
 
-        i = ReplaceTokens(self._original)
+        i = ReplaceTokens(self._original, use_format=self.use_format)
         iter(i)
         self.result = [self._empty]
 
         for t in i:
             if len(t) > 1:
-                c = t[1:]
-                if c[0:1].isdigit() or c[0:1] == self._group:
-                    self.handle_group(t)
-                elif c == self._lc:
-                    self.single_case(i, _LOWER)
-                elif c == self._lc_span:
-                    self.span_case(i, _LOWER)
-                elif c == self._uc:
-                    self.single_case(i, _UPPER)
-                elif c == self._uc_span:
-                    self.span_case(i, _UPPER)
-                elif c == self._end:
-                    # This is here just as a reminder that \E is ignored
-                    pass
+                if self.use_format and t[0:1] == self._lc_bracket:
+                    self.handle_format_group(t[1:-1])
                 else:
-                    self.result.append(t)
+                    c = t[1:]
+                    if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                        self.handle_group(t)
+                    elif c == self._lc:
+                        self.single_case(i, _LOWER)
+                    elif c == self._lc_span:
+                        self.span_case(i, _LOWER)
+                    elif c == self._uc:
+                        self.single_case(i, _UPPER)
+                    elif c == self._uc_span:
+                        self.span_case(i, _UPPER)
+                    elif c == self._end:
+                        # This is here just as a reminder that \E is ignored
+                        pass
+                    else:
+                        self.result.append(t)
             else:
                 self.result.append(t)
 
@@ -319,20 +342,23 @@ class ReplaceTemplate(object):
             t = next(i)
             while t != self._esc_end:
                 if len(t) > 1:
-                    c = t[1:]
-                    if c[0:1].isdigit() or c[0:1] == self._group:
-                        self.handle_group(t)
-                    elif c == self._uc:
-                        self.single_case(i, _UPPER)
-                    elif c == self._lc:
-                        self.single_case(i, _LOWER)
-                    elif c == self._uc_span:
-                        self.span_case(i, _UPPER)
-                    elif c == self._lc_span:
-                        self.span_case(i, _LOWER)
+                    if self.use_format and t[0:1] == self._lc_bracket:
+                        self.handle_format_group(t[1:-1])
                     else:
-                        self.get_single_stack()
-                        self.result.append(t)
+                        c = t[1:]
+                        if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                            self.handle_group(t)
+                        elif c == self._uc:
+                            self.single_case(i, _UPPER)
+                        elif c == self._lc:
+                            self.single_case(i, _LOWER)
+                        elif c == self._uc_span:
+                            self.span_case(i, _UPPER)
+                        elif c == self._lc_span:
+                            self.span_case(i, _LOWER)
+                        else:
+                            self.get_single_stack()
+                            self.result.append(t)
                 elif self.single_stack:
                     single = self.get_single_stack()
                     text = getattr(t, attr)()
@@ -356,22 +382,25 @@ class ReplaceTemplate(object):
         try:
             t = next(i)
             if len(t) > 1:
-                c = t[1:]
-                if c[0:1].isdigit() or c[0:1] == self._group:
-                    self.handle_group(t)
-                elif c == self._uc:
-                    self.single_case(i, _UPPER)
-                elif c == self._lc:
-                    self.single_case(i, _LOWER)
-                elif c == self._uc_span:
-                    self.span_case(i, _UPPER)
-                elif c == self._lc_span:
-                    self.span_case(i, _LOWER)
-                elif c == self._end:
-                    self.end_found = True
+                if self.use_format and t[0:1] == self._lc_bracket:
+                    self.handle_format_group(t[1:-1])
                 else:
-                    self.get_single_stack()
-                    self.result.append(t)
+                    c = t[1:]
+                    if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                        self.handle_group(t)
+                    elif c == self._uc:
+                        self.single_case(i, _UPPER)
+                    elif c == self._lc:
+                        self.single_case(i, _LOWER)
+                    elif c == self._uc_span:
+                        self.span_case(i, _UPPER)
+                    elif c == self._lc_span:
+                        self.span_case(i, _LOWER)
+                    elif c == self._end:
+                        self.end_found = True
+                    else:
+                        self.get_single_stack()
+                        self.result.append(t)
             else:
                 self.result.append(getattr(t, self.get_single_stack())())
 
@@ -385,6 +414,47 @@ class ReplaceTemplate(object):
         while self.single_stack:
             single = self.single_stack.pop()
         return single
+
+    def handle_format_group(self, text):
+        """Handle groups."""
+
+        # Handle auto or manual format
+        if text == self._empty:
+            if self.auto:
+                text = self.string_convert(self.auto_index)
+                self.auto_index += 1
+            elif not self.manual and not self.auto:
+                self.auto = True
+                text = self.string_convert(self.auto_index)
+                self.auto_index += 1
+            else:
+                raise ValueError("Cannot switch to auto format during manual format!")
+        elif not self.manual and not self.auto:
+            self.manual = True
+        elif not self.manual:
+            raise ValueError("Cannot switch to manual format during auto format!")
+
+        if len(self.result) > 1:
+            self.literal_slots.append(self._empty.join(self.result))
+            self.literal_slots.extend([self._group_start, text, self._group_end])
+            del self.result[:]
+            self.result.append(self._empty)
+            self.slot += 1
+        else:
+            self.literal_slots.extend([self._group_start, text, self._group_end])
+
+        single = self.get_single_stack()
+
+        self.group_slots.append(
+            (
+                self.slot,
+                (
+                    self.span_stack[-1] if self.span_stack else None,
+                    single
+                )
+            )
+        )
+        self.slot += 1
 
     def handle_group(self, text):
         """Handle groups."""
@@ -789,7 +859,7 @@ class ReplaceTemplateExpander(object):
         return self.sep.join(self.text)
 
 
-def _apply_replace_backrefs(m, repl=None):
+def _apply_replace_backrefs(m, repl=None, use_format=False):
     """Expand with either the ReplaceTemplate or the user function, compile on the fly, or return None."""
 
     if repl is not None and m is not None:
@@ -798,7 +868,7 @@ def _apply_replace_backrefs(m, repl=None):
         elif isinstance(repl, ReplaceTemplate):
             return ReplaceTemplateExpander(m, repl).expand()
         elif isinstance(repl, (compat.string_type, compat.binary_type)):
-            return ReplaceTemplateExpander(m, ReplaceTemplate(m.re, repl)).expand()
+            return ReplaceTemplateExpander(m, ReplaceTemplate(m.re, repl, use_format)).expand()
 
 
 def _apply_search_backrefs(pattern, flags=0):
@@ -821,14 +891,14 @@ def compile_search(pattern, flags=0):
     return re.compile(_apply_search_backrefs(pattern, flags), flags)
 
 
-def compile_replace(pattern, repl):
+def compile_replace(pattern, repl, use_format=False):
     """Construct a method that can be used as a replace method for sub, subn, etc."""
 
     call = None
     if pattern is not None:
         if not hasattr(repl, '__call__') and isinstance(pattern, RE_TYPE):
-            repl = ReplaceTemplate(pattern, repl)
-        call = functools.partial(_apply_replace_backrefs, repl=repl)
+            repl = ReplaceTemplate(pattern, repl, use_format)
+        call = functools.partial(_apply_replace_backrefs, repl=repl, use_format=use_format)
     return call
 
 
@@ -838,6 +908,12 @@ def expand(m, repl):
     """Expand the string using the replace pattern or function."""
 
     return _apply_replace_backrefs(m, repl)
+
+
+def expandf(m, repl):
+    """Expand the string using the format replace pattern or function."""
+
+    return _apply_replace_backrefs(m, repl, use_format=True)
 
 
 def search(pattern, string, flags=0):
@@ -877,8 +953,21 @@ def sub(pattern, repl, string, count=0, flags=0):
     return re.sub(pattern, compile_replace(pattern, repl), string, count, flags)
 
 
+def subf(pattern, format, string, count=0, flags=0):  # noqa B002
+    """Sub with format style replace."""
+
+    pattern = compile_search(pattern, flags)
+    return re.sub(pattern, compile_replace(pattern, format, use_format=True), string, count, flags)
+
+
 def subn(pattern, repl, string, count=0, flags=0):
-    """Subn after applying backrefs."""
+    """Subn with format style replace."""
 
     pattern = compile_search(pattern, flags)
     return re.subn(pattern, compile_replace(pattern, repl), string, count, flags)
+
+def subfn(pattern, format, string, count=0, flags=0):  # noqa B002
+    """Subn after applying backrefs."""
+
+    pattern = compile_search(pattern, flags)
+    return re.subn(pattern, compile_replace(pattern, format, use_format=True), string, count, flags)

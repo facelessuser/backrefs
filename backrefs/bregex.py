@@ -83,39 +83,21 @@ if REGEX_SUPPORT:
     _LOWER = 1
 
     utokens = {
-        "lc_bracket": "{",
-        "rc_bracket": "}",
-        "group_start": r"\g<",
-        "group_end": ">",
         "regex_flags": re.compile(
             r'(?s)(\\.)|\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]|(.)'
         ),
         "regex_search_ref": re.compile(r'(\\)|([(EQ])'),
         "regex_search_ref_verbose": re.compile(r'(\\)|([(EQ#])'),
-        "regex_replace_group_ref": re.compile(
-            r'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'
-        ),
-        "regex_format_replace_ref": re.compile(r'(\\)|([cClLE{])'),
-        "regex_format_replace_group": re.compile(r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)?\})'),
         "v0": 'V0',
         "v1": 'V1'
     }
 
     btokens = {
-        "lc_bracket": b"{",
-        "rc_bracket": b"}",
-        "group_start": br"\g<",
-        "group_end": b">",
         "regex_flags": re.compile(
             br'(?s)(\\.)|\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]|(.)'
         ),
         "regex_search_ref": re.compile(br'(\\)|([EQ])'),
         "regex_search_ref_verbose": re.compile(br'(\\)|([EQ#])'),
-        "regex_replace_group_ref": re.compile(
-            br'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'
-        ),
-        "regex_format_replace_ref": re.compile(br'(\\)|([cClLE])'),
-        "regex_format_replace_group": re.compile(br'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)?\})'),
         "v0": b'V0',
         "v1": b'V1'
     }
@@ -176,20 +158,19 @@ if REGEX_SUPPORT:
             """Initialize."""
 
             if isinstance(string, compat.binary_type):
-                tokens = btokens
                 ctokens = ctok.btokens
             else:
-                tokens = utokens
                 ctokens = ctok.utokens
 
             self.string = string
+            self.use_format = use_format
             if use_format:
-                self._regex_replace_ref = tokens["regex_format_replace_ref"]
+                self._replace_ref = ctokens["format_replace_ref"]
             else:
-                self._regex_replace_ref = tokens["regex_replace_group_ref"]
-            self._regex_format_replace_group = tokens["regex_format_replace_group"]
-            self._lc_bracket = tokens["lc_bracket"]
-            self._rc_bracket = tokens["rc_bracket"]
+                self._replace_ref = ctokens["replace_group_ref"]
+            self._format_replace_group = ctokens["format_replace_group"]
+            self._lc_bracket = ctokens["lc_bracket"]
+            self._rc_bracket = ctokens["rc_bracket"]
             self._b_slash = ctokens["b_slash"]
             self.max_index = len(string) - 1
             self.index = 0
@@ -212,11 +193,11 @@ if REGEX_SUPPORT:
 
             char = self.string[self.index:self.index + 1]
             if char == self._b_slash:
-                m = self._regex_replace_ref.match(self.string[self.index + 1:])
+                m = self._replace_ref.match(self.string[self.index + 1:])
                 if m:
                     char += m.group(1) if m.group(1) else m.group(2)
-            elif char in (self._lc_bracket, self._rc_bracket):
-                m = self._regex_format_replace_group.match(self.string[self.index:])
+            elif self.use_format and char in (self._lc_bracket, self._rc_bracket):
+                m = self._format_replace_group.match(self.string[self.index:])
                 if m:
                     if m.group(2):
                         char = m.group(2)
@@ -472,11 +453,9 @@ if REGEX_SUPPORT:
             if isinstance(template, compat.binary_type):
                 self.binary = True
                 ctokens = ctok.btokens
-                tokens = btokens
             else:
                 self.binary = False
                 ctokens = ctok.utokens
-                tokens = utokens
 
             self.string_convert = compat.bstr if self.binary else compat.ustr
             self.use_format = use_format
@@ -484,14 +463,14 @@ if REGEX_SUPPORT:
             self._esc_end = ctokens["esc_end"]
             self._end = ctokens["end"]
             self._lc = ctokens["lc"]
-            self._lc_bracket = tokens["lc_bracket"]
+            self._lc_bracket = ctokens["lc_bracket"]
             self._lc_span = ctokens["lc_span"]
             self._uc = ctokens["uc"]
             self._uc_span = ctokens["uc_span"]
             self._group = ctokens["group"]
             self._empty = ctokens["empty"]
-            self._group_start = tokens["group_start"]
-            self._group_end = tokens["group_end"]
+            self._group_start = ctokens["group_start"]
+            self._group_end = ctokens["group_end"]
             self.end_found = False
             self.group_slots = []
             self.literal_slots = []
@@ -517,7 +496,6 @@ if REGEX_SUPPORT:
 
             groups = []
             literals = []
-            print(pattern, template)
             replacements = regex._compile_replacement_helper(pattern, template)
             count = 0
             for part in replacements:
@@ -527,7 +505,6 @@ if REGEX_SUPPORT:
                 else:
                     literals.append(part)
                 count += 1
-            print(groups, literals)
             return groups, literals
 
         def parse_template(self, pattern):
@@ -538,7 +515,6 @@ if REGEX_SUPPORT:
             self.result = [self._empty]
 
             for t in i:
-                print(t)
                 if len(t) > 1:
                     if self.use_format and t[0:1] == self._lc_bracket:
                         self.handle_format_group(t[1:-1])
