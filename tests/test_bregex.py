@@ -5,6 +5,7 @@ import unittest
 from backrefs import bregex
 import regex
 import sys
+import pytest
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 
@@ -935,6 +936,88 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual('Success!', result)
 
+    def test_numeric_groups(self):
+        """Test numeric capture groups."""
+
+        text = "this is a test for numeric capture groups!"
+        text_pattern = r"(this )(.*?)(numeric capture )(groups)(!)"
+        pattern = regex.compile(text_pattern)
+
+        expand = bregex.compile_replace(pattern, r'\l\C\g<0001>\l\g<02>\L\c\g<03>\E\g<004>\E\5\n\C\g<000>\E')
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
+            results
+        )
+
+    def test_numeric_format_groups(self):
+        """Test numeric format capture groups."""
+
+        text = "this is a test for numeric capture groups!"
+        text_pattern = r"(this )(.*?)(numeric capture )(groups)(!)"
+        pattern = regex.compile(text_pattern)
+
+        expand = bregex.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', use_format=True)
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
+            results
+        )
+
+    def test_escaped_format_groups(self):
+        """Test escaping of format capture groups."""
+
+        text = "this is a test for format capture groups!"
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = regex.compile(text_pattern)
+
+        expand = bregex.compile_replace(
+            pattern, r'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', use_format=True
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            '{0001}{IS A TEST FOR }Format capture GROUPS!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
+            results
+        )
+
+    def test_bad_left_format_bracket(self):
+        """Test bad left format bracket."""
+
+        text_pattern = r"(Bad )(format)!"
+        pattern = regex.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.compile_replace(pattern, r'Bad format { test', use_format=True)
+
+        assert "Single '{'" in str(excinfo.value)
+
+    def test_bad_right_format_bracket(self):
+        """Test bad right format bracket."""
+
+        text_pattern = r"(Bad )(format)!"
+        pattern = regex.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.compile_replace(pattern, r'Bad format } test', use_format=True)
+
+        assert "Single '}'" in str(excinfo.value)
+
+    def test_format_auto(self):
+        """Test auto format capture groups."""
+
+        text = "this is a test for format capture groups!"
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = regex.compile(text_pattern)
+
+        expand = bregex.compile_replace(
+            pattern, r'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', use_format=True
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\ntHIS iS A TEST FOR Format capture GROUPS!{}',
+            results
+        )
+
 
 class TestConvenienceFunctions(unittest.TestCase):
     """Test convenience functions."""
@@ -1029,5 +1112,14 @@ class TestConvenienceFunctions(unittest.TestCase):
         m = bregex.match(r'(This is a test for )(match!)', "This is a test for match!")
         self.assertEqual(
             bregex.expand(m, r'\1\C\2\E'),
+            'This is a test for MATCH!'
+        )
+
+    def test_expandf(self):
+        """Test that expand works."""
+
+        m = bregex.match(r'(This is a test for )(match!)', "This is a test for match!")
+        self.assertEqual(
+            bregex.expandf(m, r'{1}\C{2}\E'),
             'This is a test for MATCH!'
         )

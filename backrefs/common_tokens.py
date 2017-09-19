@@ -24,7 +24,8 @@ utokens = {
     "nl": '\n',
     "negate": '^',
     "verbose_flag": 'x',
-    "unicode_flag": 'u'
+    "unicode_flag": 'u',
+    "group": "g"
 }
 
 # Byte string related references
@@ -48,5 +49,6 @@ btokens = {
     "nl": b'\n',
     "negate": b'^',
     "verbose_flag": b'x',
-    "unicode_flag": b'u'
+    "unicode_flag": b'u',
+    "group": b"g"
 }

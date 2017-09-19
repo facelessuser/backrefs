@@ -111,8 +111,7 @@ utokens = {
     "re_search_ref_verbose": re.compile(r'(\\)|([lLcCEQ#]|%(uni_prop)s)' % {"uni_prop": _UPROP}),
     "re_flags": re.compile(r'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else r'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
     "re_replace_group_ref": re.compile(r'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'),
-    "ascii_flag": "a",
-    "group": "g"
+    "ascii_flag": "a"
 }
 
 # Byte string related references
@@ -135,8 +134,7 @@ btokens = {
     "re_search_ref_verbose": re.compile(br'(\\)|([lLcCEQ#])'),
     "re_flags": re.compile(br'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else br'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
     "re_replace_group_ref": re.compile(br'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'),
-    "ascii_flag": b"a",
-    "group": b"g"
+    "ascii_flag": b"a"
 }
 
 
@@ -252,11 +250,9 @@ class ReplaceTemplate(object):
         if isinstance(template, compat.binary_type):
             self.binary = True
             ctokens = ctok.btokens
-            tokens = btokens
         else:
             self.binary = False
             ctokens = ctok.utokens
-            tokens = utokens
 
         self._original = template
         self._esc_end = ctokens["esc_end"]
@@ -265,7 +261,7 @@ class ReplaceTemplate(object):
         self._lc_span = ctokens["lc_span"]
         self._uc = ctokens["uc"]
         self._uc_span = ctokens["uc_span"]
-        self._group = tokens["group"]
+        self._group = ctokens["group"]
         self._empty = ctokens["empty"]
         self.end_found = False
         self.group_slots = []
