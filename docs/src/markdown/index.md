@@ -13,7 +13,7 @@ from backrefs import bre
 from backrefs import bregex
 ```
 
-Backrefs provides a wrapper for all of Re's and Regex's normal functions such as `match`, `sub`, etc., but is recommended to pre-compile your search patterns **and** your replace patterns for the best performance; especially if you plan on reusing the same pattern multiple times.  As Re and Regex does cache a certain amount of the non-compiled calls you will be spared from some of the performance hit, but Backrefs does not cache the preprocessing of search and replace patterns.
+Backrefs provides a wrapper for all of Re's and Regex's normal functions such as `match`, `sub`, etc., but it is recommended to pre-compile your search patterns **and** your replace patterns for the best performance; especially if you plan on reusing the same pattern multiple times.  As Re and Regex does cache a certain amount of the non-compiled calls you will be spared from some of the performance hit, but Backrefs itself does no caching of the preprocessing of search and replace patterns.
 
 To use pre-compiled functions, you compile the search pattern with `compile_search`.  If you want to take advantage of replace Backrefs, you need to compile the replace pattern as well.  Notice the compiled pattern is fed into the replace pattern; you can feed the replace compiler the string representation of the search pattern as well, but the compiled pattern will be faster and is the recommended way.
 
