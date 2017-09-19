@@ -2,7 +2,7 @@
 
 ## 1.1.1
 
-- **FIX**: Fix bad regex for binary replace in `bre`.
+- **FIX**: Fix bad regular expression pattern for binary replace in `bre`.
 
 ## 1.1.0
 
