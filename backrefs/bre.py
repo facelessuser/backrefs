@@ -110,7 +110,7 @@ utokens = {
     "re_search_ref": re.compile(r'(\\)|([lLcCEQ]|%(uni_prop)s)' % {"uni_prop": _UPROP}),
     "re_search_ref_verbose": re.compile(r'(\\)|([lLcCEQ#]|%(uni_prop)s)' % {"uni_prop": _UPROP}),
     "re_flags": re.compile(r'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else r'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
-    "re_replace_group_ref": re.compile(r'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>)'),
+    "re_replace_group_ref": re.compile(r'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'),
     "ascii_flag": "a",
     "group": "g"
 }
@@ -134,7 +134,7 @@ btokens = {
     "re_search_ref": re.compile(br'(\\)|([lLcCEQ])'),
     "re_search_ref_verbose": re.compile(br'(\\)|([lLcCEQ#])'),
     "re_flags": re.compile(br'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else br'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
-    "re_replace_group_ref": re.compile(br'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>)'),
+    "re_replace_group_ref": re.compile(br'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'),
     "ascii_flag": b"a",
     "group": b"g"
 }
