@@ -107,46 +107,10 @@ utokens = {
     "inverse_uni_prop": "P",
     "ascii_lower": 'lower',
     "ascii_upper": 'upper',
-    "re_search_ref": re.compile(
-        r'''(?x)
-        (\\)+
-        (
-            [lLcCEQ] |
-            %(uni_prop)s
-        )? |
-        (
-            [lLcCEQ] |
-            %(uni_prop)s
-        )
-        ''' % {"uni_prop": _UPROP}
-    ),
-    "re_search_ref_verbose": re.compile(
-        r'''(?x)
-        (\\)+
-        (
-            [lLcCEQ#] |
-            %(uni_prop)s
-        )? |
-        (
-            [lLcCEQ#] |
-            %(uni_prop)s
-        )
-        ''' % {"uni_prop": _UPROP}
-    ),
-    "re_flags": re.compile(
-        r'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else r'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'
-    ),
-    "re_replace_group_ref": re.compile(
-        r'''(?x)
-        (\\)+
-        (
-            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>
-        )? |
-        (
-            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>
-        )
-        '''
-    ),
+    "re_search_ref": re.compile(r'(\\)|([lLcCEQ]|%(uni_prop)s)' % {"uni_prop": _UPROP}),
+    "re_search_ref_verbose": re.compile(r'(\\)|([lLcCEQ#]|%(uni_prop)s)' % {"uni_prop": _UPROP}),
+    "re_flags": re.compile(r'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else r'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
+    "re_replace_group_ref": re.compile(r'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>)'),
     "ascii_flag": "a",
     "group": "g"
 }
@@ -167,42 +131,10 @@ btokens = {
     "inverse_uni_prop": b"P",
     "ascii_lower": b"lower",
     "ascii_upper": b"upper",
-    "re_search_ref": re.compile(
-        br'''(?x)
-        (\\)+
-        (
-            [lLcCEQ]
-        )? |
-        (
-            [lLcCEQ]
-        )
-        '''
-    ),
-    "re_search_ref_verbose": re.compile(
-        br'''(?x)
-        (\\)+
-        (
-            [lLcCEQ#]
-        )? |
-        (
-            [lLcCEQ#]
-        )
-        '''
-    ),
-    "re_flags": re.compile(
-        br'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else br'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'
-    ),
-    "re_replace_group_ref": re.compile(
-        br'''(?x)
-        (\\)+
-        (
-            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9])>
-        )? |
-        (
-            [1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9])>
-        )
-        '''
-    ),
+    "re_search_ref": re.compile(br'(\\)|([lLcCEQ])'),
+    "re_search_ref_verbose": re.compile(br'(\\)|([lLcCEQ#])'),
+    "re_flags": re.compile(br'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else br'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
+    "re_replace_group_ref": re.compile(br'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|[1-9][0-9]?)>)'),
     "ascii_flag": b"a",
     "group": b"g"
 }
@@ -248,10 +180,7 @@ class ReplaceTokens(compat.Tokens):
         if char == self._b_slash:
             m = self.re_replace_group_ref.match(self.string[self.index + 1:])
             if m:
-                if m.group(1):
-                    char += self._b_slash
-                else:
-                    char += m.group(3)
+                char += m.group(1) if m.group(1) else m.group(2)
 
         self.index += len(char)
         self.current = char
@@ -302,10 +231,7 @@ class SearchTokens(compat.Tokens):
         if char == self._b_slash:
             m = self._re_search_ref.match(self.string[self.index + 1:])
             if m:
-                if m.group(1):
-                    char += self._b_slash
-                else:
-                    char += m.group(3)
+                char += m.group(1) if m.group(1) else m.group(2)
         elif char == self._ls_bracket:
             m = self._re_posix.match(self.string[self.index:])
             if m:

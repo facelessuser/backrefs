@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- **FIX**: Fix bad regular expression pattern for binary replace in `bre`.
+
 ## 1.1.0
 
 - **NEW**: Rework algorithm to handle replace casing back references in Python 3.7 development builds in preparation for Python 3.7 release.
