@@ -3,6 +3,7 @@
 ## 1.1.1
 
 - **FIX**: Fix bad regular expression pattern for binary replace in `bre`.
+- **FIX**: For `\g<digit>`, ensure you can use group `0` and also allow leading `0` on non-zero digits.
 
 ## 1.1.0
 

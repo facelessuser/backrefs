@@ -1184,6 +1184,21 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual('Success!', result)
 
+    def test_numeric_groups(self):
+        """Test numeric capture groups."""
+
+        text = "this is a test for numeric capture groups!"
+        text_pattern = r"(this )(.*?)(numeric capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        # This will pass because we do not need to resolve named groups.
+        expand = bre.compile_replace(text_pattern, r'\l\C\g<0001>\l\g<02>\L\c\g<03>\E\g<004>\E\5\n\C\g<000>\E')
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
+            results
+        )
+
 
 class TestConvenienceFunctions(unittest.TestCase):
     """Test convenience functions."""
