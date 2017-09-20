@@ -653,7 +653,7 @@ if REGEX_SUPPORT:
                         base = 8
                     elif char == self._hex:
                         base = 16
-            except ValueError as e:
+            except ValueError:
                 pass
 
             if not isinstance(capture, int):
