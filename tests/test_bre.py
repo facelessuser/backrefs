@@ -1207,7 +1207,7 @@ class TestReplaceTemplate(unittest.TestCase):
         text_pattern = r"(this )(.*?)(numeric capture )(groups)(!)"
         pattern = re.compile(text_pattern)
 
-        expand = bre.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', use_format=True)
+        expand = bre.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT)
         results = expand(pattern.match(text))
         self.assertEqual(
             'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
@@ -1222,7 +1222,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         expand = bre.compile_replace(
-            pattern, r'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', use_format=True
+            pattern, r'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -1237,7 +1237,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         with pytest.raises(ValueError) as excinfo:
-            bre.compile_replace(pattern, r'Bad format { test', use_format=True)
+            bre.compile_replace(pattern, r'Bad format { test', bre.FORMAT)
 
         assert "Single '{'" in str(excinfo.value)
 
@@ -1248,7 +1248,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         with pytest.raises(ValueError) as excinfo:
-            bre.compile_replace(pattern, r'Bad format } test', use_format=True)
+            bre.compile_replace(pattern, r'Bad format } test', bre.FORMAT)
 
         assert "Single '}'" in str(excinfo.value)
 
@@ -1260,7 +1260,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         expand = bre.compile_replace(
-            pattern, r'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', use_format=True
+            pattern, r'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', bre.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -1276,7 +1276,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         with pytest.raises(ValueError) as excinfo:
             bre.compile_replace(
-                pattern, r'{}{}{manual}', use_format=True
+                pattern, r'{}{}{manual}', bre.FORMAT
             )
 
         assert "Cannot switch to manual format during auto format!" in str(excinfo.value)
@@ -1289,7 +1289,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         with pytest.raises(ValueError) as excinfo:
             bre.compile_replace(
-                pattern, r'{manual}{}{}', use_format=True
+                pattern, r'{manual}{}{}', bre.FORMAT
             )
 
         assert "Cannot switch to auto format during manual format!" in str(excinfo.value)
@@ -1302,7 +1302,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         expand = bre.compile_replace(
-            pattern, r'{1[0]}{1[-1]}{1[0]}', use_format=True
+            pattern, r'{1[0]}{1[-1]}{1[0]}', bre.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -1318,7 +1318,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         expand = bre.compile_replace(
-            pattern, r'{[-1]}{[0]}', use_format=True
+            pattern, r'{[-1]}{[0]}', bre.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -1334,7 +1334,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         expand = bre.compile_replace(
-            pattern, r'{1[-0x1]}{1[-0o1]}{1[-0b1]}', use_format=True
+            pattern, r'{1[-0x1]}{1[-0o1]}{1[-0b1]}', bre.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -1350,7 +1350,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         with pytest.raises(ValueError) as excinfo:
             bre.compile_replace(
-                pattern, r'{1[0o3f]}', use_format=True
+                pattern, r'{1[0o3f]}', bre.FORMAT
             )
 
         assert "Capture index must be an integer!" in str(excinfo.value)
@@ -1361,7 +1361,7 @@ class TestReplaceTemplate(unittest.TestCase):
         text_pattern = r"(\w)+"
         pattern = re.compile(text_pattern)
         expand = bre.compile_replace(
-            pattern, r'{1[37]}', use_format=True
+            pattern, r'{1[37]}', bre.FORMAT
         )
 
         with pytest.raises(IndexError) as excinfo:

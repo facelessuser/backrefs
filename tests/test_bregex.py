@@ -957,7 +957,7 @@ class TestReplaceTemplate(unittest.TestCase):
         text_pattern = r"(this )(.*?)(numeric capture )(groups)(!)"
         pattern = regex.compile(text_pattern)
 
-        expand = bregex.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', use_format=True)
+        expand = bregex.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bregex.FORMAT)
         results = expand(pattern.match(text))
         self.assertEqual(
             'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
@@ -972,7 +972,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = regex.compile(text_pattern)
 
         expand = bregex.compile_replace(
-            pattern, r'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', use_format=True
+            pattern, r'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', bregex.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -987,7 +987,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = regex.compile(text_pattern)
 
         with pytest.raises(ValueError) as excinfo:
-            bregex.compile_replace(pattern, r'Bad format { test', use_format=True)
+            bregex.compile_replace(pattern, r'Bad format { test', bregex.FORMAT)
 
         assert "Single '{'" in str(excinfo.value)
 
@@ -998,7 +998,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = regex.compile(text_pattern)
 
         with pytest.raises(ValueError) as excinfo:
-            bregex.compile_replace(pattern, r'Bad format } test', use_format=True)
+            bregex.compile_replace(pattern, r'Bad format } test', bregex.FORMAT)
 
         assert "Single '}'" in str(excinfo.value)
 
@@ -1010,7 +1010,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = regex.compile(text_pattern)
 
         expand = bregex.compile_replace(
-            pattern, r'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', use_format=True
+            pattern, r'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', bregex.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -1026,7 +1026,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         with pytest.raises(ValueError) as excinfo:
             bregex.compile_replace(
-                pattern, r'{}{}{manual}', use_format=True
+                pattern, r'{}{}{manual}', bregex.FORMAT
             )
 
         assert "Cannot switch to manual format during auto format!" in str(excinfo.value)
@@ -1039,7 +1039,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         with pytest.raises(ValueError) as excinfo:
             bregex.compile_replace(
-                pattern, r'{manual}{}{}', use_format=True
+                pattern, r'{manual}{}{}', bregex.FORMAT
             )
 
         assert "Cannot switch to auto format during manual format!" in str(excinfo.value)
@@ -1052,7 +1052,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = regex.compile(text_pattern)
 
         expand = bregex.compile_replace(
-            pattern, r'{1[0]}{1[2]}{1[4]}', use_format=True
+            pattern, r'{1[0]}{1[2]}{1[4]}', bregex.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -1068,7 +1068,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = regex.compile(text_pattern)
 
         expand = bregex.compile_replace(
-            pattern, r'{[-1]}{[3]}', use_format=True
+            pattern, r'{[-1]}{[3]}', bregex.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -1084,7 +1084,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = regex.compile(text_pattern)
 
         expand = bregex.compile_replace(
-            pattern, r'{1[-0x1]}{1[0o3]}{1[0b101]}', use_format=True
+            pattern, r'{1[-0x1]}{1[0o3]}{1[0b101]}', bregex.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -1100,7 +1100,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         with pytest.raises(ValueError) as excinfo:
             bregex.compile_replace(
-                pattern, r'{1[0o3f]}', use_format=True
+                pattern, r'{1[0o3f]}', bregex.FORMAT
             )
 
         assert "Capture index must be an integer!" in str(excinfo.value)
@@ -1111,7 +1111,7 @@ class TestReplaceTemplate(unittest.TestCase):
         text_pattern = r"(\w)+"
         pattern = regex.compile(text_pattern)
         expand = bregex.compile_replace(
-            pattern, r'{1[37]}', use_format=True
+            pattern, r'{1[37]}', bregex.FORMAT
         )
 
         with pytest.raises(IndexError) as excinfo:

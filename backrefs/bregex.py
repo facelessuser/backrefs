@@ -78,6 +78,9 @@ if REGEX_SUPPORT:
     escape = regex.escape
     purge = regex.purge
 
+    # Replace flags
+    FORMAT = 1
+
     # Case upper or lower
     _UPPER = 0
     _LOWER = 1
@@ -800,7 +803,7 @@ if REGEX_SUPPORT:
 
             return self.sep.join(self.text)
 
-    def _apply_replace_backrefs(m, repl=None, use_format=False):
+    def _apply_replace_backrefs(m, repl=None, flags=0):
         """Expand with either the RegexReplaceTemplate or the user function, compile on the fly, or return None."""
 
         if repl is not None and m is not None:
@@ -809,7 +812,7 @@ if REGEX_SUPPORT:
             elif isinstance(repl, RegexReplaceTemplate):
                 return RegexReplaceTemplateExpander(m, repl).expand()
             elif isinstance(repl, (compat.string_type, compat.binary_type)):
-                return RegexReplaceTemplateExpander(m, RegexReplaceTemplate(m.re, repl, use_format)).expand()
+                return RegexReplaceTemplateExpander(m, RegexReplaceTemplate(m.re, repl, bool(flags & FORMAT))).expand()
 
     def _apply_search_backrefs(pattern, flags=0):
         """Apply the search backrefs to the search pattern."""
@@ -831,14 +834,14 @@ if REGEX_SUPPORT:
 
         return regex.compile(_apply_search_backrefs(pattern, flags), flags, **kwargs)
 
-    def compile_replace(pattern, repl, use_format=False):
+    def compile_replace(pattern, repl, flags=0):
         """Construct a method that can be used as a replace method for sub, subn, etc."""
 
         call = None
         if pattern is not None:
             if not hasattr(repl, '__call__') and isinstance(pattern, REGEX_TYPE):
-                repl = RegexReplaceTemplate(pattern, repl, use_format)
-            call = functools.partial(_apply_replace_backrefs, repl=repl, use_format=use_format)
+                repl = RegexReplaceTemplate(pattern, repl, bool(flags & FORMAT))
+            call = functools.partial(_apply_replace_backrefs, repl=repl, flags=flags)
         return call
 
     # Convenience methods like re has, but slower due to overhead on each call.
@@ -851,7 +854,7 @@ if REGEX_SUPPORT:
     def expandf(m, repl):
         """Expand the string using the format replace pattern or function."""
 
-        return _apply_replace_backrefs(m, repl, use_format=True)
+        return _apply_replace_backrefs(m, repl, flags=FORMAT)
 
     def match(pattern, string, flags=0, pos=None, endpos=None, partial=False, concurrent=None, **kwargs):
         """Wrapper for match."""
@@ -891,7 +894,7 @@ if REGEX_SUPPORT:
 
         pattern = compile_search(pattern, flags)
         return regex.sub(
-            pattern, compile_replace(pattern, format, use_format=True), string,
+            pattern, compile_replace(pattern, format, flags=FORMAT), string,
             count, flags, pos, endpos, concurrent, **kwargs
         )
 
@@ -909,7 +912,7 @@ if REGEX_SUPPORT:
 
         pattern = compile_search(pattern, flags)
         return regex.subn(
-            pattern, compile_replace(pattern, format, use_format=True), string,
+            pattern, compile_replace(pattern, format, flags=FORMAT), string,
             count, flags, pos, endpos, concurrent, **kwargs
         )
 
