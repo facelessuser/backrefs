@@ -1118,7 +1118,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         # Use text pattern directly.
-        expand = bre.compile_replace(text_pattern, r'\l\C\g<first>\l\g<second>\L\c\g<third>\E\g<fourth>\E\5')
+        expand = bre.compile_replace(pattern, r'\l\C\g<first>\l\g<second>\L\c\g<third>\E\g<fourth>\E\5')
         results = expand(pattern.match(text))
         self.assertEqual('tHIS iS A TEST FOR Named capture GROUPS!', results)
 
@@ -1130,7 +1130,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         # This will pass because we do not need to resolve named groups.
-        expand = bre.compile_replace(text_pattern, r'\l\C\g<1>\l\g<2>\L\c\g<3>\E\g<4>\E\5')
+        expand = bre.compile_replace(pattern, r'\l\C\g<1>\l\g<2>\L\c\g<3>\E\g<4>\E\5')
         results = expand(pattern.match(text))
         self.assertEqual('tHIS iS A TEST FOR Named capture GROUPS!', results)
 
@@ -1193,7 +1193,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         # This will pass because we do not need to resolve named groups.
-        expand = bre.compile_replace(text_pattern, r'\l\C\g<0001>\l\g<02>\L\c\g<03>\E\g<004>\E\5\n\C\g<000>\E')
+        expand = bre.compile_replace(pattern, r'\l\C\g<0001>\l\g<02>\L\c\g<03>\E\g<004>\E\5\n\C\g<000>\E')
         results = expand(pattern.match(text))
         self.assertEqual(
             'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
@@ -1368,6 +1368,16 @@ class TestReplaceTemplate(unittest.TestCase):
             expand(pattern.match('text'))
 
         assert "is out of range!" in str(excinfo.value)
+
+    def test_require_compiled_pattern(self):
+        """Test a bad capture."""
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(
+                r'\w+', r'\1'
+            )
+
+        assert "Pattern must be a compiled regular expression!" in str(excinfo.value)
 
 
 class TestConvenienceFunctions(unittest.TestCase):

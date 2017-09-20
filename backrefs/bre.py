@@ -931,10 +931,12 @@ def compile_replace(pattern, repl, flags=0):
     """Construct a method that can be used as a replace method for sub, subn, etc."""
 
     call = None
-    if pattern is not None:
-        if not hasattr(repl, '__call__') and isinstance(pattern, RE_TYPE):
+    if pattern is not None and isinstance(pattern, RE_TYPE):
+        if not hasattr(repl, '__call__'):
             repl = ReplaceTemplate(pattern, repl, bool(flags & FORMAT))
-        call = functools.partial(_apply_replace_backrefs, repl=repl, flags=flags)
+        call = functools.partial(_apply_replace_backrefs, repl=repl)
+    else:
+        raise ValueError("Pattern must be a compiled regular expression!")
     return call
 
 

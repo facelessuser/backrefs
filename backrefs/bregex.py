@@ -838,10 +838,12 @@ if REGEX_SUPPORT:
         """Construct a method that can be used as a replace method for sub, subn, etc."""
 
         call = None
-        if pattern is not None:
-            if not hasattr(repl, '__call__') and isinstance(pattern, REGEX_TYPE):
+        if pattern is not None and isinstance(pattern, REGEX_TYPE):
+            if not hasattr(repl, '__call__'):
                 repl = RegexReplaceTemplate(pattern, repl, bool(flags & FORMAT))
-            call = functools.partial(_apply_replace_backrefs, repl=repl, flags=flags)
+            call = functools.partial(_apply_replace_backrefs, repl=repl)
+        else:
+            raise ValueError("Pattern must be a compiled regular expression!")
         return call
 
     # Convenience methods like re has, but slower due to overhead on each call.
