@@ -1326,6 +1326,49 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
+    def test_format_capture_bases(self):
+        """Test capture bases."""
+
+        text = "abababab"
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'{1[-0x1]}{1[-0o1]}{1[-0b1]}', use_format=True
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'bbb',
+            results
+        )
+
+    def test_format_bad_capture(self):
+        """Test a bad capture."""
+
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(
+                pattern, r'{1[0o3f]}', use_format=True
+            )
+
+        assert "Capture index must be an integer!" in str(excinfo.value)
+
+    def test_format_bad_capture_range(self):
+        """Test a bad capture."""
+
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+        expand = bre.compile_replace(
+            pattern, r'{1[37]}', use_format=True
+        )
+
+        with pytest.raises(IndexError) as excinfo:
+            expand(pattern.match('text'))
+
+        assert "is out of range!" in str(excinfo.value)
+
 
 class TestConvenienceFunctions(unittest.TestCase):
     """Test convenience functions."""

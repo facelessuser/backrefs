@@ -55,6 +55,26 @@ if m:
     text = bre.expand(m, r'replace pattern')
 ```
 
+## Format Replacements
+
+The Regex module offers a feature where you can apply replacements via a format string style.
+
+```py
+>>> regex.subf(r"(\w+) (\w+)", "{0} => {2} {1}", "foo bar")
+'foo bar => bar foo'
+>>> regex.subf(r"(?P<word1>\w+) (?P<word2>\w+)", "{word2} {word1}", "foo bar")
+'bar foo'
+```
+
+You can even index into groups that have multiple captures.
+
+```py
+>>> regex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
+'foo bar => bar f'
+```
+
+This format replace style is supported in Backrefs for both Regex **and** Re. `subf` and `subfn` have been ported over. But when using this feature in Re, you cannot index into different captures if a group accumulated multiple captures for one group as Re only retains the last capture of a group. Technically Re will accept the indexes `0` and `-1` since these are valid for a list of one.
+
 ## Search Back References
 
 Added features available for search patterns. Features are broken up to show what is specifically added for Re and for Regex.

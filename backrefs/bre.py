@@ -281,6 +281,11 @@ class ReplaceTemplate(object):
         self._empty = ctokens["empty"]
         self._group_start = ctokens["group_start"]
         self._group_end = ctokens["group_end"]
+        self._binary = ctokens["binary"]
+        self._octal = ctokens["octal"]
+        self._hex = ctokens["hex"]
+        self._minus = ctokens["minus"]
+        self._zero = ctokens["zero"]
         self.end_found = False
         self.group_slots = []
         self.literal_slots = []
@@ -304,7 +309,7 @@ class ReplaceTemplate(object):
         for t in i:
             if len(t) > 1:
                 if self.use_format and t[0:1] == self._lc_bracket:
-                    self.handle_format_group(t[1:-1])
+                    self.handle_format_group(t[1:-1].strip())
                 else:
                     c = t[1:]
                     if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
@@ -344,7 +349,7 @@ class ReplaceTemplate(object):
             while t != self._esc_end:
                 if len(t) > 1:
                     if self.use_format and t[0:1] == self._lc_bracket:
-                        self.handle_format_group(t[1:-1])
+                        self.handle_format_group(t[1:-1].strip())
                     else:
                         c = t[1:]
                         if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
@@ -384,7 +389,7 @@ class ReplaceTemplate(object):
             t = next(i)
             if len(t) > 1:
                 if self.use_format and t[0:1] == self._lc_bracket:
-                    self.handle_format_group(t[1:-1])
+                    self.handle_format_group(t[1:-1].strip())
                 else:
                     c = t[1:]
                     if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
@@ -420,12 +425,28 @@ class ReplaceTemplate(object):
         """Handle groups."""
 
         capture = -1
+        base = 10
         try:
             index = text.index(self._ls_bracket)
-            capture = int(text[index + 1:-1])
+            capture = text[index + 1:-1]
             text = text[:index]
-        except ValueError:
+            prefix = capture[1:3] if capture[0:1] == self._minus else capture[:2]
+            if prefix[0:1] == self._zero:
+                char = prefix[-1:]
+                if char == self._binary:
+                    base = 2
+                elif char == self._octal:
+                    base = 8
+                elif char == self._hex:
+                    base = 16
+        except ValueError as e:
             pass
+
+        if not isinstance(capture, int):
+            try:
+                capture = int(capture, base)
+            except ValueError:
+                raise ValueError("Capture index must be an integer!")
 
         # Handle auto or manual format
         if text == self._empty:
@@ -860,7 +881,8 @@ class ReplaceTemplateExpander(object):
             if l is None:
                 g_index = self.template.get_group_index(index)
                 span_case, single_case, capture = self.template.get_group_attributes(index)
-                assert capture in (0, -1), "Index is out of range!"
+                if capture not in (0, -1):
+                    raise IndexError("'%d' is out of range!" % capture)
                 l = self.match.group(g_index)
                 if span_case is not None:
                     l = getattr(l, span_case)()

@@ -36,8 +36,13 @@ utokens = {
     ),
     "format_replace_ref": re.compile(r'(\\)|([cClLE])'),
     "format_replace_group": re.compile(
-        r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)?(?:\[-?\d+\])?\})'
-    )
+        r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})'
+    ),
+    "minus": "-",
+    "binary": "b",
+    "octal": "o",
+    "hex": "x",
+    "zero": "0"
 }
 
 # Byte string related references
@@ -72,6 +77,11 @@ btokens = {
     ),
     "format_replace_ref": re.compile(br'(\\)|([cClLE])'),
     "format_replace_group": re.compile(
-        br'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)?(?:\[-?\d+\])?\})'
-    )
+        br'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})'
+    ),
+    "minus": b"-",
+    "binary": b"b",
+    "octal": b"o",
+    "hex": b"x",
+    "zero": b"0"
 }
