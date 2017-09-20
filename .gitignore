@@ -68,3 +68,5 @@ site/*
 tools/unicodedata/*/*.txt
 backrefs/uniprops/unidata/*
 *-sdist/*
+
+.~c9*
