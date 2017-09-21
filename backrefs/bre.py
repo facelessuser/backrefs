@@ -298,6 +298,7 @@ class ReplaceTemplate(object):
         self.manual = False
         self.auto = False
         self.auto_index = 0
+        self.hash = hash(pattern.pattern)
 
         self.parse_template(pattern)
 
@@ -898,9 +899,10 @@ class ReplaceTemplateExpander(object):
 class _BreReplace(object):
     """Bre compiled object."""
 
-    def __init__(self, func, use_format, **kwargs):
+    def __init__(self, func, hash, use_format, **kwargs):
         """Initialize."""
 
+        self.hash = hash
         self.use_format = use_format
         self.func = functools.partial(func, **kwargs)
 
@@ -957,10 +959,12 @@ def compile_replace(pattern, repl, flags=0):
         use_format = bool(flags & FORMAT)
         if isinstance(repl, (compat.string_type, compat.binary_type)):
             repl = ReplaceTemplate(pattern, repl, use_format)
-            call = _BreReplace(_apply_replace_backrefs, use_format, repl=repl)
+            call = _BreReplace(_apply_replace_backrefs, repl.hash, use_format, repl=repl)
         elif isinstance(repl, _BreReplace):
             if flags:
                 raise ValueError("Cannot process flags argument with a compiled pattern!")
+            if repl.hash != hash(pattern.pattern):
+                raise ValueError("Pattern doesn't match pattern in compiled replace!")
             call = repl
         elif callable(repl):
             if flags:
