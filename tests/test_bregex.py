@@ -980,28 +980,6 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
-    def test_bad_left_format_bracket(self):
-        """Test bad left format bracket."""
-
-        text_pattern = r"(Bad )(format)!"
-        pattern = regex.compile(text_pattern)
-
-        with pytest.raises(ValueError) as excinfo:
-            bregex.compile_replace(pattern, r'Bad format { test', bregex.FORMAT)
-
-        assert "Single '{'" in str(excinfo.value)
-
-    def test_bad_right_format_bracket(self):
-        """Test bad right format bracket."""
-
-        text_pattern = r"(Bad )(format)!"
-        pattern = regex.compile(text_pattern)
-
-        with pytest.raises(ValueError) as excinfo:
-            bregex.compile_replace(pattern, r'Bad format } test', bregex.FORMAT)
-
-        assert "Single '}'" in str(excinfo.value)
-
     def test_format_auto(self):
         """Test auto format capture groups."""
 
@@ -1017,32 +995,6 @@ class TestReplaceTemplate(unittest.TestCase):
             'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\ntHIS iS A TEST FOR Format capture GROUPS!{}',
             results
         )
-
-    def test_switch_from_format_auto(self):
-        """Test a switch from auto to manual format."""
-
-        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
-        pattern = regex.compile(text_pattern)
-
-        with pytest.raises(ValueError) as excinfo:
-            bregex.compile_replace(
-                pattern, r'{}{}{manual}', bregex.FORMAT
-            )
-
-        assert "Cannot switch to manual format during auto format!" in str(excinfo.value)
-
-    def test_switch_from_format_manual(self):
-        """Test a switch from manual to auto format."""
-
-        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
-        pattern = regex.compile(text_pattern)
-
-        with pytest.raises(ValueError) as excinfo:
-            bregex.compile_replace(
-                pattern, r'{manual}{}{}', bregex.FORMAT
-            )
-
-        assert "Cannot switch to auto format during manual format!" in str(excinfo.value)
 
     def test_format_captures(self):
         """Test format capture indexing."""
@@ -1092,6 +1044,58 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
+
+class TestExceptions(unittest.TestCase):
+    """Test Exceptions."""
+
+    def test_bad_left_format_bracket(self):
+        """Test bad left format bracket."""
+
+        text_pattern = r"(Bad )(format)!"
+        pattern = regex.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.compile_replace(pattern, r'Bad format { test', bregex.FORMAT)
+
+        assert "Single '{'" in str(excinfo.value)
+
+    def test_bad_right_format_bracket(self):
+        """Test bad right format bracket."""
+
+        text_pattern = r"(Bad )(format)!"
+        pattern = regex.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.compile_replace(pattern, r'Bad format } test', bregex.FORMAT)
+
+        assert "Single '}'" in str(excinfo.value)
+
+    def test_switch_from_format_auto(self):
+        """Test a switch from auto to manual format."""
+
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = regex.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.compile_replace(
+                pattern, r'{}{}{manual}', bregex.FORMAT
+            )
+
+        assert "Cannot switch to manual format during auto format!" in str(excinfo.value)
+
+    def test_switch_from_format_manual(self):
+        """Test a switch from manual to auto format."""
+
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = regex.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.compile_replace(
+                pattern, r'{manual}{}{}', bregex.FORMAT
+            )
+
+        assert "Cannot switch to auto format during manual format!" in str(excinfo.value)
+
     def test_format_bad_capture(self):
         """Test a bad capture."""
 
@@ -1122,10 +1126,74 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_require_compiled_pattern(self):
         """Test a bad capture."""
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(TypeError) as excinfo:
             bregex.compile_replace(
                 r'\w+', r'\1'
             )
+
+        assert "Pattern must be a compiled regular expression!" in str(excinfo.value)
+
+    def test_none_match(self):
+        """Test None match."""
+
+        pattern = regex.compile("test")
+        expand = bregex.compile_replace(pattern, "replace")
+        m = pattern.match('wrong')
+
+        with pytest.raises(ValueError) as excinfo:
+            expand(m)
+
+        assert "Match is None!" in str(excinfo.value)
+
+    def test_search_flag_on_compiled(self):
+        """Test when a compile occurs on a compiled object with flags passed."""
+
+        pattern = bregex.compile_search("test")
+
+        with pytest.raises(ValueError) as excinfo:
+            pattern = bregex.compile_search(pattern, bregex.I)
+
+        assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
+
+    def test_bad_value_search(self):
+        """Test when the search value is bad."""
+
+        with pytest.raises(TypeError) as excinfo:
+            bregex.compile_search(None)
+
+        assert "Not a string or compiled pattern!" in str(excinfo.value)
+
+    def test_relace_flag_on_compiled(self):
+        """Test when a compile occurs on a compiled object with flags passsed."""
+
+        pattern = regex.compile('test')
+        replace = bregex.compile_replace(pattern, "whatever")
+
+        with pytest.raises(ValueError) as excinfo:
+            replace = bregex.compile_replace(pattern, replace, bregex.FORMAT)
+
+        assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
+
+    def test_relace_flag_on_function(self):
+        """Test when a compile occurs on a function with flags passsed."""
+
+        def func(m):
+            """Replace."""
+
+            return "whatever"
+
+        pattern = regex.compile('test')
+
+        with pytest.raises(ValueError) as excinfo:
+            pattern = bregex.compile_replace(pattern, func, bregex.FORMAT)
+
+        assert "Cannot process flags argument with a function!" in str(excinfo.value)
+
+    def test_bad_pattern_in_replace(self):
+        """Test when a bad pattern is passed into replace."""
+
+        with pytest.raises(TypeError) as excinfo:
+            bregex.compile_replace(None, "whatever", bregex.FORMAT)
 
         assert "Pattern must be a compiled regular expression!" in str(excinfo.value)
 

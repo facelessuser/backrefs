@@ -803,16 +803,34 @@ if REGEX_SUPPORT:
 
             return self.sep.join(self.text)
 
-    def _apply_replace_backrefs(m, repl=None, flags=0):
-        """Expand with either the RegexReplaceTemplate or the user function, compile on the fly, or return None."""
+    class _BregexReplace(object):
+        """Bregex compiled object."""
 
-        if repl is not None and m is not None:
-            if hasattr(repl, '__call__'):
-                return repl(m)
-            elif isinstance(repl, RegexReplaceTemplate):
+        def __init__(self, func, use_format, **kwargs):
+            """Initialize."""
+
+            self.use_format = use_format
+            self.func = functools.partial(func, **kwargs)
+
+        def __call__(self, *args, **kwargs):
+            """Call."""
+
+            return self.func(*args, **kwargs)
+
+    def _apply_replace_backrefs(m, repl=None, flags=0):
+        """Expand with either the RegexReplaceTemplate or compile on the fly, or return None."""
+
+        if repl is None:
+            raise ValueError("Replace is None!")
+        elif m is None:
+            raise ValueError("Match is None!")
+        else:
+            if isinstance(repl, RegexReplaceTemplate):
                 return RegexReplaceTemplateExpander(m, repl).expand()
             elif isinstance(repl, (compat.string_type, compat.binary_type)):
                 return RegexReplaceTemplateExpander(m, RegexReplaceTemplate(m.re, repl, bool(flags & FORMAT))).expand()
+            else:
+                raise ValueError("Not a string, function, or compiled replace!")
 
     def _apply_search_backrefs(pattern, flags=0):
         """Apply the search backrefs to the search pattern."""
@@ -826,7 +844,11 @@ if REGEX_SUPPORT:
             else:
                 re_version = 0
             pattern = RegexSearchTemplate(pattern, re_verbose, re_version).apply()
-
+        elif isinstance(pattern, REGEX_TYPE):
+            if flags:
+                raise ValueError("Cannot process flags argument with a compiled pattern!")
+        else:
+            raise TypeError("Not a string or compiled pattern!")
         return pattern
 
     def compile_search(pattern, flags=0, **kwargs):
@@ -839,11 +861,20 @@ if REGEX_SUPPORT:
 
         call = None
         if pattern is not None and isinstance(pattern, REGEX_TYPE):
-            if not hasattr(repl, '__call__'):
-                repl = RegexReplaceTemplate(pattern, repl, bool(flags & FORMAT))
-            call = functools.partial(_apply_replace_backrefs, repl=repl)
+            use_format = bool(flags & FORMAT)
+            if isinstance(repl, (compat.string_type, compat.binary_type)):
+                repl = RegexReplaceTemplate(pattern, repl, use_format)
+                call = _BregexReplace(_apply_replace_backrefs, use_format, repl=repl)
+            elif isinstance(repl, _BregexReplace):
+                if flags:
+                    raise ValueError("Cannot process flags argument with a compiled pattern!")
+                call = repl
+            elif callable(repl):
+                if flags:
+                    raise ValueError("Cannot process flags argument with a function!")
+                call = repl
         else:
-            raise ValueError("Pattern must be a compiled regular expression!")
+            raise TypeError("Pattern must be a compiled regular expression!")
         return call
 
     # Convenience methods like re has, but slower due to overhead on each call.
@@ -851,12 +882,22 @@ if REGEX_SUPPORT:
     def expand(m, repl):
         """Expand the string using the replace pattern or function."""
 
+        if isinstance(repl, (_BregexReplace, RegexReplaceTemplate)):
+            if repl.use_format:
+                raise ValueError("Replace should not be compiled as a format replace!")
+        elif not isinstance(repl, (compat.string_type, compat.binary_type)):
+            raise TypeError("Expected string, buffer, or compiled replace!")
         return _apply_replace_backrefs(m, repl)
 
-    def expandf(m, repl):
+    def expandf(m, format):  # noqa B002
         """Expand the string using the format replace pattern or function."""
 
-        return _apply_replace_backrefs(m, repl, flags=FORMAT)
+        if isinstance(format, (_BregexReplace, RegexReplaceTemplate)):
+            if not format.use_format:
+                raise ValueError("Replace not compiled as a format replace")
+        elif not isinstance(format, (compat.string_type, compat.binary_type)):
+            raise TypeError("Expected string, buffer, or compiled replace!")
+        return _apply_replace_backrefs(m, format, flags=FORMAT)
 
     def match(pattern, string, flags=0, pos=None, endpos=None, partial=False, concurrent=None, **kwargs):
         """Wrapper for match."""
@@ -885,6 +926,9 @@ if REGEX_SUPPORT:
     def sub(pattern, repl, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):
         """Wrapper for sub."""
 
+        if isinstance(repl, _BregexReplace) and repl.use_format:
+            raise ValueError("Compiled replace is cannot be a format object!")
+
         pattern = compile_search(pattern, flags)
         return regex.sub(
             pattern, compile_replace(pattern, repl), string,
@@ -894,14 +938,21 @@ if REGEX_SUPPORT:
     def subf(pattern, format, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):  # noqa B002
         """Wrapper for subf."""
 
+        if isinstance(format, _BregexReplace) and not format.use_format:
+            raise ValueError("Compiled replace is not a format object!")
+
         pattern = compile_search(pattern, flags)
+        rflags = FORMAT if isinstance(format, (compat.string_type, compat.binary_type)) else 0
         return regex.sub(
-            pattern, compile_replace(pattern, format, flags=FORMAT), string,
+            pattern, compile_replace(pattern, format, flags=rflags), string,
             count, flags, pos, endpos, concurrent, **kwargs
         )
 
     def subn(pattern, repl, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):
         """Wrapper for subn."""
+
+        if isinstance(repl, _BregexReplace) and repl.use_format:
+            raise ValueError("Compiled replace is cannot be a format object!")
 
         pattern = compile_search(pattern, flags)
         return regex.subn(
@@ -912,9 +963,13 @@ if REGEX_SUPPORT:
     def subfn(pattern, format, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):  # noqa B002
         """Wrapper for subfn."""
 
+        if isinstance(format, _BregexReplace) and not format.use_format:
+            raise ValueError("Compiled replace is not a format object!")
+
         pattern = compile_search(pattern, flags)
+        rflags = FORMAT if isinstance(format, (compat.string_type, compat.binary_type)) else 0
         return regex.subn(
-            pattern, compile_replace(pattern, format, flags=FORMAT), string,
+            pattern, compile_replace(pattern, format, flags=rflags), string,
             count, flags, pos, endpos, concurrent, **kwargs
         )
 

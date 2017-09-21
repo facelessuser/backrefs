@@ -895,13 +895,30 @@ class ReplaceTemplateExpander(object):
         return self.sep.join(self.text)
 
 
-def _apply_replace_backrefs(m, repl=None, flags=0):
-    """Expand with either the ReplaceTemplate or the user function, compile on the fly, or return None."""
+class _BreReplace(object):
+    """Bre compiled object."""
 
-    if repl is not None and m is not None:
-        if hasattr(repl, '__call__'):
-            return repl(m)
-        elif isinstance(repl, ReplaceTemplate):
+    def __init__(self, func, use_format, **kwargs):
+        """Initialize."""
+
+        self.use_format = use_format
+        self.func = functools.partial(func, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        """Call."""
+
+        return self.func(*args, **kwargs)
+
+
+def _apply_replace_backrefs(m, repl=None, flags=0):
+    """Expand with either the ReplaceTemplate or compile on the fly, or return None."""
+
+    if repl is None:
+        raise ValueError("Replace is None!")
+    elif m is None:
+        raise ValueError("Match is None!")
+    else:
+        if isinstance(repl, ReplaceTemplate):
             return ReplaceTemplateExpander(m, repl).expand()
         elif isinstance(repl, (compat.string_type, compat.binary_type)):
             return ReplaceTemplateExpander(m, ReplaceTemplate(m.re, repl, bool(flags & FORMAT))).expand()
@@ -918,6 +935,11 @@ def _apply_search_backrefs(pattern, flags=0):
         elif bool(UNICODE & flags):
             re_unicode = True
         pattern = SearchTemplate(pattern, re_verbose, re_unicode).apply()
+    elif isinstance(pattern, RE_TYPE):
+        if flags:
+            raise ValueError("Cannot process flags argument with a compiled pattern!")
+    else:
+        raise TypeError("Not a string or compiled pattern!")
     return pattern
 
 
@@ -932,11 +954,20 @@ def compile_replace(pattern, repl, flags=0):
 
     call = None
     if pattern is not None and isinstance(pattern, RE_TYPE):
-        if not hasattr(repl, '__call__'):
-            repl = ReplaceTemplate(pattern, repl, bool(flags & FORMAT))
-        call = functools.partial(_apply_replace_backrefs, repl=repl)
+        use_format = bool(flags & FORMAT)
+        if isinstance(repl, (compat.string_type, compat.binary_type)):
+            repl = ReplaceTemplate(pattern, repl, use_format)
+            call = _BreReplace(_apply_replace_backrefs, use_format, repl=repl)
+        elif isinstance(repl, _BreReplace):
+            if flags:
+                raise ValueError("Cannot process flags argument with a compiled pattern!")
+            call = repl
+        elif callable(repl):
+            if flags:
+                raise ValueError("Cannot process flags argument with a function!")
+            call = repl
     else:
-        raise ValueError("Pattern must be a compiled regular expression!")
+        raise TypeError("Pattern must be a compiled regular expression!")
     return call
 
 
@@ -945,13 +976,23 @@ def compile_replace(pattern, repl, flags=0):
 def expand(m, repl):
     """Expand the string using the replace pattern or function."""
 
+    if isinstance(repl, (_BreReplace, ReplaceTemplate)):
+        if repl.use_format:
+            raise ValueError("Replace should not be compiled as a format replace!")
+    elif not isinstance(repl, (compat.string_type, compat.binary_type)):
+        raise TypeError("Expected string, buffer, or compiled replace!")
     return _apply_replace_backrefs(m, repl)
 
 
-def expandf(m, repl):
+def expandf(m, format):  # noqa B002
     """Expand the string using the format replace pattern or function."""
 
-    return _apply_replace_backrefs(m, repl, flags=FORMAT)
+    if isinstance(format, (_BreReplace, ReplaceTemplate)):
+        if not format.use_format:
+            raise ValueError("Replace not compiled as a format replace")
+    elif not isinstance(format, (compat.string_type, compat.binary_type)):
+        raise TypeError("Expected string, buffer, or compiled replace!")
+    return _apply_replace_backrefs(m, format, flags=FORMAT)
 
 
 def search(pattern, string, flags=0):
@@ -987,6 +1028,9 @@ def finditer(pattern, string, flags=0):
 def sub(pattern, repl, string, count=0, flags=0):
     """Sub after applying backrefs."""
 
+    if isinstance(repl, _BreReplace) and repl.use_format:
+        raise ValueError("Compiled replace is cannot be a format object!")
+
     pattern = compile_search(pattern, flags)
     return re.sub(pattern, compile_replace(pattern, repl), string, count, flags)
 
@@ -994,12 +1038,19 @@ def sub(pattern, repl, string, count=0, flags=0):
 def subf(pattern, format, string, count=0, flags=0):  # noqa B002
     """Sub with format style replace."""
 
+    if isinstance(format, _BreReplace) and not format.use_format:
+        raise ValueError("Compiled replace is not a format object!")
+
     pattern = compile_search(pattern, flags)
-    return re.sub(pattern, compile_replace(pattern, format, flags=FORMAT), string, count, flags)
+    rflags = FORMAT if isinstance(format, (compat.string_type, compat.binary_type)) else 0
+    return re.sub(pattern, compile_replace(pattern, format, flags=rflags), string, count, flags)
 
 
 def subn(pattern, repl, string, count=0, flags=0):
     """Subn with format style replace."""
+
+    if isinstance(repl, _BreReplace) and repl.use_format:
+        raise ValueError("Compiled replace is cannot be a format object!")
 
     pattern = compile_search(pattern, flags)
     return re.subn(pattern, compile_replace(pattern, repl), string, count, flags)
@@ -1007,5 +1058,9 @@ def subn(pattern, repl, string, count=0, flags=0):
 def subfn(pattern, format, string, count=0, flags=0):  # noqa B002
     """Subn after applying backrefs."""
 
+    if isinstance(format, _BreReplace) and not format.use_format:
+        raise ValueError("Compiled replace is not a format object!")
+
     pattern = compile_search(pattern, flags)
-    return re.subn(pattern, compile_replace(pattern, format, flags=FORMAT), string, count, flags)
+    rflags = FORMAT if isinstance(format, (compat.string_type, compat.binary_type)) else 0
+    return re.subn(pattern, compile_replace(pattern, format, flags=rflags), string, count, flags)
