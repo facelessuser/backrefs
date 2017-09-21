@@ -1185,7 +1185,7 @@ class TestExceptions(unittest.TestCase):
         pattern = regex.compile('test')
 
         with pytest.raises(ValueError) as excinfo:
-            pattern = bregex.compile_replace(pattern, func, bregex.FORMAT)
+            bregex.compile_replace(pattern, func, bregex.FORMAT)
 
         assert "Cannot process flags argument with a function!" in str(excinfo.value)
 
@@ -1196,6 +1196,84 @@ class TestExceptions(unittest.TestCase):
             bregex.compile_replace(None, "whatever", bregex.FORMAT)
 
         assert "Pattern must be a compiled regular expression!" in str(excinfo.value)
+
+    def test_bad_hash(self):
+        """Test when pattern hashes don't match."""
+
+        pattern = regex.compile('test')
+        replace = bregex.compile_replace(pattern, 'whatever')
+        pattern2 = regex.compile('test', regex.I)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.compile_replace(pattern2, replace)
+
+        assert "Pattern hash doesn't match hash in compiled replace!" in str(excinfo.value)
+
+    def test_sub_wrong_replace_type(self):
+        """Test sending wrong type into sub, subn."""
+
+        pattern = regex.compile('test')
+        replace = bregex.compile_replace(pattern, 'whatever', bregex.FORMAT)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.sub(pattern, replace, 'test')
+
+        assert "Compiled replace is cannot be a format object!" in str(excinfo.value)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.subn(pattern, replace, 'test')
+
+        assert "Compiled replace is cannot be a format object!" in str(excinfo.value)
+
+    def test_sub_wrong_replace_format_type(self):
+        """Test sending wrong format type into sub, subn."""
+
+        pattern = regex.compile('test')
+        replace = bregex.compile_replace(pattern, 'whatever')
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.subf(pattern, replace, 'test')
+
+        assert "Compiled replace is not a format object!" in str(excinfo.value)
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.subfn(pattern, replace, 'test')
+
+        assert "Compiled replace is not a format object!" in str(excinfo.value)
+
+    def test_expand_wrong_values(self):
+        """Test expand with wrong values."""
+
+        pattern = regex.compile('test')
+        replace = bregex.compile_replace(pattern, 'whatever', bregex.FORMAT)
+        m = pattern.match('test')
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.expand(m, replace)
+
+        assert "Replace should not be compiled as a format replace!" in str(excinfo.value)
+
+        with pytest.raises(TypeError) as excinfo:
+            bregex.expand(m, 0)
+
+        assert "Expected string, buffer, or compiled replace!" in str(excinfo.value)
+
+    def test_expandf_wrong_values(self):
+        """Test expand with wrong values."""
+
+        pattern = regex.compile('test')
+        replace = bregex.compile_replace(pattern, 'whatever')
+        m = pattern.match('test')
+
+        with pytest.raises(ValueError) as excinfo:
+            bregex.expandf(m, replace)
+
+        assert "Replace not compiled as a format replace" in str(excinfo.value)
+
+        with pytest.raises(TypeError) as excinfo:
+            bregex.expandf(m, 0)
+
+        assert "Expected string, buffer, or compiled replace!" in str(excinfo.value)
 
 
 class TestConvenienceFunctions(unittest.TestCase):
@@ -1241,6 +1319,17 @@ class TestConvenienceFunctions(unittest.TestCase):
 
         self.assertEqual(
             bregex.sub(r'tset', 'test', r'This is a tset for sub!'),
+            "This is a test for sub!"
+        )
+
+    def test_compiled_sub(self):
+        """Test that compiled search and replace works."""
+
+        pattern = bregex.compile_search(r'tset')
+        replace = bregex.compile_replace(pattern, 'test')
+
+        self.assertEqual(
+            bregex.sub(pattern, replace, 'This is a tset for sub!'),
             "This is a test for sub!"
         )
 

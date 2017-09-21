@@ -490,7 +490,7 @@ if REGEX_SUPPORT:
             self.manual = False
             self.auto = False
             self.auto_index = 0
-            self.hash = hash(pattern.pattern)
+            self.pattern_hash = hash(pattern)
 
             self.parse_template(pattern)
 
@@ -807,12 +807,12 @@ if REGEX_SUPPORT:
     class _BregexReplace(object):
         """Bregex compiled object."""
 
-        def __init__(self, func, hash, use_format, **kwargs):  # noqa B002
+        def __init__(self, func, use_format, repl):
             """Initialize."""
 
-            self.hash = hash
+            self.pattern_hash = repl.pattern_hash
             self.use_format = use_format
-            self.func = functools.partial(func, **kwargs)
+            self.func = functools.partial(func, repl=repl)
 
         def __call__(self, *args, **kwargs):
             """Call."""
@@ -822,17 +822,13 @@ if REGEX_SUPPORT:
     def _apply_replace_backrefs(m, repl=None, flags=0):
         """Expand with either the RegexReplaceTemplate or compile on the fly, or return None."""
 
-        if repl is None:
-            raise ValueError("Replace is None!")
-        elif m is None:
+        if m is None:
             raise ValueError("Match is None!")
         else:
             if isinstance(repl, RegexReplaceTemplate):
                 return RegexReplaceTemplateExpander(m, repl).expand()
             elif isinstance(repl, (compat.string_type, compat.binary_type)):
                 return RegexReplaceTemplateExpander(m, RegexReplaceTemplate(m.re, repl, bool(flags & FORMAT))).expand()
-            else:
-                raise ValueError("Not a string, function, or compiled replace!")
 
     def _apply_search_backrefs(pattern, flags=0):
         """Apply the search backrefs to the search pattern."""
@@ -866,12 +862,12 @@ if REGEX_SUPPORT:
             use_format = bool(flags & FORMAT)
             if isinstance(repl, (compat.string_type, compat.binary_type)):
                 repl = RegexReplaceTemplate(pattern, repl, use_format)
-                call = _BregexReplace(_apply_replace_backrefs, repl.hash, use_format, repl=repl)
+                call = _BregexReplace(_apply_replace_backrefs, use_format, repl)
             elif isinstance(repl, _BregexReplace):
                 if flags:
                     raise ValueError("Cannot process flags argument with a compiled pattern!")
-                if repl.hash != hash(pattern.pattern):
-                    raise ValueError("Pattern doesn't match pattern in compiled replace!")
+                if repl.pattern_hash != hash(pattern):
+                    raise ValueError("Pattern hash doesn't match hash in compiled replace!")
                 call = repl
             elif callable(repl):
                 if flags:

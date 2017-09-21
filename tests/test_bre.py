@@ -1435,7 +1435,7 @@ class TestExceptions(unittest.TestCase):
         pattern = re.compile('test')
 
         with pytest.raises(ValueError) as excinfo:
-            pattern = bre.compile_replace(pattern, func, bre.FORMAT)
+            bre.compile_replace(pattern, func, bre.FORMAT)
 
         assert "Cannot process flags argument with a function!" in str(excinfo.value)
 
@@ -1446,6 +1446,84 @@ class TestExceptions(unittest.TestCase):
             bre.compile_replace(None, "whatever", bre.FORMAT)
 
         assert "Pattern must be a compiled regular expression!" in str(excinfo.value)
+
+    def test_bad_hash(self):
+        """Test when pattern hashes don't match."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, 'whatever')
+        pattern2 = re.compile('test', re.I)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern2, replace)
+
+        assert "Pattern hash doesn't match hash in compiled replace!" in str(excinfo.value)
+
+    def test_sub_wrong_replace_type(self):
+        """Test sending wrong type into sub, subn."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, 'whatever', bre.FORMAT)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.sub(pattern, replace, 'test')
+
+        assert "Compiled replace is cannot be a format object!" in str(excinfo.value)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.subn(pattern, replace, 'test')
+
+        assert "Compiled replace is cannot be a format object!" in str(excinfo.value)
+
+    def test_sub_wrong_replace_format_type(self):
+        """Test sending wrong format type into sub, subn."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, 'whatever')
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.subf(pattern, replace, 'test')
+
+        assert "Compiled replace is not a format object!" in str(excinfo.value)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.subfn(pattern, replace, 'test')
+
+        assert "Compiled replace is not a format object!" in str(excinfo.value)
+
+    def test_expand_wrong_values(self):
+        """Test expand with wrong values."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, 'whatever', bre.FORMAT)
+        m = pattern.match('test')
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.expand(m, replace)
+
+        assert "Replace should not be compiled as a format replace!" in str(excinfo.value)
+
+        with pytest.raises(TypeError) as excinfo:
+            bre.expand(m, 0)
+
+        assert "Expected string, buffer, or compiled replace!" in str(excinfo.value)
+
+    def test_expandf_wrong_values(self):
+        """Test expand with wrong values."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, 'whatever')
+        m = pattern.match('test')
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.expandf(m, replace)
+
+        assert "Replace not compiled as a format replace" in str(excinfo.value)
+
+        with pytest.raises(TypeError) as excinfo:
+            bre.expandf(m, 0)
+
+        assert "Expected string, buffer, or compiled replace!" in str(excinfo.value)
 
 
 class TestConvenienceFunctions(unittest.TestCase):
