@@ -73,7 +73,46 @@ You can even index into groups that have multiple captures.
 'foo bar => bar f'
 ```
 
-This format replace style is supported in Backrefs for both Regex **and** Re. `subf` and `subfn` have been ported over. But when using this feature in Re, you cannot index into different captures if a group accumulated multiple captures for one group as Re only retains the last capture of a group. Technically Re will accept the indexes `0` and `-1` since these are valid for a list of one.
+Even though this is a Regex specific feature, this replace format is supported by Backrefs for both Regex *and* Re, though indexing into different captures in Re is limited to `0` or `-1` since Re only maintains the last capture.
+
+The feature is supported by providing a wrapper for `subf` and `subfn` and also a convenience method `expandf` which is used just like `expand` as shown in [Using Backrefs](#using-backrefs).
+
+Example:
+
+Simple replace with `expandf`
+
+```py
+    def test_format_captures(self):
+        """Test format capture indexing."""
+
+        pattern = bregex.compile_search(r"(\w)+")
+        result = bregex.expandf(
+            pattern.match("abababab"),
+            r'{1[0]}{1[2]}{1[4]}'
+        )
+
+        self.assertEqual('aaa', result)
+```
+
+Compiling a replace with `FORMAT` flag.
+
+```py
+    def test_format_captures2(self):
+        """Test format capture indexing."""
+
+        pattern = bregex.compile_search(r"(\w)+")
+        expandf = bregex.compile_replace(
+            pattern,
+            r'{1[0]}{1[2]}{1[4]}',
+            bregex.FORMAT
+        )
+        result = expandf(pattern.match("abababab"))
+
+        self.assertEqual('aaa', result)
+```
+
+Using `subf`.
+
 
 ## Search Back References
 
