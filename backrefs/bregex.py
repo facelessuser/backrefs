@@ -29,9 +29,10 @@ Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import unicode_literals
 import re
+import functools
+from collections import namedtuple
 from . import compat
 from . import common_tokens as ctok
-import functools
 try:
     import regex
     REGEX_SUPPORT = True
@@ -154,7 +155,7 @@ if REGEX_SUPPORT:
             return self.current
 
     # Break apart template patterns into char tokens
-    class RegexReplaceTokens(compat.Tokens):
+    class ReplaceTokens(compat.Tokens):
         """Preprocess replace tokens."""
 
         def __init__(self, string, use_format=False):
@@ -447,7 +448,7 @@ if REGEX_SUPPORT:
 
             return self._empty.join(self.extended)
 
-    class RegexReplaceTemplate(object):
+    class ReplaceTemplate(object):
         """Pre-replace template."""
 
         def __init__(self, pattern, template, use_format=False):
@@ -520,7 +521,7 @@ if REGEX_SUPPORT:
         def parse_template(self, pattern):
             """Parse template."""
 
-            i = RegexReplaceTokens(self._original, use_format=self.use_format)
+            i = ReplaceTokens(self._original, use_format=self.use_format)
             iter(i)
             self.result = [self._empty]
 
@@ -757,7 +758,7 @@ if REGEX_SUPPORT:
             return g_case
 
     # Template expander
-    class RegexReplaceTemplateExpander(object):
+    class ReplaceTemplateExpander(object):
         """Backrefereces."""
 
         def __init__(self, match, template):
@@ -783,8 +784,8 @@ if REGEX_SUPPORT:
         def expand(self):
             """Using the template, expand the string."""
 
-            self.sep = self.match.string[:0]
-            self.text = []
+            sep = self.match.string[:0]
+            text = []
             # Expand string
             for x in range(0, len(self.template.literals)):
                 index = x
@@ -800,19 +801,12 @@ if REGEX_SUPPORT:
                         l = getattr(l, span_case)()
                     if single_case is not None:
                         l = getattr(l[0:1], single_case)() + l[1:]
-                self.text.append(l)
+                text.append(l)
 
-            return self.sep.join(self.text)
+            return sep.join(text)
 
-    class _BregexReplace(object):
-        """Bregex compiled object."""
-
-        def __init__(self, func, use_format, repl):
-            """Initialize."""
-
-            self.pattern_hash = repl.pattern_hash
-            self.use_format = use_format
-            self.func = functools.partial(func, repl=repl)
+    class Replace(namedtuple('Replace', ['func', 'use_format', 'pattern_hash'])):
+        """Bregex compiled replace object."""
 
         def __call__(self, *args, **kwargs):
             """Call."""
@@ -820,15 +814,17 @@ if REGEX_SUPPORT:
             return self.func(*args, **kwargs)
 
     def _apply_replace_backrefs(m, repl=None, flags=0):
-        """Expand with either the RegexReplaceTemplate or compile on the fly, or return None."""
+        """Expand with either the ReplaceTemplate or compile on the fly, or return None."""
 
         if m is None:
             raise ValueError("Match is None!")
         else:
-            if isinstance(repl, RegexReplaceTemplate):
-                return RegexReplaceTemplateExpander(m, repl).expand()
+            if isinstance(repl, Replace):
+                return repl(m)
+            elif isinstance(repl, ReplaceTemplate):
+                return ReplaceTemplateExpander(m, repl).expand()
             elif isinstance(repl, (compat.string_type, compat.binary_type)):
-                return RegexReplaceTemplateExpander(m, RegexReplaceTemplate(m.re, repl, bool(flags & FORMAT))).expand()
+                return ReplaceTemplateExpander(m, ReplaceTemplate(m.re, repl, bool(flags & FORMAT))).expand()
 
     def _apply_search_backrefs(pattern, flags=0):
         """Apply the search backrefs to the search pattern."""
@@ -861,9 +857,11 @@ if REGEX_SUPPORT:
         if pattern is not None and isinstance(pattern, REGEX_TYPE):
             use_format = bool(flags & FORMAT)
             if isinstance(repl, (compat.string_type, compat.binary_type)):
-                repl = RegexReplaceTemplate(pattern, repl, use_format)
-                call = _BregexReplace(_apply_replace_backrefs, use_format, repl)
-            elif isinstance(repl, _BregexReplace):
+                repl = ReplaceTemplate(pattern, repl, use_format)
+                call = Replace(
+                    functools.partial(_apply_replace_backrefs, repl=repl), use_format, repl.pattern_hash
+                )
+            elif isinstance(repl, Replace):
                 if flags:
                     raise ValueError("Cannot process flags argument with a compiled pattern!")
                 if repl.pattern_hash != hash(pattern):
@@ -882,7 +880,7 @@ if REGEX_SUPPORT:
     def expand(m, repl):
         """Expand the string using the replace pattern or function."""
 
-        if isinstance(repl, (_BregexReplace, RegexReplaceTemplate)):
+        if isinstance(repl, (Replace, ReplaceTemplate)):
             if repl.use_format:
                 raise ValueError("Replace should not be compiled as a format replace!")
         elif not isinstance(repl, (compat.string_type, compat.binary_type)):
@@ -892,7 +890,7 @@ if REGEX_SUPPORT:
     def expandf(m, format):  # noqa B002
         """Expand the string using the format replace pattern or function."""
 
-        if isinstance(format, (_BregexReplace, RegexReplaceTemplate)):
+        if isinstance(format, (Replace, ReplaceTemplate)):
             if not format.use_format:
                 raise ValueError("Replace not compiled as a format replace")
         elif not isinstance(format, (compat.string_type, compat.binary_type)):
@@ -926,7 +924,7 @@ if REGEX_SUPPORT:
     def sub(pattern, repl, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):
         """Wrapper for sub."""
 
-        if isinstance(repl, _BregexReplace) and repl.use_format:
+        if isinstance(repl, Replace) and repl.use_format:
             raise ValueError("Compiled replace is cannot be a format object!")
 
         pattern = compile_search(pattern, flags)
@@ -938,7 +936,7 @@ if REGEX_SUPPORT:
     def subf(pattern, format, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):  # noqa B002
         """Wrapper for subf."""
 
-        if isinstance(format, _BregexReplace) and not format.use_format:
+        if isinstance(format, Replace) and not format.use_format:
             raise ValueError("Compiled replace is not a format object!")
 
         pattern = compile_search(pattern, flags)
@@ -951,7 +949,7 @@ if REGEX_SUPPORT:
     def subn(pattern, repl, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):
         """Wrapper for subn."""
 
-        if isinstance(repl, _BregexReplace) and repl.use_format:
+        if isinstance(repl, Replace) and repl.use_format:
             raise ValueError("Compiled replace is cannot be a format object!")
 
         pattern = compile_search(pattern, flags)
@@ -963,7 +961,7 @@ if REGEX_SUPPORT:
     def subfn(pattern, format, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):  # noqa B002
         """Wrapper for subfn."""
 
-        if isinstance(format, _BregexReplace) and not format.use_format:
+        if isinstance(format, Replace) and not format.use_format:
             raise ValueError("Compiled replace is not a format object!")
 
         pattern = compile_search(pattern, flags)

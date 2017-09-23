@@ -55,6 +55,7 @@ from __future__ import unicode_literals
 import sre_parse
 import functools
 import re
+from collections import namedtuple
 from . import common_tokens as ctok
 from . import compat
 from . import uniprops
@@ -875,8 +876,8 @@ class ReplaceTemplateExpander(object):
     def expand(self):
         """Using the template, expand the string."""
 
-        self.sep = self.match.string[:0]
-        self.text = []
+        sep = self.match.string[:0]
+        text = []
         # Expand string
         for x in range(0, len(self.template.literals)):
             index = x
@@ -891,20 +892,13 @@ class ReplaceTemplateExpander(object):
                     l = getattr(l, span_case)()
                 if single_case is not None:
                     l = getattr(l[0:1], single_case)() + l[1:]
-            self.text.append(l)
+            text.append(l)
 
-        return self.sep.join(self.text)
+        return sep.join(text)
 
 
-class _BreReplace(object):
-    """Bre compiled object."""
-
-    def __init__(self, func, use_format, repl):
-        """Initialize."""
-
-        self.pattern_hash = repl.pattern_hash
-        self.use_format = use_format
-        self.func = functools.partial(func, repl=repl)
+class Replace(namedtuple('Replace', ['func', 'use_format', 'pattern_hash'])):
+    """Bre compiled replace object."""
 
     def __call__(self, *args, **kwargs):
         """Call."""
@@ -918,7 +912,9 @@ def _apply_replace_backrefs(m, repl=None, flags=0):
     if m is None:
         raise ValueError("Match is None!")
     else:
-        if isinstance(repl, ReplaceTemplate):
+        if isinstance(repl, Replace):
+            return repl(m)
+        elif isinstance(repl, ReplaceTemplate):
             return ReplaceTemplateExpander(m, repl).expand()
         elif isinstance(repl, (compat.string_type, compat.binary_type)):
             return ReplaceTemplateExpander(m, ReplaceTemplate(m.re, repl, bool(flags & FORMAT))).expand()
@@ -957,8 +953,10 @@ def compile_replace(pattern, repl, flags=0):
         use_format = bool(flags & FORMAT)
         if isinstance(repl, (compat.string_type, compat.binary_type)):
             repl = ReplaceTemplate(pattern, repl, use_format)
-            call = _BreReplace(_apply_replace_backrefs, use_format, repl)
-        elif isinstance(repl, _BreReplace):
+            call = Replace(
+                functools.partial(_apply_replace_backrefs, repl=repl), use_format, repl.pattern_hash
+            )
+        elif isinstance(repl, Replace):
             if flags:
                 raise ValueError("Cannot process flags argument with a compiled pattern!")
             if repl.pattern_hash != hash(pattern):
@@ -978,7 +976,7 @@ def compile_replace(pattern, repl, flags=0):
 def expand(m, repl):
     """Expand the string using the replace pattern or function."""
 
-    if isinstance(repl, (_BreReplace, ReplaceTemplate)):
+    if isinstance(repl, (Replace, ReplaceTemplate)):
         if repl.use_format:
             raise ValueError("Replace should not be compiled as a format replace!")
     elif not isinstance(repl, (compat.string_type, compat.binary_type)):
@@ -989,7 +987,7 @@ def expand(m, repl):
 def expandf(m, format):  # noqa B002
     """Expand the string using the format replace pattern or function."""
 
-    if isinstance(format, (_BreReplace, ReplaceTemplate)):
+    if isinstance(format, (Replace, ReplaceTemplate)):
         if not format.use_format:
             raise ValueError("Replace not compiled as a format replace")
     elif not isinstance(format, (compat.string_type, compat.binary_type)):
@@ -1030,7 +1028,7 @@ def finditer(pattern, string, flags=0):
 def sub(pattern, repl, string, count=0, flags=0):
     """Sub after applying backrefs."""
 
-    if isinstance(repl, _BreReplace) and repl.use_format:
+    if isinstance(repl, Replace) and repl.use_format:
         raise ValueError("Compiled replace is cannot be a format object!")
 
     pattern = compile_search(pattern, flags)
@@ -1040,7 +1038,7 @@ def sub(pattern, repl, string, count=0, flags=0):
 def subf(pattern, format, string, count=0, flags=0):  # noqa B002
     """Sub with format style replace."""
 
-    if isinstance(format, _BreReplace) and not format.use_format:
+    if isinstance(format, Replace) and not format.use_format:
         raise ValueError("Compiled replace is not a format object!")
 
     pattern = compile_search(pattern, flags)
@@ -1051,7 +1049,7 @@ def subf(pattern, format, string, count=0, flags=0):  # noqa B002
 def subn(pattern, repl, string, count=0, flags=0):
     """Subn with format style replace."""
 
-    if isinstance(repl, _BreReplace) and repl.use_format:
+    if isinstance(repl, Replace) and repl.use_format:
         raise ValueError("Compiled replace is cannot be a format object!")
 
     pattern = compile_search(pattern, flags)
@@ -1060,7 +1058,7 @@ def subn(pattern, repl, string, count=0, flags=0):
 def subfn(pattern, format, string, count=0, flags=0):  # noqa B002
     """Subn after applying backrefs."""
 
-    if isinstance(format, _BreReplace) and not format.use_format:
+    if isinstance(format, Replace) and not format.use_format:
         raise ValueError("Compiled replace is not a format object!")
 
     pattern = compile_search(pattern, flags)

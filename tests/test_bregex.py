@@ -474,7 +474,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test retrieval of the replace template original string."""
 
         pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
-        template = bregex.RegexReplaceTemplate(pattern, r'\c\1\2\C\3\E\4')
+        template = bregex.ReplaceTemplate(pattern, r'\c\1\2\C\3\E\4')
 
         self.assertEqual(r'\c\1\2\C\3\E\4', template.get_base_template())
 
@@ -1377,17 +1377,31 @@ class TestConvenienceFunctions(unittest.TestCase):
     def test_expand(self):
         """Test that expand works."""
 
-        m = bregex.match(r'(This is a test for )(match!)', "This is a test for match!")
+        pattern = bregex.compile_search(r'(This is a test for )(match!)')
+        m = bregex.match(pattern, "This is a test for match!")
         self.assertEqual(
             bregex.expand(m, r'\1\C\2\E'),
+            'This is a test for MATCH!'
+        )
+
+        replace = bregex.compile_replace(pattern, r'\1\C\2\E')
+        self.assertEqual(
+            bregex.expand(m, replace),
             'This is a test for MATCH!'
         )
 
     def test_expandf(self):
         """Test that expandf works."""
 
-        m = bregex.match(r'(This is a test for )(match!)', "This is a test for match!")
+        pattern = bregex.compile_search(r'(This is a test for )(match!)')
+        m = bregex.match(pattern, "This is a test for match!")
         self.assertEqual(
             bregex.expandf(m, r'{1}\C{2}\E'),
+            'This is a test for MATCH!'
+        )
+
+        replace = bregex.compile_replace(pattern, r'{1}\C{2}\E', bregex.FORMAT)
+        self.assertEqual(
+            bregex.expandf(m, replace),
             'This is a test for MATCH!'
         )

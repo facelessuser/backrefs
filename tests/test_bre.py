@@ -1612,17 +1612,31 @@ class TestConvenienceFunctions(unittest.TestCase):
     def test_expand(self):
         """Test that expand works."""
 
-        m = bre.match(r'(This is a test for )(m[\l]+!)', "This is a test for match!")
+        pattern = bre.compile_search(r'(This is a test for )(m[\l]+!)')
+        m = bre.match(pattern, "This is a test for match!")
         self.assertEqual(
             bre.expand(m, r'\1\C\2\E'),
+            'This is a test for MATCH!'
+        )
+
+        replace = bre.compile_replace(pattern, r'\1\C\2\E')
+        self.assertEqual(
+            bre.expand(m, replace),
             'This is a test for MATCH!'
         )
 
     def test_expandf(self):
         """Test that expandf works."""
 
-        m = bre.match(r'(This is a test for )(match!)', "This is a test for match!")
+        pattern = bre.compile_search(r'(This is a test for )(match!)')
+        m = bre.match(pattern, "This is a test for match!")
         self.assertEqual(
             bre.expandf(m, r'{1}\C{2}\E'),
+            'This is a test for MATCH!'
+        )
+
+        replace = bre.compile_replace(pattern, r'{1}\C{2}\E', bre.FORMAT)
+        self.assertEqual(
+            bre.expandf(m, replace),
             'This is a test for MATCH!'
         )
