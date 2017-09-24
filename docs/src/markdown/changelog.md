@@ -1,11 +1,13 @@
 # Changelog
 
-## 1.2.0
+## 2.0.0
 
 - **NEW**: Add support for case back references when using the Regex module's `subf` and `subfn`.
 - **NEW**: Add new convenience method `expandf` to Regex that can take a format string and apply format style replaces.
-- **NEW**: Add `use_format` argument to `compile_replace` to apply format style replaces when applicable.
+- **NEW**: Add `FORMAT` flag to `compile_replace` to apply format style replaces when applicable.
 - **NEW**: Add the same support that Regex has in relation to format style replacements to Re.
+- **NEW**: Compiled replacements are now immutable.
+- **NEW**: Various logic checking proper types and values.
 
 ## 1.1.1
 

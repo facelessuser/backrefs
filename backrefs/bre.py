@@ -906,6 +906,12 @@ class Replace(namedtuple('Replace', ['func', 'use_format', 'pattern_hash'])):
         return self.func(*args, **kwargs)
 
 
+def _is_replace(obj):
+    """Check if object is a replace object."""
+
+    return isinstance(obj, (ReplaceTemplate, Replace))
+
+
 def _apply_replace_backrefs(m, repl=None, flags=0):
     """Expand with either the ReplaceTemplate or compile on the fly, or return None."""
 
@@ -950,11 +956,10 @@ def compile_replace(pattern, repl, flags=0):
 
     call = None
     if pattern is not None and isinstance(pattern, RE_TYPE):
-        use_format = bool(flags & FORMAT)
         if isinstance(repl, (compat.string_type, compat.binary_type)):
-            repl = ReplaceTemplate(pattern, repl, use_format)
+            repl = ReplaceTemplate(pattern, repl, bool(flags & FORMAT))
             call = Replace(
-                functools.partial(_apply_replace_backrefs, repl=repl), use_format, repl.pattern_hash
+                functools.partial(_apply_replace_backrefs, repl=repl), repl.use_format, repl.pattern_hash
             )
         elif isinstance(repl, Replace):
             if flags:
@@ -962,10 +967,14 @@ def compile_replace(pattern, repl, flags=0):
             if repl.pattern_hash != hash(pattern):
                 raise ValueError("Pattern hash doesn't match hash in compiled replace!")
             call = repl
-        elif callable(repl):
+        elif isinstance(repl, ReplaceTemplate):
             if flags:
-                raise ValueError("Cannot process flags argument with a function!")
-            call = repl
+                raise ValueError("Cannot process flags argument with a ReplaceTemplate!")
+            call = Replace(
+                functools.partial(_apply_replace_backrefs, repl=repl), repl.use_format, repl.pattern_hash
+            )
+        else:
+            raise TypeError("Not a valid type!")
     else:
         raise TypeError("Pattern must be a compiled regular expression!")
     return call
@@ -1028,39 +1037,57 @@ def finditer(pattern, string, flags=0):
 def sub(pattern, repl, string, count=0, flags=0):
     """Sub after applying backrefs."""
 
-    if isinstance(repl, Replace) and repl.use_format:
+    is_replace = _is_replace(repl)
+    is_string = isinstance(repl, (compat.string_type, compat.binary_type))
+    if is_replace and repl.use_format:
         raise ValueError("Compiled replace is cannot be a format object!")
 
     pattern = compile_search(pattern, flags)
-    return re.sub(pattern, compile_replace(pattern, repl), string, count, flags)
+    return re.sub(
+        pattern, (compile_replace(pattern, repl) if is_replace or is_string else repl), string, count, flags
+    )
 
 
 def subf(pattern, format, string, count=0, flags=0):  # noqa B002
     """Sub with format style replace."""
 
-    if isinstance(format, Replace) and not format.use_format:
+    is_replace = _is_replace(format)
+    is_string = isinstance(format, (compat.string_type, compat.binary_type))
+    if is_replace and not format.use_format:
         raise ValueError("Compiled replace is not a format object!")
 
     pattern = compile_search(pattern, flags)
-    rflags = FORMAT if isinstance(format, (compat.string_type, compat.binary_type)) else 0
-    return re.sub(pattern, compile_replace(pattern, format, flags=rflags), string, count, flags)
+    rflags = FORMAT if is_string else 0
+    return re.sub(
+        pattern, (compile_replace(pattern, format, flags=rflags) if is_replace or is_string else format),
+        string, count, flags
+    )
 
 
 def subn(pattern, repl, string, count=0, flags=0):
     """Subn with format style replace."""
 
-    if isinstance(repl, Replace) and repl.use_format:
+    is_replace = _is_replace(repl)
+    is_string = isinstance(repl, (compat.string_type, compat.binary_type))
+    if is_replace and repl.use_format:
         raise ValueError("Compiled replace is cannot be a format object!")
 
     pattern = compile_search(pattern, flags)
-    return re.subn(pattern, compile_replace(pattern, repl), string, count, flags)
+    return re.subn(
+        pattern, (compile_replace(pattern, repl) if is_replace or is_string else repl), string, count, flags
+    )
 
 def subfn(pattern, format, string, count=0, flags=0):  # noqa B002
     """Subn after applying backrefs."""
 
-    if isinstance(format, Replace) and not format.use_format:
+    is_replace = _is_replace(format)
+    is_string = isinstance(format, (compat.string_type, compat.binary_type))
+    if is_replace and not format.use_format:
         raise ValueError("Compiled replace is not a format object!")
 
     pattern = compile_search(pattern, flags)
-    rflags = FORMAT if isinstance(format, (compat.string_type, compat.binary_type)) else 0
-    return re.subn(pattern, compile_replace(pattern, format, flags=rflags), string, count, flags)
+    rflags = FORMAT if is_string else 0
+    return re.subn(
+        pattern, (compile_replace(pattern, format, flags=rflags) if is_replace or is_string else format),
+        string, count, flags
+    )

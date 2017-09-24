@@ -1169,15 +1169,12 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(result, b"SOME BINARY TEXT")
         self.assertTrue(isinstance(result, binary_type))
 
-    def test_function_replace(self):
+    def test_template_replace(self):
         """Test replace by passing in replace function."""
-
-        def repl(m):
-            """Replace test function."""
-            return 'Success!'
 
         text = "Replace with function test!"
         pattern = bre.compile_search('(.*)')
+        repl = bre.ReplaceTemplate(pattern, 'Success!')
         expand = bre.compile_replace(pattern, repl)
 
         m = pattern.match(text)
@@ -1424,20 +1421,16 @@ class TestExceptions(unittest.TestCase):
 
         assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
 
-    def test_relace_flag_on_function(self):
-        """Test when a compile occurs on a function with flags passsed."""
-
-        def func(m):
-            """Replace."""
-
-            return "whatever"
+    def test_relace_flag_on_template(self):
+        """Test when a compile occurs on a template with flags passsed."""
 
         pattern = re.compile('test')
+        template = bre.ReplaceTemplate(pattern, 'whatever')
 
         with pytest.raises(ValueError) as excinfo:
-            bre.compile_replace(pattern, func, bre.FORMAT)
+            bre.compile_replace(pattern, template, bre.FORMAT)
 
-        assert "Cannot process flags argument with a function!" in str(excinfo.value)
+        assert "Cannot process flags argument with a ReplaceTemplate!" in str(excinfo.value)
 
     def test_bad_pattern_in_replace(self):
         """Test when a bad pattern is passed into replace."""
@@ -1524,6 +1517,21 @@ class TestExceptions(unittest.TestCase):
             bre.expandf(m, 0)
 
         assert "Expected string, buffer, or compiled replace!" in str(excinfo.value)
+
+    def test_compile_with_function(self):
+        """Test that a normal function cannot compile."""
+
+        def repl(m):
+            """Replacement function."""
+
+            return "whatever"
+
+        pattern = re.compile('test')
+
+        with pytest.raises(TypeError) as excinfo:
+            bre.compile_replace(pattern, repl)
+
+        assert "Not a valid type!" in str(excinfo.value)
 
 
 class TestConvenienceFunctions(unittest.TestCase):
