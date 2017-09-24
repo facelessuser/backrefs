@@ -1291,6 +1291,22 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
+    def test_binary_format_capture_bases(self):
+        """Test capture bases."""
+
+        text = b"abababab"
+        text_pattern = br"(\w)+"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, br'{1[-0x1]}{1[-0o1]}{1[-0b1]}', bre.FORMAT
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            b'bbb',
+            results
+        )
+
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
@@ -1304,7 +1320,7 @@ class TestExceptions(unittest.TestCase):
         with pytest.raises(ValueError) as excinfo:
             bre.compile_replace(pattern, r'Bad format { test', bre.FORMAT)
 
-        assert "Single '{'" in str(excinfo.value)
+        assert "Single unmatched curly bracket!" in str(excinfo.value)
 
     def test_bad_right_format_bracket(self):
         """Test bad right format bracket."""
@@ -1315,7 +1331,7 @@ class TestExceptions(unittest.TestCase):
         with pytest.raises(ValueError) as excinfo:
             bre.compile_replace(pattern, r'Bad format } test', bre.FORMAT)
 
-        assert "Single '}'" in str(excinfo.value)
+        assert "Single unmatched curly bracket!" in str(excinfo.value)
 
     def test_switch_from_format_auto(self):
         """Test a switch from auto to manual format."""
@@ -1461,12 +1477,12 @@ class TestExceptions(unittest.TestCase):
         with pytest.raises(ValueError) as excinfo:
             bre.sub(pattern, replace, 'test')
 
-        assert "Compiled replace is cannot be a format object!" in str(excinfo.value)
+        assert "Compiled replace cannot be a format object!" in str(excinfo.value)
 
         with pytest.raises(ValueError) as excinfo:
             bre.subn(pattern, replace, 'test')
 
-        assert "Compiled replace is cannot be a format object!" in str(excinfo.value)
+        assert "Compiled replace cannot be a format object!" in str(excinfo.value)
 
     def test_sub_wrong_replace_format_type(self):
         """Test sending wrong format type into sub, subn."""

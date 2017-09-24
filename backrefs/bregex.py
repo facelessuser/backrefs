@@ -208,7 +208,7 @@ if REGEX_SUPPORT:
                     else:
                         self.index += 1
                 else:
-                    raise ValueError("Single '%s'" % compat.ustr(char))
+                    raise ValueError("Single unmatched curly bracket!")
 
             self.index += len(char)
             self.current = char
@@ -461,7 +461,7 @@ if REGEX_SUPPORT:
                 self.binary = False
                 ctokens = ctok.utokens
 
-            self.string_convert = compat.bstr if self.binary else compat.ustr
+            self.string_convert = compat.int2bytes if self.binary else compat.int2str
             self.use_format = use_format
             self._original = template
             self._esc_end = ctokens["esc_end"]
@@ -935,7 +935,7 @@ if REGEX_SUPPORT:
         is_replace = _is_replace(repl)
         is_string = isinstance(repl, (compat.string_type, compat.binary_type))
         if is_replace and repl.use_format:
-            raise ValueError("Compiled replace is cannot be a format object!")
+            raise ValueError("Compiled replace cannot be a format object!")
 
         pattern = compile_search(pattern, flags)
         return regex.sub(
@@ -964,7 +964,7 @@ if REGEX_SUPPORT:
         is_replace = _is_replace(repl)
         is_string = isinstance(repl, (compat.string_type, compat.binary_type))
         if is_replace and repl.use_format:
-            raise ValueError("Compiled replace is cannot be a format object!")
+            raise ValueError("Compiled replace cannot be a format object!")
 
         pattern = compile_search(pattern, flags)
         return regex.subn(

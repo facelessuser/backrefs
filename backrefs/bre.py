@@ -193,7 +193,7 @@ class ReplaceTokens(compat.Tokens):
                 else:
                     self.index += 1
             else:
-                raise ValueError("Single '%s'" % compat.ustr(char))
+                raise ValueError("Single unmatched curly bracket!")
 
         self.index += len(char)
         self.current = char
@@ -269,7 +269,7 @@ class ReplaceTemplate(object):
             self.binary = False
             ctokens = ctok.utokens
 
-        self.string_convert = compat.bstr if self.binary else compat.ustr
+        self.string_convert = compat.int2bytes if self.binary else compat.int2str
         self._original = template
         self.use_format = use_format
         self._esc_end = ctokens["esc_end"]
@@ -1040,7 +1040,7 @@ def sub(pattern, repl, string, count=0, flags=0):
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (compat.string_type, compat.binary_type))
     if is_replace and repl.use_format:
-        raise ValueError("Compiled replace is cannot be a format object!")
+        raise ValueError("Compiled replace cannot be a format object!")
 
     pattern = compile_search(pattern, flags)
     return re.sub(
@@ -1070,7 +1070,7 @@ def subn(pattern, repl, string, count=0, flags=0):
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (compat.string_type, compat.binary_type))
     if is_replace and repl.use_format:
-        raise ValueError("Compiled replace is cannot be a format object!")
+        raise ValueError("Compiled replace cannot be a format object!")
 
     pattern = compile_search(pattern, flags)
     return re.subn(

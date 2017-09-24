@@ -9,10 +9,8 @@ import sys
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 
 if PY3:
-    string_type = str  # noqa
-    binary_type = bytes  # noqa
-    ustr = str
-    bstr = bytes
+    string_type = str
+    binary_type = bytes
 
     def iterstring(string):
         """Iterate through a string."""
@@ -36,10 +34,8 @@ if PY3:
             return self.iternext()
 
 else:
-    string_type = basestring  # noqa
-    binary_type = str  # noqa
-    ustr = unicode  # noqa F821
-    bstr = str  # noqa F821
+    string_type = unicode  # noqa F821
+    binary_type = str  # noqa F821
 
     def iterstring(string):
         """Iterate through a string."""
@@ -57,3 +53,15 @@ else:
             """PY2 iterator compatible next."""
 
             return self.iternext()
+
+
+def int2str(number):
+    """Convert number to string."""
+
+    return string_type(number)
+
+
+def int2bytes(number):
+    """Convert number to bytes."""
+
+    return string_type(number).encode('ascii')
