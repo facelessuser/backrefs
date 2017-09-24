@@ -11,6 +11,8 @@ PY3 = (3, 0) <= sys.version_info < (4, 0)
 if PY3:
     string_type = str  # noqa
     binary_type = bytes  # noqa
+    ustr = str
+    bstr = bytes
 
     def iterstring(string):
         """Iterate through a string."""
@@ -36,6 +38,8 @@ if PY3:
 else:
     string_type = basestring  # noqa
     binary_type = str  # noqa
+    ustr = unicode  # noqa F821
+    bstr = str  # noqa F821
 
     def iterstring(string):
         """Iterate through a string."""

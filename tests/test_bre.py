@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Test critic lib."""
+"""Test bre lib."""
 from __future__ import unicode_literals
 import unittest
 from backrefs import bre
 import re
 import sys
+import pytest
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY3_FUTURE = (3, 6) <= sys.version_info < (4, 0)
@@ -1117,7 +1118,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         # Use text pattern directly.
-        expand = bre.compile_replace(text_pattern, r'\l\C\g<first>\l\g<second>\L\c\g<third>\E\g<fourth>\E\5')
+        expand = bre.compile_replace(pattern, r'\l\C\g<first>\l\g<second>\L\c\g<third>\E\g<fourth>\E\5')
         results = expand(pattern.match(text))
         self.assertEqual('tHIS iS A TEST FOR Named capture GROUPS!', results)
 
@@ -1129,7 +1130,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         # This will pass because we do not need to resolve named groups.
-        expand = bre.compile_replace(text_pattern, r'\l\C\g<1>\l\g<2>\L\c\g<3>\E\g<4>\E\5')
+        expand = bre.compile_replace(pattern, r'\l\C\g<1>\l\g<2>\L\c\g<3>\E\g<4>\E\5')
         results = expand(pattern.match(text))
         self.assertEqual('tHIS iS A TEST FOR Named capture GROUPS!', results)
 
@@ -1168,15 +1169,12 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(result, b"SOME BINARY TEXT")
         self.assertTrue(isinstance(result, binary_type))
 
-    def test_function_replace(self):
+    def test_template_replace(self):
         """Test replace by passing in replace function."""
-
-        def repl(m):
-            """Replace test function."""
-            return 'Success!'
 
         text = "Replace with function test!"
         pattern = bre.compile_search('(.*)')
+        repl = bre.ReplaceTemplate(pattern, 'Success!')
         expand = bre.compile_replace(pattern, repl)
 
         m = pattern.match(text)
@@ -1192,12 +1190,348 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         # This will pass because we do not need to resolve named groups.
-        expand = bre.compile_replace(text_pattern, r'\l\C\g<0001>\l\g<02>\L\c\g<03>\E\g<004>\E\5\n\C\g<000>\E')
+        expand = bre.compile_replace(pattern, r'\l\C\g<0001>\l\g<02>\L\c\g<03>\E\g<004>\E\5\n\C\g<000>\E')
         results = expand(pattern.match(text))
         self.assertEqual(
             'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
             results
         )
+
+    def test_numeric_format_groups(self):
+        """Test numeric format capture groups."""
+
+        text = "this is a test for numeric capture groups!"
+        text_pattern = r"(this )(.*?)(numeric capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT)
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
+            results
+        )
+
+    def test_escaped_format_groups(self):
+        """Test escaping of format capture groups."""
+
+        text = "this is a test for format capture groups!"
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            '{0001}{IS A TEST FOR }Format capture GROUPS!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
+            results
+        )
+
+    def test_format_auto(self):
+        """Test auto format capture groups."""
+
+        text = "this is a test for format capture groups!"
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', bre.FORMAT
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\ntHIS iS A TEST FOR Format capture GROUPS!{}',
+            results
+        )
+
+    def test_format_captures(self):
+        """Test format capture indexing."""
+
+        text = "abababab"
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'{1[0]}{1[-1]}{1[0]}', bre.FORMAT
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'bbb',
+            results
+        )
+
+    def test_format_auto_captures(self):
+        """Test format auto capture indexing."""
+
+        text = "abababab"
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'{[-1]}{[0]}', bre.FORMAT
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'ababababb',
+            results
+        )
+
+    def test_format_capture_bases(self):
+        """Test capture bases."""
+
+        text = "abababab"
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'{1[-0x1]}{1[-0o1]}{1[-0b1]}', bre.FORMAT
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'bbb',
+            results
+        )
+
+
+class TestExceptions(unittest.TestCase):
+    """Test Exceptions."""
+
+    def test_bad_left_format_bracket(self):
+        """Test bad left format bracket."""
+
+        text_pattern = r"(Bad )(format)!"
+        pattern = re.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, r'Bad format { test', bre.FORMAT)
+
+        assert "Single '{'" in str(excinfo.value)
+
+    def test_bad_right_format_bracket(self):
+        """Test bad right format bracket."""
+
+        text_pattern = r"(Bad )(format)!"
+        pattern = re.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, r'Bad format } test', bre.FORMAT)
+
+        assert "Single '}'" in str(excinfo.value)
+
+    def test_switch_from_format_auto(self):
+        """Test a switch from auto to manual format."""
+
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(
+                pattern, r'{}{}{manual}', bre.FORMAT
+            )
+
+        assert "Cannot switch to manual format during auto format!" in str(excinfo.value)
+
+    def test_switch_from_format_manual(self):
+        """Test a switch from manual to auto format."""
+
+        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(
+                pattern, r'{manual}{}{}', bre.FORMAT
+            )
+
+        assert "Cannot switch to auto format during manual format!" in str(excinfo.value)
+
+    def test_format_bad_capture(self):
+        """Test a bad capture."""
+
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(
+                pattern, r'{1[0o3f]}', bre.FORMAT
+            )
+
+        assert "Capture index must be an integer!" in str(excinfo.value)
+
+    def test_format_bad_capture_range(self):
+        """Test a bad capture."""
+
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+        expand = bre.compile_replace(
+            pattern, r'{1[37]}', bre.FORMAT
+        )
+
+        with pytest.raises(IndexError) as excinfo:
+            expand(pattern.match('text'))
+
+        assert "is out of range!" in str(excinfo.value)
+
+    def test_require_compiled_pattern(self):
+        """Test a bad capture."""
+
+        with pytest.raises(TypeError) as excinfo:
+            bre.compile_replace(
+                r'\w+', r'\1'
+            )
+
+        assert "Pattern must be a compiled regular expression!" in str(excinfo.value)
+
+    def test_none_match(self):
+        """Test None match."""
+
+        pattern = re.compile("test")
+        expand = bre.compile_replace(pattern, "replace")
+        m = pattern.match('wrong')
+
+        with pytest.raises(ValueError) as excinfo:
+            expand(m)
+
+        assert "Match is None!" in str(excinfo.value)
+
+    def test_search_flag_on_compiled(self):
+        """Test when a compile occurs on a compiled object with flags passed."""
+
+        pattern = bre.compile_search("test")
+
+        with pytest.raises(ValueError) as excinfo:
+            pattern = bre.compile_search(pattern, bre.I)
+
+        assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
+
+    def test_bad_value_search(self):
+        """Test when the search value is bad."""
+
+        with pytest.raises(TypeError) as excinfo:
+            bre.compile_search(None)
+
+        assert "Not a string or compiled pattern!" in str(excinfo.value)
+
+    def test_relace_flag_on_compiled(self):
+        """Test when a compile occurs on a compiled object with flags passsed."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, "whatever")
+
+        with pytest.raises(ValueError) as excinfo:
+            replace = bre.compile_replace(pattern, replace, bre.FORMAT)
+
+        assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
+
+    def test_relace_flag_on_template(self):
+        """Test when a compile occurs on a template with flags passsed."""
+
+        pattern = re.compile('test')
+        template = bre.ReplaceTemplate(pattern, 'whatever')
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, template, bre.FORMAT)
+
+        assert "Cannot process flags argument with a ReplaceTemplate!" in str(excinfo.value)
+
+    def test_bad_pattern_in_replace(self):
+        """Test when a bad pattern is passed into replace."""
+
+        with pytest.raises(TypeError) as excinfo:
+            bre.compile_replace(None, "whatever", bre.FORMAT)
+
+        assert "Pattern must be a compiled regular expression!" in str(excinfo.value)
+
+    def test_bad_hash(self):
+        """Test when pattern hashes don't match."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, 'whatever')
+        pattern2 = re.compile('test', re.I)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern2, replace)
+
+        assert "Pattern hash doesn't match hash in compiled replace!" in str(excinfo.value)
+
+    def test_sub_wrong_replace_type(self):
+        """Test sending wrong type into sub, subn."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, 'whatever', bre.FORMAT)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.sub(pattern, replace, 'test')
+
+        assert "Compiled replace is cannot be a format object!" in str(excinfo.value)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.subn(pattern, replace, 'test')
+
+        assert "Compiled replace is cannot be a format object!" in str(excinfo.value)
+
+    def test_sub_wrong_replace_format_type(self):
+        """Test sending wrong format type into sub, subn."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, 'whatever')
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.subf(pattern, replace, 'test')
+
+        assert "Compiled replace is not a format object!" in str(excinfo.value)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.subfn(pattern, replace, 'test')
+
+        assert "Compiled replace is not a format object!" in str(excinfo.value)
+
+    def test_expand_wrong_values(self):
+        """Test expand with wrong values."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, 'whatever', bre.FORMAT)
+        m = pattern.match('test')
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.expand(m, replace)
+
+        assert "Replace should not be compiled as a format replace!" in str(excinfo.value)
+
+        with pytest.raises(TypeError) as excinfo:
+            bre.expand(m, 0)
+
+        assert "Expected string, buffer, or compiled replace!" in str(excinfo.value)
+
+    def test_expandf_wrong_values(self):
+        """Test expand with wrong values."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, 'whatever')
+        m = pattern.match('test')
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.expandf(m, replace)
+
+        assert "Replace not compiled as a format replace" in str(excinfo.value)
+
+        with pytest.raises(TypeError) as excinfo:
+            bre.expandf(m, 0)
+
+        assert "Expected string, buffer, or compiled replace!" in str(excinfo.value)
+
+    def test_compile_with_function(self):
+        """Test that a normal function cannot compile."""
+
+        def repl(m):
+            """Replacement function."""
+
+            return "whatever"
+
+        pattern = re.compile('test')
+
+        with pytest.raises(TypeError) as excinfo:
+            bre.compile_replace(pattern, repl)
+
+        assert "Not a valid type!" in str(excinfo.value)
 
 
 class TestConvenienceFunctions(unittest.TestCase):
@@ -1231,12 +1565,39 @@ class TestConvenienceFunctions(unittest.TestCase):
             "This is a test for sub!"
         )
 
+    def test_compiled_sub(self):
+        """Test that compiled search and replace works."""
+
+        pattern = bre.compile_search(r'tset')
+        replace = bre.compile_replace(pattern, 'test')
+
+        self.assertEqual(
+            bre.sub(pattern, replace, 'This is a tset for sub!'),
+            "This is a test for sub!"
+        )
+
     def test_subn(self):
         """Test that subn works."""
 
         self.assertEqual(
             bre.subn(r'tset', 'test', r'This is a tset for subn! This is a tset for subn!'),
             ('This is a test for subn! This is a test for subn!', 2)
+        )
+
+    def test_subf(self):
+        """Test that subf works."""
+
+        self.assertEqual(
+            bre.subf(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subf!'),
+            "This is a test for subf!"
+        )
+
+    def test_subfn(self):
+        """Test that subfn works."""
+
+        self.assertEqual(
+            bre.subfn(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
+            ('This is a test for subfn! This is a test for subfn!', 2)
         )
 
     def test_findall(self):
@@ -1259,8 +1620,31 @@ class TestConvenienceFunctions(unittest.TestCase):
     def test_expand(self):
         """Test that expand works."""
 
-        m = bre.match(r'(This is a test for )(m[\l]+!)', "This is a test for match!")
+        pattern = bre.compile_search(r'(This is a test for )(m[\l]+!)')
+        m = bre.match(pattern, "This is a test for match!")
         self.assertEqual(
             bre.expand(m, r'\1\C\2\E'),
+            'This is a test for MATCH!'
+        )
+
+        replace = bre.compile_replace(pattern, r'\1\C\2\E')
+        self.assertEqual(
+            bre.expand(m, replace),
+            'This is a test for MATCH!'
+        )
+
+    def test_expandf(self):
+        """Test that expandf works."""
+
+        pattern = bre.compile_search(r'(This is a test for )(match!)')
+        m = bre.match(pattern, "This is a test for match!")
+        self.assertEqual(
+            bre.expandf(m, r'{1}\C{2}\E'),
+            'This is a test for MATCH!'
+        )
+
+        replace = bre.compile_replace(pattern, r'{1}\C{2}\E', bre.FORMAT)
+        self.assertEqual(
+            bre.expandf(m, replace),
             'This is a test for MATCH!'
         )
