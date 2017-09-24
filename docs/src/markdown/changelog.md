@@ -11,10 +11,14 @@
 
 ## 1.1.1
 
+Sep 19, 2017
+
 - **FIX**: Fix bad regular expression pattern for binary replace in `bre`.
 - **FIX**: For `\g<digit>`, ensure you can use group `0` and also allow leading `0` on non-zero digits.
 
 ## 1.1.0
+
+Sep 18, 2017
 
 - **NEW**: Rework algorithm to handle replace casing back references in Python 3.7 development builds in preparation for Python 3.7 release.
 - **FIX**: Fix issue dealing with trailing backslashes in replace templates.
