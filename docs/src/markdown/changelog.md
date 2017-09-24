@@ -2,6 +2,8 @@
 
 ## 2.0.0
 
+Sep 24, 2017
+
 - **NEW**: Add support for case back references when using the Regex module's `subf` and `subfn`.
 - **NEW**: Add new convenience method `expandf` to Regex that can take a format string and apply format style replaces.
 - **NEW**: Add `FORMAT` flag to `compile_replace` to apply format style replaces when applicable.
