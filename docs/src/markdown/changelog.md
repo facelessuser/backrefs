@@ -5,6 +5,7 @@
 Sep 24, 2017
 
 - **FIX**: Make sure that back slash group formats don't not get applied to format templates.
+- **FIX**: Make sure format curly brackets don't get escaped by back slash.
 
 ## 2.0.0
 

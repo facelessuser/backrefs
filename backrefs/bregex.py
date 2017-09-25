@@ -202,7 +202,8 @@ if REGEX_SUPPORT:
                     if self.use_format and (m.group(3) or m.group(4)):
                         char += self._b_slash
                         self.index -= 1
-                    char += m.group(1) if m.group(1) else m.group(2)
+                    if not self.use_format or not m.group(4):
+                        char += m.group(1) if m.group(1) else m.group(2)
             elif self.use_format and char in (self._lc_bracket, self._rc_bracket):
                 m = self._format_replace_group.match(self.string[self.index:])
                 if m:

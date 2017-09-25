@@ -1323,6 +1323,22 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
+    def test_format_escapes_before_group(self):
+        """Test format escapes before group."""
+
+        text = "abababab"
+        text_pattern = r"(\w)+"
+        pattern = re.compile(text_pattern)
+
+        expand = bre.compile_replace(
+            pattern, r'\{1[-1]}\\{1[-1]}', bre.FORMAT
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            '\\b\\b',
+            results
+        )
+
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
