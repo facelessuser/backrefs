@@ -93,10 +93,12 @@ You can even index into groups that have multiple captures.
 'foo bar => bar f'
 ```
 
-Even though this is a Regex specific feature, this replace format is supported by Backrefs for both Regex *and* Re, though indexing into different captures in Re is limited to `0` or `-1` since Re only maintains the last capture. Also, while you can access the `subf` and `subfn` methods directly from a match object or via Backrefs provided wrappers in Regex, for Re you **must** use the Backrefs' provided wrappers as this is not a native Re feature.
+Even though this is a Regex specific feature, this replace format is supported by Backrefs for both Regex *and* Re, though indexing into different captures in Re is limited to `0` or `-1` since Re only maintains the last capture. Also, while you can access the `subf` and `subfn` methods directly from a match object or via Backrefs provided wrappers in Regex, but for Re you **must** use the Backrefs' provided wrappers as this is not a native Re feature.
+
+One final note about format templates. Backrefs' format templates are slightly different from Regex's default format templates. Regex's default format templates don't need to handle back slashes like non-format, replace templates, so a back slash is a literal back slash in most cases: `r"{1} \\word" => "Group1 \\word"`. But since Backrefs does account for back references, back slash logic is similar to non-format, replace templates: `r"{1} \\word" => "Group1 \word"`. Because of this, you will note all examples below will represent format templates as raw strings as a reminder: `r"{}"`.
 
 ```pycon3
->>> bre.subf(r"(\w+) (\w+)", "{0} => {2} {1}", "foo bar")
+>>> bre.subf(r"(\w+) (\w+)", r"{0} => {2} {1}", "foo bar")
 'foo bar => bar foo'
 >>> bre.subf(r"(?P<word1>\w+) (?P<word2>\w+)", "{word2} {word1}", "foo bar")
 'bar foo'

@@ -1057,6 +1057,22 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
+    def test_format_escapes(self):
+        """Test format escapes."""
+
+        text = "abababab"
+        text_pattern = r"(\w)+"
+        pattern = regex.compile(text_pattern)
+
+        expand = bregex.compile_replace(
+            pattern, r'{1[1]}\g<1>\\g<1>\1\\2\\\3', bregex.FORMAT
+        )
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            'b\\g<1>\\g<1>\\1\\2\\\\3',
+            results
+        )
+
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""

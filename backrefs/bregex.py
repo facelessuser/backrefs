@@ -199,6 +199,9 @@ if REGEX_SUPPORT:
             if char == self._b_slash:
                 m = self._replace_ref.match(self.string[self.index + 1:])
                 if m:
+                    if self.use_format and (m.group(3) or m.group(4)):
+                        char += self._b_slash
+                        self.index -= 1
                     char += m.group(1) if m.group(1) else m.group(2)
             elif self.use_format and char in (self._lc_bracket, self._rc_bracket):
                 m = self._format_replace_group.match(self.string[self.index:])

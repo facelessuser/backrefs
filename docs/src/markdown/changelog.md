@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1
+
+Sep 24, 2017
+
+- **FIX**: Make sure that back slash group formats don't not get applied to format templates.
+
 ## 2.0.0
 
 Sep 24, 2017

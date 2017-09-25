@@ -34,7 +34,9 @@ utokens = {
     "replace_group_ref": re.compile(
         r'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'
     ),
-    "format_replace_ref": re.compile(r'(\\)|([cClLE])'),
+    "format_replace_ref": re.compile(
+        r'(\\)|(([1-9][0-9]?)|[cClLE]|(g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>))'
+    ),
     "format_replace_group": re.compile(
         r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})'
     ),
@@ -75,7 +77,9 @@ btokens = {
     "replace_group_ref": re.compile(
         br'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'
     ),
-    "format_replace_ref": re.compile(br'(\\)|([cClLE])'),
+    "format_replace_ref": re.compile(
+        br'(\\)|(([1-9][0-9]?)|[cClLE]|(g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>))'
+    ),
     "format_replace_group": re.compile(
         br'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})'
     ),
