@@ -28,6 +28,7 @@ Licensed under MIT
 Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import unicode_literals
+import sys
 import re
 import functools
 from collections import namedtuple
@@ -38,6 +39,9 @@ try:
     REGEX_SUPPORT = True
 except Exception:  # pragma: no coverage
     REGEX_SUPPORT = False
+
+MAXUNICODE = sys.maxunicode
+NARROW = sys.maxunicode == 0xFFFF
 
 if REGEX_SUPPORT:
     # Expose some common re flags and methods to
@@ -90,6 +94,34 @@ if REGEX_SUPPORT:
         "regex_flags": re.compile(
             r'(?s)(\\.)|\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]|(.)'
         ),
+        "replace_group_ref": re.compile(
+            r'''(?x)
+            (\\)|
+            (
+                [1-9][0-9]?|
+                [cClLEabfrtnv]|
+                g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>|
+                u[0-9a-fA-F]{4}|
+                U[0-9a-fA-F]{8}|
+                x[0-9a-fA-F]{2}
+            )
+            '''
+        ),
+        "format_replace_ref": re.compile(
+            r'''(?x)
+            (\\)|
+            (
+                [cClLEabfrtnv]|
+                u[0-9a-fA-F]{4}|
+                U[0-9a-fA-F]{8}|
+                x[0-9a-fA-F]{2}|
+                (
+                    [1-9][0-9]?|
+                    g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
+                )
+            )|
+            (\{)'''
+        ),
         "regex_search_ref": re.compile(r'(\\)|([(EQ])'),
         "regex_search_ref_verbose": re.compile(r'(\\)|([(EQ#])'),
         "v0": 'V0',
@@ -99,6 +131,32 @@ if REGEX_SUPPORT:
     btokens = {
         "regex_flags": re.compile(
             br'(?s)(\\.)|\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]|(.)'
+        ),
+        "replace_group_ref": re.compile(
+            br'''(?x)
+            (\\)|
+            (
+                [1-9][0-9]?|
+                [cClLEabfrtnv]|
+                g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>|
+                x[0-9a-fA-F]{2}
+            )
+            '''
+        ),
+        "format_replace_ref": re.compile(
+            br'''(?x)
+            (\\)|
+            (
+                [cClLEabfrtnv]|
+                u[0-9a-fA-F]{4}|
+                U[0-9a-fA-F]{8}|
+                x[0-9a-fA-F]{2}|
+                (
+                    [1-9][0-9]?|
+                    g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
+                )
+            )|
+            (\{)'''
         ),
         "regex_search_ref": re.compile(br'(\\)|([EQ])'),
         "regex_search_ref_verbose": re.compile(br'(\\)|([EQ#])'),
@@ -163,15 +221,17 @@ if REGEX_SUPPORT:
 
             if isinstance(string, compat.binary_type):
                 ctokens = ctok.btokens
+                tokens = btokens
             else:
                 ctokens = ctok.utokens
+                tokens = utokens
 
             self.string = string
             self.use_format = use_format
             if use_format:
-                self._replace_ref = ctokens["format_replace_ref"]
+                self._replace_ref = tokens["format_replace_ref"]
             else:
-                self._replace_ref = ctokens["replace_group_ref"]
+                self._replace_ref = tokens["replace_group_ref"]
             self._format_replace_group = ctokens["format_replace_group"]
             self._lc_bracket = ctokens["lc_bracket"]
             self._rc_bracket = ctokens["rc_bracket"]
@@ -485,6 +545,8 @@ if REGEX_SUPPORT:
             self._hex = ctokens["hex"]
             self._minus = ctokens["minus"]
             self._zero = ctokens["zero"]
+            self._unicode_narrow = ctokens["unicode_narrow"]
+            self._unicode_wide = ctokens["unicode_wide"]
             self.end_found = False
             self.group_slots = []
             self.literal_slots = []
@@ -575,6 +637,7 @@ if REGEX_SUPPORT:
                             self.handle_format_group(t[1:-1].strip())
                         else:
                             c = t[1:]
+                            first = c[0:1]
                             if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                                 self.handle_group(t)
                             elif c == self._uc:
@@ -585,6 +648,24 @@ if REGEX_SUPPORT:
                                 self.span_case(i, _UPPER)
                             elif c == self._lc_span:
                                 self.span_case(i, _LOWER)
+                            elif (
+                                not self.binary and
+                                (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
+                            ):
+                                uc = compat.uchr(int(t[2:], 16))
+                                template = "\\u%04x" if len(uc) == 4 else "\\U%08x"
+                                text = getattr(uc, attr)()
+                                single = self.get_single_stack()
+                                self.result.append(
+                                    template % (ord(getattr(text, single)()) if single is not None else ord(text))
+                                )
+                            elif first == self._hex:
+                                hc = chr(int(t[2:], 16))
+                                text = getattr(hc, attr)()
+                                single = self.get_single_stack()
+                                self.result.append(
+                                    "\\x%02x" % (ord(getattr(text, single)()) if single is not None else ord(text))
+                                )
                             else:
                                 self.get_single_stack()
                                 self.result.append(t)
@@ -615,6 +696,7 @@ if REGEX_SUPPORT:
                         self.handle_format_group(t[1:-1].strip())
                     else:
                         c = t[1:]
+                        first = c[0:1]
                         if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                             self.handle_group(t)
                         elif c == self._uc:
@@ -627,6 +709,20 @@ if REGEX_SUPPORT:
                             self.span_case(i, _LOWER)
                         elif c == self._end:
                             self.end_found = True
+                        elif (
+                            not self.binary and
+                            (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
+                        ):
+                            uc = compat.uchr(int(t[2:], 16))
+                            template = "\\u%04x" if len(uc) == 4 else "\\U%08x"
+                            self.result.append(
+                                template % ord(getattr(uc, self.get_single_stack())())
+                            )
+                        elif first == self._hex:
+                            hc = chr(int(t[2:], 16))
+                            self.result.append(
+                                "\\x%02x" % ord(getattr(hc, self.get_single_stack())())
+                            )
                         else:
                             self.get_single_stack()
                             self.result.append(t)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2
+
+- **FIX**: Don't case replace template character tokens `\u00cf`, `\x57` etc. or standard special references like `\n` etc.
+- **FIX**: The Regex engine actually translates Unicode and binary tokens in normal replace, so add logic to mimic the same behavior.
+- **FIX**: Backrefs simulates format replace by running the template through normal replace, so translate Unicode and binary tokens when in raw strings.
+
 ## 2.0.1
 
 Sep 24, 2017
