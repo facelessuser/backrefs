@@ -63,7 +63,7 @@ def uchr(i):
 
     try:
         return unichar(i)
-    except ValueError:
+    except ValueError:  # pragma: no cover
         return struct.pack('i', i).decode('utf-32')
 
 

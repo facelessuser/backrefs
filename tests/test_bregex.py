@@ -1093,13 +1093,13 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test that we don't case unicode and bytes tokens, but case the character."""
 
         pattern = regex.compile('Test')
-        expand = bregex.compile_replace(pattern, r'\C\u0109\n\x77\E\l\x57')
+        expand = bregex.compile_replace(pattern, r'\C\u0109\n\x77\E\l\x57\c\u0109')
         results = expand(pattern.match('Test'))
-        self.assertEqual('\u0108\nWw', results)
+        self.assertEqual('\u0108\nWw\u0108', results)
 
-        expandf = bregex.compile_replace(pattern, r'\C\u0109\n\x77\E\l\x57', bregex.FORMAT)
+        expandf = bregex.compile_replace(pattern, r'\C\u0109\n\x77\E\l\x57\c\u0109', bregex.FORMAT)
         results = expandf(pattern.match('Test'))
-        self.assertEqual('\u0108\nWw', results)
+        self.assertEqual('\u0108\nWw\u0108', results)
 
 
 class TestExceptions(unittest.TestCase):
