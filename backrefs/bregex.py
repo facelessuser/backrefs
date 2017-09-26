@@ -712,7 +712,6 @@ if REGEX_SUPPORT:
                         ):
                             uc = compat.uchr(int(t[2:], 16))
                             value = ord(getattr(uc, self.get_single_stack())())
-                            template = "\\u%04x" if value <= 0xFFFF else "\\U%08x"
                             self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                         elif first == self._hex:
                             hc = chr(int(t[2:], 16))
