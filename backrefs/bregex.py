@@ -653,19 +653,16 @@ if REGEX_SUPPORT:
                                 (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
                             ):
                                 uc = compat.uchr(int(t[2:], 16))
-                                template = "\\u%04x" if len(uc) == 4 else "\\U%08x"
                                 text = getattr(uc, attr)()
                                 single = self.get_single_stack()
-                                self.result.append(
-                                    template % (ord(getattr(text, single)()) if single is not None else ord(text))
-                                )
+                                value = ord(getattr(text, single)()) if single is not None else ord(text)
+                                self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                             elif first == self._hex:
                                 hc = chr(int(t[2:], 16))
                                 text = getattr(hc, attr)()
                                 single = self.get_single_stack()
-                                self.result.append(
-                                    "\\x%02x" % (ord(getattr(text, single)()) if single is not None else ord(text))
-                                )
+                                value = ord(getattr(text, single)()) if single is not None else ord(text)
+                                self.result.append("\\x%02x" % value)
                             else:
                                 self.get_single_stack()
                                 self.result.append(t)
@@ -714,15 +711,12 @@ if REGEX_SUPPORT:
                             (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
                         ):
                             uc = compat.uchr(int(t[2:], 16))
-                            template = "\\u%04x" if len(uc) == 4 else "\\U%08x"
-                            self.result.append(
-                                template % ord(getattr(uc, self.get_single_stack())())
-                            )
+                            value = ord(getattr(uc, self.get_single_stack())())
+                            template = "\\u%04x" if value <= 0xFFFF else "\\U%08x"
+                            self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                         elif first == self._hex:
                             hc = chr(int(t[2:], 16))
-                            self.result.append(
-                                "\\x%02x" % ord(getattr(hc, self.get_single_stack())())
-                            )
+                            self.result.append("\\x%02x" % ord(getattr(hc, self.get_single_stack())()))
                         else:
                             self.get_single_stack()
                             self.result.append(t)
