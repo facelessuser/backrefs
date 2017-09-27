@@ -98,6 +98,7 @@ if REGEX_SUPPORT:
             r'''(?x)
             (\\)|
             (
+                [0-7]{3}|
                 [1-9][0-9]?|
                 [cClLEabfrtnv]|
                 g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>|
@@ -136,6 +137,7 @@ if REGEX_SUPPORT:
             br'''(?x)
             (\\)|
             (
+                [0-7]{3}|
                 [1-9][0-9]?|
                 [cClLEabfrtnv]|
                 g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>|
@@ -595,16 +597,16 @@ if REGEX_SUPPORT:
                         self.handle_format_group(t[1:-1].strip())
                     else:
                         c = t[1:]
-                        if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
-                            self.handle_group(t)
-                        elif self.use_format and c.isdigit():
+                        if c[0:1].isdigit() and (self.use_format or len(c) == 3):
                             value = int(c, 8)
                             if self.binary:
                                 if value > 0xFF:
                                     value -= 0x100
-                                self.result.append(b'\\x%02x' % value)
+                                self.result.append(self.string_convert('\\%03o' % value))
                             else:
-                                self.result.append(('\\x%02x' if value <= 0xFF else '\\u%04x') % value)
+                                self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
+                        elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                            self.handle_group(t)
                         elif c == self._lc:
                             self.single_case(i, _LOWER)
                         elif c == self._lc_span:
@@ -644,9 +646,7 @@ if REGEX_SUPPORT:
                         else:
                             c = t[1:]
                             first = c[0:1]
-                            if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
-                                self.handle_group(t)
-                            elif self.use_format and c.isdigit():
+                            if c[0:1].isdigit() and (self.use_format or len(c) == 3):
                                 value = int(c, 8)
                                 if self.binary:
                                     if value > 0xFF:
@@ -654,12 +654,14 @@ if REGEX_SUPPORT:
                                     text = getattr(compat.uchr(value), attr)()
                                     single = self.get_single_stack()
                                     value = ord(getattr(text, single)()) if single is not None else ord(text)
-                                    self.result.append(b'\\x%02x' % value)
+                                    self.result.append(self.string_convert('\\%03o' % value))
                                 else:
                                     text = getattr(compat.uchr(value), attr)()
                                     single = self.get_single_stack()
                                     value = ord(getattr(text, single)()) if single is not None else ord(text)
-                                    self.result.append(('\\x%02x' if value <= 0xFF else '\\u%04x') % value)
+                                    self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
+                            elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                                self.handle_group(t)
                             elif c == self._uc:
                                 self.single_case(i, _UPPER)
                             elif c == self._lc:
@@ -714,20 +716,20 @@ if REGEX_SUPPORT:
                     else:
                         c = t[1:]
                         first = c[0:1]
-                        if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
-                            self.handle_group(t)
-                        elif self.use_format and c.isdigit():
+                        if c[0:1].isdigit() and (self.use_format or len(c) == 3):
                             value = int(c, 8)
                             if self.binary:
                                 if value > 0xFF:
                                     value -= 0x100
                                 text = compat.uchr(value)
                                 value = ord(getattr(text, self.get_single_stack())())
-                                self.result.append(b'\\x%02x' % value)
+                                self.result.append(self.string_convert('\\%03o' % value))
                             else:
                                 text = compat.uchr(value)
                                 value = ord(getattr(text, self.get_single_stack())())
-                                self.result.append(('\\x%02x' if value <= 0xFF else '\\u%04x') % value)
+                                self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
+                        elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                                self.handle_group(t)
                         elif c == self._uc:
                             self.single_case(i, _UPPER)
                         elif c == self._lc:
