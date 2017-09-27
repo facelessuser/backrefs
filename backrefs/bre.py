@@ -52,6 +52,7 @@ Licensed under MIT
 Copyright (c) 2011 - 2015 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import unicode_literals
+import sys
 import sre_parse
 import functools
 import re
@@ -59,6 +60,9 @@ from collections import namedtuple
 from . import common_tokens as ctok
 from . import compat
 from . import uniprops
+
+MAXUNICODE = sys.maxunicode
+NARROW = sys.maxunicode == 0xFFFF
 
 # Expose some common re flags and methods to
 # save having to import re and backrefs libs
@@ -106,6 +110,28 @@ utokens = {
         ((?:\\.|[^\\}]+)+)
         '''
     ),
+    "replace_group_ref": re.compile(
+        r'''(?x)
+        (\\)|
+        (
+            [1-9][0-9]?|
+            [cClLEabfrtnv]|
+            g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
+        )
+        '''
+    ),
+    "format_replace_ref": re.compile(
+        r'''(?x)
+        (\\)|
+        (
+            [cClLEabfrtnv]|
+            (
+                [1-9][0-9]?|
+                g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
+            )
+        )|
+        (\{)'''
+    ),
     "uni_prop": "p",
     "inverse_uni_prop": "P",
     "ascii_lower": 'lower',
@@ -128,6 +154,28 @@ btokens = {
         ((?:\\.|[^\\}]+)+)
         '''
     ),
+    "replace_group_ref": re.compile(
+        br'''(?x)
+        (\\)|
+        (
+            [1-9][0-9]?|
+            [cClLEabfrtnv]|
+            g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
+        )
+        '''
+    ),
+    "format_replace_ref": re.compile(
+        br'''(?x)
+        (\\)|
+        (
+            [cClLEabfrtnv]|
+            (
+                [1-9][0-9]?|
+                g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
+            )
+        )|
+        (\{)'''
+    ),
     "uni_prop": b"p",
     "inverse_uni_prop": b"P",
     "ascii_lower": b"lower",
@@ -148,15 +196,17 @@ class ReplaceTokens(compat.Tokens):
 
         if isinstance(string, compat.binary_type):
             ctokens = ctok.btokens
+            tokens = btokens
         else:
             ctokens = ctok.utokens
+            tokens = utokens
 
         self.string = string
         self.use_format = use_format
         if use_format:
-            self._replace_ref = ctokens["format_replace_ref"]
+            self._replace_ref = tokens["format_replace_ref"]
         else:
-            self._replace_ref = ctokens["replace_group_ref"]
+            self._replace_ref = tokens["replace_group_ref"]
         self._format_replace_group = ctokens["format_replace_group"]
         self._lc_bracket = ctokens["lc_bracket"]
         self._rc_bracket = ctokens["rc_bracket"]
@@ -293,6 +343,8 @@ class ReplaceTemplate(object):
         self._hex = ctokens["hex"]
         self._minus = ctokens["minus"]
         self._zero = ctokens["zero"]
+        self._unicode_narrow = ctokens["unicode_narrow"]
+        self._unicode_wide = ctokens["unicode_wide"]
         self.end_found = False
         self.group_slots = []
         self.literal_slots = []

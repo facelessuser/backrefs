@@ -1339,6 +1339,18 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
+    def test_dont_case_special_refs(self):
+        """Test that we don't case unicode and bytes symbols."""
+
+        pattern = re.compile('Test')
+        expand = bre.compile_replace(pattern, r'\C\t\n\E\c\t')
+        results = expand(pattern.match('Test'))
+        self.assertEqual('\t\n\t', results)
+
+        expandf = bre.compile_replace(pattern, r'\C\t\n\E\c\t', bre.FORMAT)
+        results = expandf(pattern.match('Test'))
+        self.assertEqual('\t\n\t', results)
+
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""

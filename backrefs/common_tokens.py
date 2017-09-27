@@ -31,12 +31,6 @@ utokens = {
     "rc_bracket": "}",
     "group_start": r"\g<",
     "group_end": ">",
-    "replace_group_ref": re.compile(
-        r'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'
-    ),
-    "format_replace_ref": re.compile(
-        r'(\\)|([cClLE]|([1-9][0-9]?|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>))|(\{)'
-    ),
     "format_replace_group": re.compile(
         r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})'
     ),
@@ -44,7 +38,9 @@ utokens = {
     "binary": "b",
     "octal": "o",
     "hex": "x",
-    "zero": "0"
+    "zero": "0",
+    "unicode_narrow": "u",
+    "unicode_wide": "U"
 }
 
 # Byte string related references
@@ -74,12 +70,6 @@ btokens = {
     "rc_bracket": b"}",
     "group_start": br"\g<",
     "group_end": b">",
-    "replace_group_ref": re.compile(
-        br'(\\)|([1-9][0-9]?|[cClLE]|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)'
-    ),
-    "format_replace_ref": re.compile(
-        br'(\\)|([cClLE]|([1-9][0-9]?|g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>))|(\{)'
-    ),
     "format_replace_group": re.compile(
         br'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})'
     ),
@@ -87,5 +77,7 @@ btokens = {
     "binary": b"b",
     "octal": b"o",
     "hex": b"x",
-    "zero": b"0"
+    "zero": b"0",
+    "unicode_narrow": b"u",
+    "unicode_wide": b"U"
 }

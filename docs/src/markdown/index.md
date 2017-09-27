@@ -77,6 +77,14 @@ In order to escape patterns formulated for Backrefs, you can simply use your reg
 
 ### Format Replacements
 
+!!! note "Backrefs' Format Differences"
+    Even though this is a Regex specific feature, this replace format is supported by Backrefs for both Regex *and* Re with some slight differences.
+
+    1. Backrefs does not implement true format replace strings, but the functionality feels the same in regards to specifying groups and captures within a group.
+    2. Indexing into different captures in Re is limited to `0` or `-1` since Re *only* maintains the last capture.
+    3. While you can access the `subf` and `subfn` methods directly from a match object or via Backrefs provided wrappers in Regex, you *must* use Backrefs' provided wrappers for Re as Re does not natively support such a feature.
+    3. Regex's default format replace doesn't process back slashes in replace templates like it does in non-format replaces.  So when specifying a raw string (`r"..."`) for format templates without Backrefs, things like newline back references (`\n`) will not be translated to real newlines. You would instead need a normal string (`"..."`).
+
 The Regex module offers a feature where you can apply replacements via a format string style.
 
 ```pycon3
@@ -93,15 +101,21 @@ You can even index into groups that have multiple captures.
 'foo bar => bar f'
 ```
 
-Even though this is a Regex specific feature, this replace format is supported by Backrefs for both Regex *and* Re, though indexing into different captures in Re is limited to `0` or `-1` since Re only maintains the last capture. Also, while you can access the `subf` and `subfn` methods directly from a match object or via Backrefs provided wrappers in Regex, but for Re you **must** use the Backrefs' provided wrappers as this is not a native Re feature.
+Backrefs supports this functionality in a similar way, and you can do it with Regex *or* Re. This allows you to use case back references and the format style replacements.
 
-One final note about format templates. Backrefs' format templates are slightly different from Regex's default format templates. Regex's default format templates don't need to handle back slashes like non-format, replace templates, so a back slash is a literal back slash in most cases if you try to use raw strings: `r"{1}\n word" => "Group1\\n word"`. For Regex, it actually makes since to not use a raw string if using notation like `\n`. But since Backrefs does account for back references, back slash logic is similar to non-format, replace templates: `r"{1}\n word" => "Group1\n word"`. Because of this, you will note all examples below will represent format templates as raw strings as a reminder: `r"{}"`.
 
 ```pycon3
 >>> bre.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
 'foo bar => BAR FOO'
 >>> bre.subf(r"(?P<word1>\w+) (?P<word2>\w+)", r"\c{word2} \c{word1}", "foo bar")
 'Bar Foo'
+```
+
+And `{} {}` is the same as `{0} {1}`.
+
+```pycon3
+>>> bre.subf(r"(\w+) (\w+)", r"{} => \C{} {}\E", "foo bar")
+'foo bar => FOO BAR'
 ```
 
 To pre-compile a format replace template, you can use the Backrefs' `compile_replace` method with the `FORMAT` flag.
