@@ -1092,6 +1092,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_dont_case_special_refs(self):
         """Test that we don't case unicode and bytes tokens, but case the character."""
 
+        # Unicode and bytes should get evaluated proper
         pattern = regex.compile('Test')
         expand = bregex.compile_replace(pattern, r'\C\u0109\n\x77\E\l\x57\c\u0109')
         results = expand(pattern.match('Test'))
@@ -1100,6 +1101,79 @@ class TestReplaceTemplate(unittest.TestCase):
         expandf = bregex.compile_replace(pattern, r'\C\u0109\n\x77\E\l\x57\c\u0109', bregex.FORMAT)
         results = expandf(pattern.match('Test'))
         self.assertEqual('\u0108\nWw\u0108', results)
+
+        # Wide Unicode must be evaluated before narrow Unicode
+        pattern = regex.compile('Test')
+        expand = bregex.compile_replace(pattern, r'\C\U00000109\n\x77\E\l\x57\c\U00000109')
+        results = expand(pattern.match('Test'))
+        self.assertEqual('\u0108\nWw\u0108', results)
+
+        expandf = bregex.compile_replace(pattern, r'\C\U00000109\n\x77\E\l\x57\c\U00000109', bregex.FORMAT)
+        results = expandf(pattern.match('Test'))
+        self.assertEqual('\u0108\nWw\u0108', results)
+
+        # Binary doesn't care about Unicode, but should evaluate bytes
+        pattern = regex.compile(b'Test')
+        expand = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\\U0109\nWw\\u0109', results)
+
+        expandf = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bregex.FORMAT)
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'\\U0109\nWw\\u0109', results)
+
+        pattern = regex.compile(b'Test')
+        expand = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\U00000109\nWw\U00000109', results)
+
+        expandf = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bregex.FORMAT)
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'\U00000109\nWw\U00000109', results)
+
+        # Format doesn't care about groups
+        pattern = regex.compile('Test')
+        expand = bregex.compile_replace(pattern, r'\127\666\C\167\666\n\E\l\127\c\666', bregex.FORMAT)
+        results = expand(pattern.match('Test'))
+        self.assertEqual('W\u01b6W\u01b5\nw\u01b5', results)
+
+        pattern = regex.compile(b'Test')
+        expandf = bregex.compile_replace(pattern, br'\127\666\C\167\666\n\E\l\127\c\666', bregex.FORMAT)
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'W\xb6W\xb6\nw\xb6', results)
+
+        # Octal behavior in regex grabs \127 before it evaluates \27, so we must match that behavior
+        pattern = regex.compile('Test')
+        expand = bregex.compile_replace(pattern, r'\127\666\C\167\666\n\E\l\127\c\666')
+        results = expand(pattern.match('Test'))
+        self.assertEqual('W\u01b6W\u01b5\nw\u01b5', results)
+
+        # Regex uniquely seems to roll over octal in binary strings.
+        pattern = regex.compile(b'Test')
+        expandf = bregex.compile_replace(pattern, br'\127\666\C\167\666\n\E\l\127\c\666')
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'W\xb6W\xb6\nw\xb6', results)
+
+        # Null should pass through
+        pattern = regex.compile('Test')
+        expand = bregex.compile_replace(pattern, r'\0\00\000')
+        results = expand(pattern.match('Test'))
+        self.assertEqual('\x00\x00\x00', results)
+
+        pattern = regex.compile(b'Test')
+        expand = bregex.compile_replace(pattern, br'\0\00\000')
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\x00\x00\x00', results)
+
+        pattern = regex.compile('Test')
+        expand = bregex.compile_replace(pattern, r'\0\00\000', bregex.FORMAT)
+        results = expand(pattern.match('Test'))
+        self.assertEqual('\x00\x00\x00', results)
+
+        pattern = regex.compile(b'Test')
+        expand = bregex.compile_replace(pattern, br'\0\00\000', bregex.FORMAT)
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\x00\x00\x00', results)
 
 
 class TestExceptions(unittest.TestCase):

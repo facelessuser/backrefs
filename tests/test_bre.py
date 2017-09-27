@@ -1319,7 +1319,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
         results = expand(pattern.match(text))
         self.assertEqual(
-            'b\\g<1>\\g<1>\\1\\2\\\\3',
+            'b\\g<1>\\g<1>\1\\2\\\3',
             results
         )
 
@@ -1342,6 +1342,8 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_dont_case_special_refs(self):
         """Test that we don't case unicode and bytes symbols."""
 
+        # Unicode and bytes should get evaluated proper
+        # (on Re Unicode and bytes notation passes throgh raw strings)
         pattern = re.compile('Test')
         expand = bre.compile_replace(pattern, r'\C\t\n\E\c\t')
         results = expand(pattern.match('Test'))
@@ -1350,6 +1352,49 @@ class TestReplaceTemplate(unittest.TestCase):
         expandf = bre.compile_replace(pattern, r'\C\t\n\E\c\t', bre.FORMAT)
         results = expandf(pattern.match('Test'))
         self.assertEqual('\t\n\t', results)
+
+        # Format doesn't care about groups
+        pattern = re.compile('Test')
+        expand = bre.compile_replace(pattern, r'\127\C\167\n\E\l\127', bre.FORMAT)
+        results = expand(pattern.match('Test'))
+        self.assertEqual('WW\nw', results)
+
+        pattern = re.compile(b'Test')
+        expandf = bre.compile_replace(pattern, br'\127\C\167\n\E\l\127', bre.FORMAT)
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'WW\nw', results)
+
+        # Octal behavior in regex grabs \127 before it evaluates \12, so we must match that behavior
+        pattern = re.compile('Test')
+        expand = bre.compile_replace(pattern, r'\127\C\167\n\E\l\127')
+        results = expand(pattern.match('Test'))
+        self.assertEqual('WW\nw', results)
+
+        pattern = re.compile(b'Test')
+        expandf = bre.compile_replace(pattern, br'\127\C\167\n\E\l\127')
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'WW\nw', results)
+
+        # Null should pass through
+        pattern = re.compile('Test')
+        expand = bre.compile_replace(pattern, r'\0\00\000')
+        results = expand(pattern.match('Test'))
+        self.assertEqual('\x00\x00\x00', results)
+
+        pattern = re.compile(b'Test')
+        expand = bre.compile_replace(pattern, br'\0\00\000')
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\x00\x00\x00', results)
+
+        pattern = re.compile('Test')
+        expand = bre.compile_replace(pattern, r'\0\00\000', bre.FORMAT)
+        results = expand(pattern.match('Test'))
+        self.assertEqual('\x00\x00\x00', results)
+
+        pattern = re.compile(b'Test')
+        expand = bre.compile_replace(pattern, br'\0\00\000', bre.FORMAT)
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\x00\x00\x00', results)
 
 
 class TestExceptions(unittest.TestCase):
@@ -1592,6 +1637,26 @@ class TestExceptions(unittest.TestCase):
             bre.compile_replace(pattern, repl)
 
         assert "Not a valid type!" in str(excinfo.value)
+
+    def test_octal_fail(self):
+        """Test that octal fails properly."""
+
+        pattern = re.compile('Test')
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, r'\666')
+
+        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, r'\C\666\E')
+
+        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, r'\c\666')
+
+        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
 
 
 class TestConvenienceFunctions(unittest.TestCase):
