@@ -1069,7 +1069,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
         results = expand(pattern.match(text))
         self.assertEqual(
-            'b\\g<1>\\g<1>\\1\\2\\\\3',
+            'b\\g<1>\\g<1>\1\\2\\\3',
             results
         )
 
