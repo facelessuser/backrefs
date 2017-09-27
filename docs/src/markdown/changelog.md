@@ -2,6 +2,8 @@
 
 ## 2.0.2
 
+Sep 26, 2017
+
 - **FIX**: Don't apply case to template Unicode and binary notation: `\u00cf`, `\x57` etc. Also don't apply case to standard special references like `\n` etc.
 - **FIX**: For Regex only (because it is Regex's default behavior), translate syntax for Unicode characters and binary to there actual character form and then apply case if specified. Afterwards, convert back to back slash notation and insert back into the replace template.
 - **FIX**: Since Backrefs' format replace is a simulation of Regex's format, it uses Regex's non-format API to pull of the format replace; therefore, respect Unicode and binary char replacements the same way as non-format replace.
