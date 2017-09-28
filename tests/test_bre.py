@@ -1340,40 +1340,69 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
     def test_dont_case_special_refs(self):
-        """Test that we don't case unicode and bytes symbols."""
+        """Test that we don't case unicode and bytes tokens, but case the character."""
 
         # Unicode and bytes should get evaluated proper
-        # (on Re Unicode and bytes notation passes throgh raw strings)
         pattern = re.compile('Test')
-        expand = bre.compile_replace(pattern, r'\C\t\n\E\c\t')
+        expand = bre.compile_replace(pattern, r'\C\u0109\n\x77\E\l\x57\c\u0109')
         results = expand(pattern.match('Test'))
-        self.assertEqual('\t\n\t', results)
+        self.assertEqual('\u0108\nWw\u0108', results)
 
-        expandf = bre.compile_replace(pattern, r'\C\t\n\E\c\t', bre.FORMAT)
+        expandf = bre.compile_replace(pattern, r'\C\u0109\n\x77\E\l\x57\c\u0109', bre.FORMAT)
         results = expandf(pattern.match('Test'))
-        self.assertEqual('\t\n\t', results)
+        self.assertEqual('\u0108\nWw\u0108', results)
+
+        # Wide Unicode must be evaluated before narrow Unicode
+        pattern = re.compile('Test')
+        expand = bre.compile_replace(pattern, r'\C\U00000109\n\x77\E\l\x57\c\U00000109')
+        results = expand(pattern.match('Test'))
+        self.assertEqual('\u0108\nWw\u0108', results)
+
+        expandf = bre.compile_replace(pattern, r'\C\U00000109\n\x77\E\l\x57\c\U00000109', bre.FORMAT)
+        results = expandf(pattern.match('Test'))
+        self.assertEqual('\u0108\nWw\u0108', results)
+
+        # Binary doesn't care about Unicode, but should evaluate bytes
+        pattern = re.compile(b'Test')
+        expand = bre.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\\U0109\nWw\\u0109', results)
+
+        expandf = bre.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bre.FORMAT)
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'\\U0109\nWw\\u0109', results)
+
+        pattern = re.compile(b'Test')
+        expand = bre.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\U00000109\nWw\U00000109', results)
+
+        expandf = bre.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bre.FORMAT)
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
         # Format doesn't care about groups
         pattern = re.compile('Test')
-        expand = bre.compile_replace(pattern, r'\127\C\167\n\E\l\127', bre.FORMAT)
+        expand = bre.compile_replace(pattern, r'\127\666\C\167\666\n\E\l\127\c\666', bre.FORMAT)
         results = expand(pattern.match('Test'))
-        self.assertEqual('WW\nw', results)
+        self.assertEqual('W\u01b6W\u01b5\nw\u01b5', results)
 
         pattern = re.compile(b'Test')
-        expandf = bre.compile_replace(pattern, br'\127\C\167\n\E\l\127', bre.FORMAT)
+        expandf = bre.compile_replace(pattern, br'\127\666\C\167\666\n\E\l\127\c\666', bre.FORMAT)
         results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'WW\nw', results)
+        self.assertEqual(b'W\xb6W\xb6\nw\xb6', results)
 
-        # Octal behavior in regex grabs \127 before it evaluates \12, so we must match that behavior
+        # Octal behavior in regex grabs \127 before it evaluates \27, so we must match that behavior
         pattern = re.compile('Test')
-        expand = bre.compile_replace(pattern, r'\127\C\167\n\E\l\127')
+        expand = bre.compile_replace(pattern, r'\127\666\C\167\666\n\E\l\127\c\666')
         results = expand(pattern.match('Test'))
-        self.assertEqual('WW\nw', results)
+        self.assertEqual('W\u01b6W\u01b5\nw\u01b5', results)
 
+        # Regex uniquely seems to roll over octal in binary strings.
         pattern = re.compile(b'Test')
-        expandf = bre.compile_replace(pattern, br'\127\C\167\n\E\l\127')
+        expandf = bre.compile_replace(pattern, br'\127\666\C\167\666\n\E\l\127\c\666')
         results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'WW\nw', results)
+        self.assertEqual(b'W\xb6W\xb6\nw\xb6', results)
 
         # Null should pass through
         pattern = re.compile('Test')
@@ -1637,26 +1666,6 @@ class TestExceptions(unittest.TestCase):
             bre.compile_replace(pattern, repl)
 
         assert "Not a valid type!" in str(excinfo.value)
-
-    def test_octal_fail(self):
-        """Test that octal fails properly."""
-
-        pattern = re.compile('Test')
-
-        with pytest.raises(ValueError) as excinfo:
-            bre.compile_replace(pattern, r'\666')
-
-        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
-
-        with pytest.raises(ValueError) as excinfo:
-            bre.compile_replace(pattern, r'\C\666\E')
-
-        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
-
-        with pytest.raises(ValueError) as excinfo:
-            bre.compile_replace(pattern, r'\c\666')
-
-        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
 
 
 class TestConvenienceFunctions(unittest.TestCase):
