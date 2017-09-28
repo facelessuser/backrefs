@@ -8,7 +8,6 @@ import sys
 import pytest
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
-PY37 = (3, 7) <= sys.version_info
 
 if PY3:
     binary_type = bytes  # noqa
@@ -1113,27 +1112,24 @@ class TestReplaceTemplate(unittest.TestCase):
         results = expandf(pattern.match('Test'))
         self.assertEqual('\u0108\nWw\u0108', results)
 
-        # Python 3.7 will choke on \U and \u as invalid escapes, so
-        # don't bother running these tests there.
-        if not PY37:
-            # Binary doesn't care about Unicode, but should evaluate bytes
-            pattern = regex.compile(b'Test')
-            expand = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
-            results = expand(pattern.match(b'Test'))
-            self.assertEqual(b'\\U0109\nWw\\u0109', results)
+        # Binary doesn't care about Unicode, but should evaluate bytes
+        pattern = regex.compile(b'Test')
+        expand = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\\U0109\nWw\\u0109', results)
 
-            expandf = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bregex.FORMAT)
-            results = expandf(pattern.match(b'Test'))
-            self.assertEqual(b'\\U0109\nWw\\u0109', results)
+        expandf = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bregex.FORMAT)
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'\\U0109\nWw\\u0109', results)
 
-            pattern = regex.compile(b'Test')
-            expand = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
-            results = expand(pattern.match(b'Test'))
-            self.assertEqual(b'\U00000109\nWw\U00000109', results)
+        pattern = regex.compile(b'Test')
+        expand = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
-            expandf = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bregex.FORMAT)
-            results = expandf(pattern.match(b'Test'))
-            self.assertEqual(b'\U00000109\nWw\U00000109', results)
+        expandf = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bregex.FORMAT)
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
         # Format doesn't care about groups
         pattern = regex.compile('Test')

@@ -8,7 +8,8 @@ import sys
 import pytest
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
-PY3_FUTURE = (3, 6) <= sys.version_info < (4, 0)
+PY36_PLUS = (3, 6) <= sys.version_info
+PY37_PLUS = (3, 7) <= sys.version_info
 
 if PY3:
     binary_type = bytes  # noqa
@@ -434,7 +435,7 @@ class TestSearchTemplate(unittest.TestCase):
         r"""Binary patterns should not process \p references."""
         import sre_constants
 
-        if PY3_FUTURE:
+        if PY36_PLUS:
             def no_unicode():
                 """Should fail on Unicode back reference."""
                 bre.compile_search(br'EX\p{Lu}MPLE')
@@ -1362,24 +1363,27 @@ class TestReplaceTemplate(unittest.TestCase):
         results = expandf(pattern.match('Test'))
         self.assertEqual('\u0108\nWw\u0108', results)
 
-        # Binary doesn't care about Unicode, but should evaluate bytes
-        pattern = re.compile(b'Test')
-        expand = bre.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
-        results = expand(pattern.match(b'Test'))
-        self.assertEqual(b'\\U0109\nWw\\u0109', results)
+        # Python 3.7 will choke on \U and \u as invalid escapes, so
+        # don't bother running these tests there.
+        if not PY37_PLUS:
+            # Binary doesn't care about Unicode, but should evaluate bytes
+            pattern = re.compile(b'Test')
+            expand = bre.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
+            results = expand(pattern.match(b'Test'))
+            self.assertEqual(b'\\U0109\nWw\\u0109', results)
 
-        expandf = bre.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bre.FORMAT)
-        results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'\\U0109\nWw\\u0109', results)
+            expandf = bre.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bre.FORMAT)
+            results = expandf(pattern.match(b'Test'))
+            self.assertEqual(b'\\U0109\nWw\\u0109', results)
 
-        pattern = re.compile(b'Test')
-        expand = bre.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
-        results = expand(pattern.match(b'Test'))
-        self.assertEqual(b'\U00000109\nWw\U00000109', results)
+            pattern = re.compile(b'Test')
+            expand = bre.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
+            results = expand(pattern.match(b'Test'))
+            self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
-        expandf = bre.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bre.FORMAT)
-        results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'\U00000109\nWw\U00000109', results)
+            expandf = bre.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bre.FORMAT)
+            results = expandf(pattern.match(b'Test'))
+            self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
         # Format doesn't care about groups
         pattern = re.compile('Test')

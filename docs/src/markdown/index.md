@@ -168,8 +168,10 @@ Back&nbsp;References | Description
 ---------------------|-------------
 `\c`                 | Uppercase the next character. 
 `\l`                 | Lowercase the next character. 
-`\C...\E`            | Apply uppercase to all characters until either the end of the string or the end marker `\E` is found. 
-`\L...\E`            | Apply lowercase to all characters until either the end of the string or the end marker `\E` is found. 
+`\C...\E`            | Apply uppercase to all characters until either the end of the string or the end marker `\E` is found.
+`\L...\E`            | Apply lowercase to all characters until either the end of the string or the end marker `\E` is found.
+
+Though `\U`, `\u`, and `\x` are not new back references, Re will not process then in raw string templates (`r"..."`), nor will Regex in format templates.  Backrefs will ensure these get processed in Re and in Regex's format replace templates.
 
 !!! tip "Tip"
     Complex configurations of casing should work fine.
@@ -177,6 +179,7 @@ Back&nbsp;References | Description
     - `\L\cTEST\E` --> `Test`
     - `\c\LTEST\E` --> `Test`
     - `\L\cTEST \cTEST\E` --> `Test Test`
+
 
 ## Unicode Properties
 
