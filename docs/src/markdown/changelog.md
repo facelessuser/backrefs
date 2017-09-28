@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0
+
+- **NEW**: Handle Unicode and byte notation in Re replace templates.
+- **FIX**: Fix octal/group logic in Regex and Re.
+
 ## 2.0.2
 
 Sep 26, 2017

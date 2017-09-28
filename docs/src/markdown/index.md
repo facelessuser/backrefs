@@ -156,20 +156,23 @@ Back\ References      | Description
 
 ### Regex
 
-Back\ References | Description 
+Back\ References | Description
 ---------------- | -----------
-`\Q...\E`        | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Will be ignored in character classes `[]`. 
+`\Q...\E`        | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Will be ignored in character classes `[]`.
 
 ## Replace Back References
 
 Added features available for replace patterns. None of the replace back references can be used in character classes `[]`.  The references below apply to both Re **and** Regex.
 
-Back&nbsp;References | Description 
+Back&nbsp;References | Description
 ---------------------|-------------
-`\c`                 | Uppercase the next character. 
-`\l`                 | Lowercase the next character. 
-`\C...\E`            | Apply uppercase to all characters until either the end of the string or the end marker `\E` is found. 
-`\L...\E`            | Apply lowercase to all characters until either the end of the string or the end marker `\E` is found. 
+`\c`                 | Uppercase the next character.
+`\l`                 | Lowercase the next character.
+`\C...\E`            | Apply uppercase to all characters until either the end of the string or the end marker `\E` is found.
+`\L...\E`            | Apply lowercase to all characters until either the end of the string or the end marker `\E` is found.
+`\U`                 | Wide Unicode character `\U00000057`. Re doesn't translate this notation in raw strings (`r"..."`), and Regex doesn't in format templates in raw strings (`r"{} {}"`).  This adds support for them.
+`\u`                 | Narrow Unicode character `\u0057`. Re doesn't translate this notation in raw strings (`r"..."`), and Regex doesn't in format templates in raw strings (`r"{} {}"`).  This adds support for them.
+`\x`                 | Byte character `\x57`. Re doesn't translate this notation in raw strings (`r"..."`), and Regex doesn't in format templates in raw strings (`r"{} {}"`).  This adds support for them.
 
 !!! tip "Tip"
     Complex configurations of casing should work fine.

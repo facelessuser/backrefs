@@ -117,7 +117,10 @@ utokens = {
             [0-7]{3}|
             [1-9][0-9]?|
             [cClLEabfrtnv]|
-            g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
+            g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>|
+            U[0-9a-fA-F]{8}|
+            u[0-9a-fA-F]{4}|
+            x[0-9a-fA-F]{2}
         )
         '''
     ),
@@ -126,6 +129,9 @@ utokens = {
         (\\)|
         (
             [cClLEabfrtnv]|
+            U[0-9a-fA-F]{8}|
+            u[0-9a-fA-F]{4}|
+            x[0-9a-fA-F]{2}|
             [0-7]{1,3}|
             (
                 g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
@@ -162,7 +168,8 @@ btokens = {
             [0-7]{3}|
             [1-9][0-9]?|
             [cClLEabfrtnv]|
-            g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
+            g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>|
+            x[0-9a-fA-F]{2}
         )
         '''
     ),
@@ -172,6 +179,7 @@ btokens = {
         (
             [cClLEabfrtnv]|
             [0-7]{1,3}|
+            x[0-9a-fA-F]{2}|
             (
                 g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
             )
@@ -374,12 +382,18 @@ class ReplaceTemplate(object):
                     self.handle_format_group(t[1:-1].strip())
                 else:
                     c = t[1:]
-                    if c[0:1].isdigit() and (self.use_format or len(c) == 3):
+                    first = c[0:1]
+                    if first.isdigit() and (self.use_format or len(c) == 3):
                         value = int(c, 8)
-                        if value > 0xFF:
-                            # Re fails on octal greater than 0o377 or 0xFF
-                            raise ValueError("octal escape value outside of range 0-0o377!")
-                        self.result.append(self.string_convert('\\%03o' % value))
+                        if self.binary:
+                            if value > 0xFF:
+                                value -= 0x100
+                            self.result.append(self.string_convert('\\%03o' % value))
+                        else:
+                            if value <= 0xFF:
+                                self.result.append('\\%03o' % value)
+                            else:
+                                self.result.append(compat.uchr(value))
                     elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                         self.handle_group(t)
                     elif c == self._lc:
@@ -393,6 +407,17 @@ class ReplaceTemplate(object):
                     elif c == self._end:
                         # This is here just as a reminder that \E is ignored
                         pass
+                    elif (
+                        not self.binary and
+                        (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
+                    ):
+                        value = int(t[2:], 16)
+                        if value <= 0xFF:
+                            self.result.append('\\%03o' % value)
+                        else:
+                            self.result.append(compat.uchr(value))
+                    elif first == self._hex:
+                        self.result.append('\\%03o' % int(t[2:], 16))
                     else:
                         self.result.append(t)
             else:
@@ -420,15 +445,24 @@ class ReplaceTemplate(object):
                         self.handle_format_group(t[1:-1].strip())
                     else:
                         c = t[1:]
-                        if c[0:1].isdigit() and (self.use_format or len(c) == 3):
+                        first = c[0:1]
+                        if first.isdigit() and (self.use_format or len(c) == 3):
                             value = int(c, 8)
-                            if value > 0xFF:
-                                # Re fails on octal greater than 0o377 or 0xFF
-                                raise ValueError("octal escape value outside of range 0-0o377!")
-                            text = getattr(compat.uchr(value), attr)()
-                            single = self.get_single_stack()
-                            value = ord(getattr(text, single)()) if single is not None else ord(text)
-                            self.result.append(self.string_convert('\\%03o' % value))
+                            if self.binary:
+                                if value > 0xFF:
+                                    value -= 0x100
+                                text = getattr(compat.uchr(value), attr)()
+                                single = self.get_single_stack()
+                                value = ord(getattr(text, single)()) if single is not None else ord(text)
+                                self.result.append(self.string_convert('\\%03o' % value))
+                            else:
+                                text = getattr(compat.uchr(value), attr)()
+                                single = self.get_single_stack()
+                                value = ord(getattr(text, single)()) if single is not None else ord(text)
+                                if value <= 0xFF:
+                                    self.result.append('\\%03o' % value)
+                                else:
+                                    self.result.append(compat.uchr(value))
                         elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                             self.handle_group(t)
                         elif c == self._uc:
@@ -439,6 +473,24 @@ class ReplaceTemplate(object):
                             self.span_case(i, _UPPER)
                         elif c == self._lc_span:
                             self.span_case(i, _LOWER)
+                        elif (
+                            not self.binary and
+                            (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
+                        ):
+                            uc = compat.uchr(int(t[2:], 16))
+                            text = getattr(uc, attr)()
+                            single = self.get_single_stack()
+                            value = ord(getattr(text, single)()) if single is not None else ord(text)
+                            if value <= 0xFF:
+                                self.result.append('\\%03o' % value)
+                            else:
+                                self.result.append(compat.uchr(value))
+                        elif first == self._hex:
+                            hc = chr(int(t[2:], 16))
+                            text = getattr(hc, attr)()
+                            single = self.get_single_stack()
+                            value = ord(getattr(text, single)()) if single is not None else ord(text)
+                            self.result.append(self.string_convert("\\%03o" % value))
                         else:
                             self.get_single_stack()
                             self.result.append(t)
@@ -469,14 +521,20 @@ class ReplaceTemplate(object):
                     self.handle_format_group(t[1:-1].strip())
                 else:
                     c = t[1:]
-                    if c[0:1].isdigit() and (self.use_format or len(c) == 3):
+                    first = c[0:1]
+                    if first.isdigit() and (self.use_format or len(c) == 3):
                         value = int(c, 8)
-                        if value > 0xFF:
-                            # Re fails on octal greater than 0o377 or 0xFF
-                            raise ValueError("octal escape value outside of range 0-0o377!")
-                        text = compat.uchr(value)
-                        value = ord(getattr(text, self.get_single_stack())())
-                        self.result.append(self.string_convert('\\%03o' % value))
+                        if self.binary:
+                            if value > 0xFF:
+                                value -= 0x100
+                            value = ord(getattr(compat.uchr(value), self.get_single_stack())())
+                            self.result.append(self.string_convert('\\%03o' % value))
+                        else:
+                            value = ord(getattr(compat.uchr(value), self.get_single_stack())())
+                            if value <= 0xFF:
+                                self.result.append('\\%03o' % value)
+                            else:
+                                self.result.append(compat.uchr(value))
                     elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                         self.handle_group(t)
                     elif c == self._uc:
@@ -489,6 +547,21 @@ class ReplaceTemplate(object):
                         self.span_case(i, _LOWER)
                     elif c == self._end:
                         self.end_found = True
+                    elif (
+                        not self.binary and
+                        (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
+                    ):
+                        uc = compat.uchr(int(t[2:], 16))
+                        value = ord(getattr(uc, self.get_single_stack())())
+                        if value <= 0xFF:
+                            self.result.append('\\%03o' % value)
+                        else:
+                            self.result.append(compat.uchr(value))
+                    elif first == self._hex:
+                        hc = chr(int(t[2:], 16))
+                        self.result.append(
+                            self.string_convert("\\%03o" % ord(getattr(hc, self.get_single_stack())()))
+                        )
                     else:
                         self.get_single_stack()
                         self.result.append(t)

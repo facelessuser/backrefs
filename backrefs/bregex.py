@@ -646,7 +646,7 @@ if REGEX_SUPPORT:
                         else:
                             c = t[1:]
                             first = c[0:1]
-                            if c[0:1].isdigit() and (self.use_format or len(c) == 3):
+                            if first.isdigit() and (self.use_format or len(c) == 3):
                                 value = int(c, 8)
                                 if self.binary:
                                     if value > 0xFF:
@@ -716,17 +716,15 @@ if REGEX_SUPPORT:
                     else:
                         c = t[1:]
                         first = c[0:1]
-                        if c[0:1].isdigit() and (self.use_format or len(c) == 3):
+                        if first.isdigit() and (self.use_format or len(c) == 3):
                             value = int(c, 8)
                             if self.binary:
                                 if value > 0xFF:
                                     value -= 0x100
-                                text = compat.uchr(value)
-                                value = ord(getattr(text, self.get_single_stack())())
+                                value = ord(getattr(compat.uchr(value), self.get_single_stack())())
                                 self.result.append(self.string_convert('\\%03o' % value))
                             else:
-                                text = compat.uchr(value)
-                                value = ord(getattr(text, self.get_single_stack())())
+                                value = ord(getattr(compat.uchr(value), self.get_single_stack())())
                                 self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
                         elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                                 self.handle_group(t)
