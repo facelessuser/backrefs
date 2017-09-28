@@ -1345,9 +1345,9 @@ class TestReplaceTemplate(unittest.TestCase):
 
         # Unicode and bytes should get evaluated proper
         pattern = re.compile('Test')
-        expand = bre.compile_replace(pattern, r'\C\u0109\n\x77\E\l\x57\c\u0109')
+        expand = bre.compile_replace(pattern, r'\x57\u0057\u0109\C\u0077\u0109\n\x77\E\l\x57\c\u0109\c\u0077')
         results = expand(pattern.match('Test'))
-        self.assertEqual('\u0108\nWw\u0108', results)
+        self.assertEqual('WW\u0109W\u0108\nWw\u0108W', results)
 
         expandf = bre.compile_replace(pattern, r'\C\u0109\n\x77\E\l\x57\c\u0109', bre.FORMAT)
         results = expandf(pattern.match('Test'))
