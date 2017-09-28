@@ -385,15 +385,13 @@ class ReplaceTemplate(object):
                     first = c[0:1]
                     if first.isdigit() and (self.use_format or len(c) == 3):
                         value = int(c, 8)
-                        if self.binary:
-                            if value > 0xFF:
-                                value -= 0x100
-                            self.result.append(self.string_convert('\\%03o' % value))
+                        if value > 0xFF:
+                            if self.binary:
+                                # Re fails on octal greater than 0o377 or 0xFF
+                                raise ValueError("octal escape value outside of range 0-0o377!")
+                            self.result.append(compat.uchr(value))
                         else:
-                            if value <= 0xFF:
-                                self.result.append('\\%03o' % value)
-                            else:
-                                self.result.append(compat.uchr(value))
+                            self.result.append(self.string_convert('\\%03o' % value))
                     elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                         self.handle_group(t)
                     elif c == self._lc:
@@ -450,7 +448,8 @@ class ReplaceTemplate(object):
                             value = int(c, 8)
                             if self.binary:
                                 if value > 0xFF:
-                                    value -= 0x100
+                                    # Re fails on octal greater than 0o377 or 0xFF
+                                    raise ValueError("octal escape value outside of range 0-0o377!")
                                 text = getattr(compat.uchr(value), attr)()
                                 single = self.get_single_stack()
                                 value = ord(getattr(text, single)()) if single is not None else ord(text)
@@ -526,7 +525,8 @@ class ReplaceTemplate(object):
                         value = int(c, 8)
                         if self.binary:
                             if value > 0xFF:
-                                value -= 0x100
+                                # Re fails on octal greater than 0o377 or 0xFF
+                                raise ValueError("octal escape value outside of range 0-0o377!")
                             value = ord(getattr(compat.uchr(value), self.get_single_stack())())
                             self.result.append(self.string_convert('\\%03o' % value))
                         else:
