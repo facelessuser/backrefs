@@ -1392,9 +1392,9 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual('W\u01b6W\u01b5\nw\u01b5', results)
 
         pattern = re.compile(b'Test')
-        expandf = bre.compile_replace(pattern, br'\127\666\C\167\666\n\E\l\127\c\666', bre.FORMAT)
+        expandf = bre.compile_replace(pattern, br'\127\C\167\n\E\l\127', bre.FORMAT)
         results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'W\xb6W\xb6\nw\xb6', results)
+        self.assertEqual(b'WW\nw', results)
 
         # Octal behavior in regex grabs \127 before it evaluates \27, so we must match that behavior
         pattern = re.compile('Test')
@@ -1402,11 +1402,10 @@ class TestReplaceTemplate(unittest.TestCase):
         results = expand(pattern.match('Test'))
         self.assertEqual('W\u01b6W\u01b5\nw\u01b5', results)
 
-        # Regex uniquely seems to roll over octal in binary strings.
         pattern = re.compile(b'Test')
-        expandf = bre.compile_replace(pattern, br'\127\666\C\167\666\n\E\l\127\c\666')
+        expandf = bre.compile_replace(pattern, br'\127\C\167\n\E\l\127')
         results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'W\xb6W\xb6\nw\xb6', results)
+        self.assertEqual(b'WW\nw', results)
 
         # Null should pass through
         pattern = re.compile('Test')
@@ -1670,6 +1669,26 @@ class TestExceptions(unittest.TestCase):
             bre.compile_replace(pattern, repl)
 
         assert "Not a valid type!" in str(excinfo.value)
+
+    def test_octal_fail(self):
+        """Test that octal fails properly."""
+
+        pattern = re.compile(b'Test')
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, br'\666')
+
+        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, br'\C\666\E')
+
+        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
+
+        with pytest.raises(ValueError) as excinfo:
+            bre.compile_replace(pattern, br'\c\666')
+
+        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
 
 
 class TestConvenienceFunctions(unittest.TestCase):
