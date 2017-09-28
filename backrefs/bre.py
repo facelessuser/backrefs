@@ -114,6 +114,7 @@ utokens = {
         r'''(?x)
         (\\)|
         (
+            [0-7]{3}|
             [1-9][0-9]?|
             [cClLEabfrtnv]|
             g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
@@ -125,8 +126,8 @@ utokens = {
         (\\)|
         (
             [cClLEabfrtnv]|
+            [0-7]{1,3}|
             (
-                [1-9][0-9]?|
                 g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
             )
         )|
@@ -158,6 +159,7 @@ btokens = {
         br'''(?x)
         (\\)|
         (
+            [0-7]{3}|
             [1-9][0-9]?|
             [cClLEabfrtnv]|
             g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
@@ -169,8 +171,8 @@ btokens = {
         (\\)|
         (
             [cClLEabfrtnv]|
+            [0-7]{1,3}|
             (
-                [1-9][0-9]?|
                 g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
             )
         )|
@@ -372,7 +374,13 @@ class ReplaceTemplate(object):
                     self.handle_format_group(t[1:-1].strip())
                 else:
                     c = t[1:]
-                    if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                    if c[0:1].isdigit() and (self.use_format or len(c) == 3):
+                        value = int(c, 8)
+                        if value > 0xFF:
+                            # Re fails on octal greater than 0o377 or 0xFF
+                            raise ValueError("octal escape value outside of range 0-0o377!")
+                        self.result.append(self.string_convert('\\%03o' % value))
+                    elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                         self.handle_group(t)
                     elif c == self._lc:
                         self.single_case(i, _LOWER)
@@ -412,7 +420,16 @@ class ReplaceTemplate(object):
                         self.handle_format_group(t[1:-1].strip())
                     else:
                         c = t[1:]
-                        if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                        if c[0:1].isdigit() and (self.use_format or len(c) == 3):
+                            value = int(c, 8)
+                            if value > 0xFF:
+                                # Re fails on octal greater than 0o377 or 0xFF
+                                raise ValueError("octal escape value outside of range 0-0o377!")
+                            text = getattr(compat.uchr(value), attr)()
+                            single = self.get_single_stack()
+                            value = ord(getattr(text, single)()) if single is not None else ord(text)
+                            self.result.append(self.string_convert('\\%03o' % value))
+                        elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                             self.handle_group(t)
                         elif c == self._uc:
                             self.single_case(i, _UPPER)
@@ -452,7 +469,15 @@ class ReplaceTemplate(object):
                     self.handle_format_group(t[1:-1].strip())
                 else:
                     c = t[1:]
-                    if not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                    if c[0:1].isdigit() and (self.use_format or len(c) == 3):
+                        value = int(c, 8)
+                        if value > 0xFF:
+                            # Re fails on octal greater than 0o377 or 0xFF
+                            raise ValueError("octal escape value outside of range 0-0o377!")
+                        text = compat.uchr(value)
+                        value = ord(getattr(text, self.get_single_stack())())
+                        self.result.append(self.string_convert('\\%03o' % value))
+                    elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                         self.handle_group(t)
                     elif c == self._uc:
                         self.single_case(i, _UPPER)
