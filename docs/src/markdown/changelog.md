@@ -1,10 +1,6 @@
 # Changelog
 
-## 2.1.0b2
-
-- **FIX**: Fail on octal notation greater than `\377` in byte strings.
-
-## 2.1.0b1
+## 2.1.0
 
 - **NEW**: Handle Unicode and byte notation in Re replace templates.
 - **NEW**: Rework algorithm to handle replace casing back references in Python 3.7 development builds in preparation for Python 3.7 release.
@@ -16,6 +12,10 @@
 - **NEW**: Various logic checking proper types and values.
 - **FIX**: Fix octal/group logic in Regex and Re.
 - **FIX**: Fix issue dealing with trailing backslashes in replace templates.
+
+## 2.0.0
+
+- **NEW**: First attempt at bringing Python 3.7 support, fixing back reference logic, and adding new back reference. Released and then removed due to very poor behavior.
 
 ## 1.0.2
 
