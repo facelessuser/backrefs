@@ -3,11 +3,24 @@ site_url: https://facelessuser.github.io/backrefs
 repo_url: https://github.com/facelessuser/backrefs
 edit_uri: tree/master/docs/src/markdown
 site_description: A library to add additional back references to regular expressions.
-copyright: Copyright &copy; 2015 - 2017 <a href="https://github.com/facelessuser">Isaac Muse</a>
+copyright: |
+  Copyright &copy; 2015 - 2017 <a href="https://github.com/facelessuser">Isaac Muse</a>
+  <br><span class="md-footer-custom-text">emoji provided free by </span><a href="http://www.emojione.com">EmojiOne</a>
 
-theme: material
 docs_dir: docs/src/markdown
-theme_dir: docs/theme
+theme:
+  name: material
+  custom_dir: docs/theme
+  palette:
+    primary: blue
+    accent: blue
+  logo:
+    icon: description
+  font:
+    text: Roboto
+    code: Roboto Mono
+  feature:
+    tabs: true
 
 pages:
   - User Guide: index.md
@@ -44,7 +57,10 @@ markdown_extensions:
   - pymdownx.inlinehilite:
   - pymdownx.magiclink:
       repo_url_shortener: true
-      base_repo_url: https://github.com/facelessuser/backrefs
+      repo_url_shorthand: true
+      social_url_shorthand: true
+      user: facelessuser
+      repo: backrefs
   - pymdownx.tilde:
   - pymdownx.caret:
   - pymdownx.smartsymbols:
@@ -56,10 +72,8 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.progressbar:
-  - pymdownx.arithmatex:
   - pymdownx.mark:
-  - pymdownx.plainhtml:
-      strip_attributes: ''
+  - pymdownx.striphtml:
   - pymdownx.snippets:
       base_path: docs/src/markdown/_snippets
   - pymdownx.keys:
@@ -67,18 +81,10 @@ markdown_extensions:
   - pymdownx.details:
 
 extra:
-  logo:
-    icon: description
-  palette:
-    primary: blue
-    accent: blue
-  font:
-    text: Roboto
-    code: Roboto Mono
   social:
     - type: github
       link: https://github.com/facelessuser
 extra_css:
-  - extra-21c736e569.css
+  - extra-4e53a56959.css
 extra_javascript:
-  - extra-4596f9831a.js
+  - extra-d8800ea088.js
