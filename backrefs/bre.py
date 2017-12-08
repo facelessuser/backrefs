@@ -56,6 +56,7 @@ import sys
 import sre_parse
 import functools
 import re
+import unicodedata
 from collections import namedtuple
 from . import common_tokens as ctok
 from . import compat
@@ -94,7 +95,8 @@ _UPPER = 0
 _LOWER = 1
 
 # Regex pattern for unicode properties
-_UPROP = r'''(?:p|P)\{(?:\\.|[^\\}]+)+\}'''
+_UPROP = r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\})?'
+_UNAME = r'N(?:\{[\w ]+\})?'
 
 _RE_UPROP = re.compile(r'(?x)\\%s' % _UPROP)
 
@@ -117,10 +119,11 @@ utokens = {
             [0-7]{3}|
             [1-9][0-9]?|
             [cClLEabfrtnv]|
-            g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>|
-            U[0-9a-fA-F]{8}|
-            u[0-9a-fA-F]{4}|
-            x[0-9a-fA-F]{2}
+            g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
+            U(?:[0-9a-fA-F]{8})?|
+            u(?:[0-9a-fA-F]{4})?|
+            x(?:[0-9a-fA-F]{2})?|
+            N(?:\{[\w ]+\})?
         )
         '''
     ),
@@ -129,13 +132,14 @@ utokens = {
         (\\)|
         (
             [cClLEabfrtnv]|
-            U[0-9a-fA-F]{8}|
-            u[0-9a-fA-F]{4}|
-            x[0-9a-fA-F]{2}|
+            U(?:[0-9a-fA-F]{8})?|
+            u(?:[0-9a-fA-F]{4})?|
+            x(?:[0-9a-fA-F]{2})?|
             [0-7]{1,3}|
             (
-                g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
-            )
+                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
+            )|
+            N(?:\{[\w ]+\})?
         )|
         (\{)'''
     ),
@@ -143,10 +147,15 @@ utokens = {
     "inverse_uni_prop": "P",
     "ascii_lower": 'lower',
     "ascii_upper": 'upper',
-    "re_search_ref": re.compile(r'(\\)|([lLcCEQ]|%(uni_prop)s)' % {"uni_prop": _UPROP}),
-    "re_search_ref_verbose": re.compile(r'(\\)|([lLcCEQ#]|%(uni_prop)s)' % {"uni_prop": _UPROP}),
+    "re_search_ref": re.compile(
+        r'(\\)|([lLcCEQ]|%(uni_prop)s|%(uni_name)s)' % {"uni_prop": _UPROP, "uni_name": _UNAME}
+    ),
+    "re_search_ref_verbose": re.compile(
+        r'(\\)|([lLcCEQ#]|%(uni_prop)s|%(uni_name)s)' % {"uni_prop": _UPROP, "uni_name": _UNAME}
+    ),
     "re_flags": re.compile(r'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else r'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
-    "ascii_flag": "a"
+    "ascii_flag": "a",
+    "long_search_refs": ("p", "P", "N")
 }
 
 # Byte string related references
@@ -168,8 +177,8 @@ btokens = {
             [0-7]{3}|
             [1-9][0-9]?|
             [cClLEabfrtnv]|
-            g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>|
-            x[0-9a-fA-F]{2}
+            g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
+            x(?:[0-9a-fA-F]{2})?
         )
         '''
     ),
@@ -179,9 +188,9 @@ btokens = {
         (
             [cClLEabfrtnv]|
             [0-7]{1,3}|
-            x[0-9a-fA-F]{2}|
+            x(?:[0-9a-fA-F]{2})?|
             (
-                g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
+                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
             )
         )|
         (\{)'''
@@ -193,7 +202,8 @@ btokens = {
     "re_search_ref": re.compile(br'(\\)|([lLcCEQ])'),
     "re_search_ref_verbose": re.compile(br'(\\)|([lLcCEQ#])'),
     "re_flags": re.compile(br'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else br'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
-    "ascii_flag": b"a"
+    "ascii_flag": b"a",
+    "long_search_refs": tuple()
 }
 
 
@@ -218,6 +228,12 @@ class ReplaceTokens(compat.Tokens):
         else:
             self._replace_ref = tokens["replace_group_ref"]
         self._format_replace_group = ctokens["format_replace_group"]
+        self._unicode_narrow = ctokens["unicode_narrow"]
+        self._unicode_wide = ctokens["unicode_wide"]
+        self._hex = ctokens["hex"]
+        self._group = ctokens["group"]
+        self._unicode_name = ctokens["unicode_name"]
+        self._long_replace_refs = ctokens["long_replace_refs"]
         self._lc_bracket = ctokens["lc_bracket"]
         self._rc_bracket = ctokens["rc_bracket"]
         self._b_slash = ctokens["b_slash"]
@@ -244,6 +260,18 @@ class ReplaceTokens(compat.Tokens):
         if char == self._b_slash:
             m = self._replace_ref.match(self.string[self.index + 1:])
             if m:
+                ref = m.group(0)
+                if len(ref) == 1 and ref in self._long_replace_refs:
+                    if ref == self._hex:
+                        raise SyntaxError('Format for byte is \\xXX!')
+                    elif ref == self._group:
+                        raise SyntaxError('Format for group is \\g<group_name_or_index>!')
+                    elif ref == self._unicode_name:
+                        raise SyntaxError('Format for Unicode name is \\N{name}!')
+                    elif ref == self._unicode_narrow:
+                        raise SyntaxError('Format for Unicode is \\uXXXX!')
+                    elif ref == self._unicode_wide:
+                        raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
                 if self.use_format and (m.group(3) or m.group(4)):
                     char += self._b_slash
                     self.index -= 1
@@ -282,6 +310,10 @@ class SearchTokens(compat.Tokens):
             self._re_search_ref = tokens["re_search_ref_verbose"]
         else:
             self._re_search_ref = tokens["re_search_ref"]
+        self._long_search_refs = tokens["long_search_refs"]
+        self._unicode_name = ctokens["unicode_name"]
+        self._uni_prop = tokens["uni_prop"]
+        self._inverse_uni_prop = tokens["inverse_uni_prop"]
         self._ls_bracket = ctokens["ls_bracket"]
         self._b_slash = ctokens["b_slash"]
         self._re_posix = tokens["re_posix"]
@@ -298,7 +330,7 @@ class SearchTokens(compat.Tokens):
         """
         Iterate through characters of the string.
 
-        Count escaped l, L, c, C, E and backslash as a single char.
+        Count escaped l, L, c, C, E, N, p, P, backslash as a single char.
         """
 
         if self.index > self.max_index:
@@ -308,6 +340,14 @@ class SearchTokens(compat.Tokens):
         if char == self._b_slash:
             m = self._re_search_ref.match(self.string[self.index + 1:])
             if m:
+                ref = m.group(0)
+                if len(ref) == 1 and ref in self._long_search_refs:
+                    if ref == self._unicode_name:
+                        raise SyntaxError('Format for Unicode name is \\N{name}!')
+                    elif ref == self._uni_prop:
+                        raise SyntaxError('Format for Unicode property is \\p{property}!')
+                    elif ref == self._inverse_uni_prop:
+                        raise SyntaxError('Format for inverse Unicode property is \\P{property}!')
                 char += m.group(1) if m.group(1) else m.group(2)
         elif char == self._ls_bracket:
             m = self._re_posix.match(self.string[self.index:])
@@ -351,6 +391,7 @@ class ReplaceTemplate(object):
         self._binary = ctokens["binary"]
         self._octal = ctokens["octal"]
         self._hex = ctokens["hex"]
+        self._unicode_name = ctokens['unicode_name']
         self._minus = ctokens["minus"]
         self._zero = ctokens["zero"]
         self._unicode_narrow = ctokens["unicode_narrow"]
@@ -405,6 +446,12 @@ class ReplaceTemplate(object):
                     elif c == self._end:
                         # This is here just as a reminder that \E is ignored
                         pass
+                    elif not self.binary and first == self._unicode_name:
+                        value = ord(unicodedata.lookup(t[2:-1]))
+                        if value <= 0xFF:
+                            self.result.append('\\%03o' % value)
+                        else:
+                            self.result.append(compat.uchr(value))
                     elif (
                         not self.binary and
                         (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
@@ -472,6 +519,15 @@ class ReplaceTemplate(object):
                             self.span_case(i, _UPPER)
                         elif c == self._lc_span:
                             self.span_case(i, _LOWER)
+                        elif not self.binary and first == self._unicode_name:
+                            uc = unicodedata.lookup(c[1:-1])
+                            text = getattr(uc, attr)()
+                            single = self.get_single_stack()
+                            value = ord(getattr(text, single)()) if single is not None else ord(text)
+                            if value <= 0xFF:
+                                self.result.append('\\%03o' % value)
+                            else:
+                                self.result.append(compat.uchr(value))
                         elif (
                             not self.binary and
                             (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
@@ -547,6 +603,13 @@ class ReplaceTemplate(object):
                         self.span_case(i, _LOWER)
                     elif c == self._end:
                         self.end_found = True
+                    elif not self.binary and first == self._unicode_name:
+                        uc = unicodedata.lookup(c[1:-1])
+                        value = ord(getattr(uc, self.get_single_stack())())
+                        if value <= 0xFF:
+                            self.result.append('\\%03o' % value)
+                        else:
+                            self.result.append(compat.uchr(value))
                     elif (
                         not self.binary and
                         (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
@@ -739,6 +802,7 @@ class SearchTemplate(object):
         self._re_posix = tokens["re_posix"]
         self._nl = ctokens["nl"]
         self._hashtag = ctokens["hashtag"]
+        self._unicode_name = ctokens["unicode_name"]
         self.search = search
         self.groups, quotes = self.find_char_groups(search)
         self.verbose, self.unicode = self.find_flags(search, quotes, re_verbose, re_unicode)
@@ -844,6 +908,12 @@ class SearchTemplate(object):
             raise ValueError('Invalid POSIX property!')
 
         return [pattern]
+
+    def unicode_name(self, name):
+        """Insert Unicode value by its name."""
+
+        value = ord(unicodedata.lookup(name))
+        return '\\%03o' % value if value <= 0xFF else compat.uchr(value)
 
     def unicode_props(self, props, in_group, negate=False):
         """
@@ -976,6 +1046,8 @@ class SearchTemplate(object):
 
                 if t.startswith(self._ls_bracket) and self.in_group(i.index - 1):
                     self.extended.extend(self.posix_props(t[2:-2]))
+                elif c.startswith(self._unicode_name):
+                    self.extended.extend(self.unicode_name(c[2:-1]))
                 elif c.startswith(self._uni_prop):
                     self.extended.extend(self.unicode_props(c[2:-1], self.in_group(i.index - 1)))
                 elif c.startswith(self._inverse_uni_prop):

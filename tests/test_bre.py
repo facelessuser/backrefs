@@ -44,6 +44,42 @@ class TestSearchTemplate(unittest.TestCase):
 
         self.assertTrue(str(e), 'Invalid Unicode property!')
 
+    def test_incomplete_inverse_category(self):
+        """Test incomplete inverse category."""
+
+        with self.assertRaises(SyntaxError) as e:
+            bre.compile_search(r'\p', re.UNICODE)
+
+        self.assertTrue(str(e), 'Format for inverse Unicode property is \\P{property}!')
+
+    def test_incomplete_category(self):
+        """Test incomplete category."""
+
+        with self.assertRaises(SyntaxError) as e:
+            bre.compile_search(r'\P', re.UNICODE)
+
+        self.assertTrue(str(e), 'Format for Unicode property is \\p{property}!')
+
+    def test_incomplete_unicode_name(self):
+        """Test incomplete unicode name."""
+
+        with self.assertRaises(SyntaxError) as e:
+            bre.compile_search(r'\N', re.UNICODE)
+
+        self.assertTrue(str(e), 'Format for Unicode name is \\N{name}!')
+
+    def test_unicode_name(self):
+        """Test unicode block."""
+
+        pattern = bre.compile_search(r'\N{black club suit}', re.UNICODE)
+        print(pattern.pattern)
+        print('\N{black club suit}')
+        m = pattern.match('\N{black club suit}')
+        self.assertTrue(m is not None)
+        pattern = bre.compile_search(r'[\N{black club suit}]')
+        m = pattern.match('\N{black club suit}')
+        self.assertTrue(m is not None)
+
     def test_unicode_block(self):
         """Test unicode block."""
 
@@ -1431,6 +1467,16 @@ class TestReplaceTemplate(unittest.TestCase):
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
+
+    # def test_incomplete_replace_narrow_unicode(self):
+
+    # def test_incomplete_replace_wide_unicode(self):
+
+    # def test_incomplete_replace_unicode_name(self):
+
+    # def test_incomplete_replace_group(self):
+
+    # def test_incomplete_replace_byte(self):
 
     def test_bad_left_format_bracket(self):
         """Test bad left format bracket."""
