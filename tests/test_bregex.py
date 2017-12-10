@@ -1227,21 +1227,21 @@ class TestReplaceTemplate(unittest.TestCase):
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
 
-    def test_incomplete_replace_narrow_unicode(self):
-        """Test incomplete replace of narrow Unicode."""
+    # def test_incomplete_replace_narrow_unicode(self):
+    #     """Test incomplete replace of narrow Unicode."""
 
-        p = bregex.compile_search(r'test')
-        with self.assertRaises(SyntaxError) as e:
-            bregex.compile_replace(p, r'Replace \u fail!')
-        self.assertTrue(str(e), 'Format for Unicode is \\uXXXX!')
+    #     p = bregex.compile_search(r'test')
+    #     with self.assertRaises(SyntaxError) as e:
+    #         bregex.compile_replace(p, r'Replace \u fail!')
+    #     self.assertTrue(str(e), 'Format for Unicode is \\uXXXX!')
 
-    def test_incomplete_replace_wide_unicode(self):
-        """Test incomplete replace wide Unicode."""
+    # def test_incomplete_replace_wide_unicode(self):
+    #     """Test incomplete replace wide Unicode."""
 
-        p = bregex.compile_search(r'test')
-        with self.assertRaises(SyntaxError) as e:
-            bregex.compile_replace(p, r'Replace \U fail!')
-        self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
+    #     p = bregex.compile_search(r'test')
+    #     with self.assertRaises(SyntaxError) as e:
+    #         bregex.compile_replace(p, r'Replace \U fail!')
+    #     self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
 
     def test_incomplete_replace_unicode_name(self):
         """Test incomplete replace with Unicode name."""

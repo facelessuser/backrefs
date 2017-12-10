@@ -268,9 +268,9 @@ class ReplaceTokens(compat.Tokens):
                         raise SyntaxError('Format for group is \\g<group_name_or_index>!')
                     elif ref == self._unicode_name:
                         raise SyntaxError('Format for Unicode name is \\N{name}!')
-                    elif ref == self._unicode_narrow:
+                    elif ref == self._unicode_narrow:  # pragma: no cover
                         raise SyntaxError('Format for Unicode is \\uXXXX!')
-                    elif ref == self._unicode_wide:
+                    elif ref == self._unicode_wide:  # pragma: no cover
                         raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
                 if self.use_format and (m.group(3) or m.group(4)):
                     char += self._b_slash
