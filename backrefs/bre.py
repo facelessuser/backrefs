@@ -447,7 +447,7 @@ class ReplaceTemplate(object):
                         # This is here just as a reminder that \E is ignored
                         pass
                     elif not self.binary and first == self._unicode_name:
-                        value = ord(unicodedata.lookup(t[2:-1]))
+                        value = ord(unicodedata.lookup(t[3:-1]))
                         if value <= 0xFF:
                             self.result.append('\\%03o' % value)
                         else:
@@ -520,7 +520,7 @@ class ReplaceTemplate(object):
                         elif c == self._lc_span:
                             self.span_case(i, _LOWER)
                         elif not self.binary and first == self._unicode_name:
-                            uc = unicodedata.lookup(c[1:-1])
+                            uc = unicodedata.lookup(t[3:-1])
                             text = getattr(uc, attr)()
                             single = self.get_single_stack()
                             value = ord(getattr(text, single)()) if single is not None else ord(text)
@@ -604,7 +604,7 @@ class ReplaceTemplate(object):
                     elif c == self._end:
                         self.end_found = True
                     elif not self.binary and first == self._unicode_name:
-                        uc = unicodedata.lookup(c[1:-1])
+                        uc = unicodedata.lookup(t[3:-1])
                         value = ord(getattr(uc, self.get_single_stack())())
                         if value <= 0xFF:
                             self.result.append('\\%03o' % value)

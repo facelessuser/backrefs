@@ -695,7 +695,7 @@ if REGEX_SUPPORT:
                             elif c == self._lc_span:
                                 self.span_case(i, _LOWER)
                             elif not self.binary and first == self._unicode_name:
-                                uc = unicodedata.lookup(c[1:-1])
+                                uc = unicodedata.lookup(t[3:-1])
                                 text = getattr(uc, attr)()
                                 single = self.get_single_stack()
                                 value = ord(getattr(text, single)()) if single is not None else ord(text)
@@ -770,7 +770,7 @@ if REGEX_SUPPORT:
                         elif c == self._end:
                             self.end_found = True
                         elif not self.binary and first == self._unicode_name:
-                            uc = unicodedata.lookup(c[1:-1])
+                            uc = unicodedata.lookup(t[3:-1])
                             value = ord(getattr(uc, self.get_single_stack())())
                             self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                         elif (
