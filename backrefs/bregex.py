@@ -31,6 +31,7 @@ from __future__ import unicode_literals
 import sys
 import re
 import functools
+import unicodedata
 from collections import namedtuple
 from . import compat
 from . import common_tokens as ctok
@@ -101,10 +102,11 @@ if REGEX_SUPPORT:
                 [0-7]{3}|
                 [1-9][0-9]?|
                 [cClLEabfrtnv]|
-                g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>|
-                U[0-9a-fA-F]{8}|
-                u[0-9a-fA-F]{4}|
-                x[0-9a-fA-F]{2}
+                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
+                U(?:[0-9a-fA-F]{8})?|
+                u(?:[0-9a-fA-F]{4})?|
+                x(?:[0-9a-fA-F]{2})?|
+                N(?:\{[\w ]+\})?
             )
             '''
         ),
@@ -113,13 +115,14 @@ if REGEX_SUPPORT:
             (\\)|
             (
                 [cClLEabfrtnv]|
-                U[0-9a-fA-F]{8}|
-                u[0-9a-fA-F]{4}|
-                x[0-9a-fA-F]{2}|
+                U(?:[0-9a-fA-F]{8})?|
+                u(?:[0-9a-fA-F]{4})?|
+                x(?:[0-9a-fA-F]{2})?|
                 [0-7]{1,3}|
                 (
-                    g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
-                )
+                    g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
+                )|
+                N(?:\{[\w ]+\})?
             )|
             (\{)'''
         ),
@@ -140,8 +143,8 @@ if REGEX_SUPPORT:
                 [0-7]{3}|
                 [1-9][0-9]?|
                 [cClLEabfrtnv]|
-                g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>|
-                x[0-9a-fA-F]{2}
+                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
+                x(?:[0-9a-fA-F]{2})?
             )
             '''
         ),
@@ -150,10 +153,10 @@ if REGEX_SUPPORT:
             (\\)|
             (
                 [cClLEabfrtnv]|
-                x[0-9a-fA-F]{2}|
+                x(?:[0-9a-fA-F]{2})?|
                 [0-7]{1,3}|
                 (
-                    g<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>
+                    g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
                 )
             )|
             (\{)'''
@@ -232,6 +235,12 @@ if REGEX_SUPPORT:
                 self._replace_ref = tokens["format_replace_ref"]
             else:
                 self._replace_ref = tokens["replace_group_ref"]
+            self._unicode_narrow = ctokens["unicode_narrow"]
+            self._unicode_wide = ctokens["unicode_wide"]
+            self._hex = ctokens["hex"]
+            self._group = ctokens["group"]
+            self._unicode_name = ctokens["unicode_name"]
+            self._long_replace_refs = ctokens["long_replace_refs"]
             self._format_replace_group = ctokens["format_replace_group"]
             self._lc_bracket = ctokens["lc_bracket"]
             self._rc_bracket = ctokens["rc_bracket"]
@@ -259,6 +268,18 @@ if REGEX_SUPPORT:
             if char == self._b_slash:
                 m = self._replace_ref.match(self.string[self.index + 1:])
                 if m:
+                    ref = m.group(0)
+                    if len(ref) == 1 and ref in self._long_replace_refs:
+                        if ref == self._hex:
+                            raise SyntaxError('Format for byte is \\xXX!')
+                        elif ref == self._group:
+                            raise SyntaxError('Format for group is \\g<group_name_or_index>!')
+                        elif ref == self._unicode_name:
+                            raise SyntaxError('Format for Unicode name is \\N{name}!')
+                        elif ref == self._unicode_narrow:  # pragma: no cover
+                            raise SyntaxError('Format for Unicode is \\uXXXX!')
+                        elif ref == self._unicode_wide:  # pragma: no cover
+                            raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
                     if self.use_format and (m.group(3) or m.group(4)):
                         char += self._b_slash
                         self.index -= 1
@@ -545,6 +566,7 @@ if REGEX_SUPPORT:
             self._hex = ctokens["hex"]
             self._minus = ctokens["minus"]
             self._zero = ctokens["zero"]
+            self._unicode_name = ctokens["unicode_name"]
             self._unicode_narrow = ctokens["unicode_narrow"]
             self._unicode_wide = ctokens["unicode_wide"]
             self.end_found = False
@@ -672,6 +694,12 @@ if REGEX_SUPPORT:
                                 self.span_case(i, _UPPER)
                             elif c == self._lc_span:
                                 self.span_case(i, _LOWER)
+                            elif not self.binary and first == self._unicode_name:
+                                uc = unicodedata.lookup(t[3:-1])
+                                text = getattr(uc, attr)()
+                                single = self.get_single_stack()
+                                value = ord(getattr(text, single)()) if single is not None else ord(text)
+                                self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                             elif (
                                 not self.binary and
                                 (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
@@ -741,6 +769,10 @@ if REGEX_SUPPORT:
                             self.span_case(i, _LOWER)
                         elif c == self._end:
                             self.end_found = True
+                        elif not self.binary and first == self._unicode_name:
+                            uc = unicodedata.lookup(t[3:-1])
+                            value = ord(getattr(uc, self.get_single_stack())())
+                            self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                         elif (
                             not self.binary and
                             (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))

@@ -20,29 +20,17 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
-    def test_bad_posix(self):
-        """Test bad posix."""
+    def test_unicode_name(self):
+        """Test unicode block."""
 
-        with self.assertRaises(ValueError) as e:
-            bre.compile_search(r'[[:bad:]]', re.UNICODE)
-
-        self.assertTrue(str(e), 'Invalid POSIX property!')
-
-    def test_bad_binary(self):
-        """Test bad binary."""
-
-        with self.assertRaises(ValueError) as e:
-            bre.compile_search(r'\p{bad_binary:n}', re.UNICODE)
-
-        self.assertTrue(str(e), 'Invalid Unicode property!')
-
-    def test_bad_category(self):
-        """Test bad category."""
-
-        with self.assertRaises(ValueError) as e:
-            bre.compile_search(r'\p{alphanumeric: bad}', re.UNICODE)
-
-        self.assertTrue(str(e), 'Invalid Unicode property!')
+        pattern = bre.compile_search(r'\N{black club suit}', re.UNICODE)
+        print(pattern.pattern)
+        print('\N{black club suit}')
+        m = pattern.match('\N{black club suit}')
+        self.assertTrue(m is not None)
+        pattern = bre.compile_search(r'[\N{black club suit}]')
+        m = pattern.match('\N{black club suit}')
+        self.assertTrue(m is not None)
 
     def test_unicode_block(self):
         """Test unicode block."""
@@ -727,6 +715,55 @@ class TestSearchTemplate(unittest.TestCase):
 
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
+
+    def test_replace_unicode_name_ascii_range(self):
+        """Test replacing Unicode names in the ascii range."""
+
+        pattern = re.compile(r"(some)(.*?)(pattern)(!)")
+        expand = bre.compile_replace(
+            pattern,
+            r'\1 \N{Latin small letter a}\l\N{Latin Capital Letter A} and '
+            r'\LSPAN \N{Latin Capital Letter A}\E and Escaped \\N{Latin Capital Letter A}\E \3'
+        )
+        results = expand(pattern.match('some test pattern!'))
+
+        self.assertEqual(
+            'some aa and span a and Escaped \\N{Latin Capital Letter A} pattern',
+            results
+        )
+
+    def test_replace_unicode_name(self):
+        """Test replacing unicode names."""
+
+        pattern = re.compile(r"(some)(.*?)(pattern)(!)")
+        expand = bre.compile_replace(
+            pattern,
+            r'\1 \N{Black club suit}\l\N{Greek Capital Letter omega} and '
+            r'\LSPAN \N{Greek Capital Letter omega}\E and Escaped \\N{Greek Capital Letter omega}\E \3'
+        )
+        results = expand(pattern.match('some test pattern!'))
+
+        self.assertEqual(
+            'some \u2663\u03c9 and span \u03c9 and Escaped \\N{Greek Capital Letter omega} pattern',
+            results
+        )
+
+    def test_format_replace_unicode_name(self):
+        """Test replacing format unicode names."""
+
+        pattern = re.compile(r"(some)(.*?)(pattern)(!)")
+        expandf = bre.compile_replace(
+            pattern,
+            r'{1} \N{Black club suit}\l\N{Greek Capital Letter omega} and '
+            r'\LSPAN \N{Greek Capital Letter omega}\E and Escaped \\N{{Greek Capital Letter omega}}\E {3}',
+            bre.FORMAT
+        )
+        results = expandf(pattern.match('some test pattern!'))
+
+        self.assertEqual(
+            'some \u2663\u03c9 and span \u03c9 and Escaped \\N{Greek Capital Letter omega} pattern',
+            results
+        )
 
     def test_get_replace_template_string(self):
         """Test retrieval of the replace template original string."""
@@ -1431,6 +1468,94 @@ class TestReplaceTemplate(unittest.TestCase):
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
+
+    # def test_incomplete_replace_narrow_unicode(self):
+    #     """Test incomplete replace of narrow Unicode."""
+
+    #     p = bre.compile_search(r'test')
+    #     with self.assertRaises(SyntaxError) as e:
+    #         bre.compile_replace(p, r'Replace \u fail!')
+    #     self.assertTrue(str(e), 'Format for Unicode is \\uXXXX!')
+
+    # def test_incomplete_replace_wide_unicode(self):
+    #     """Test incomplete replace wide Unicode."""
+
+    #     p = bre.compile_search(r'test')
+    #     with self.assertRaises(SyntaxError) as e:
+    #         bre.compile_replace(p, r'Replace \U fail!')
+    #     self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
+
+    def test_incomplete_replace_unicode_name(self):
+        """Test incomplete replace with Unicode name."""
+
+        p = bre.compile_search(r'test')
+        with self.assertRaises(SyntaxError) as e:
+            bre.compile_replace(p, r'Replace \N fail!')
+        self.assertTrue(str(e), 'Format for Unicode name is \\N{name}!')
+
+    def test_incomplete_replace_group(self):
+        """Test incomplete replace group."""
+
+        p = bre.compile_search(r'test')
+        with self.assertRaises(SyntaxError) as e:
+            bre.compile_replace(p, r'Replace \g fail!')
+        self.assertTrue(str(e), 'Format for group is \\g<group_name_or_index>!')
+
+    def test_incomplete_replace_byte(self):
+        """Test incomplete byte group."""
+
+        p = bre.compile_search(r'test')
+        with self.assertRaises(SyntaxError) as e:
+            bre.compile_replace(p, r'Replace \x fail!')
+        self.assertTrue(str(e), 'Format for byte is \\xXX!')
+
+    def test_bad_posix(self):
+        """Test bad posix."""
+
+        with self.assertRaises(ValueError) as e:
+            bre.compile_search(r'[[:bad:]]', re.UNICODE)
+
+        self.assertTrue(str(e), 'Invalid POSIX property!')
+
+    def test_bad_binary(self):
+        """Test bad binary."""
+
+        with self.assertRaises(ValueError) as e:
+            bre.compile_search(r'\p{bad_binary:n}', re.UNICODE)
+
+        self.assertTrue(str(e), 'Invalid Unicode property!')
+
+    def test_bad_category(self):
+        """Test bad category."""
+
+        with self.assertRaises(ValueError) as e:
+            bre.compile_search(r'\p{alphanumeric: bad}', re.UNICODE)
+
+        self.assertTrue(str(e), 'Invalid Unicode property!')
+
+    def test_incomplete_inverse_category(self):
+        """Test incomplete inverse category."""
+
+        with self.assertRaises(SyntaxError) as e:
+            bre.compile_search(r'\p', re.UNICODE)
+
+        self.assertTrue(str(e), 'Format for inverse Unicode property is \\P{property}!')
+
+    def test_incomplete_category(self):
+        """Test incomplete category."""
+
+        with self.assertRaises(SyntaxError) as e:
+            bre.compile_search(r'\P', re.UNICODE)
+
+        self.assertTrue(str(e), 'Format for Unicode property is \\p{property}!')
+
+    def test_incomplete_unicode_name(self):
+        """Test incomplete unicode name."""
+
+        with self.assertRaises(SyntaxError) as e:
+            bre.compile_search(r'\N', re.UNICODE)
+
+        self.assertTrue(str(e), 'Format for Unicode name is \\N{name}!')
 
     def test_bad_left_format_bracket(self):
         """Test bad left format bracket."""

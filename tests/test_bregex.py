@@ -470,6 +470,55 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_replace_unicode_name_ascii_range(self):
+        """Test replacing Unicode names in the ascii range."""
+
+        pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
+        expand = bregex.compile_replace(
+            pattern,
+            r'\1 \N{Latin small letter a}\l\N{Latin Capital Letter A} and '
+            r'\LSPAN \N{Latin Capital Letter A}\E and Escaped \\N{Latin Capital Letter A}\E \3'
+        )
+        results = expand(pattern.match('some test pattern!'))
+
+        self.assertEqual(
+            'some aa and span a and Escaped \\N{Latin Capital Letter A} pattern',
+            results
+        )
+
+    def test_replace_unicode_name(self):
+        """Test replacing unicode names."""
+
+        pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
+        expand = bregex.compile_replace(
+            pattern,
+            r'\1 \N{Black club suit}\l\N{Greek Capital Letter omega} and '
+            r'\LSPAN \N{Greek Capital Letter omega}\E and Escaped \\N{Greek Capital Letter omega}\E \3'
+        )
+        results = expand(pattern.match('some test pattern!'))
+
+        self.assertEqual(
+            'some \u2663\u03c9 and span \u03c9 and Escaped \\N{Greek Capital Letter omega} pattern',
+            results
+        )
+
+    def test_format_replace_unicode_name(self):
+        """Test replacing format unicode names."""
+
+        pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
+        expandf = bregex.compile_replace(
+            pattern,
+            r'{1} \N{Black club suit}\l\N{Greek Capital Letter omega} and '
+            r'\LSPAN \N{Greek Capital Letter omega}\E and Escaped \\N{{Greek Capital Letter omega}}\E {3}',
+            bregex.FORMAT
+        )
+        results = expandf(pattern.match('some test pattern!'))
+
+        self.assertEqual(
+            'some \u2663\u03c9 and span \u03c9 and Escaped \\N{Greek Capital Letter omega} pattern',
+            results
+        )
+
     def test_get_replace_template_string(self):
         """Test retrieval of the replace template original string."""
 
@@ -1177,6 +1226,46 @@ class TestReplaceTemplate(unittest.TestCase):
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
+
+    # def test_incomplete_replace_narrow_unicode(self):
+    #     """Test incomplete replace of narrow Unicode."""
+
+    #     p = bregex.compile_search(r'test')
+    #     with self.assertRaises(SyntaxError) as e:
+    #         bregex.compile_replace(p, r'Replace \u fail!')
+    #     self.assertTrue(str(e), 'Format for Unicode is \\uXXXX!')
+
+    # def test_incomplete_replace_wide_unicode(self):
+    #     """Test incomplete replace wide Unicode."""
+
+    #     p = bregex.compile_search(r'test')
+    #     with self.assertRaises(SyntaxError) as e:
+    #         bregex.compile_replace(p, r'Replace \U fail!')
+    #     self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
+
+    def test_incomplete_replace_unicode_name(self):
+        """Test incomplete replace with Unicode name."""
+
+        p = bregex.compile_search(r'test')
+        with self.assertRaises(SyntaxError) as e:
+            bregex.compile_replace(p, r'Replace \N fail!')
+        self.assertTrue(str(e), 'Format for Unicode name is \\N{name}!')
+
+    def test_incomplete_replace_group(self):
+        """Test incomplete replace group."""
+
+        p = bregex.compile_search(r'test')
+        with self.assertRaises(SyntaxError) as e:
+            bregex.compile_replace(p, r'Replace \g fail!')
+        self.assertTrue(str(e), 'Format for group is \\g<group_name_or_index>!')
+
+    def test_incomplete_replace_byte(self):
+        """Test incomplete byte group."""
+
+        p = bregex.compile_search(r'test')
+        with self.assertRaises(SyntaxError) as e:
+            bregex.compile_replace(p, r'Replace \x fail!')
+        self.assertTrue(str(e), 'Format for byte is \\xXX!')
 
     def test_bad_left_format_bracket(self):
         """Test bad left format bracket."""

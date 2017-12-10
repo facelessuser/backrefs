@@ -40,7 +40,9 @@ utokens = {
     "hex": "x",
     "zero": "0",
     "unicode_narrow": "u",
-    "unicode_wide": "U"
+    "unicode_wide": "U",
+    "unicode_name": "N",
+    "long_replace_refs": ("u", "U", "g", "x", "N")
 }
 
 # Byte string related references
@@ -79,5 +81,7 @@ btokens = {
     "hex": b"x",
     "zero": b"0",
     "unicode_narrow": b"u",
-    "unicode_wide": b"U"
+    "unicode_wide": b"U",
+    "unicode_name": b"N",
+    "long_replace_refs": (b"g", b"x")
 }
