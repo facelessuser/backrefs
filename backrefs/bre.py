@@ -3,50 +3,61 @@ Backrefs re.
 
 Add the ability to use the following backrefs with re:
 
-    * \l             - Lowercase character class (search)
-    * \c             - Uppercase character class (search)
-    * \L             - Inverse of lowercase character class (search)
-    * \C             - Inverse of uppercase character class (search)
-    * \Q and \Q...\E - Escape/quote chars (search)
-    * \c and \C...\E - Uppercase char or chars (replace)
-    * \l and \L...\E - Lowercase char or chars (replace)
-    * [:ascii:]      - Posix style classes (search)
-    * [:^ascii:]     - Inverse Posix style classes (search)
-    * \p{Lu} and \p{Letter} and \p{gc=Uppercase_Letter}    - Unicode properties (search unicode)
-    * \p{block=Basic_Latin} and \p{InBasic_Latin}          - Unicode block properties (search unicode)
-    * \P{Lu} and \P{Letter} and \P{gc=Uppercase_Letter}    - Inverse Unicode properties (search unicode)
-    * \p{^Lu} and \p{^Letter} and \p{^gc=Uppercase_Letter} - Inverse Unicode properties (search unicode)
+ - `\l`                                                       - Lowercase character class (search)
+ - `\c`                                                       - Uppercase character class (search)
+ - `\L`                                                       - Inverse of lowercase character class (search)
+ - `\C`                                                       - Inverse of uppercase character class (search)
+ - `\Q` and `\Q...\E`                                         - Escape/quote chars (search)
+ - `\c` and `\C...\E`                                         - Uppercase char or chars (replace)
+ - `\l` and `\L...\E`                                         - Lowercase char or chars (replace)
+ - `[:ascii:]`                                                - Posix style classes (search)
+ - `[:^ascii:]`                                               - Inverse Posix style classes (search)
+ - `\p{Lu}` and \p{Letter} and `\p{gc=Uppercase_Letter}`      - Unicode properties (search unicode)
+ - `\p{block=Basic_Latin}` and `\p{InBasic_Latin}             - Unicode block properties (search unicode)
+ - `\P{Lu}` and `\P{Letter}` and `\P{gc=Uppercase_Letter}`    - Inverse Unicode properties (search unicode)
+ - `\p{^Lu}` and `\p{^Letter}` and `\p{^gc=Uppercase_Letter}` - Inverse Unicode properties (search unicode)
+ - `\N{Black Club Suit}`                                      - Unicode character by name (search & replace)
 
 Note
 =========
-- Only category or category with subcategory can be specifed for \p or \P.
+ -  Various Unicode properites can be specified for `\p` or `\P`. They can also be placed in character groups,
+    but you have to specify them separetly.
 
-  So the following is okay: r"[\p{Lu}\p{Ll}]" or r"[\p{L}]" etc.
-  The following is *not* okay: r"[\p{Lul}]" or r"[\p{Lu Ll}]" etc.
+    So the following is okay: `r"[\p{Lu}\p{Ll}]"` or `r"[\p{L}]"` etc.
+    The following is *not* okay: `r"[\p{Lul}]"` or `r"[\p{Lu Ll}]"` etc.
 
-- Your search pattern must be a unicode string in order to use unicode proptery backreferences,
-  but you do *not* have to use re.UNICODE.
+ -  Unicode names can be specified in groups as well: `r"[\N{black club suit}]"`.
 
-- \l, \L, \c, and \C in searches will be ascii ranges unless re.UNICODE is used.  This is to
-  give some consistency with re's \w, \W, \b, \B, \d, \D, \s and \S. Some posix classes will
-  also be affected.  See docs for more info.
+ -  Your search pattern must be a unicode string in order to use unicode proptery backreferences,
+    but you do *not* have to use re.UNICODE.
+
+ -  `\l`, `\L`, `\c`, and `\C` in searches will be ascii ranges unless re.UNICODE is used.  This is to
+    give some consistency with re's `\w`, `\W`, `\b`, `\B`, `\d`, `\D`, `\s` and `\S`. Some posix classes will
+    also be affected.  See docs for more info.
 
 Compiling
 =========
+
+```py3
 pattern = compile_search(r'somepattern', flags)
 replace = compile_replace(pattern, r'\1 some replace pattern')
+```
 
 Usage
 =========
 Recommended to use compiling.  Assuming the above compiling:
 
+```py3
     text = pattern.sub(replace, 'sometext')
+```
 
 --or--
 
+```py3
     m = pattern.match('sometext')
     if m:
         text = replace(m)  # similar to m.expand(template)
+```
 
 Licensed under MIT
 Copyright (c) 2011 - 2015 Isaac Muse <isaacmuse@gmail.com>

@@ -11,7 +11,7 @@ environment:
       TOXENV: "py35-unittests"
     - PYTHON: "C:/Python36"
       TOXENV: "py36-unittests"
-    - PYTHON: "C:/Python27"
+    - PYTHON: "C:/Python36"
       TOXENV: "lint"
 init:
   - "ECHO %TOXENV%"

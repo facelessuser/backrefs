@@ -21,7 +21,7 @@ class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
     def test_unicode_name(self):
-        """Test unicode block."""
+        """Test Unicode block."""
 
         pattern = bre.compile_search(r'\N{black club suit}', re.UNICODE)
         print(pattern.pattern)
@@ -33,7 +33,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is not None)
 
     def test_unicode_block(self):
-        """Test unicode block."""
+        """Test Unicode block."""
 
         pattern = bre.compile_search(r'\p{InBasicLatin}')
         m = pattern.match(r'a')
@@ -42,7 +42,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is None)
 
     def test_unicode_block_specifier(self):
-        """Test unicode block by specifier."""
+        """Test Unicode block by specifier."""
 
         pattern = bre.compile_search(r'\p{Block: BasicLatin}')
         m = pattern.match(r'a')
@@ -51,7 +51,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is None)
 
     def test_inverse_unicode_block(self):
-        """Test inverse unicode block."""
+        """Test inverse Unicode block."""
 
         pattern = bre.compile_search(r'\p{^InBasicLatin}')
         m = pattern.match(r'a')
@@ -60,7 +60,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is not None)
 
     def test_inverse_unicode_block_specifier(self):
-        """Test inverse unicode block by specifier."""
+        """Test inverse Unicode block by specifier."""
 
         pattern = bre.compile_search(r'\p{^Block: BasicLatin}')
         m = pattern.match(r'a')
@@ -69,7 +69,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is not None)
 
     def test_unicode_script(self):
-        """Test unicode script."""
+        """Test Unicode script."""
 
         pattern = bre.compile_search(r'\p{IsLatin}')
         m = pattern.match(r'a')
@@ -78,7 +78,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is None)
 
     def test_unicode_script_specifier(self):
-        """Test unicode script by specifier."""
+        """Test Unicode script by specifier."""
 
         pattern = bre.compile_search(r'\p{Script: Latin}')
         m = pattern.match(r'a')
@@ -87,7 +87,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is None)
 
     def test_inverse_unicode_script(self):
-        """Test inverse unicode script."""
+        """Test inverse Unicode script."""
 
         pattern = bre.compile_search(r'\p{^IsLatin}')
         m = pattern.match(r'a')
@@ -96,7 +96,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is not None)
 
     def test_inverse_unicode_script_specifier(self):
-        """Test inverse unicode block by specifier."""
+        """Test inverse Unicode block by specifier."""
 
         pattern = bre.compile_search(r'\p{^Script: Latin}')
         m = pattern.match(r'a')
@@ -118,7 +118,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(pattern.pattern, pattern2.pattern)
 
     def test_posix_in_group_ascii(self):
-        """Test posix in a group for ascii."""
+        """Test posix in a group for ASCII."""
         if PY3:
             pattern = bre.compile_search(r'Test [[:graph:]]', re.ASCII)
             pattern2 = bre.compile_search('Test [\u0021-\u007E]', re.ASCII)
@@ -128,96 +128,96 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(pattern.pattern, pattern2.pattern)
 
     def test_not_posix_at_start_group(self):
-        """Test a situation that is not a posix at the start of a group."""
+        """Test a situation that is not a POSIX at the start of a group."""
 
         pattern = bre.compile_search(r'Test [:graph:]]')
         self.assertEqual(pattern.pattern, r'Test [:graph:]]')
 
     def test_not_posix_at_end_group(self):
-        """Test a situation that is not a posix at the end of a group."""
+        """Test a situation that is not a POSIX at the end of a group."""
 
         pattern = bre.compile_search(r'Test [[:graph:]')
         self.assertEqual(pattern.pattern, r'Test [[:graph:]')
 
     def test_ascii_upper_props(self):
-        """Test ascii uppercase properties."""
+        """Test ASCII uppercase properties."""
 
         pattern = bre.compile_search(br'EX\c+LE')
         m = pattern.match(br'EXAMPLE')
         self.assertTrue(m is not None)
 
     def test_ascii_upper_props_group(self):
-        """Test ascii uppercase properties in a char group."""
+        """Test ASCII uppercase properties in a character group."""
 
         pattern = bre.compile_search(br'EX[\c]+LE')
         m = pattern.match(br'EXAMPLE')
         self.assertTrue(m is not None)
 
     def test_ascii_lower_props(self):
-        """Test ascii lowercase properties."""
+        """Test ASCII lowercase properties."""
 
         pattern = bre.compile_search(br'EX\l+LE')
         m = pattern.match(br'EXampLE')
         self.assertTrue(m is not None)
 
     def test_ascii_lower_props_group(self):
-        """Test ascii uppercase properties in a char group."""
+        """Test ASCII uppercase properties in a char group."""
 
         pattern = bre.compile_search(br'EX[\l]+LE')
         m = pattern.match(br'EXampLE')
         self.assertTrue(m is not None)
 
     def test_ascii_props_mixed_group(self):
-        """Test mixed ascii properties in group."""
+        """Test mixed ASCII properties in group."""
 
         pattern = bre.compile_search(br'EX[\l\c]+LE')
         m = pattern.match(br'EXaMpLE')
         self.assertTrue(m is not None)
 
     def test_ascii_props_mixed(self):
-        """Test mixed ascii properties."""
+        """Test mixed ASCII properties."""
 
         pattern = bre.compile_search(br'EX\l\c\lLE')
         m = pattern.match(br'EXaMpLE')
         self.assertTrue(m is not None)
 
     def test_reverse_ascii_lower_props(self):
-        """Test reverse ascii lowercase properties."""
+        """Test reverse ASCII lowercase properties."""
 
         pattern = bre.compile_search(br'EX\L+LE')
         m = pattern.match(br'EXAMPLE')
         self.assertTrue(m is not None)
 
     def test_reverse_ascii_lower_props_group(self):
-        """Test reverse ascii lowercase properties in a group."""
+        """Test reverse ASCII lowercase properties in a group."""
 
         pattern = bre.compile_search(br'EX[\L]+LE')
         m = pattern.match(br'EXAMPLE')
         self.assertTrue(m is not None)
 
     def test_reverse_ascii_upper_props(self):
-        """Test reveerse ascii uppercase properties."""
+        """Test reverse ASCII uppercase properties."""
 
         pattern = bre.compile_search(br'EX\C+LE')
         m = pattern.match(br'EXampLE')
         self.assertTrue(m is not None)
 
     def test_reverse_ascii_upper_props_group(self):
-        """Test reverse ascii uppercase properties in a group."""
+        """Test reverse ASCII uppercase properties in a group."""
 
         pattern = bre.compile_search(br'EX[\C]+LE')
         m = pattern.match(br'EXampLE')
         self.assertTrue(m is not None)
 
     def test_reverse_ascii_props_mixed_group(self):
-        """Test reverse mixed ascii properties in a group."""
+        """Test reverse mixed ASCII properties in a group."""
 
         pattern = bre.compile_search(br'EX[\C\L]+LE')
         m = pattern.match(br'EXaMpLE')
         self.assertTrue(m is not None)
 
     def test_reverse_ascii_props_mixed(self):
-        """Test reverse ascii properties."""
+        """Test reverse ASCII properties."""
 
         pattern = bre.compile_search(br'EX\C\L\CLE')
         m = pattern.match(br'EXaMpLE')
@@ -246,7 +246,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]', result)
 
     def test_quote_no_end(self):
-        r"""Test quote where no \E is defined."""
+        r"""Test quote where no `\E` is defined."""
 
         result = bre.SearchTemplate(r'Testing \Q(quote) with no [end]!').apply()
         self.assertEqual(r'Testing %s' % re.escape(r'(quote) with no [end]!'), result)
@@ -291,7 +291,7 @@ class TestSearchTemplate(unittest.TestCase):
         """
         Ensure escaping escaped escaped escaped backrefs do get processed.
 
-        This is far enough to prove out that we are handeling them well enough.
+        This is far enough to prove out that we are handling them well enough.
         """
 
         result = bre.SearchTemplate(r'Testing escaped escaped \\\\\Qbackrefs\\\\\E!').apply()
@@ -311,10 +311,10 @@ class TestSearchTemplate(unittest.TestCase):
 
     def test_unicode_shorthand_properties_capital(self):
         """
-        Excercising that unicode properties are built correctly by testing shorthand lower and upper.
+        Exercising that Unicode properties are built correctly by testing shorthand lower and upper.
 
         We want to test uppercase and make sure things make sense,
-        and then test lower case later.  Not extensive, just making sure its genrally working.
+        and then test lower case later.  Not extensive, just making sure its generally working.
         """
 
         pattern = bre.compile_search(r'EX\cMPLE', re.UNICODE)
@@ -324,7 +324,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is None)
 
     def test_unicode_shorthand_properties_lower(self):
-        """Exercise the unicode shorthand properties for lower case."""
+        """Exercise the Unicode shorthand properties for lower case."""
 
         pattern = bre.compile_search(r'ex\lmple', re.UNICODE)
         m = pattern.match('exámple')
@@ -333,7 +333,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is None)
 
     def test_unicode_shorthand_properties_in_char_group(self):
-        """Exercise the unicode shorthand properties inside a char group."""
+        """Exercise the Unicode shorthand properties inside a char group."""
 
         pattern = bre.compile_search(r'ex[\l\c]mple', re.UNICODE)
         m = pattern.match('exámple')
@@ -342,7 +342,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is not None)
 
     def test_unicode_shorthand_properties_with_string_flag(self):
-        """Exercise the unicode shorthand properties with an re string flag (?u)."""
+        """Exercise the Unicode shorthand properties with an re string flag `(?u)`."""
 
         pattern = bre.compile_search(r'ex[\l\c]mple(?u)')
         m = pattern.match('exámple')
@@ -351,7 +351,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is not None)
 
     def test_unicode_shorthand_ascii_only(self):
-        """Ensure that when the unicode flag is not used, only ascii properties are used."""
+        """Ensure that when the Unicode flag is not used, only ASCII properties are used."""
 
         flags = bre.ASCII if PY3 else 0
         pattern = bre.compile_search(r'ex\lmple', flags)
@@ -362,10 +362,10 @@ class TestSearchTemplate(unittest.TestCase):
 
     def test_unicode_properties_capital(self):
         """
-        Excercising that unicode properties are built correctly.
+        Exercising that Unicode properties are built correctly.
 
         We want to test uppercase and make sure things make sense,
-        and then test lower case later.  Not extensive, just making sure its genrally working.
+        and then test lower case later.  Not extensive, just making sure its generally working.
         """
 
         pattern = bre.compile_search(r'EX\p{Lu}MPLE', re.UNICODE)
@@ -375,7 +375,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is None)
 
     def test_unicode_properties_lower(self):
-        """Exercise the unicode properties for lower case."""
+        """Exercise the Unicode properties for lower case."""
 
         pattern = bre.compile_search(r'ex\p{Ll}mple', re.UNICODE)
         m = pattern.match('exámple')
@@ -384,7 +384,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is None)
 
     def test_unicode_properties_in_char_group(self):
-        """Exercise the unicode properties inside a char group."""
+        """Exercise the Unicode properties inside a character group."""
 
         pattern = bre.compile_search(r'ex[\p{Ll}\p{Lu}]mple', re.UNICODE)
         m = pattern.match('exámple')
@@ -393,7 +393,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is not None)
 
     def test_unicode_properties_names(self):
-        """Test unicode group friendly names."""
+        """Test Unicode group friendly names."""
 
         pattern = bre.compile_search(r'ex[\p{Letter}]mple', re.UNICODE)
         m = pattern.match('exámple')
@@ -402,7 +402,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is not None)
 
     def test_unicode_properties_inverse(self):
-        """Excercising inverse unicode properties."""
+        """Exercising inverse Unicode properties."""
 
         pattern = bre.compile_search(r'\P{Po}', re.UNICODE)
         m = pattern.match(r'·')
@@ -411,7 +411,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is not None)
 
     def test_negated_unicode_properties_inverse(self):
-        """Excercising negated inverse unicode properties."""
+        """Exercising negated inverse Unicode properties."""
 
         pattern = bre.compile_search(r'[^\P{Po}]', re.UNICODE)
         m = pattern.match(r'·')
@@ -420,7 +420,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is None)
 
     def test_binary_unicode_ignore(self):
-        r"""Binary patterns should not process \p references."""
+        r"""Binary patterns should not process `\p` references."""
         import sre_constants
 
         if PY36_PLUS:
@@ -428,7 +428,7 @@ class TestSearchTemplate(unittest.TestCase):
                 """Should fail on Unicode back reference."""
                 bre.compile_search(br'EX\p{Lu}MPLE')
 
-            # Python3.6+ fails on invalid back references (which ours are)
+            # Python 3.6+ fails on invalid back references (which ours are)
             # Since this one is not valid in a bytes string, it shouldn't
             # be used.  It is okay that Python fails on this.
             self.assertRaises(sre_constants.error, no_unicode)
@@ -438,7 +438,7 @@ class TestSearchTemplate(unittest.TestCase):
             self.assertTrue(m is not None)
 
     def test_unicode_and_verbose_flag(self):
-        """Test that VERBOSE and UNICODE togethter come through."""
+        """Test that `VERBOSE` and `UNICODE` together come through."""
 
         pattern = bre.compile_search(r'Some pattern', flags=bre.VERBOSE | bre.UNICODE)
         self.assertTrue(pattern.flags & bre.UNICODE and pattern.flags & bre.VERBOSE)
@@ -468,7 +468,7 @@ class TestSearchTemplate(unittest.TestCase):
         )
 
     def test_detect_verbose_string_flag_at_end(self):
-        """Test verbose string flag (?x) at end."""
+        """Test verbose string flag `(?x)` at end."""
 
         pattern = bre.compile_search(
             r'''
@@ -492,7 +492,7 @@ class TestSearchTemplate(unittest.TestCase):
         )
 
     def test_ignore_verbose_string(self):
-        """Test verbose string flag (?x) in char set."""
+        """Test verbose string flag `(?x)` in character set."""
 
         pattern = bre.compile_search(
             r'''
@@ -516,7 +516,7 @@ class TestSearchTemplate(unittest.TestCase):
         )
 
     def test_verbose_string_in_quote(self):
-        """Test verbose string flag (?x) in quote."""
+        """Test verbose string flag `(?x)` in quote."""
 
         pattern = bre.compile_search(
             r'''
@@ -540,7 +540,7 @@ class TestSearchTemplate(unittest.TestCase):
         )
 
     def test_detect_complex_verbose_string_flag(self):
-        """Test complex verbose string flag (?x)."""
+        """Test complex verbose string flag `(?x)`."""
 
         pattern = bre.compile_search(
             r'''
@@ -566,7 +566,7 @@ class TestSearchTemplate(unittest.TestCase):
         )
 
     def test_unicode_string_flag(self):
-        """Test finding unicode/ascii string flag."""
+        """Test finding Unicode/ASCII string flag."""
 
         if PY3:
             template = bre.SearchTemplate(r'Testing for (?ia) ASCII flag.', False, None)
@@ -578,7 +578,7 @@ class TestSearchTemplate(unittest.TestCase):
             self.assertTrue(template.unicode)
 
     def test_unicode_string_flag_in_group(self):
-        """Test ignoring unicode/ascii string flag in group."""
+        """Test ignoring Unicode/ASCII string flag in group."""
 
         if PY3:
             template = bre.SearchTemplate(r'Testing for [(?ia)] ASCII flag.', False, None)
@@ -590,7 +590,7 @@ class TestSearchTemplate(unittest.TestCase):
             self.assertFalse(template.unicode)
 
     def test_unicode_string_flag_escaped(self):
-        """Test ignoring unicode/ascii string flag in group."""
+        """Test ignoring Unicode/ASCII string flag in group."""
 
         if PY3:
             template = bre.SearchTemplate(r'Testing for \(?ia) ASCII flag.', False, None)
@@ -602,7 +602,7 @@ class TestSearchTemplate(unittest.TestCase):
             self.assertFalse(template.unicode)
 
     def test_unicode_string_flag_unescaped(self):
-        """Test unescaped unicode string flag."""
+        """Test unescaped Unicode string flag."""
 
         if PY3:
             template = bre.SearchTemplate(r'Testing for \\(?ia) ASCII flag.', False, None)
@@ -614,7 +614,7 @@ class TestSearchTemplate(unittest.TestCase):
             self.assertTrue(template.unicode)
 
     def test_unicode_string_flag_escaped_deep(self):
-        """Test deep escaped unicode flag."""
+        """Test deep escaped Unicode flag."""
 
         if PY3:
             template = bre.SearchTemplate(r'Testing for \\\(?ia) ASCII flag.', False, None)
@@ -717,7 +717,7 @@ class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
     def test_replace_unicode_name_ascii_range(self):
-        """Test replacing Unicode names in the ascii range."""
+        """Test replacing Unicode names in the ASCII range."""
 
         pattern = re.compile(r"(some)(.*?)(pattern)(!)")
         expand = bre.compile_replace(
@@ -733,7 +733,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
     def test_replace_unicode_name(self):
-        """Test replacing unicode names."""
+        """Test replacing Unicode names."""
 
         pattern = re.compile(r"(some)(.*?)(pattern)(!)")
         expand = bre.compile_replace(
@@ -749,7 +749,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
     def test_format_replace_unicode_name(self):
-        """Test replacing format unicode names."""
+        """Test replacing format Unicode names."""
 
         pattern = re.compile(r"(some)(.*?)(pattern)(!)")
         expandf = bre.compile_replace(
@@ -1074,7 +1074,7 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(r'\\l\cThis is a test of escaped backrefs!', results)
 
     def test_escaped_slash_before_backref(self):
-        """Test deepeer escaped slash."""
+        """Test deeper escaped slash."""
 
         text = "this is a test of escaped slash backrefs!"
         pattern = re.compile(r"(.*)")
@@ -1378,7 +1378,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
     def test_dont_case_special_refs(self):
-        """Test that we don't case unicode and bytes tokens, but case the character."""
+        """Test that we don't case Unicode and bytes tokens, but case the character."""
 
         # Unicode and bytes should get evaluated proper
         pattern = re.compile('Test')
@@ -1550,7 +1550,7 @@ class TestExceptions(unittest.TestCase):
         self.assertTrue(str(e), 'Format for Unicode property is \\p{property}!')
 
     def test_incomplete_unicode_name(self):
-        """Test incomplete unicode name."""
+        """Test incomplete Unicode name."""
 
         with self.assertRaises(SyntaxError) as e:
             bre.compile_search(r'\N', re.UNICODE)
@@ -1673,7 +1673,7 @@ class TestExceptions(unittest.TestCase):
         assert "Not a string or compiled pattern!" in str(excinfo.value)
 
     def test_relace_flag_on_compiled(self):
-        """Test when a compile occurs on a compiled object with flags passsed."""
+        """Test when a compile occurs on a compiled object with flags passed."""
 
         pattern = re.compile('test')
         replace = bre.compile_replace(pattern, "whatever")
@@ -1684,7 +1684,7 @@ class TestExceptions(unittest.TestCase):
         assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
 
     def test_relace_flag_on_template(self):
-        """Test when a compile occurs on a template with flags passsed."""
+        """Test when a compile occurs on a template with flags passed."""
 
         pattern = re.compile('test')
         template = bre.ReplaceTemplate(pattern, 'whatever')
@@ -1715,7 +1715,7 @@ class TestExceptions(unittest.TestCase):
         assert "Pattern hash doesn't match hash in compiled replace!" in str(excinfo.value)
 
     def test_sub_wrong_replace_type(self):
-        """Test sending wrong type into sub, subn."""
+        """Test sending wrong type into `sub`, `subn`."""
 
         pattern = re.compile('test')
         replace = bre.compile_replace(pattern, 'whatever', bre.FORMAT)
@@ -1731,7 +1731,7 @@ class TestExceptions(unittest.TestCase):
         assert "Compiled replace cannot be a format object!" in str(excinfo.value)
 
     def test_sub_wrong_replace_format_type(self):
-        """Test sending wrong format type into sub, subn."""
+        """Test sending wrong format type into `sub`, `subn`."""
 
         pattern = re.compile('test')
         replace = bre.compile_replace(pattern, 'whatever')
@@ -1820,19 +1820,19 @@ class TestConvenienceFunctions(unittest.TestCase):
     """Test convenience functions."""
 
     def test_match(self):
-        """Test that match works."""
+        """Test that `match` works."""
 
         m = bre.match(r'This is a test for m[\l]+!', "This is a test for match!")
         self.assertTrue(m is not None)
 
     def test_search(self):
-        """Test that search works."""
+        """Test that `search` works."""
 
         m = bre.search(r'test', "This is a test for search!")
         self.assertTrue(m is not None)
 
     def test_split(self):
-        """Test that split works."""
+        """Test that `split` works."""
 
         self.assertEqual(
             bre.split(r'\W+', "This is a test for split!"),
@@ -1840,7 +1840,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_sub(self):
-        """Test that sub works."""
+        """Test that `sub` works."""
 
         self.assertEqual(
             bre.sub(r'tset', 'test', r'This is a tset for sub!'),
@@ -1859,7 +1859,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_subn(self):
-        """Test that subn works."""
+        """Test that `subn` works."""
 
         self.assertEqual(
             bre.subn(r'tset', 'test', r'This is a tset for subn! This is a tset for subn!'),
@@ -1867,7 +1867,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_subf(self):
-        """Test that subf works."""
+        """Test that `subf` works."""
 
         self.assertEqual(
             bre.subf(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subf!'),
@@ -1875,7 +1875,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_subfn(self):
-        """Test that subfn works."""
+        """Test that `subfn` works."""
 
         self.assertEqual(
             bre.subfn(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
@@ -1883,7 +1883,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_findall(self):
-        """Test that findall works."""
+        """Test that `findall` works."""
 
         self.assertEqual(
             bre.findall(r'\w+', 'This is a test for findall!'),
@@ -1891,7 +1891,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_finditer(self):
-        """Test that finditer works."""
+        """Test that `finditer` works."""
 
         count = 0
         for m in bre.finditer(r'\w+', 'This is a test for finditer!'):
@@ -1900,7 +1900,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         self.assertEqual(count, 6)
 
     def test_expand(self):
-        """Test that expand works."""
+        """Test that `expand` works."""
 
         pattern = bre.compile_search(r'(This is a test for )(m[\l]+!)')
         m = bre.match(pattern, "This is a test for match!")
@@ -1916,7 +1916,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_expandf(self):
-        """Test that expandf works."""
+        """Test that `expandf` works."""
 
         pattern = bre.compile_search(r'(This is a test for )(match!)')
         m = bre.match(pattern, "This is a test for match!")

@@ -1,7 +1,7 @@
 """
-Generate a unicode prop table for Python narrow and wide builds.
+Generate a Unicode prop table for Python narrow and wide builds.
 
-Narrow builds will stop at 0xffff.
+Narrow builds will stop at `0xffff`.
 """
 from __future__ import unicode_literals
 import sys
@@ -39,7 +39,7 @@ from __future__ import unicode_literals
 
 
 def uchr(i):
-    """Allow getting unicode character on narrow python builds."""
+    """Allow getting Unicode character on narrow Python builds."""
 
     try:
         return unichar(i)
@@ -48,7 +48,7 @@ def uchr(i):
 
 
 def uniformat(value):
-    """Convert a unicode char."""
+    """Convert a Unicode char."""
 
     # Escape #^-\]
     # We include # in case we are using (?x)
@@ -79,7 +79,7 @@ def binaryformat(value):
 
 
 def create_span(unirange):
-    """Clamp the unicode range."""
+    """Clamp the Unicode range."""
     if len(unirange) < 2:
         unirange.append(unirange[0])
     if NARROW:
@@ -1008,7 +1008,7 @@ def gen_properties(output):
 
 
 def build_unicode_property_table(output):
-    """Build and write out unicode property table."""
+    """Build and write out Unicode property table."""
 
     if not os.path.exists(output):
         os.mkdir(output)

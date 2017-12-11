@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.0
+
+- **NEW**: Proper support for `\N{Unicode Name}`.
+
 ## 2.1.0
 
 - **NEW**: Handle Unicode and byte notation in Re replace templates.

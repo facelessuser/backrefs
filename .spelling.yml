@@ -1,0 +1,54 @@
+documents:
+- name: MkDocs
+  language: html
+  src:
+  - site
+  aspell:
+    lang: en
+    mode: html
+  dictionary:
+    lang: en
+    wordlists:
+    - docs/src/dictionary/en-custom.txt
+    output: build/dictionary/mkdocs.dic
+  html:
+    attributes:
+    - title
+    - alt
+    ignores:
+    - code
+    - pre
+    - a.magiclink-compare
+    - a.magiclink-commit
+    - span.keys
+    - .MathJax_Preview
+    - .md-nav__link
+    - .md-footer-custom-text
+    - .md-source__repository
+
+- name: Python Source
+  language: python
+  src:
+  - pymdownx
+  - tests
+  - tools
+  excludes:
+  - backrefs/uniprops/unidata/*
+  - tests/spellcheck.py
+  aspell:
+    lang: en
+  dictionary:
+    lang: en
+    wordlists:
+    - docs/src/dictionary/en-custom.txt
+    - docs/src/dictionary/en-python.txt
+    output: build/dictionary/python.dic
+  context_delimiters:
+    context_visible_first: true
+    delimiters:
+    - escapes: ['`']
+      open: (?P<open>`+)
+      close: (?P=open)
+    - escapes: ['~']
+      open: (?P<open>~{3,})
+      close: (?P=open)
