@@ -3,26 +3,33 @@ Backrefs for the 'regex' module.
 
 Add the ability to use the following backrefs with re:
 
-    * \Q and \Q...\E - Escape/quote chars (search)
-    * \c and \C...\E - Uppercase char or chars (replace)
-    * \l and \L...\E - Lowercase char or chars (replace)
+ -  `\Q` and `\Q...\E` - Escape/quote chars (search)
+ -  `\c` and `\C...\E` - Uppercase char or chars (replace)
+ -  `\l` and `\L...\E` - Lowercase char or chars (replace)
 
 Compiling
 =========
+
+```py3
 pattern = compile_search(r'somepattern', flags)
 replace = compile_replace(pattern, r'\1 some replace pattern')
+```
 
 Usage
 =========
 Recommended to use compiling.  Assuming the above compiling:
 
+```py3
     text = pattern.sub(replace, 'sometext')
+```
 
 --or--
 
+```py3
     m = pattern.match('sometext')
     if m:
         text = replace(m)  # similar to m.expand(template)
+```
 
 Licensed under MIT
 Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>

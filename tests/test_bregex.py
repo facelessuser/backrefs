@@ -86,7 +86,7 @@ class TestSearchTemplate(unittest.TestCase):
         """
         Ensure escaping escaped escaped escaped backrefs do get processed.
 
-        This is far enough to prove out that we are handeling them well enough.
+        This is far enough to prove out that we are handling them well enough.
         """
 
         result = bregex.RegexSearchTemplate(r'Testing escaped escaped \\\\\Qbackrefs\\\\\E!').apply()
@@ -105,7 +105,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(r'\e \\e \\\e \\\\e \\\\\e', result)
 
     def test_unicode_and_verbose_flag(self):
-        """Test that VERBOSE and UNICODE togethter come through."""
+        """Test that VERBOSE and UNICODE together come through."""
 
         pattern = bregex.compile_search(r'Some pattern', flags=bregex.VERBOSE | bregex.UNICODE)
         self.assertTrue(pattern.flags & bregex.UNICODE and pattern.flags & bregex.VERBOSE)
@@ -315,13 +315,13 @@ class TestSearchTemplate(unittest.TestCase):
         )
 
     def test_version0_and_verbose_flag(self):
-        """Test that VERBOSE and V0 togethter come through."""
+        """Test that VERBOSE and V0 together come through."""
 
         pattern = bregex.compile_search(r'Some pattern', flags=bregex.VERBOSE | bregex.V0)
         self.assertTrue(pattern.flags & bregex.V0 and pattern.flags & bregex.VERBOSE)
 
     def test_version1_and_verbose_flag(self):
-        """Test that VERBOSE and V1 togethter come through."""
+        """Test that VERBOSE and V1 together come through."""
 
         pattern = bregex.compile_search(r'Some pattern', flags=bregex.VERBOSE | bregex.V1)
         self.assertTrue(pattern.flags & bregex.V1 and pattern.flags & bregex.VERBOSE)
@@ -471,7 +471,7 @@ class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
     def test_replace_unicode_name_ascii_range(self):
-        """Test replacing Unicode names in the ascii range."""
+        """Test replacing Unicode names in the ASCII range."""
 
         pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
         expand = bregex.compile_replace(
@@ -487,7 +487,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
     def test_replace_unicode_name(self):
-        """Test replacing unicode names."""
+        """Test replacing Unicode names."""
 
         pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
         expand = bregex.compile_replace(
@@ -503,7 +503,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
     def test_format_replace_unicode_name(self):
-        """Test replacing format unicode names."""
+        """Test replacing format Unicode names."""
 
         pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
         expandf = bregex.compile_replace(
@@ -828,7 +828,7 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(r'\\l\cThis is a test of escaped backrefs!', results)
 
     def test_escaped_slash_before_backref(self):
-        """Test deepeer escaped slash."""
+        """Test deeper escaped slash."""
 
         text = "this is a test of escaped slash backrefs!"
         pattern = regex.compile(r"(.*)")
@@ -1139,7 +1139,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
     def test_dont_case_special_refs(self):
-        """Test that we don't case unicode and bytes tokens, but case the character."""
+        """Test that we don't case Unicode and bytes tokens, but case the character."""
 
         # Unicode and bytes should get evaluated proper
         pattern = regex.compile('Test')
@@ -1383,7 +1383,7 @@ class TestExceptions(unittest.TestCase):
         assert "Not a string or compiled pattern!" in str(excinfo.value)
 
     def test_relace_flag_on_compiled(self):
-        """Test when a compile occurs on a compiled object with flags passsed."""
+        """Test when a compile occurs on a compiled object with flags passed."""
 
         pattern = regex.compile('test')
         replace = bregex.compile_replace(pattern, "whatever")
@@ -1394,7 +1394,7 @@ class TestExceptions(unittest.TestCase):
         assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
 
     def test_relace_flag_on_template(self):
-        """Test when a compile occurs on a template with flags passsed."""
+        """Test when a compile occurs on a template with flags passed."""
 
         pattern = regex.compile('test')
         template = bregex.ReplaceTemplate(pattern, 'whatever')
@@ -1425,7 +1425,7 @@ class TestExceptions(unittest.TestCase):
         assert "Pattern hash doesn't match hash in compiled replace!" in str(excinfo.value)
 
     def test_sub_wrong_replace_type(self):
-        """Test sending wrong type into sub, subn."""
+        """Test sending wrong type into `sub`, `subn`."""
 
         pattern = regex.compile('test')
         replace = bregex.compile_replace(pattern, 'whatever', bregex.FORMAT)
@@ -1441,7 +1441,7 @@ class TestExceptions(unittest.TestCase):
         assert "Compiled replace cannot be a format object!" in str(excinfo.value)
 
     def test_sub_wrong_replace_format_type(self):
-        """Test sending wrong format type into sub, subn."""
+        """Test sending wrong format type into `sub`, `subn`."""
 
         pattern = regex.compile('test')
         replace = bregex.compile_replace(pattern, 'whatever')
@@ -1457,7 +1457,7 @@ class TestExceptions(unittest.TestCase):
         assert "Compiled replace is not a format object!" in str(excinfo.value)
 
     def test_expand_wrong_values(self):
-        """Test expand with wrong values."""
+        """Test `expand` with wrong values."""
 
         pattern = regex.compile('test')
         replace = bregex.compile_replace(pattern, 'whatever', bregex.FORMAT)
@@ -1474,7 +1474,7 @@ class TestExceptions(unittest.TestCase):
         assert "Expected string, buffer, or compiled replace!" in str(excinfo.value)
 
     def test_expandf_wrong_values(self):
-        """Test expand with wrong values."""
+        """Test `expand` with wrong values."""
 
         pattern = regex.compile('test')
         replace = bregex.compile_replace(pattern, 'whatever')
@@ -1530,25 +1530,25 @@ class TestConvenienceFunctions(unittest.TestCase):
     """Test convenience functions."""
 
     def test_match(self):
-        """Test that match works."""
+        """Test that `match` works."""
 
         m = bregex.match(r'This is a test for match!', "This is a test for match!")
         self.assertTrue(m is not None)
 
     def test_fullmatch(self):
-        """Test that match works."""
+        """Test that `match` works."""
 
         m = bregex.fullmatch(r'This is a test for match!', "This is a test for match!")
         self.assertTrue(m is not None)
 
     def test_search(self):
-        """Test that search works."""
+        """Test that `search` works."""
 
         m = bregex.search(r'test', "This is a test for search!")
         self.assertTrue(m is not None)
 
     def test_split(self):
-        """Test that split works."""
+        """Test that `split` works."""
 
         self.assertEqual(
             bregex.split(r'\W+', "This is a test for split!"),
@@ -1556,7 +1556,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_splititer(self):
-        """Test that split works."""
+        """Test that `split` works."""
 
         array = []
         for x in bregex.splititer(r'\W+', "This is a test for split!"):
@@ -1565,7 +1565,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         self.assertEqual(array, ["This", "is", "a", "test", "for", "split", ""])
 
     def test_sub(self):
-        """Test that sub works."""
+        """Test that `sub` works."""
 
         self.assertEqual(
             bregex.sub(r'tset', 'test', r'This is a tset for sub!'),
@@ -1584,7 +1584,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_subn(self):
-        """Test that subn works."""
+        """Test that `subn` works."""
 
         self.assertEqual(
             bregex.subn(r'tset', 'test', r'This is a tset for subn! This is a tset for subn!'),
@@ -1592,7 +1592,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_subf(self):
-        """Test that subf works."""
+        """Test that `subf` works."""
 
         self.assertEqual(
             bregex.subf(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subf!'),
@@ -1600,7 +1600,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_subfn(self):
-        """Test that subfn works."""
+        """Test that `subfn` works."""
 
         self.assertEqual(
             bregex.subfn(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
@@ -1608,7 +1608,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_findall(self):
-        """Test that findall works."""
+        """Test that `findall` works."""
 
         self.assertEqual(
             bregex.findall(r'\w+', 'This is a test for findall!'),
@@ -1616,7 +1616,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_finditer(self):
-        """Test that finditer works."""
+        """Test that `finditer` works."""
 
         count = 0
         for m in bregex.finditer(r'\w+', 'This is a test for finditer!'):
@@ -1625,7 +1625,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         self.assertEqual(count, 6)
 
     def test_expand(self):
-        """Test that expand works."""
+        """Test that `expand` works."""
 
         pattern = bregex.compile_search(r'(This is a test for )(match!)')
         m = bregex.match(pattern, "This is a test for match!")
@@ -1641,7 +1641,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         )
 
     def test_expandf(self):
-        """Test that expandf works."""
+        """Test that `expandf` works."""
 
         pattern = bregex.compile_search(r'(This is a test for )(match!)')
         m = bregex.match(pattern, "This is a test for match!")

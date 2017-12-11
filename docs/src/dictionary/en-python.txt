@@ -1,0 +1,8 @@
+enum
+bidi
+BOM
+BOMs
+UTF
+backrefs
+backref
+bregex
