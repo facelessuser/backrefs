@@ -226,7 +226,7 @@ class DetectEncoding(object):
                             encoding = 'bin'
             else:
                 encoding = 'bin'
-        except Exception as e:  # pragma: no cover
+        except Exception:  # pragma: no cover
             encoding = 'bin'
             pass
 
@@ -341,7 +341,7 @@ class SpellingHTML(SpellingGeneric):
             with codecs.open(source_file, 'r', encoding=encoding) as f:
                 text = f.read()
             html = [(text, source_file, encoding)]
-        except Exception as e:
+        except Exception:
             html = [('', source_file, 'bin')]
         return html
 
