@@ -83,7 +83,7 @@ In order to escape patterns formulated for Backrefs, you can simply use your reg
     1. Backrefs does not implement true format replace strings, but the functionality feels the same in regards to specifying groups and captures within a group.
     2. Indexing into different captures in Re is limited to `0` or `-1` since Re *only* maintains the last capture.
     3. While you can access the `subf` and `subfn` methods directly from a match object or via Backrefs' provided wrappers in Regex, you *must* use Backrefs' provided wrappers for Re as Re does not natively support such a feature.
-    3. Raw string (`r"..."`) handling for format replace is a bit different for Backrefs compared to Regex. Regex treats format strings as simply strings instead of as a regular replace template. So while in a regular replace template you can use `\n` to represent a new line, in format strings, you'd have use a literal new line or use a normal string (`"..."`) with `\n`. Backrefs will actually process back references and format references.
+    3. Raw string (`#!py3 r"..."`) handling for format replace is a bit different for Backrefs compared to Regex. Regex treats format strings as simply strings instead of as a regular replace template. So while in a regular replace template you can use `\n` to represent a new line, in format strings, you'd have use a literal new line or use a normal string (`!#py3 "..."`) with `\n`. Backrefs will actually process back references and format references.
 
 The Regex module offers a feature where you can apply replacements via a format string style.
 
