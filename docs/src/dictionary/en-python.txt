@@ -1,8 +1,10 @@
-enum
-bidi
 BOM
 BOMs
 UTF
-backrefs
 backref
+backrefs
+bidi
 bregex
+builtin
+enum
+regex
