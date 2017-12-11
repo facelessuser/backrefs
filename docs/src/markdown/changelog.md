@@ -3,6 +3,7 @@
 ## 2.2.0
 
 - **NEW**: Proper support for `\N{Unicode Name}`.
+- **FIX**: Incomplete escapes will not be passed through, but will instead throw an error. For instance `\p` should only be passed through if it is complete `\p{category}`.  Python 3.7 will error on this if we pass it through, and Python 3.6 will generate warnings.  We should just consistently fail on it for all Python versions.
 
 ## 2.1.0
 
