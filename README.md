@@ -7,7 +7,7 @@
 ![License][license-image]
 # Backrefs
 
-Backrefs is a wrapper around Python's built-in **re** and the 3rd party **regex** library.  Backrefs adds various additional back references that are known to some regex engines, but not to Python's **re**, and (to a much lesser degree) **regex**.  The supported back references actually vary depending on the regular expression engine being used as **regex** already has most of them.
+Backrefs is a wrapper around Python's built-in [Re][re] and the 3rd party [Regex][regex] library.  Backrefs adds various additional back references (and a couple other features) that are known to some regular expression engines, but not to Python's Re and/or Regex.  The supported back references actually vary depending on the regular expression engine being used as the engine may already have support for some.
 
 # Documentation
 
@@ -38,3 +38,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 [requires-link]: https://requires.io/github/facelessuser/backrefs/requirements/?branch=master
 [pypi-image]: https://img.shields.io/pypi/v/backrefs.svg
 [pypi-link]: https://pypi.python.org/pypi/backrefs
+
+[re]: https://docs.python.org/3/library/re.html
+[regex]: https://pypi.python.org/pypi/regex
