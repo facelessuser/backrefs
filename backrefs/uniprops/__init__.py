@@ -24,7 +24,7 @@ def get_posix_property(value, uni=False):
 
 
 def get_gc_property(value):
-    """Get GC property."""
+    """Get `GC` property."""
 
     if value.startswith('^'):
         negate = True
@@ -47,7 +47,7 @@ def get_gc_property(value):
 
 
 def get_binary_property(value):
-    """Get BINARY property."""
+    """Get `BINARY` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -59,7 +59,7 @@ def get_binary_property(value):
 
 
 def get_canonical_combining_class_property(value):
-    """Get CANONICAL COMBINING CLASS property."""
+    """Get `CANONICAL COMBINING CLASS` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -71,7 +71,7 @@ def get_canonical_combining_class_property(value):
 
 
 def get_east_asian_width_property(value):
-    """Get EAST ASIAN WIDTH property."""
+    """Get `EAST ASIAN WIDTH` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -83,7 +83,7 @@ def get_east_asian_width_property(value):
 
 
 def get_grapheme_cluster_break_property(value):
-    """Get GRAPHEME CLUSTER BREAK property."""
+    """Get `GRAPHEME CLUSTER BREAK` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -95,7 +95,7 @@ def get_grapheme_cluster_break_property(value):
 
 
 def get_line_break_property(value):
-    """Get LINE BREAK property."""
+    """Get `LINE BREAK` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -107,7 +107,7 @@ def get_line_break_property(value):
 
 
 def get_sentence_break_property(value):
-    """Get SENTENCE BREAK property."""
+    """Get `SENTENCE BREAK` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -119,7 +119,7 @@ def get_sentence_break_property(value):
 
 
 def get_word_break_property(value):
-    """Get WORD BREAK property."""
+    """Get `WORD BREAK` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -131,7 +131,7 @@ def get_word_break_property(value):
 
 
 def get_hangul_syllable_type_property(value):
-    """Get HANGUL SYLLABLE TYPE property."""
+    """Get `HANGUL SYLLABLE TYPE` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -143,7 +143,7 @@ def get_hangul_syllable_type_property(value):
 
 
 def get_decomposition_type_property(value):
-    """Get DECOMPOSITION TYPE property."""
+    """Get `DECOMPOSITION TYPE` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -155,7 +155,7 @@ def get_decomposition_type_property(value):
 
 
 def get_nfc_quick_check_property(value):
-    """Get NFC QUICK CHECK property."""
+    """Get `NFC QUICK CHECK` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -167,7 +167,7 @@ def get_nfc_quick_check_property(value):
 
 
 def get_nfd_quick_check_property(value):
-    """Get NFD QUICK CHECK property."""
+    """Get `NFD QUICK CHECK` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -179,7 +179,7 @@ def get_nfd_quick_check_property(value):
 
 
 def get_nfkc_quick_check_property(value):
-    """Get NFKC QUICK CHECK property."""
+    """Get `NFKC QUICK CHECK` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -191,7 +191,7 @@ def get_nfkc_quick_check_property(value):
 
 
 def get_nfkd_quick_check_property(value):
-    """Get NFKD QUICK CHECK property."""
+    """Get `NFKD QUICK CHECK` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -203,7 +203,7 @@ def get_nfkd_quick_check_property(value):
 
 
 def get_numeric_type_property(value):
-    """Get NUMERIC TYPE property."""
+    """Get `NUMERIC TYPE` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -215,7 +215,7 @@ def get_numeric_type_property(value):
 
 
 def get_numeric_value_property(value):
-    """Get NUMERIC VALUE property."""
+    """Get `NUMERIC VALUE` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -227,7 +227,7 @@ def get_numeric_value_property(value):
 
 
 def get_age_property(value):
-    """Get AGE property."""
+    """Get `AGE` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -239,7 +239,7 @@ def get_age_property(value):
 
 
 def get_joining_type_property(value):
-    """Get JOINING TYPE property."""
+    """Get `JOINING TYPE` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -251,7 +251,7 @@ def get_joining_type_property(value):
 
 
 def get_joining_group_property(value):
-    """Get JOINING GROUP property."""
+    """Get `JOINING GROUP` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -263,7 +263,7 @@ def get_joining_group_property(value):
 
 
 def get_script_property(value):
-    """Get SC property."""
+    """Get `SC` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -275,7 +275,7 @@ def get_script_property(value):
 
 
 def get_block_property(value):
-    """Get BLK property."""
+    """Get `BLK` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -287,7 +287,7 @@ def get_block_property(value):
 
 
 def get_bidi_property(value):
-    """Get BC property."""
+    """Get `BC` property."""
 
     if value.startswith('^'):
         negated = value[1:]
@@ -305,7 +305,7 @@ def is_enum(name):
 
 
 def get_unicode_property(value, prop=None):
-    """Retrieve the unicode category from the table."""
+    """Retrieve the Unicode category from the table."""
 
     if prop is not None:
         prop = unidata.unicode_alias['_'].get(prop, prop)
