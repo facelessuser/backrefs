@@ -12,52 +12,52 @@ Add the ability to use the following backrefs with re:
  - `\l` and `\L...\E`                                         - Lowercase char or chars (replace)
  - `[:ascii:]`                                                - Posix style classes (search)
  - `[:^ascii:]`                                               - Inverse Posix style classes (search)
- - `\p{Lu}` and \p{Letter} and `\p{gc=Uppercase_Letter}`      - Unicode properties (search unicode)
- - `\p{block=Basic_Latin}` and `\p{InBasic_Latin}             - Unicode block properties (search unicode)
- - `\P{Lu}` and `\P{Letter}` and `\P{gc=Uppercase_Letter}`    - Inverse Unicode properties (search unicode)
- - `\p{^Lu}` and `\p{^Letter}` and `\p{^gc=Uppercase_Letter}` - Inverse Unicode properties (search unicode)
+ - `\p{Lu}` and \p{Letter} and `\p{gc=Uppercase_Letter}`      - Unicode properties (search Unicode)
+ - `\p{block=Basic_Latin}` and `\p{InBasic_Latin}`            - Unicode block properties (search Unicode)
+ - `\P{Lu}` and `\P{Letter}` and `\P{gc=Uppercase_Letter}`    - Inverse Unicode properties (search Unicode)
+ - `\p{^Lu}` and `\p{^Letter}` and `\p{^gc=Uppercase_Letter}` - Inverse Unicode properties (search Unicode)
  - `\N{Black Club Suit}`                                      - Unicode character by name (search & replace)
 
 Note
 =========
- -  Various Unicode properites can be specified for `\p` or `\P`. They can also be placed in character groups,
-    but you have to specify them separetly.
+ -  Various Unicode properties can be specified for `\p` or `\P`. They can also be placed in character groups,
+    but you have to specify them separately.
 
     So the following is okay: `r"[\p{Lu}\p{Ll}]"` or `r"[\p{L}]"` etc.
     The following is *not* okay: `r"[\p{Lul}]"` or `r"[\p{Lu Ll}]"` etc.
 
  -  Unicode names can be specified in groups as well: `r"[\N{black club suit}]"`.
 
- -  Your search pattern must be a unicode string in order to use unicode proptery backreferences,
-    but you do *not* have to use re.UNICODE.
+ -  Your search pattern must be a Unicode string in order to use Unicode property back references,
+    but you do *not* have to use `re.UNICODE`.
 
- -  `\l`, `\L`, `\c`, and `\C` in searches will be ascii ranges unless re.UNICODE is used.  This is to
-    give some consistency with re's `\w`, `\W`, `\b`, `\B`, `\d`, `\D`, `\s` and `\S`. Some posix classes will
+ -  `\l`, `\L`, `\c`, and `\C` in searches will be ASCII ranges unless `re.UNICODE` is used.  This is to
+    give some consistency with re's `\w`, `\W`, `\b`, `\B`, `\d`, `\D`, `\s` and `\S`. Some POSIX classes will
     also be affected.  See docs for more info.
 
 Compiling
 =========
 
-```py3
+~~~.py3
 pattern = compile_search(r'somepattern', flags)
 replace = compile_replace(pattern, r'\1 some replace pattern')
-```
+~~~
 
 Usage
 =========
 Recommended to use compiling.  Assuming the above compiling:
 
-```py3
+~~~.py3
     text = pattern.sub(replace, 'sometext')
-```
+~~~
 
 --or--
 
-```py3
+~~~.py3
     m = pattern.match('sometext')
     if m:
         text = replace(m)  # similar to m.expand(template)
-```
+~~~
 
 Licensed under MIT
 Copyright (c) 2011 - 2015 Isaac Muse <isaacmuse@gmail.com>
@@ -824,7 +824,7 @@ class SearchTemplate(object):
         self.extended = []
 
     def find_flags(self, s, quotes, re_verbose, re_unicode):
-        """Find verbose and unicode flags."""
+        """Find verbose and Unicode flags."""
 
         new = []
         start = 0
@@ -903,7 +903,7 @@ class SearchTemplate(object):
 
     def posix_props(self, prop):
         """
-        Insert posix properties.
+        Insert POSIX properties.
 
         Posix style properties are not as forgiving
         as Unicode properties.  Case does matter,
@@ -928,10 +928,10 @@ class SearchTemplate(object):
 
     def unicode_props(self, props, in_group, negate=False):
         """
-        Insert unicode properties.
+        Insert Unicode properties.
 
         Unicode properties are very forgiving.
-        Case doesn't matter and [ -_] will be stripped out.
+        Case doesn't matter and `[ -_]` will be stripped out.
         """
 
         # 'GC = Some_Unpredictable-Category Name' -> 'gc=someunpredictablecategoryname'
@@ -968,7 +968,7 @@ class SearchTemplate(object):
         return properties
 
     def letter_case_props(self, case, in_group, negate=False):
-        """Insert letter (ascii or unicode) case properties."""
+        """Insert letter (ASCII or Unicode) case properties."""
 
         # Use traditional ASCII upper/lower case unless:
         #    1. The strings fed in are not binary
@@ -1088,7 +1088,7 @@ class SearchTemplate(object):
 
 # Template expander
 class ReplaceTemplateExpander(object):
-    """Backrefereces."""
+    """Replacement template expander."""
 
     def __init__(self, match, template):
         """Initialize."""
@@ -1150,7 +1150,7 @@ def _is_replace(obj):
 
 
 def _apply_replace_backrefs(m, repl=None, flags=0):
-    """Expand with either the ReplaceTemplate or compile on the fly, or return None."""
+    """Expand with either the `ReplaceTemplate` or compile on the fly, or return None."""
 
     if m is None:
         raise ValueError("Match is None!")
@@ -1189,7 +1189,7 @@ def compile_search(pattern, flags=0):
 
 
 def compile_replace(pattern, repl, flags=0):
-    """Construct a method that can be used as a replace method for sub, subn, etc."""
+    """Construct a method that can be used as a replace method for `sub`, `subn`, etc."""
 
     call = None
     if pattern is not None and isinstance(pattern, RE_TYPE):
@@ -1242,37 +1242,37 @@ def expandf(m, format):  # noqa B002
 
 
 def search(pattern, string, flags=0):
-    """Search after applying backrefs."""
+    """Apply `search` after applying backrefs."""
 
     return re.search(_apply_search_backrefs(pattern, flags), string, flags)
 
 
 def match(pattern, string, flags=0):
-    """Match after applying backrefs."""
+    """Apply `match` after applying backrefs."""
 
     return re.match(_apply_search_backrefs(pattern, flags), string, flags)
 
 
 def split(pattern, string, maxsplit=0, flags=0):
-    """Split after applying backrefs."""
+    """Apply `split` after applying backrefs."""
 
     return re.split(_apply_search_backrefs(pattern, flags), string, maxsplit, flags)
 
 
 def findall(pattern, string, flags=0):
-    """Findall after applying backrefs."""
+    """Apply `findall` after applying backrefs."""
 
     return re.findall(_apply_search_backrefs(pattern, flags), string, flags)
 
 
 def finditer(pattern, string, flags=0):
-    """Finditer after applying backrefs."""
+    """Apply `finditer` after applying backrefs."""
 
     return re.finditer(_apply_search_backrefs(pattern, flags), string, flags)
 
 
 def sub(pattern, repl, string, count=0, flags=0):
-    """Sub after applying backrefs."""
+    """Apply `sub` after applying backrefs."""
 
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (compat.string_type, compat.binary_type))
@@ -1286,7 +1286,7 @@ def sub(pattern, repl, string, count=0, flags=0):
 
 
 def subf(pattern, format, string, count=0, flags=0):  # noqa B002
-    """Sub with format style replace."""
+    """Apply `sub` with format style replace."""
 
     is_replace = _is_replace(format)
     is_string = isinstance(format, (compat.string_type, compat.binary_type))
@@ -1302,7 +1302,7 @@ def subf(pattern, format, string, count=0, flags=0):  # noqa B002
 
 
 def subn(pattern, repl, string, count=0, flags=0):
-    """Subn with format style replace."""
+    """Apply `subn` with format style replace."""
 
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (compat.string_type, compat.binary_type))
@@ -1315,7 +1315,7 @@ def subn(pattern, repl, string, count=0, flags=0):
     )
 
 def subfn(pattern, format, string, count=0, flags=0):  # noqa B002
-    """Subn after applying backrefs."""
+    """Apply `subn` after applying backrefs."""
 
     is_replace = _is_replace(format)
     is_string = isinstance(format, (compat.string_type, compat.binary_type))

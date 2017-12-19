@@ -25,13 +25,13 @@ if PY3:
                 yield c
 
     class Tokens(object):
-        """Tokens base for PY3."""
+        """Tokens base for Python 3."""
 
         def iternext(self):
             """Common override method."""
 
         def __next__(self):
-            """PY3 iterator compatible next."""
+            """Python 3 iterator compatible next."""
 
             return self.iternext()
 
@@ -47,19 +47,19 @@ else:
             yield c
 
     class Tokens(object):
-        """Tokens base for PY2."""
+        """Tokens base for Python 2."""
 
         def iternext(self):
             """Common override method."""
 
         def next(self):
-            """PY2 iterator compatible next."""
+            """Python 2 iterator compatible next."""
 
             return self.iternext()
 
 
 def uchr(i):
-    """Allow getting unicode character on narrow python builds."""
+    """Allow getting Unicode character on narrow python builds."""
 
     try:
         return unichar(i)

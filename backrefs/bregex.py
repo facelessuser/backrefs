@@ -10,26 +10,26 @@ Add the ability to use the following backrefs with re:
 Compiling
 =========
 
-```py3
+~~~.py3
 pattern = compile_search(r'somepattern', flags)
 replace = compile_replace(pattern, r'\1 some replace pattern')
-```
+~~~
 
 Usage
 =========
 Recommended to use compiling.  Assuming the above compiling:
 
-```py3
+~~~.py3
     text = pattern.sub(replace, 'sometext')
-```
+~~~
 
 --or--
 
-```py3
+~~~.py3
     m = pattern.match('sometext')
     if m:
         text = replace(m)  # similar to m.expand(template)
-```
+~~~
 
 Licensed under MIT
 Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
@@ -353,7 +353,7 @@ if REGEX_SUPPORT:
             self.extended = []
 
         def find_flags(self, s, quotes, re_verbose, re_version):
-            """Find verbose and unicode flags."""
+            """Find verbose and Unicode flags."""
 
             new = []
             start = 0
@@ -928,7 +928,7 @@ if REGEX_SUPPORT:
 
     # Template expander
     class ReplaceTemplateExpander(object):
-        """Backrefereces."""
+        """Replacement template expander."""
 
         def __init__(self, match, template):
             """Initialize."""
@@ -983,7 +983,7 @@ if REGEX_SUPPORT:
             return self.func(*args, **kwargs)
 
     def _apply_replace_backrefs(m, repl=None, flags=0):
-        """Expand with either the ReplaceTemplate or compile on the fly, or return None."""
+        """Expand with either the `ReplaceTemplate` or compile on the fly, or return None."""
 
         if m is None:
             raise ValueError("Match is None!")
@@ -1025,7 +1025,7 @@ if REGEX_SUPPORT:
         return regex.compile(_apply_search_backrefs(pattern, flags), flags, **kwargs)
 
     def compile_replace(pattern, repl, flags=0):
-        """Construct a method that can be used as a replace method for sub, subn, etc."""
+        """Construct a method that can be used as a replace method for `sub`, `subn`, etc."""
 
         call = None
         if pattern is not None and isinstance(pattern, REGEX_TYPE):
@@ -1075,7 +1075,7 @@ if REGEX_SUPPORT:
         return _apply_replace_backrefs(m, format, flags=FORMAT)
 
     def match(pattern, string, flags=0, pos=None, endpos=None, partial=False, concurrent=None, **kwargs):
-        """Wrapper for match."""
+        """Wrapper for `match`."""
 
         return regex.match(
             _apply_search_backrefs(pattern, flags), string,
@@ -1083,7 +1083,7 @@ if REGEX_SUPPORT:
         )
 
     def fullmatch(pattern, string, flags=0, pos=None, endpos=None, partial=False, concurrent=None, **kwargs):
-        """Wrapper for fullmatch."""
+        """Wrapper for `fullmatch`."""
 
         return regex.fullmatch(
             _apply_search_backrefs(pattern, flags), string,
@@ -1091,7 +1091,7 @@ if REGEX_SUPPORT:
         )
 
     def search(pattern, string, flags=0, pos=None, endpos=None, partial=False, concurrent=None, **kwargs):
-        """Wrapper for search."""
+        """Wrapper for `search`."""
 
         return regex.search(
             _apply_search_backrefs(pattern, flags), string,
@@ -1099,7 +1099,7 @@ if REGEX_SUPPORT:
         )
 
     def sub(pattern, repl, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):
-        """Wrapper for sub."""
+        """Wrapper for `sub`."""
 
         is_replace = _is_replace(repl)
         is_string = isinstance(repl, (compat.string_type, compat.binary_type))
@@ -1113,7 +1113,7 @@ if REGEX_SUPPORT:
         )
 
     def subf(pattern, format, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):  # noqa B002
-        """Wrapper for subf."""
+        """Wrapper for `subf`."""
 
         is_replace = _is_replace(format)
         is_string = isinstance(format, (compat.string_type, compat.binary_type))
@@ -1128,7 +1128,7 @@ if REGEX_SUPPORT:
         )
 
     def subn(pattern, repl, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):
-        """Wrapper for subn."""
+        """Wrapper for `subn`."""
 
         is_replace = _is_replace(repl)
         is_string = isinstance(repl, (compat.string_type, compat.binary_type))
@@ -1142,7 +1142,7 @@ if REGEX_SUPPORT:
         )
 
     def subfn(pattern, format, string, count=0, flags=0, pos=None, endpos=None, concurrent=None, **kwargs):  # noqa B002
-        """Wrapper for subfn."""
+        """Wrapper for `subfn`."""
 
         is_replace = _is_replace(format)
         is_string = isinstance(format, (compat.string_type, compat.binary_type))
@@ -1157,7 +1157,7 @@ if REGEX_SUPPORT:
         )
 
     def split(pattern, string, maxsplit=0, flags=0, concurrent=None, **kwargs):
-        """Wrapper for split."""
+        """Wrapper for `split`."""
 
         return regex.split(
             _apply_search_backrefs(pattern, flags), string,
@@ -1165,7 +1165,7 @@ if REGEX_SUPPORT:
         )
 
     def splititer(pattern, string, maxsplit=0, flags=0, concurrent=None, **kwargs):
-        """Wrapper for splititer."""
+        """Wrapper for `splititer`."""
 
         return regex.splititer(
             _apply_search_backrefs(pattern, flags), string,
@@ -1176,7 +1176,7 @@ if REGEX_SUPPORT:
         pattern, string, flags=0, pos=None, endpos=None, overlapped=False,
         concurrent=None, **kwargs
     ):
-        """Wrapper for findall."""
+        """Wrapper for `findall`."""
 
         return regex.findall(
             _apply_search_backrefs(pattern, flags), string,
@@ -1187,7 +1187,7 @@ if REGEX_SUPPORT:
         pattern, string, flags=0, pos=None, endpos=None, overlapped=False,
         partial=False, concurrent=None, **kwargs
     ):
-        """Wrapper for finditer."""
+        """Wrapper for `finditer`."""
 
         return regex.finditer(
             _apply_search_backrefs(pattern, flags), string,
