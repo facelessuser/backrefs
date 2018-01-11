@@ -511,7 +511,7 @@ if REGEX_SUPPORT:
             return quoted
 
         def linebreak(self, s, i):
-            """Hanlde line breaks."""
+            """Handle line breaks."""
 
             return self._re_line_break if not self.in_group(i.index - 1) else s
 

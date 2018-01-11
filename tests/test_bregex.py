@@ -471,7 +471,7 @@ class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
     def test_line_break(self):
-        """Test line break \\R"""
+        r"""Test line break \R."""
 
         self.assertEqual(
             bregex.sub(r"\R", ' ', 'line\r\nline\nline\r'),
@@ -479,7 +479,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
     def test_binary_line_break(self):
-        """Test binary line break \\R"""
+        r"""Test binary line break \R."""
 
         self.assertEqual(
             bregex.sub(br"\R", b' ', b'line\r\nline\nline\r'),
