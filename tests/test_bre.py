@@ -371,7 +371,7 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bre.compile_search(r'EX\p{Lu}MPLE', re.UNICODE)
         m = pattern.match(r'EXÁMPLE')
         self.assertTrue(m is not None)
-        m = pattern.match(r'exámple')
+        m = pattern.match(r'EXáMPLE')
         self.assertTrue(m is None)
 
     def test_unicode_properties_lower(self):
@@ -380,7 +380,7 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bre.compile_search(r'ex\p{Ll}mple', re.UNICODE)
         m = pattern.match('exámple')
         self.assertTrue(m is not None)
-        m = pattern.match('EXÁMPLE')
+        m = pattern.match('exÁmple')
         self.assertTrue(m is None)
 
     def test_unicode_properties_in_char_group(self):
@@ -391,6 +391,42 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(m is not None)
         m = pattern.match('exÁmple')
         self.assertTrue(m is not None)
+
+    def test_unicode_short_properties_letters(self):
+        """Exercise the Unicode shortened properties for letters."""
+
+        pattern = bre.compile_search(r'ex\pLmple', re.UNICODE)
+        m = pattern.match('exámple')
+        self.assertTrue(m is not None)
+        m = pattern.match('ex!mple')
+        self.assertTrue(m is None)
+
+    def test_unicode_short_properties_in_char_group(self):
+        """Exercise the Unicode shortened properties inside a character group."""
+
+        pattern = bre.compile_search(r'ex[\pL]mple', re.UNICODE)
+        m = pattern.match('exámple')
+        self.assertTrue(m is not None)
+        m = pattern.match('ex!mple')
+        self.assertTrue(m is None)
+
+    def test_unicode_short_properties_letters(self):
+        """Exercise the inverse Unicode shortened properties for letters."""
+
+        pattern = bre.compile_search(r'ex\PLmple', re.UNICODE)
+        m = pattern.match('ex!mple')
+        self.assertTrue(m is not None)
+        m = pattern.match('exámple')
+        self.assertTrue(m is None)
+
+    def test_unicode_short_properties_in_char_group(self):
+        """Exercise the inverse Unicode shortened properties inside a character group."""
+
+        pattern = bre.compile_search(r'ex[\PL]mple', re.UNICODE)
+        m = pattern.match('ex!mple')
+        self.assertTrue(m is not None)
+        m = pattern.match('exÁmple')
+        self.assertTrue(m is None)
 
     def test_unicode_properties_names(self):
         """Test Unicode group friendly names."""
@@ -1530,6 +1566,14 @@ class TestExceptions(unittest.TestCase):
 
         with self.assertRaises(ValueError) as e:
             bre.compile_search(r'\p{alphanumeric: bad}', re.UNICODE)
+
+        self.assertTrue(str(e), 'Invalid Unicode property!')
+
+    def test_bad_short_category(self):
+        """Test bad category."""
+
+        with self.assertRaises(ValueError) as e:
+            bre.compile_search(r'\pQ', re.UNICODE)
 
         self.assertTrue(str(e), 'Invalid Unicode property!')
 

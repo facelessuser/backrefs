@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.3.0
+
+- **NEW**: Support Unicode property form `\pP` and `\PP`.
+- **FIX**: Fix issue where an invalid general category could sometimes pass and return no characters.
+
 ## 2.2.0
 
 - **NEW**: Proper support for `\N{Unicode Name}`.
