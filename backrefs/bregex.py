@@ -133,8 +133,10 @@ if REGEX_SUPPORT:
             )|
             (\{)'''
         ),
-        "regex_search_ref": re.compile(r'(\\)|([(EQ])'),
-        "regex_search_ref_verbose": re.compile(r'(\\)|([(EQ#])'),
+        "line_break": 'R',
+        "re_line_break": r'(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)',
+        "regex_search_ref": re.compile(r'(\\)|([(EQR])'),
+        "regex_search_ref_verbose": re.compile(r'(\\)|([(EQR#])'),
         "v0": 'V0',
         "v1": 'V1'
     }
@@ -168,8 +170,10 @@ if REGEX_SUPPORT:
             )|
             (\{)'''
         ),
-        "regex_search_ref": re.compile(br'(\\)|([EQ])'),
-        "regex_search_ref_verbose": re.compile(br'(\\)|([EQ#])'),
+        "line_break": b'R',
+        "re_line_break": br'(?>\r\n|\n|\x0b|\f|\r|\x85)',
+        "regex_search_ref": re.compile(br'(\\)|([EQR])'),
+        "regex_search_ref_verbose": re.compile(br'(\\)|([EQR#])'),
         "v0": b'V0',
         "v1": b'V1'
     }
@@ -333,6 +337,8 @@ if REGEX_SUPPORT:
             self._regex_flags = tokens["regex_flags"]
             self._nl = ctokens["nl"]
             self._hashtag = ctokens["hashtag"]
+            self._line_break = tokens["line_break"]
+            self._re_line_break = tokens["re_line_break"]
             self._V0 = tokens["v0"]
             self._V1 = tokens["v1"]
             self.search = search
@@ -488,7 +494,7 @@ if REGEX_SUPPORT:
             return parts
 
         def quoted(self, i):
-            r"""Handle quoted block."""
+            """Handle quoted block."""
 
             quoted = []
             raw = []
@@ -503,6 +509,11 @@ if REGEX_SUPPORT:
                 if len(raw):
                     quoted.extend([escape(self._empty.join(raw))])
             return quoted
+
+        def linebreak(self, s, i):
+            """Handle line breaks."""
+
+            return self._re_line_break if not self.in_group(i.index - 1) else s
 
         def in_group(self, index):
             """Check if last index was in a char group."""
@@ -528,6 +539,8 @@ if REGEX_SUPPORT:
 
                     if c[0:1] in self._verbose_tokens:
                         self.extended.append(t)
+                    elif c == self._line_break:
+                        self.extended.append(self.linebreak(t, i))
                     elif c == self._quote:
                         self.extended.extend(self.quoted(i))
                     elif c != self._end:

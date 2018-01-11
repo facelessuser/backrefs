@@ -470,6 +470,30 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_line_break(self):
+        r"""Test line break \R."""
+
+        self.assertEqual(
+            bregex.sub(r"\R", ' ', 'line\r\nline\nline\r'),
+            'line line line '
+        )
+
+    def test_binary_line_break(self):
+        r"""Test binary line break \R."""
+
+        self.assertEqual(
+            bregex.sub(br"\R", b' ', b'line\r\nline\nline\r'),
+            b'line line line '
+        )
+
+    def test_line_break_in_group(self):
+        """Test that line break in group matches a normal R."""
+
+        self.assertEqual(
+            bregex.sub(r"[\R]", 'l', 'Rine\r\nRine\nRine\r'),
+            'line\r\nline\nline\r'
+        )
+
     def test_replace_unicode_name_ascii_range(self):
         """Test replacing Unicode names in the ASCII range."""
 
