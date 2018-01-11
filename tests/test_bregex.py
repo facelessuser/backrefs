@@ -473,7 +473,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_replace_unicode_name_ascii_range(self):
         """Test replacing Unicode names in the ASCII range."""
 
-        pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
+        pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
         expand = bregex.compile_replace(
             pattern,
             r'\1 \N{Latin small letter a}\l\N{Latin Capital Letter A} and '
@@ -489,7 +489,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_replace_unicode_name(self):
         """Test replacing Unicode names."""
 
-        pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
+        pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
         expand = bregex.compile_replace(
             pattern,
             r'\1 \N{Black club suit}\l\N{Greek Capital Letter omega} and '
@@ -505,7 +505,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_format_replace_unicode_name(self):
         """Test replacing format Unicode names."""
 
-        pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
+        pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
         expandf = bregex.compile_replace(
             pattern,
             r'{1} \N{Black club suit}\l\N{Greek Capital Letter omega} and '
@@ -522,7 +522,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_get_replace_template_string(self):
         """Test retrieval of the replace template original string."""
 
-        pattern = regex.compile(r"(some)(.*?)(pattern)(!)")
+        pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
         template = bregex.ReplaceTemplate(pattern, r'\c\1\2\C\3\E\4')
 
         self.assertEqual(r'\c\1\2\C\3\E\4', template.get_base_template())
@@ -531,7 +531,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test uppercase."""
 
         text = "This is a test for uppercase!"
-        pattern = regex.compile(r"(.*?)(uppercase)(!)")
+        pattern = regex.compile(r"(.+?)(uppercase)(!)")
         expand = bregex.compile_replace(pattern, r'\1\c\2\3')
         results = expand(pattern.match(text))
 
@@ -541,7 +541,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test lowercase."""
 
         text = "This is a test for LOWERCASE!"
-        pattern = regex.compile(r"(.*?)(LOWERCASE)(!)")
+        pattern = regex.compile(r"(.+?)(LOWERCASE)(!)")
         expand = bregex.compile_replace(pattern, r'\1\l\2\3')
         results = expand(pattern.match(text))
 
@@ -551,7 +551,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test span uppercase."""
 
         text = "This is a test for uppercase!"
-        pattern = regex.compile(r"(.*?)(uppercase)(!)")
+        pattern = regex.compile(r"(.+?)(uppercase)(!)")
         expand = bregex.compile_replace(pattern, r'\1\C\2\E\3')
         results = expand(pattern.match(text))
 
@@ -561,7 +561,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test span lowercase."""
 
         text = "This is a test for LOWERCASE!"
-        pattern = regex.compile(r"(.*?)(LOWERCASE)(!)")
+        pattern = regex.compile(r"(.+?)(LOWERCASE)(!)")
         expand = bregex.compile_replace(pattern, r'\1\L\2\E\3')
         results = expand(pattern.match(text))
 
@@ -571,7 +571,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test stacked casing of non-spans."""
 
         text = "This is a test for stacking!"
-        pattern = regex.compile(r"(.*?)(stacking)(!)")
+        pattern = regex.compile(r"(.+?)(stacking)(!)")
         expand = bregex.compile_replace(pattern, r'\1\c\l\2\3')
         results = expand(pattern.match(text))
 
@@ -581,7 +581,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test stacked casing of non-spans in and out of a span."""
 
         text = "This is a test for STACKING!"
-        pattern = regex.compile(r"(.*?)(STACKING)(!)")
+        pattern = regex.compile(r"(.+?)(STACKING)(!)")
         expand = bregex.compile_replace(pattern, r'\1\c\L\l\2\E\3')
         results = expand(pattern.match(text))
 
@@ -591,7 +591,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test single backslash following a single case reference."""
 
         text = "This is a test!"
-        pattern = regex.compile(r"(.*?)(test)(!)")
+        pattern = regex.compile(r"(.+?)(test)(!)")
         expand = bregex.compile_replace(pattern, r'\1\c\\\2\3')
         results = expand(pattern.match(text))
 
@@ -601,7 +601,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test single backslash following a span case reference."""
 
         text = "This is a test!"
-        pattern = regex.compile(r"(.*?)(test)(!)")
+        pattern = regex.compile(r"(.+?)(test)(!)")
         expand = bregex.compile_replace(pattern, r'\1\C\\\2\E\3')
         results = expand(pattern.match(text))
 
@@ -611,7 +611,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test single backslash before a single case reference before a literal."""
 
         text = "This is a test!"
-        pattern = regex.compile(r"(.*?)(test)(!)")
+        pattern = regex.compile(r"(.+?)(test)(!)")
         expand = bregex.compile_replace(pattern, r'Test \l\Cstacked\E\3')
         results = expand(pattern.match(text))
 
@@ -621,7 +621,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test for extraneous end characters."""
 
         text = "This is a test for extraneous \\E chars!"
-        pattern = regex.compile(r"(.*?)(extraneous)(.*)")
+        pattern = regex.compile(r"(.+?)(extraneous)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\2\E\3')
         results = expand(pattern.match(text))
 
@@ -631,7 +631,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test for normal backrefs."""
 
         text = "This is a test for normal backrefs!"
-        pattern = regex.compile(r"(.*?)(normal)(.*)")
+        pattern = regex.compile(r"(.+?)(normal)(.+)")
         expand = bregex.compile_replace(pattern, '\\1\\2\t\\3 \u0067\147\v\f\n')
         results = expand(pattern.match(text))
 
@@ -641,7 +641,7 @@ class TestReplaceTemplate(unittest.TestCase):
         r"""Test case where no \E is defined."""
 
         text = "This is a test for uppercase with no end!"
-        pattern = regex.compile(r"(.*?)(uppercase)(.*)")
+        pattern = regex.compile(r"(.+?)(uppercase)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\C\2\3')
         results = expand(pattern.match(text))
 
@@ -651,7 +651,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test uppercase followed by uppercase span."""
 
         text = "This is a complex uppercase test!"
-        pattern = regex.compile(r"(.*?)(uppercase)(.*)")
+        pattern = regex.compile(r"(.+?)(uppercase)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\c\C\2\E\3')
         results = expand(pattern.match(text))
 
@@ -661,7 +661,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test lowercase followed by lowercase span."""
 
         text = "This is a complex LOWERCASE test!"
-        pattern = regex.compile(r"(.*?)(LOWERCASE)(.*)")
+        pattern = regex.compile(r"(.+?)(LOWERCASE)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\l\L\2\E\3')
         results = expand(pattern.match(text))
 
@@ -671,7 +671,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test uppercase span around an uppercase."""
 
         text = "This is a complex uppercase test!"
-        pattern = regex.compile(r"(.*?)(uppercase)(.*)")
+        pattern = regex.compile(r"(.+?)(uppercase)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\C\c\2\E\3')
         results = expand(pattern.match(text))
 
@@ -681,7 +681,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test lowercase span around an lowercase."""
 
         text = "This is a complex LOWERCASE test!"
-        pattern = regex.compile(r"(.*?)(LOWERCASE)(.*)")
+        pattern = regex.compile(r"(.+?)(LOWERCASE)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\L\l\2\E\3')
         results = expand(pattern.match(text))
 
@@ -691,7 +691,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test uppercase after uppercase."""
 
         text = "This is a complex uppercase test!"
-        pattern = regex.compile(r"(.*?)(uppercase)(.*)")
+        pattern = regex.compile(r"(.+?)(uppercase)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\c\c\2\3')
         results = expand(pattern.match(text))
 
@@ -701,7 +701,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test uppercase span inside uppercase span."""
 
         text = "This is a complex uppercase test!"
-        pattern = regex.compile(r"(.*?)(uppercase)(.*)")
+        pattern = regex.compile(r"(.+?)(uppercase)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\C\C\2\E\3\E')
         results = expand(pattern.match(text))
 
@@ -711,7 +711,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test lowercase after lowercase."""
 
         text = "This is a complex LOWERCASE test!"
-        pattern = regex.compile(r"(.*?)(LOWERCASE)(.*)")
+        pattern = regex.compile(r"(.+?)(LOWERCASE)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\l\l\2\3')
         results = expand(pattern.match(text))
 
@@ -721,7 +721,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test lowercase span inside lowercase span."""
 
         text = "This is a complex LOWERCASE TEST!"
-        pattern = regex.compile(r"(.*?)(LOWERCASE)(.*)")
+        pattern = regex.compile(r"(.+?)(LOWERCASE)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\L\L\2\E\3\E')
         results = expand(pattern.match(text))
 
@@ -731,7 +731,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test lowercase followed by uppercase span."""
 
         text = "This is a complex uppercase test!"
-        pattern = regex.compile(r"(.*?)(uppercase)(.*)")
+        pattern = regex.compile(r"(.+?)(uppercase)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\l\C\2\E\3')
         results = expand(pattern.match(text))
 
@@ -741,7 +741,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test uppercase followed by lowercase span."""
 
         text = "This is a complex LOWERCASE test!"
-        pattern = regex.compile(r"(.*?)(LOWERCASE)(.*)")
+        pattern = regex.compile(r"(.+?)(LOWERCASE)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\c\L\2\E\3')
         results = expand(pattern.match(text))
 
@@ -751,7 +751,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test uppercase span around a lowercase."""
 
         text = "This is a complex uppercase test!"
-        pattern = regex.compile(r"(.*?)(uppercase)(.*)")
+        pattern = regex.compile(r"(.+?)(uppercase)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\C\l\2\E\3')
         results = expand(pattern.match(text))
 
@@ -761,7 +761,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test lowercase span around an uppercase."""
 
         text = "This is a complex LOWERCASE test!"
-        pattern = regex.compile(r"(.*?)(LOWERCASE)(.*)")
+        pattern = regex.compile(r"(.+?)(LOWERCASE)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\L\c\2\E\3')
         results = expand(pattern.match(text))
 
@@ -771,7 +771,7 @@ class TestReplaceTemplate(unittest.TestCase):
         r"""Test that \E after a single case such as \l is handled proper."""
 
         text = "This is a single case end test!"
-        pattern = regex.compile(r"(.*?)(case)(.*)")
+        pattern = regex.compile(r"(.+?)(case)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\l\E\2\3')
         results = expand(pattern.match(text))
 
@@ -781,7 +781,7 @@ class TestReplaceTemplate(unittest.TestCase):
         r"""Test that \E after a single case such as \l is handled proper inside a span."""
 
         text = "This is a nested single case end test!"
-        pattern = regex.compile(r"(.*?)(case)(.*)")
+        pattern = regex.compile(r"(.+?)(case)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\C\2\c\E\3')
         results = expand(pattern.match(text))
 
@@ -791,7 +791,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test when a single case backref is the final char."""
 
         text = "This is a single case at end test!"
-        pattern = regex.compile(r"(.*?)(case)(.*)")
+        pattern = regex.compile(r"(.+?)(case)(.+)")
         expand = bregex.compile_replace(pattern, r'\1\2\3\c')
         results = expand(pattern.match(text))
 
@@ -801,7 +801,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test single case when not applied to a group."""
 
         text = "This is a single case test that is not on a group!"
-        pattern = regex.compile(r"(.*)")
+        pattern = regex.compile(r"(.+)")
         expand = bregex.compile_replace(pattern, r'\cstill works!')
         results = expand(pattern.match(text))
 
@@ -811,7 +811,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test case span when not applied to a group."""
 
         text = "This is a case test that is not on a group!"
-        pattern = regex.compile(r"(.*)")
+        pattern = regex.compile(r"(.+)")
         expand = bregex.compile_replace(pattern, r'\Cstill\E works!')
         results = expand(pattern.match(text))
 
@@ -821,7 +821,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test escaped backrefs."""
 
         text = "This is a test of escaped backrefs!"
-        pattern = regex.compile(r"(.*)")
+        pattern = regex.compile(r"(.+)")
         expand = bregex.compile_replace(pattern, r'\\\\l\\c\1')
         results = expand(pattern.match(text))
 
@@ -831,7 +831,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test deeper escaped slash."""
 
         text = "this is a test of escaped slash backrefs!"
-        pattern = regex.compile(r"(.*)")
+        pattern = regex.compile(r"(.+)")
         expand = bregex.compile_replace(pattern, r'\\\\\lTest: \\\c\1')
         results = expand(pattern.match(text))
 
@@ -841,7 +841,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test normal escaped slash."""
 
         text = "This is a test of normal escaping!"
-        pattern = regex.compile(r"(.*)")
+        pattern = regex.compile(r"(.+)")
         repl_pattern = r'\e \\e \\\e \\\\e \\\\\e'
         expand = bregex.compile_replace(pattern, repl_pattern)
         m = pattern.match(text)
@@ -855,7 +855,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test binary normal escaped slash."""
 
         text = b"This is a test of normal escaping!"
-        pattern = regex.compile(br"(.*)")
+        pattern = regex.compile(br"(.+)")
         repl_pattern = br'\e \\e \\\e \\\\e \\\\\e'
         expand = bregex.compile_replace(pattern, repl_pattern)
         m = pattern.match(text)
@@ -869,7 +869,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test escaped slash at end of line."""
 
         text = "This is a test of eol escaping!"
-        pattern = regex.compile(r"(.*)")
+        pattern = regex.compile(r"(.+)")
         expand = bregex.compile_replace(pattern, r'\\\\')
         results = expand(pattern.match(text))
 
@@ -879,7 +879,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test unrecognized backrefs, or literal backslash before a char."""
 
         text = "This is a test of unrecognized backrefs!"
-        pattern = regex.compile(r"(.*)")
+        pattern = regex.compile(r"(.+)")
         expand = bregex.compile_replace(pattern, r'\k\1')
         results = expand(pattern.match(text))
 
@@ -889,7 +889,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test that backrefs inserted by matching groups are passed over."""
 
         text = r"This is a test to see if \Cbackre\Efs in gr\coups get ig\Lnor\led proper!"
-        pattern = regex.compile(r"(This is a test to see if \\Cbackre\\Efs )(.*?)(ig\\Lnor\\led )(proper)(!)")
+        pattern = regex.compile(r"(This is a test to see if \\Cbackre\\Efs )(.+?)(ig\\Lnor\\led )(proper)(!)")
         expand = bregex.compile_replace(pattern, r'Here is the first \C\1\Ethe second \c\2third \L\3\E\4\5')
         results = expand(pattern.match(text))
 
@@ -903,7 +903,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test mix of upper and lower case with named groups and a string replace pattern (1)."""
 
         text = "this is a test for named capture groups!"
-        text_pattern = r"(?P<first>this )(?P<second>.*?)(?P<third>named capture )(?P<fourth>groups)(!)"
+        text_pattern = r"(?P<first>this )(?P<second>.+?)(?P<third>named capture )(?P<fourth>groups)(!)"
         pattern = regex.compile(text_pattern)
 
         # Use uncompiled pattern when compiling replace.
@@ -915,7 +915,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test mix of upper and lower case with group indexes and a string replace pattern (2)."""
 
         text = "this is a test for named capture groups!"
-        text_pattern = r"(?P<first>this )(?P<second>.*?)(?P<third>named capture )(?P<fourth>groups)(!)"
+        text_pattern = r"(?P<first>this )(?P<second>.+?)(?P<third>named capture )(?P<fourth>groups)(!)"
         pattern = regex.compile(text_pattern)
 
         # This will pass because we do not need to resolve named groups.
@@ -927,7 +927,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test mix of upper and lower case with named groups and a compiled replace pattern (3)."""
 
         text = "this is a test for named capture groups!"
-        text_pattern = r"(?P<first>this )(?P<second>.*?)(?P<third>named capture )(?P<fourth>groups)(!)"
+        text_pattern = r"(?P<first>this )(?P<second>.+?)(?P<third>named capture )(?P<fourth>groups)(!)"
         pattern = regex.compile(text_pattern)
 
         # Now using compiled pattern, we can use named groups in replace template.
@@ -939,7 +939,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test that replace can be used as a replace function."""
 
         text = "this will be fed into regex.subn!  Here we go!  this will be fed into regex.subn!  Here we go!"
-        text_pattern = r"(?P<first>this )(?P<second>.*?)(!)"
+        text_pattern = r"(?P<first>this )(?P<second>.+?)(!)"
         pattern = bregex.compile_search(text_pattern)
         replace = bregex.compile_replace(pattern, r'\c\g<first>is awesome\g<3>')
         result, count = pattern.subn(replace, text)
@@ -973,7 +973,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test replace by passing in replace template."""
 
         text = "Replace with template test!"
-        pattern = bregex.compile_search('(.*)')
+        pattern = bregex.compile_search('(.+)')
         repl = bregex.ReplaceTemplate(pattern, 'Success!')
         expand = bregex.compile_replace(pattern, repl)
 
@@ -986,7 +986,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test numeric capture groups."""
 
         text = "this is a test for numeric capture groups!"
-        text_pattern = r"(this )(.*?)(numeric capture )(groups)(!)"
+        text_pattern = r"(this )(.+?)(numeric capture )(groups)(!)"
         pattern = regex.compile(text_pattern)
 
         expand = bregex.compile_replace(pattern, r'\l\C\g<0001>\l\g<02>\L\c\g<03>\E\g<004>\E\5\n\C\g<000>\E')
@@ -1000,7 +1000,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test numeric format capture groups."""
 
         text = "this is a test for numeric capture groups!"
-        text_pattern = r"(this )(.*?)(numeric capture )(groups)(!)"
+        text_pattern = r"(this )(.+?)(numeric capture )(groups)(!)"
         pattern = regex.compile(text_pattern)
 
         expand = bregex.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bregex.FORMAT)
@@ -1014,7 +1014,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test escaping of format capture groups."""
 
         text = "this is a test for format capture groups!"
-        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = regex.compile(text_pattern)
 
         expand = bregex.compile_replace(
@@ -1030,7 +1030,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test auto format capture groups."""
 
         text = "this is a test for format capture groups!"
-        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = regex.compile(text_pattern)
 
         expand = bregex.compile_replace(
@@ -1292,7 +1292,7 @@ class TestExceptions(unittest.TestCase):
     def test_switch_from_format_auto(self):
         """Test a switch from auto to manual format."""
 
-        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = regex.compile(text_pattern)
 
         with pytest.raises(ValueError) as excinfo:
@@ -1305,7 +1305,7 @@ class TestExceptions(unittest.TestCase):
     def test_switch_from_format_manual(self):
         """Test a switch from manual to auto format."""
 
-        text_pattern = r"(this )(.*?)(format capture )(groups)(!)"
+        text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = regex.compile(text_pattern)
 
         with pytest.raises(ValueError) as excinfo:
