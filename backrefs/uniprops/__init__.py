@@ -38,12 +38,14 @@ def get_gc_property(value):
 
     if not negate:
         p1, p2 = (value[0], value[1]) if len(value) > 1 else (value[0], None)
-        return ''.join(
+        value = ''.join(
             [v for k, v in unidata.unicode_properties.get(p1, {}).items() if not k.startswith('^')]
         ) if p2 is None else unidata.unicode_properties.get(p1, {}).get(p2, '')
     else:
         p1, p2 = (value[0], value[1]) if len(value) > 1 else (value[0], '')
-        return unidata.unicode_properties.get(p1, {}).get('^' + p2, '')
+        value = unidata.unicode_properties.get(p1, {}).get('^' + p2, '')
+    assert value, 'Invalid property!'
+    return value
 
 
 def get_binary_property(value):

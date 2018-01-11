@@ -106,7 +106,7 @@ _UPPER = 0
 _LOWER = 1
 
 # Regex pattern for unicode properties
-_UPROP = r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\})?'
+_UPROP = r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[a-zA-Z])?'
 _UNAME = r'N(?:\{[\w ]+\})?'
 
 _RE_UPROP = re.compile(r'(?x)\\%s' % _UPROP)
@@ -356,9 +356,9 @@ class SearchTokens(compat.Tokens):
                     if ref == self._unicode_name:
                         raise SyntaxError('Format for Unicode name is \\N{name}!')
                     elif ref == self._uni_prop:
-                        raise SyntaxError('Format for Unicode property is \\p{property}!')
+                        raise SyntaxError('Format for Unicode property is \\p{property} or \\pP!')
                     elif ref == self._inverse_uni_prop:
-                        raise SyntaxError('Format for inverse Unicode property is \\P{property}!')
+                        raise SyntaxError('Format for inverse Unicode property is \\P{property} or \\pP!')
                 char += m.group(1) if m.group(1) else m.group(2)
         elif char == self._ls_bracket:
             m = self._re_posix.match(self.string[self.index:])
@@ -791,6 +791,7 @@ class SearchTemplate(object):
         self._b_slash = ctokens["b_slash"]
         self._ls_bracket = ctokens["ls_bracket"]
         self._rs_bracket = ctokens["rs_bracket"]
+        self._rc_bracket = ctokens["rc_bracket"]
         self._unicode_flag = ctokens["unicode_flag"]
         self._ascii_flag = tokens["ascii_flag"]
         self._esc_end = ctokens["esc_end"]
@@ -1060,9 +1061,15 @@ class SearchTemplate(object):
                 elif c.startswith(self._unicode_name):
                     self.extended.extend(self.unicode_name(c[2:-1]))
                 elif c.startswith(self._uni_prop):
-                    self.extended.extend(self.unicode_props(c[2:-1], self.in_group(i.index - 1)))
+                    if c[-1:] == self._rc_bracket:
+                        self.extended.extend(self.unicode_props(c[2:-1], self.in_group(i.index - 1)))
+                    else:
+                        self.extended.extend(self.unicode_props(c[-1:], self.in_group(i.index - 1)))
                 elif c.startswith(self._inverse_uni_prop):
-                    self.extended.extend(self.unicode_props(c[2:-1], self.in_group(i.index - 1), negate=True))
+                    if c[-1:] == self._rc_bracket:
+                        self.extended.extend(self.unicode_props(c[2:-1], self.in_group(i.index - 1), negate=True))
+                    else:
+                        self.extended.extend(self.unicode_props(c[-1:], self.in_group(i.index - 1), negate=True))
                 elif c == self._lc:
                     self.extended.extend(self.letter_case_props(_LOWER, self.in_group(i.index - 1)))
                 elif c == self._lc_span:
