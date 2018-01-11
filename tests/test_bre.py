@@ -410,7 +410,7 @@ class TestSearchTemplate(unittest.TestCase):
         m = pattern.match('ex!mple')
         self.assertTrue(m is None)
 
-    def test_unicode_short_properties_letters(self):
+    def test_inverse_unicode_short_properties_letters(self):
         """Exercise the inverse Unicode shortened properties for letters."""
 
         pattern = bre.compile_search(r'ex\PLmple', re.UNICODE)
@@ -419,7 +419,7 @@ class TestSearchTemplate(unittest.TestCase):
         m = pattern.match('exámple')
         self.assertTrue(m is None)
 
-    def test_unicode_short_properties_in_char_group(self):
+    def test_inverse_unicode_short_properties_in_char_group(self):
         """Exercise the inverse Unicode shortened properties inside a character group."""
 
         pattern = bre.compile_search(r'ex[\PL]mple', re.UNICODE)
