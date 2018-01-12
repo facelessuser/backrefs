@@ -6,6 +6,7 @@ from backrefs import bre
 import re
 import sys
 import pytest
+import sre_constants
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY36_PLUS = (3, 6) <= sys.version_info
@@ -132,12 +133,6 @@ class TestSearchTemplate(unittest.TestCase):
 
         pattern = bre.compile_search(r'Test [:graph:]]')
         self.assertEqual(pattern.pattern, r'Test [:graph:]]')
-
-    def test_not_posix_at_end_group(self):
-        """Test a situation that is not a POSIX at the end of a group."""
-
-        pattern = bre.compile_search(r'Test [[:graph:]')
-        self.assertEqual(pattern.pattern, r'Test [[:graph:]')
 
     def test_ascii_upper_props(self):
         """Test ASCII uppercase properties."""
@@ -1520,6 +1515,14 @@ class TestExceptions(unittest.TestCase):
     #     with self.assertRaises(SyntaxError) as e:
     #         bre.compile_replace(p, r'Replace \U fail!')
     #     self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
+
+    def test_not_posix_at_end_group(self):
+        """Test a situation that is not a POSIX at the end of a group."""
+
+        with pytest.raises(sre_constants.error) as excinfo:
+            pattern = bre.compile_search(r'Test [[:graph:]')
+        print(str(excinfo))
+        self.assertTrue('unterminated' in str(excinfo))
 
     def test_incomplete_replace_unicode_name(self):
         """Test incomplete replace with Unicode name."""
