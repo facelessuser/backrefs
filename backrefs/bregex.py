@@ -99,8 +99,10 @@ if REGEX_SUPPORT:
     _LOWER = 1
 
     utokens = {
+        "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
+        "re_comments": re.compile(r'\(\?\#[^)]*\)'),
         "regex_flags": re.compile(
-            r'(?s)(\\.)|\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]|(.)'
+            r'\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]'
         ),
         "replace_group_ref": re.compile(
             r'''(?x)
@@ -142,8 +144,10 @@ if REGEX_SUPPORT:
     }
 
     btokens = {
+        "re_posix": re.compile(br'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
+        "re_comments": re.compile(br'\(\?\#[^)]*\)'),
         "regex_flags": re.compile(
-            br'(?s)(\\.)|\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]|(.)'
+            br'\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]'
         ),
         "replace_group_ref": re.compile(
             br'''(?x)
@@ -178,25 +182,26 @@ if REGEX_SUPPORT:
         "v1": b'V1'
     }
 
-    class RegexSearchTokens(compat.Tokens):
-        """Tokens."""
+    class FlagsFoundException(Exception):
+        """Flag exception."""
 
-        def __init__(self, string, verbose):
+    class RegexSearchTokens(compat.Tokens):
+        """Preprocess replace tokens."""
+
+        def __init__(self, string):
             """Initialize."""
 
             if isinstance(string, compat.binary_type):
                 tokens = btokens
-                ctokens = ctok.btokens
             else:
                 tokens = utokens
-                ctokens = ctok.utokens
 
             self.string = string
-            if verbose:
-                self._regex_search_ref = tokens["regex_search_ref_verbose"]
-            else:
-                self._regex_search_ref = tokens["regex_search_ref"]
-            self._b_slash = ctokens["b_slash"]
+            self._re_posix = tokens["re_posix"]
+            self._regex_flags = tokens["regex_flags"]
+            self._re_comments = tokens["re_comments"]
+
+            self.string = string
             self.max_index = len(string) - 1
             self.index = 0
             self.current = None
@@ -206,23 +211,52 @@ if REGEX_SUPPORT:
 
             return self
 
+        def get_flags(self):
+            """Get flags."""
+
+            text = None
+            m = self._regex_flags.match(self.string, self.index - 1)
+            if m:
+                text = m.group(0)
+                self.index = m.end(0)
+                self.current = text
+            return text
+
+        def get_comments(self):
+            """Get comments."""
+
+            text = None
+            m = self._re_comments.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)
+                self.current = text
+            return text
+
+        def get_posix(self):
+            """Get POSIX."""
+
+            text = None
+            m = self._re_posix.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)[2:-2] if m else None
+                self.current = text
+            return text
+
         def iternext(self):
             """
             Iterate through characters of the string.
 
-            Count escaped Q, E and backslash as a single char.
+            Count escaped l, L, c, C, E and backslash as a single char.
             """
 
             if self.index > self.max_index:
                 raise StopIteration
 
             char = self.string[self.index:self.index + 1]
-            if char == self._b_slash:
-                m = self._regex_search_ref.match(self.string[self.index + 1:])
-                if m:
-                    char += m.group(1) if m.group(1) else m.group(2)
 
-            self.index += len(char)
+            self.index += 1
             self.current = char
             return self.current
 
@@ -330,228 +364,302 @@ if REGEX_SUPPORT:
             self._b_slash = ctokens["b_slash"]
             self._ls_bracket = ctokens["ls_bracket"]
             self._rs_bracket = ctokens["rs_bracket"]
-            self._esc_end = ctokens["esc_end"]
+            self._lc_bracket = ctokens["lc_bracket"]
+            self._rc_bracket = ctokens["rc_bracket"]
             self._end = ctokens["end"]
             self._quote = ctokens["quote"]
             self._negate = ctokens["negate"]
             self._regex_flags = tokens["regex_flags"]
+            self._re_posix = tokens["re_posix"]
             self._nl = ctokens["nl"]
+            self._lr_bracket = ctokens["lr_bracket"]
+            self._rr_bracket = ctokens["rr_bracket"]
             self._hashtag = ctokens["hashtag"]
+            self.search = search
+            self.re_verbose = re_verbose
+            self.re_version = re_version
             self._line_break = tokens["line_break"]
-            self._re_line_break = tokens["re_line_break"]
             self._V0 = tokens["v0"]
             self._V1 = tokens["v1"]
-            self.search = search
-            if regex.DEFAULT_VERSION == V0:
-                self.groups, quotes = self.find_char_groups_v0(search)
-            else:  # pragma: no cover
-                self.groups, quotes = self.find_char_groups_v1(search)
-            self.verbose, self.version = self.find_flags(search, quotes, re_verbose, re_version)
-            if self.version != regex.DEFAULT_VERSION:
-                if self.version == V0:  # pragma: no cover
-                    self.groups = self.find_char_groups_v0(search)[0]
-                else:
-                    self.groups = self.find_char_groups_v1(search)[0]
-            if self.verbose:
-                self._verbose_tokens = ctokens["verbose_tokens"]
-            else:
-                self._verbose_tokens = tuple()
-            self.extended = []
+            self._re_line_break = tokens["re_line_break"]
+            self._new_refs = (self._line_break,)
 
-        def find_flags(self, s, quotes, re_verbose, re_version):
-            """Find verbose and Unicode flags."""
+        def process_quotes(self, string):
+            """Process quotes."""
 
-            new = []
-            start = 0
-            verbose_flag = re_verbose
-            version_flag = re_version
-            avoid = quotes + self.groups
-            avoid.sort()
-            if version_flag and verbose_flag:
-                return bool(verbose_flag), version_flag
-            for a in avoid:
-                new.append(s[start:a[0] + 1])
-                start = a[1]
-            new.append(s[start:])
-            for m in self._regex_flags.finditer(self._empty.join(new)):
-                if m.group(2):
-                    if self._verbose_flag in m.group(2):
-                        verbose_flag = True
-                    if self._V0 in m.group(2):
-                        version_flag = V0
-                    elif self._V1 in m.group(2):
-                        version_flag = V1
-                if version_flag and verbose_flag:
-                    break
-            return bool(verbose_flag), version_flag if version_flag else regex.DEFAULT_VERSION
-
-        def find_char_groups_v0(self, s):
-            """Find character groups."""
-
-            pos = 0
-            groups = []
-            quotes = []
-            quote_found = False
-            quote_start = 0
             escaped = False
-            found = False
-            first = None
-            for c in compat.iterstring(s):
-                if c == self._b_slash:
-                    escaped = not escaped
-                elif escaped and not found and not quote_found and c == self._quote:
-                    quote_found = True
-                    quote_start = pos - 1
-                    escaped = False
-                elif escaped and not found and quote_found and c == self._end:
-                    quotes.append((quote_start + 2, pos - 2))
-                    quote_found = False
-                    escaped = False
-                elif escaped:
-                    escaped = False
-                elif quote_found:
-                    pass
-                elif c == self._ls_bracket and not found:
-                    found = True
-                    first = pos
-                elif c == self._negate and found and (pos == first + 1):
-                    first = pos
-                elif c == self._rs_bracket and found and (pos != first + 1):
-                    groups.append((first + 1, pos - 1))
-                    found = False
-                pos += 1
-            if quote_found:
-                quotes.append((quote_start + 2, pos - 1))
-            return groups, quotes
-
-        def find_char_groups_v1(self, s):
-            """Find character groups."""
-
-            pos = 0
-            groups = []
-            quotes = []
-            quote_found = False
-            quote_start = 0
-            escaped = False
-            found = 0
-            first = None
-            sub_first = None
-            for c in compat.iterstring(s):
-                if c == self._b_slash:
-                    # Next char is escaped
-                    escaped = not escaped
-                elif escaped and found == 0 and not quote_found and c == self._quote:
-                    quote_found = True
-                    quote_start = pos - 1
-                    escaped = False
-                elif escaped and found == 0 and quote_found and c == self._end:
-                    quotes.append((quote_start, pos))
-                    quote_found = False
-                    escaped = False
-                elif escaped:
-                    # Escaped handled
-                    escaped = False
-                elif quote_found:
-                    pass
-                elif c == self._ls_bracket and not found:
-                    # Start of first char set found
-                    found += 1
-                    first = pos
-                elif c == self._ls_bracket and found:
-                    # Start of sub char set found
-                    found += 1
-                    sub_first = pos
-                elif c == self._negate and found == 1 and (pos == first + 1):
-                    # Found ^ at start of first char set; adjust 1st char pos
-                    first = pos
-                elif c == self._negate and found > 1 and (pos == sub_first + 1):
-                    # Found ^ at start of sub char set; adjust 1st char sub pos
-                    sub_first = pos
-                elif c == self._rs_bracket and found == 1 and (pos != first + 1):
-                    # First char set closed; log range
-                    groups.append((first, pos))
-                    found = 0
-                elif c == self._rs_bracket and found > 1 and (pos != sub_first + 1):
-                    # Sub char set closed; decrement depth counter
-                    found -= 1
-                pos += 1
-            if quote_found:
-                quotes.append((quote_start, pos - 1))
-            return groups, quotes
-
-        def comments(self, i):
-            """Handle comments in verbose patterns."""
-
-            parts = []
+            in_quotes = False
+            current = []
+            quoted = []
+            i = RegexSearchTokens(string)
+            iter(i)
             try:
-                t = next(i)
-                while t != self._nl:
-                    parts.append(t)
-                    t = next(i)
-                parts.append(self._nl)
+                for t in i:
+                    if not escaped and t == self._b_slash:
+                        escaped = True
+                    elif escaped:
+                        escaped = False
+                        if t == self._end:
+                            if in_quotes:
+                                current.append(escape(self._empty.join(quoted)))
+                                quoted = []
+                                in_quotes = False
+                        elif t == self._quote and not in_quotes:
+                            in_quotes = True
+                        elif in_quotes:
+                            quoted.extend([self._b_slash, t])
+                        else:
+                            current.extend([self._b_slash, t])
+                    elif in_quotes:
+                        quoted.extend(t)
+                    else:
+                        current.append(t)
             except StopIteration:
                 pass
-            return parts
 
-        def quoted(self, i):
-            """Handle quoted block."""
+            if in_quotes and escaped:
+                quoted.append(self._b_slash)
+            elif escaped:
+                current.append(self._b_slash)
 
-            quoted = []
-            raw = []
-            if not self.in_group(i.index - 1):
-                try:
+            if quoted:
+                current.append(escape(self._empty.join(quoted)))
+
+            return self._empty.join(current)
+
+        def verbose_comment(self, t, i):
+            """Handle verbose comments."""
+
+            current = []
+            escaped = False
+
+            try:
+                while t != self._nl:
+                    if not escaped and t == self._b_slash:
+                        escaped = True
+                        current.append(t)
+                    elif escaped:
+                        escaped = False
+                        if t in self._new_refs:
+                            current.append(self._b_slash)
+                        current.append(t)
+                    else:
+                        current.append(t)
                     t = next(i)
-                    while t != self._esc_end:
-                        raw.append(t)
-                        t = next(i)
-                except StopIteration:
-                    pass
-                if len(raw):
-                    quoted.extend([escape(self._empty.join(raw))])
-            return quoted
+            except StopIteration:
+                pass
 
-        def linebreak(self, s, i):
+            if t == self._nl:
+                current.append(t)
+            return current
+
+        def flags(self, text):
+            """Analyze flags."""
+
+            if self._verbose_flag in text:
+                self.live_verbose = True
+                self.flags_updated = True
+            if self._V0 in text:
+                self.live_version = V0
+                self.flags_updated = True
+            elif self._V1 in text:
+                self.live_version = V1
+                self.flags_updated = True
+
+            if (self.live_verbose and self.live_version):
+                raise FlagsFoundException('Flags found!')
+
+        def reference(self, t, i):
+            """Handle references."""
+
+            current = []
+
+            try:
+                t = next(i)
+            except StopIteration:
+                return [t]
+
+            if t == self._line_break:
+                current.append(self.linebreak())
+            else:
+                current.extend([self._b_slash, t])
+            return current
+
+        def parens(self, t, i):
+            """Handle parenthesis."""
+
+            current = []
+
+            flags = i.get_flags()
+            if flags:
+                if not self.flags_found:
+                    self.flags(flags[2:-1])
+                current.append(flags)
+                if flags[-1:] == self._rr_bracket:
+                    return current
+
+            if not flags:
+                comments = i.get_comments()
+                if comments:
+                    current.append(comments)
+                    return current
+
+            try:
+                while t != self._rr_bracket:
+                    if not current:
+                        current.append(t)
+                    else:
+                        current.extend(self.normal(t, i))
+
+                    t = next(i)
+            except StopIteration:
+                pass
+
+            if t == self._rr_bracket:
+                current.append(t)
+            return current
+
+        def char_groups(self, t, i):
+            """Handle character groups."""
+
+            current = []
+            pos = i.index - 1
+            found = 0
+            sub_first = None
+            escaped = False
+            first = None
+
+            try:
+                while True:
+                    if not escaped and t == self._b_slash:
+                        escaped = True
+                    elif escaped:
+                        escaped = False
+                        current.extend([self._b_slash, t])
+                    elif t == self._ls_bracket and not found:
+                        found += 1
+                        first = pos
+                        current.append(t)
+                    elif t == self._ls_bracket and found and self.version == V1:
+                        # Start of sub char set found
+                        posix = i.get_posix()
+                        if posix:
+                            current.append(posix)
+                            pos = i.index - 2
+                        else:
+                            found += 1
+                            sub_first = pos
+                            current.append(t)
+                    elif t == self._ls_bracket:
+                        posix = i.get_posix()
+                        if posix:
+                            current.append(posix)
+                            pos = i.index - 2
+                        else:
+                            current.append(t)
+                    elif t == self._negate and found == 1 and (pos == first + 1):
+                        # Found ^ at start of first char set; adjust 1st char pos
+                        current.append(t)
+                        first = pos
+                    elif self.version == V1 and t == self._negate and found > 1 and (pos == sub_first + 1):
+                        # Found ^ at start of sub char set; adjust 1st char sub pos
+                        current.append(t)
+                        sub_first = pos
+                    elif t == self._rs_bracket and found == 1 and (pos != first + 1):
+                        # First char set closed; log range
+                        current.append(t)
+                        found = 0
+                        break
+                    elif self.version == V1 and t == self._rs_bracket and found > 1 and (pos != sub_first + 1):
+                        # Sub char set closed; decrement depth counter
+                        found -= 1
+                        current.append(t)
+                    else:
+                        current.append(t)
+                    pos += 1
+                    t = next(i)
+            except StopIteration:
+                pass
+
+            if escaped:
+                current.append(t)
+            return current
+
+        def normal(self, t, i):
+            """Handle normal chars."""
+
+            current = []
+
+            if t == self._b_slash:
+                current.extend(self.reference(t, i))
+            elif t == self._lr_bracket:
+                current.extend(self.parens(t, i))
+            elif self.verbose and self._hashtag:
+                current.extend(self.verbose_comment(t, i))
+            elif t == self._ls_bracket:
+                current.extend(self.char_groups(t, i))
+            else:
+                current.append(t)
+            return current
+
+        def linebreak(self):
             """Handle line breaks."""
 
-            return self._re_line_break if not self.in_group(i.index - 1) else s
-
-        def in_group(self, index):
-            """Check if last index was in a char group."""
-
-            inside = False
-            for g in self.groups:
-                if g[0] <= index <= g[1]:
-                    inside = True
-                    break
-            return inside
+            return self._re_line_break
 
         def apply(self):
             """Apply search template."""
 
-            i = RegexSearchTokens(self.search, self.verbose)
+            retry = False
+            self.original_version = self.re_version
+            self.verbose = bool(self.re_verbose)
+            self.version = self.re_version if self.re_version else regex.DEFAULT_VERSION
+            self.live_verbose = self.verbose
+            self.live_version = self.version
+            self.flags_updated = False
+            self.flags_found = False
+
+            if self.original_version and self.verbose:
+                self.flags_found
+
+            new_pattern = []
+            string = self.process_quotes(self.search)
+
+            i = RegexSearchTokens(string)
             iter(i)
-
-            for t in i:
-                if len(t) > 1:
-                    # handle our stuff
-
-                    c = t[1:]
-
-                    if c[0:1] in self._verbose_tokens:
-                        self.extended.append(t)
-                    elif c == self._line_break:
-                        self.extended.append(self.linebreak(t, i))
-                    elif c == self._quote:
-                        self.extended.extend(self.quoted(i))
-                    elif c != self._end:
-                        self.extended.append(t)
-                elif self.verbose and t == self._hashtag and not self.in_group(i.index - 1):
-                    self.extended.append(t)
-                    self.extended.extend(self.comments(i))
+            try:
+                for t in i:
+                    new_pattern.extend(self.normal(t, i))
+                if self.flags_updated:
+                    retry = True
+                    self.version = self.live_version
+                    self.verbose = self.live_verbose
+            except FlagsFoundException:
+                retry = True
+                self.version = self.live_version
+                self.verbose = self.live_verbose
+            except StopIteration:
+                pass
+            except Exception as e:
+                if self.flags_updated:
+                    retry = True
+                    self.version = self.live_version
+                    self.verbose = self.live_verbose
                 else:
-                    self.extended.append(t)
+                    raise
 
-            return self._empty.join(self.extended)
+            if retry:
+                new_pattern = []
+                self.flags_found = True
+
+                i = RegexSearchTokens(string)
+                iter(i)
+                try:
+                    for t in i:
+                        new_pattern.extend(self.normal(t, i))
+                except StopIteration:
+                    pass
+            return self._empty.join(new_pattern)
 
     class ReplaceTemplate(object):
         """Pre-replace template."""

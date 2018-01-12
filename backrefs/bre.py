@@ -838,7 +838,6 @@ class SearchTemplate(object):
         self._rc_bracket = ctokens["rc_bracket"]
         self._unicode_flag = ctokens["unicode_flag"]
         self._ascii_flag = tokens["ascii_flag"]
-        self._esc_end = ctokens["esc_end"]
         self._end = ctokens["end"]
         self._re_property_strip = tokens['re_property_strip']
         self._re_property_gc = tokens.get('re_property_gc', None)
@@ -868,7 +867,6 @@ class SearchTemplate(object):
             self._lc, self._lc_span, self._uc,
             self._uc_span, self._uni_prop, self._inverse_uni_prop, self._unicode_name
         )
-        self.extended = []
 
     def process_quotes(self, string):
         """Process quotes."""

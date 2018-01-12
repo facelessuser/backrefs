@@ -31,7 +31,6 @@ utokens = {
     "rc_bracket": "}",
     "lr_bracket": "(",
     "rr_bracket": ")",
-    "question": "?",
     "group_start": r"\g<",
     "group_end": ">",
     "format_replace_group": re.compile(
@@ -75,7 +74,6 @@ btokens = {
     "rc_bracket": b"}",
     "lr_bracket": b"(",
     "rr_bracket": b")",
-    "question": b"?",
     "group_start": br"\g<",
     "group_end": b">",
     "format_replace_group": re.compile(
