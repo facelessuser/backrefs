@@ -25,8 +25,6 @@ class TestSearchTemplate(unittest.TestCase):
         """Test Unicode block."""
 
         pattern = bre.compile_search(r'\N{black club suit}', re.UNICODE)
-        print(pattern.pattern)
-        print('\N{black club suit}')
         m = pattern.match('\N{black club suit}')
         self.assertTrue(m is not None)
         pattern = bre.compile_search(r'[\N{black club suit}]')
@@ -246,17 +244,17 @@ class TestSearchTemplate(unittest.TestCase):
         result = bre.SearchTemplate(r'Testing \Q(quote) with no [end]!').apply()
         self.assertEqual(r'Testing %s' % re.escape(r'(quote) with no [end]!'), result)
 
-    def test_quote_avoid_char_blocks(self):
-        """Test that quote backrefs are ignored in character groups."""
+    def test_quote_in_char_groups(self):
+        """Test that quote backrefs are handled in character groups."""
 
         result = bre.SearchTemplate(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').apply()
-        self.assertEqual(r'Testing [char block] [(AVOIDANCE)]!', result)
+        self.assertEqual(r'Testing [char block] [\(AVOIDANCE\)]!', result)
 
-    def test_quote_avoid_with_right_square_bracket_first(self):
-        """Test that quote backrefs are ignored in character groups that have a right square bracket as first char."""
+    def test_quote_in_char_groups_with_right_square_bracket_first(self):
+        """Test that quote backrefs are handled in character groups that have a right square bracket as first char."""
 
         result = bre.SearchTemplate(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').apply()
-        self.assertEqual(r'Testing [^]char block] [](AVOIDANCE)]!', result)
+        self.assertEqual(r'Testing [^]char block] []\(AVOIDANCE\)]!', result)
 
     def test_extraneous_end_char(self):
         r"""Test that stray '\E's get removed."""
@@ -474,34 +472,10 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bre.compile_search(r'Some pattern', flags=bre.VERBOSE | bre.UNICODE)
         self.assertTrue(pattern.flags & bre.UNICODE and pattern.flags & bre.VERBOSE)
 
-    def test_detect_verbose_string_flag(self):
-        """Test verbose string flag (?x)."""
-
-        pattern = bre.compile_search(
-            r'''(?x)
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            '''
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''(?x)
-            This is a # \\Qcomment\\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \\Qcomment\\E
-            '''
-        )
-
     def test_detect_verbose_string_flag_at_end(self):
         """Test verbose string flag `(?x)` at end."""
 
-        pattern = bre.compile_search(
+        template = bre.SearchTemplate(
             r'''
             This is a # \Qcomment\E
             This is not a \# \Qcomment\E
@@ -510,17 +484,9 @@ class TestSearchTemplate(unittest.TestCase):
             This\ is\ a # \Qcomment\E (?x)
             '''
         )
+        template.apply()
 
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            This is a # \\Qcomment\\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \\Qcomment\\E (?x)
-            '''
-        )
+        self.assertTrue(template.verbose)
 
     def test_ignore_verbose_string(self):
         """Test verbose string flag `(?x)` in character set."""
@@ -567,32 +533,6 @@ class TestSearchTemplate(unittest.TestCase):
             This is not a [#\ ] comment
             This is not a [\#] comment
             This\ is\ not a # comment
-            '''
-        )
-
-    def test_detect_complex_verbose_string_flag(self):
-        """Test complex verbose string flag `(?x)`."""
-
-        pattern = bre.compile_search(
-            r'''
-            (?ixu)
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            '''
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            (?ixu)
-            This is a # \\Qcomment\\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \\Qcomment\\E
             '''
         )
 
@@ -668,55 +608,6 @@ class TestSearchTemplate(unittest.TestCase):
             '(?x)This is a # comment with no new line'
         )
 
-    def test_detect_verbose(self):
-        """Test verbose."""
-
-        pattern = bre.compile_search(
-            r'''
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            ''',
-            re.VERBOSE
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            This is a # \\Qcomment\\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \\Qcomment\\E
-            '''
-        )
-
-    def test_no_verbose(self):
-        """Test no verbose."""
-
-        pattern = bre.compile_search(
-            r'''
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            '''
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            This is a # comment
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # comment
-            '''
-        )
-
     def test_other_backrefs(self):
         """Test that other backrefs make it through."""
 
@@ -730,7 +621,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(
             pattern.pattern,
             r'''(?x)
-            This \bis a # \\Qcomment\\E
+            This \bis a # comment
             This is\w+ not a \# comment
             '''
         )
@@ -1520,7 +1411,7 @@ class TestExceptions(unittest.TestCase):
         """Test a situation that is not a POSIX at the end of a group."""
 
         with pytest.raises(sre_constants.error) as excinfo:
-            pattern = bre.compile_search(r'Test [[:graph:]')
+            bre.compile_search(r'Test [[:graph:]')
         print(str(excinfo))
         self.assertTrue('unterminated' in str(excinfo))
 

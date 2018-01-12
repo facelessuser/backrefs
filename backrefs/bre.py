@@ -106,15 +106,14 @@ _UPPER = 0
 _LOWER = 1
 
 # Regex pattern for unicode properties
-_UPROP = r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[a-zA-Z])?'
 _UNAME = r'N(?:\{[\w ]+\})?'
-
-_RE_UPROP = re.compile(r'(?x)\\%s' % _UPROP)
 
 # Unicode string related references
 utokens = {
     "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
     "re_comments": re.compile(r'\(\?\#[^)]\)'),
+    "re_uniprops": re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[a-zA-Z])?'),
+    "re_named_props": re.compile(r'N(?:\{[\w ]+\})?'),
     "property_amp": '&',
     "property_c": 'c',
     "re_property_strip": re.compile(r'[\-_ ]'),
@@ -159,13 +158,7 @@ utokens = {
     "inverse_uni_prop": "P",
     "ascii_lower": 'lower',
     "ascii_upper": 'upper',
-    "re_search_ref": re.compile(
-        r'(\\)|([lLcCEQ]|%(uni_prop)s|%(uni_name)s)' % {"uni_prop": _UPROP, "uni_name": _UNAME}
-    ),
-    "re_search_ref_verbose": re.compile(
-        r'(\\)|([lLcCEQ#]|%(uni_prop)s|%(uni_name)s)' % {"uni_prop": _UPROP, "uni_name": _UNAME}
-    ),
-    "re_flags": re.compile(r'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else r'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
+    "re_flags": re.compile(r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'),
     "ascii_flag": "a",
     "long_search_refs": ("p", "P", "N")
 }
@@ -174,6 +167,8 @@ utokens = {
 btokens = {
     "re_posix": re.compile(br'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
     "re_comments": re.compile(br'\(\?\#[^)]\)'),
+    "re_uniprops": None,
+    "re_named_props": None,
     "property_amp": b'&',
     "property_c": b'c',
     "re_property_strip": re.compile(br'[\-_ ]'),
@@ -212,16 +207,14 @@ btokens = {
     "inverse_uni_prop": b"P",
     "ascii_lower": b"lower",
     "ascii_upper": b"upper",
-    "re_search_ref": re.compile(br'(\\)|([lLcCEQ])'),
-    "re_search_ref_verbose": re.compile(br'(\\)|([lLcCEQ#])'),
-    "re_flags": re.compile(br'(?s)(\\.)|\(\?([aiLmsux]+)\)|(.)' if compat.PY3 else br'(?s)(\\.)|\(\?([iLmsux]+)\)|(.)'),
+    "re_flags": re.compile(br'\(\?([aiLmsux]+)\)' if compat.PY3 else br'\(\?([iLmsux]+)\)'),
     "ascii_flag": b"a",
     "long_search_refs": tuple()
 }
 
 
 class FlagsFoundException(Exception):
-    pass
+    """Flag exception."""
 
 
 # Break apart template patterns into char tokens
@@ -323,7 +316,8 @@ class SearchTokens(compat.Tokens):
             ctokens = ctok.utokens
 
         self.string = string
-        self._re_search_ref = tokens["re_search_ref"]
+        self._re_uniprops = tokens["re_uniprops"]
+        self._re_named_props = tokens["re_named_props"]
         self._long_search_refs = tokens["long_search_refs"]
         self._re_posix = tokens["re_posix"]
         self._unicode_name = ctokens["unicode_name"]
@@ -343,8 +337,10 @@ class SearchTokens(compat.Tokens):
         return self
 
     def get_flags(self):
+        """Get flags."""
+
         text = None
-        m = self._re_flags.match(self.string, self.index -1)
+        m = self._re_flags.match(self.string, self.index - 1)
         if m:
             text = m.group(0)
             self.index = m.end(0)
@@ -352,6 +348,8 @@ class SearchTokens(compat.Tokens):
         return text
 
     def get_comments(self):
+        """Get comments."""
+
         text = None
         m = self._re_comments.match(self.string, self.index - 1)
         if m:
@@ -361,6 +359,8 @@ class SearchTokens(compat.Tokens):
         return text
 
     def get_posix(self):
+        """Get POSIX."""
+
         text = None
         m = self._re_posix.match(self.string, self.index - 1)
         if m:
@@ -369,23 +369,34 @@ class SearchTokens(compat.Tokens):
             self.current = text
         return text
 
-
-    def get_unicode_property(self):
+    def get_named_property(self):
+        """Get named property."""
 
         text = None
-        m = self._re_search_ref.match(self.string, self.index - 1)
+        m = self._re_named_props.match(self.string, self.index - 1)
         if m:
-            ref = m.group(0)
-            if len(ref) == 1 and ref in self._long_search_refs:
-                if ref == self._unicode_name:
-                    raise SyntaxError('Format for Unicode name is \\N{name}!')
-                elif ref == self._uni_prop:
-                    raise SyntaxError('Format for Unicode property is \\p{property} or \\pP!')
-                elif ref == self._inverse_uni_prop:
-                    raise SyntaxError('Format for inverse Unicode property is \\P{property} or \\pP!')
-            text = (m.group(1) if m.group(1) else m.group(2))[1:]
+            text = m.group(0)
+            if text == self._unicode_name:
+                raise SyntaxError('Format for Unicode name is \\N{name}!')
             self.index = m.end(0)
             self.current = text
+            text = text[1:]
+        return text
+
+    def get_unicode_property(self):
+        """Get Unicode properites."""
+
+        text = None
+        m = self._re_uniprops.match(self.string, self.index - 1)
+        if m:
+            text = m.group(0)
+            if text == self._uni_prop:
+                raise SyntaxError('Format for Unicode property is \\p{property} or \\pP!')
+            elif text == self._inverse_uni_prop:
+                raise SyntaxError('Format for inverse Unicode property is \\P{property} or \\pP!')
+            self.index = m.end(0)
+            self.current = text
+            text = text[1:]
         return text
 
     def iternext(self):
@@ -855,43 +866,59 @@ class SearchTemplate(object):
         self._hashtag = ctokens["hashtag"]
         self._unicode_name = ctokens["unicode_name"]
         self.search = search
-        self._re_search_ref = tokens["re_search_ref"]
         self.re_verbose = re_verbose
         self.re_unicode = re_unicode
-        self.new_refs = (
-            self._quote, self._end, self._lc, self._lc_span, self._uc,
+        self._new_refs = (
+            self._lc, self._lc_span, self._uc,
             self._uc_span, self._uni_prop, self._inverse_uni_prop, self._unicode_name
         )
         self.extended = []
 
-    def escaped(self, i):
-        current = []
+    def process_quotes(self, string):
+        """Process quotes."""
+
         escaped = False
-        is_end = False
+        in_quotes = False
+        current = []
+        quoted = []
+        i = SearchTokens(string)
+        iter(i)
         try:
-            t = next(i)
-            while not is_end:
+            for t in i:
                 if not escaped and t == self._b_slash:
                     escaped = True
                 elif escaped:
                     escaped = False
                     if t == self._end:
-                        is_end = True
+                        if in_quotes:
+                            current.append(escape(self._empty.join(quoted)))
+                            quoted = []
+                            in_quotes = False
+                    elif t == self._quote and not in_quotes:
+                        in_quotes = True
+                    elif in_quotes:
+                        quoted.extend([self._b_slash, t])
                     else:
                         current.extend([self._b_slash, t])
+                elif in_quotes:
+                    quoted.extend(t)
                 else:
                     current.append(t)
-                if not is_end:
-                    t = next(i)
         except StopIteration:
             pass
 
-        if escaped:
+        if in_quotes and escaped:
+            quoted.append(self._b_slash)
+        elif escaped:
             current.append(self._b_slash)
 
-        return [escape(self._empty.join(current))]
+        if quoted:
+            current.append(escape(self._empty.join(quoted)))
+
+        return self._empty.join(current)
 
     def verbose_comment(self, t, i):
+        """Handle verbose comments."""
 
         current = []
         escaped = False
@@ -900,19 +927,25 @@ class SearchTemplate(object):
             while t != self._nl:
                 if not escaped and t == self._b_slash:
                     escaped = True
-                if escaped:
+                    current.append(t)
+                elif escaped:
+                    escaped = False
                     if t in self._new_refs:
                         current.append(self._b_slash)
-                    esaped = False
-                current.append(t)
+                    current.append(t)
+                else:
+                    current.append(t)
                 t = next(i)
         except StopIteration:
             pass
+
         if t == self._nl:
             current.append(t)
         return current
 
     def flags(self, text):
+        """Analyze flags."""
+
         if compat.PY3 and self._ascii_flag in text:
             self.flags_updated = True
             self.live_ascii = True
@@ -923,9 +956,11 @@ class SearchTemplate(object):
             self.flags_updated = True
             self.live_verbose = True
         if (self.live_unicode or self.live_ascii) and self.live_verbose:
-            raise FlagFoundException('Flags found!')
+            raise FlagsFoundException('Flags found!')
 
     def reference(self, t, i):
+        """Handle references."""
+
         current = []
 
         try:
@@ -933,12 +968,7 @@ class SearchTemplate(object):
         except StopIteration:
             return [t]
 
-        if t == self._end:
-            pass
-        elif t == self._quote:
-            current.extend(self.escaped(i))
-
-        elif t == self._lc:
+        if t == self._lc:
             current.extend(self.letter_case_props(_LOWER, False))
         elif t == self._lc_span:
             current.extend(self.letter_case_props(_LOWER, False, negate=True))
@@ -958,13 +988,14 @@ class SearchTemplate(object):
                 text = text[1:-1]
             current.extend(self.unicode_props(text, False, negate=True))
         elif not self.binary and t == self._unicode_name:
-            text = i.get_unicode_property()[1:-1]
+            text = i.get_named_property()[1:-1]
             current.extend(self.unicode_name(text))
         else:
             current.extend([self._b_slash, t])
         return current
 
     def parens(self, t, i):
+        """Hanlde parenthesis."""
 
         current = []
 
@@ -996,6 +1027,7 @@ class SearchTemplate(object):
         return current
 
     def char_groups(self, t, i):
+        """Handle character groups."""
 
         current = []
         pos = i.index - 1
@@ -1006,8 +1038,9 @@ class SearchTemplate(object):
         try:
             while True:
                 if not escaped and t == self._b_slash:
-                    escaped = not escaped
+                    escaped = True
                 elif escaped:
+                    escaped = False
                     if t == self._lc:
                         current.extend(self.letter_case_props(_LOWER, True))
                     elif t == self._lc_span:
@@ -1027,11 +1060,10 @@ class SearchTemplate(object):
                             text = text[1:-1]
                         current.extend(self.unicode_props(text, True, negate=True))
                     elif not self.binary and t == self._unicode_name:
-                        text = i.get_unicode_property()[1:-1]
+                        text = i.get_named_property()[1:-1]
                         current.extend(self.unicode_name(text))
                     else:
                         current.extend([self._b_slash, t])
-                    escaped = False
                 elif t == self._ls_bracket and not found:
                     found = True
                     first = pos
@@ -1057,11 +1089,12 @@ class SearchTemplate(object):
         except StopIteration:
             pass
 
-        if t == self._b_slash:
+        if escaped:
             current.append(t)
         return current
 
     def normal(self, t, i):
+        """Handle normal chars."""
 
         current = []
 
@@ -1182,8 +1215,9 @@ class SearchTemplate(object):
             self.flags_found = True
 
         new_pattern = []
+        string = self.process_quotes(self.search)
 
-        i = SearchTokens(self.search)
+        i = SearchTokens(string)
         iter(i)
         try:
             for t in i:
@@ -1217,7 +1251,7 @@ class SearchTemplate(object):
             new_pattern = []
             self.flags_found = True
 
-            i = SearchTokens(self.search)
+            i = SearchTokens(string)
             iter(i)
             try:
                 for t in i:
