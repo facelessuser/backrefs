@@ -111,7 +111,7 @@ _UNAME = r'N(?:\{[\w ]+\})?'
 # Unicode string related references
 utokens = {
     "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
-    "re_comments": re.compile(r'\(\?\#[^)]\)'),
+    "re_comments": re.compile(r'\(\?\#[^)]*\)'),
     "re_uniprops": re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[a-zA-Z])?'),
     "re_named_props": re.compile(r'N(?:\{[\w ]+\})?'),
     "property_amp": '&',
@@ -384,7 +384,7 @@ class SearchTokens(compat.Tokens):
         return text
 
     def get_unicode_property(self):
-        """Get Unicode properites."""
+        """Get Unicode properties."""
 
         text = None
         m = self._re_uniprops.match(self.string, self.index - 1)
@@ -995,7 +995,7 @@ class SearchTemplate(object):
         return current
 
     def parens(self, t, i):
-        """Hanlde parenthesis."""
+        """Handle parenthesis."""
 
         current = []
 

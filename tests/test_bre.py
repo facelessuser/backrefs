@@ -21,6 +21,13 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_inline_comments(self):
+        """Test that we properly find inline comments and avoid them."""
+        pattern = bre.compile_search(r'test(?#\l\p{^IsLatin})', re.UNICODE)
+        m = pattern.match('test')
+        self.assertEqual(pattern.pattern, r'test(?#\l\p{^IsLatin})')
+        self.assertTrue(m is not None)
+
     def test_unicode_name(self):
         """Test Unicode block."""
 
