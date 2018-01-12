@@ -112,7 +112,7 @@ _UNAME = r'N(?:\{[\w ]+\})?'
 utokens = {
     "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
     "re_comments": re.compile(r'\(\?\#[^)]*\)'),
-    "re_uniprops": re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[a-zA-Z])?'),
+    "re_uniprops": re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[A-Z])?'),
     "re_named_props": re.compile(r'N(?:\{[\w ]+\})?'),
     "property_amp": '&',
     "property_c": 'c',
@@ -159,8 +159,7 @@ utokens = {
     "ascii_lower": 'lower',
     "ascii_upper": 'upper',
     "re_flags": re.compile(r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'),
-    "ascii_flag": "a",
-    "long_search_refs": ("p", "P", "N")
+    "ascii_flag": "a"
 }
 
 # Byte string related references
@@ -208,8 +207,7 @@ btokens = {
     "ascii_lower": b"lower",
     "ascii_upper": b"upper",
     "re_flags": re.compile(br'\(\?([aiLmsux]+)\)' if compat.PY3 else br'\(\?([iLmsux]+)\)'),
-    "ascii_flag": b"a",
-    "long_search_refs": tuple()
+    "ascii_flag": b"a"
 }
 
 
@@ -318,7 +316,6 @@ class SearchTokens(compat.Tokens):
         self.string = string
         self._re_uniprops = tokens["re_uniprops"]
         self._re_named_props = tokens["re_named_props"]
-        self._long_search_refs = tokens["long_search_refs"]
         self._re_posix = tokens["re_posix"]
         self._unicode_name = ctokens["unicode_name"]
         self._re_flags = tokens["re_flags"]
@@ -862,7 +859,6 @@ class SearchTemplate(object):
         self._nl = ctokens["nl"]
         self._lr_bracket = ctokens["lr_bracket"]
         self._rr_bracket = ctokens["rr_bracket"]
-        self._question = ctokens["question"]
         self._hashtag = ctokens["hashtag"]
         self._unicode_name = ctokens["unicode_name"]
         self.search = search
