@@ -393,7 +393,7 @@ class SearchTokens(compat.Tokens):
             if text == self._uni_prop:
                 raise SyntaxError('Format for Unicode property is \\p{property} or \\pP!')
             elif text == self._inverse_uni_prop:
-                raise SyntaxError('Format for inverse Unicode property is \\P{property} or \\pP!')
+                raise SyntaxError('Format for inverse Unicode property is \\P{property} or \\PP!')
             self.index = m.end(0)
             self.current = text
             text = text[1:]
