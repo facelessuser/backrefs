@@ -393,29 +393,26 @@ if REGEX_SUPPORT:
             quoted = []
             i = RegexSearchTokens(string)
             iter(i)
-            try:
-                for t in i:
-                    if not escaped and t == self._b_slash:
-                        escaped = True
-                    elif escaped:
-                        escaped = False
-                        if t == self._end:
-                            if in_quotes:
-                                current.append(escape(self._empty.join(quoted)))
-                                quoted = []
-                                in_quotes = False
-                        elif t == self._quote and not in_quotes:
-                            in_quotes = True
-                        elif in_quotes:
-                            quoted.extend([self._b_slash, t])
-                        else:
-                            current.extend([self._b_slash, t])
+            for t in i:
+                if not escaped and t == self._b_slash:
+                    escaped = True
+                elif escaped:
+                    escaped = False
+                    if t == self._end:
+                        if in_quotes:
+                            current.append(escape(self._empty.join(quoted)))
+                            quoted = []
+                            in_quotes = False
+                    elif t == self._quote and not in_quotes:
+                        in_quotes = True
                     elif in_quotes:
-                        quoted.extend(t)
+                        quoted.extend([self._b_slash, t])
                     else:
-                        current.append(t)
-            except StopIteration:
-                pass
+                        current.extend([self._b_slash, t])
+                elif in_quotes:
+                    quoted.extend(t)
+                else:
+                    current.append(t)
 
             if in_quotes and escaped:
                 quoted.append(self._b_slash)
@@ -638,8 +635,6 @@ if REGEX_SUPPORT:
                 retry = True
                 self.version = self.live_version
                 self.verbose = self.live_verbose
-            except StopIteration:
-                pass
             except Exception as e:
                 if self.flags_updated:
                     retry = True
@@ -654,11 +649,8 @@ if REGEX_SUPPORT:
 
                 i = RegexSearchTokens(string)
                 iter(i)
-                try:
-                    for t in i:
-                        new_pattern.extend(self.normal(t, i))
-                except StopIteration:
-                    pass
+                for t in i:
+                    new_pattern.extend(self.normal(t, i))
             return self._empty.join(new_pattern)
 
     class ReplaceTemplate(object):
