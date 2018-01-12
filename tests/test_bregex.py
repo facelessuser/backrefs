@@ -6,6 +6,7 @@ from backrefs import bregex
 import regex
 import sys
 import pytest
+import _regex_core
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 
@@ -17,6 +18,27 @@ else:
 
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
+
+    def test_trailing_bslash(self):
+        """Test trailing back slash."""
+
+        with pytest.raises(_regex_core.error):
+            pattern = bregex.compile_search('test\\', regex.UNICODE)
+
+        with pytest.raises(_regex_core.error):
+            pattern = bregex.compile_search('test[\\', regex.UNICODE)
+
+        with pytest.raises(_regex_core.error):
+            pattern = bregex.compile_search('test(\\', regex.UNICODE)
+
+        pattern = bregex.compile_search('\\Qtest\\', regex.UNICODE)
+        self.assertEqual(pattern.pattern, 'test\\\\')
+
+    def test_escape_values_in_verbose_comments(self):
+        """Test added escapes in verbose comments."""
+
+        pattern = bregex.compile_search(r'(?x)test # \R', regex.UNICODE)
+        self.assertEqual(pattern.pattern, r'(?x)test # \\R', regex.UNICODE)
 
     def test_inline_comments(self):
         """Test that we properly find inline comments and avoid them."""

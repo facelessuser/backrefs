@@ -21,6 +21,27 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_trailing_bslash(self):
+        """Test trailing back slash."""
+
+        with pytest.raises(sre_constants.error):
+            pattern = bre.compile_search('test\\', re.UNICODE)
+
+        with pytest.raises(sre_constants.error):
+            pattern = bre.compile_search('test[\\', re.UNICODE)
+
+        with pytest.raises(sre_constants.error):
+            pattern = bre.compile_search('test(\\', re.UNICODE)
+
+        pattern = bre.compile_search('\\Qtest\\', re.UNICODE)
+        self.assertEqual(pattern.pattern, 'test\\\\')
+
+    def test_escape_values_in_verbose_comments(self):
+        """Test added escapes in verbose comments."""
+
+        pattern = bre.compile_search(r'(?x)test # \l \p{numbers}', re.UNICODE)
+        self.assertEqual(pattern.pattern, r'(?x)test # \\l \\p{numbers}', re.UNICODE)
+
     def test_inline_comments(self):
         """Test that we properly find inline comments and avoid them."""
         pattern = bre.compile_search(r'test(?#\l\p{^IsLatin})', re.UNICODE)
