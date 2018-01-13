@@ -6,6 +6,7 @@ from backrefs import bre
 import re
 import sys
 import pytest
+import sre_constants
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY36_PLUS = (3, 6) <= sys.version_info
@@ -20,12 +21,66 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_comments(self):
+        """Test comments v0."""
+
+        pattern = bre.compile_search(
+            r'''(?xu)
+            Test # \p{XDigit}
+            (Test (?#\p{XDigit}))
+            Test \p{XDigit}
+            '''
+        )
+
+        self.assertEqual(
+            pattern.pattern,
+            r'''(?xu)
+            Test # \\p{XDigit}
+            (Test (?#\p{XDigit}))
+            Test [0-9A-Fa-f]
+            '''
+        )
+
+        self.assertTrue(pattern.match('TestTestTestA') is not None)
+
+    def test_trailing_bslash(self):
+        """Test trailing back slash."""
+
+        with pytest.raises(sre_constants.error):
+            pattern = bre.compile_search('test\\', re.UNICODE)
+
+        with pytest.raises(sre_constants.error):
+            pattern = bre.compile_search('test[\\', re.UNICODE)
+
+        with pytest.raises(sre_constants.error):
+            pattern = bre.compile_search('test(\\', re.UNICODE)
+
+        pattern = bre.compile_search('\\Qtest\\', re.UNICODE)
+        self.assertEqual(pattern.pattern, 'test\\\\')
+
+    def test_escape_values_in_verbose_comments(self):
+        """Test added escapes in verbose comments."""
+
+        pattern = bre.compile_search(r'(?x)test # \l \p{numbers}', re.UNICODE)
+        self.assertEqual(pattern.pattern, r'(?x)test # \\l \\p{numbers}', re.UNICODE)
+
+    def test_char_group_nested_opening(self):
+        """Test char group with nested opening [."""
+
+        pattern = bre.compile_search(r'test [[] \N{black club suit}', re.UNICODE)
+        self.assertEqual(pattern.pattern, 'test [[] \u2663', re.UNICODE)
+
+    def test_inline_comments(self):
+        """Test that we properly find inline comments and avoid them."""
+        pattern = bre.compile_search(r'test(?#\l\p{^IsLatin})', re.UNICODE)
+        m = pattern.match('test')
+        self.assertEqual(pattern.pattern, r'test(?#\l\p{^IsLatin})')
+        self.assertTrue(m is not None)
+
     def test_unicode_name(self):
         """Test Unicode block."""
 
         pattern = bre.compile_search(r'\N{black club suit}', re.UNICODE)
-        print(pattern.pattern)
-        print('\N{black club suit}')
         m = pattern.match('\N{black club suit}')
         self.assertTrue(m is not None)
         pattern = bre.compile_search(r'[\N{black club suit}]')
@@ -132,12 +187,6 @@ class TestSearchTemplate(unittest.TestCase):
 
         pattern = bre.compile_search(r'Test [:graph:]]')
         self.assertEqual(pattern.pattern, r'Test [:graph:]]')
-
-    def test_not_posix_at_end_group(self):
-        """Test a situation that is not a POSIX at the end of a group."""
-
-        pattern = bre.compile_search(r'Test [[:graph:]')
-        self.assertEqual(pattern.pattern, r'Test [[:graph:]')
 
     def test_ascii_upper_props(self):
         """Test ASCII uppercase properties."""
@@ -251,17 +300,17 @@ class TestSearchTemplate(unittest.TestCase):
         result = bre.SearchTemplate(r'Testing \Q(quote) with no [end]!').apply()
         self.assertEqual(r'Testing %s' % re.escape(r'(quote) with no [end]!'), result)
 
-    def test_quote_avoid_char_blocks(self):
-        """Test that quote backrefs are ignored in character groups."""
+    def test_quote_in_char_groups(self):
+        """Test that quote backrefs are handled in character groups."""
 
         result = bre.SearchTemplate(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').apply()
-        self.assertEqual(r'Testing [char block] [(AVOIDANCE)]!', result)
+        self.assertEqual(r'Testing [char block] [\(AVOIDANCE\)]!', result)
 
-    def test_quote_avoid_with_right_square_bracket_first(self):
-        """Test that quote backrefs are ignored in character groups that have a right square bracket as first char."""
+    def test_quote_in_char_groups_with_right_square_bracket_first(self):
+        """Test that quote backrefs are handled in character groups that have a right square bracket as first char."""
 
         result = bre.SearchTemplate(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').apply()
-        self.assertEqual(r'Testing [^]char block] [](AVOIDANCE)]!', result)
+        self.assertEqual(r'Testing [^]char block] []\(AVOIDANCE\)]!', result)
 
     def test_extraneous_end_char(self):
         r"""Test that stray '\E's get removed."""
@@ -479,34 +528,10 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bre.compile_search(r'Some pattern', flags=bre.VERBOSE | bre.UNICODE)
         self.assertTrue(pattern.flags & bre.UNICODE and pattern.flags & bre.VERBOSE)
 
-    def test_detect_verbose_string_flag(self):
-        """Test verbose string flag (?x)."""
-
-        pattern = bre.compile_search(
-            r'''(?x)
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            '''
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''(?x)
-            This is a # \\Qcomment\\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \\Qcomment\\E
-            '''
-        )
-
     def test_detect_verbose_string_flag_at_end(self):
         """Test verbose string flag `(?x)` at end."""
 
-        pattern = bre.compile_search(
+        template = bre.SearchTemplate(
             r'''
             This is a # \Qcomment\E
             This is not a \# \Qcomment\E
@@ -515,17 +540,9 @@ class TestSearchTemplate(unittest.TestCase):
             This\ is\ a # \Qcomment\E (?x)
             '''
         )
+        template.apply()
 
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            This is a # \\Qcomment\\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \\Qcomment\\E (?x)
-            '''
-        )
+        self.assertTrue(template.verbose)
 
     def test_ignore_verbose_string(self):
         """Test verbose string flag `(?x)` in character set."""
@@ -572,32 +589,6 @@ class TestSearchTemplate(unittest.TestCase):
             This is not a [#\ ] comment
             This is not a [\#] comment
             This\ is\ not a # comment
-            '''
-        )
-
-    def test_detect_complex_verbose_string_flag(self):
-        """Test complex verbose string flag `(?x)`."""
-
-        pattern = bre.compile_search(
-            r'''
-            (?ixu)
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            '''
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            (?ixu)
-            This is a # \\Qcomment\\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \\Qcomment\\E
             '''
         )
 
@@ -673,55 +664,6 @@ class TestSearchTemplate(unittest.TestCase):
             '(?x)This is a # comment with no new line'
         )
 
-    def test_detect_verbose(self):
-        """Test verbose."""
-
-        pattern = bre.compile_search(
-            r'''
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            ''',
-            re.VERBOSE
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            This is a # \\Qcomment\\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \\Qcomment\\E
-            '''
-        )
-
-    def test_no_verbose(self):
-        """Test no verbose."""
-
-        pattern = bre.compile_search(
-            r'''
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            '''
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            This is a # comment
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # comment
-            '''
-        )
-
     def test_other_backrefs(self):
         """Test that other backrefs make it through."""
 
@@ -735,7 +677,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(
             pattern.pattern,
             r'''(?x)
-            This \bis a # \\Qcomment\\E
+            This \bis a # comment
             This is\w+ not a \# comment
             '''
         )
@@ -1521,85 +1463,92 @@ class TestExceptions(unittest.TestCase):
     #         bre.compile_replace(p, r'Replace \U fail!')
     #     self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
 
+    def test_not_posix_at_end_group(self):
+        """Test a situation that is not a POSIX at the end of a group."""
+
+        with pytest.raises(sre_constants.error) as excinfo:
+            bre.compile_search(r'Test [[:graph:]')
+        self.assertTrue(excinfo is not None)
+
     def test_incomplete_replace_unicode_name(self):
         """Test incomplete replace with Unicode name."""
 
         p = bre.compile_search(r'test')
-        with self.assertRaises(SyntaxError) as e:
+        with pytest.raises(SyntaxError) as e:
             bre.compile_replace(p, r'Replace \N fail!')
-        self.assertTrue(str(e), 'Format for Unicode name is \\N{name}!')
+        self.assertEqual(str(e.value), 'Format for Unicode name is \\N{name}!')
 
     def test_incomplete_replace_group(self):
         """Test incomplete replace group."""
 
         p = bre.compile_search(r'test')
-        with self.assertRaises(SyntaxError) as e:
+        with pytest.raises(SyntaxError) as e:
             bre.compile_replace(p, r'Replace \g fail!')
-        self.assertTrue(str(e), 'Format for group is \\g<group_name_or_index>!')
+        self.assertEqual(str(e.value), 'Format for group is \\g<group_name_or_index>!')
 
     def test_incomplete_replace_byte(self):
         """Test incomplete byte group."""
 
         p = bre.compile_search(r'test')
-        with self.assertRaises(SyntaxError) as e:
+        with pytest.raises(SyntaxError) as e:
             bre.compile_replace(p, r'Replace \x fail!')
-        self.assertTrue(str(e), 'Format for byte is \\xXX!')
+        self.assertEqual(str(e.value), 'Format for byte is \\xXX!')
 
     def test_bad_posix(self):
         """Test bad posix."""
 
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError) as e:
             bre.compile_search(r'[[:bad:]]', re.UNICODE)
 
-        self.assertTrue(str(e), 'Invalid POSIX property!')
+        self.assertEqual(str(e.value), 'Invalid POSIX property!')
 
     def test_bad_binary(self):
         """Test bad binary."""
 
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError) as e:
             bre.compile_search(r'\p{bad_binary:n}', re.UNICODE)
 
-        self.assertTrue(str(e), 'Invalid Unicode property!')
+        self.assertEqual(str(e.value), 'Invalid Unicode property!')
 
     def test_bad_category(self):
         """Test bad category."""
 
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError) as e:
             bre.compile_search(r'\p{alphanumeric: bad}', re.UNICODE)
 
-        self.assertTrue(str(e), 'Invalid Unicode property!')
+        self.assertEqual(str(e.value), 'Invalid Unicode property!')
 
     def test_bad_short_category(self):
         """Test bad category."""
 
-        with self.assertRaises(ValueError) as e:
+        with pytest.raises(ValueError) as e:
             bre.compile_search(r'\pQ', re.UNICODE)
 
-        self.assertTrue(str(e), 'Invalid Unicode property!')
+        self.assertEqual(str(e.value), 'Invalid Unicode property!')
 
     def test_incomplete_inverse_category(self):
         """Test incomplete inverse category."""
 
-        with self.assertRaises(SyntaxError) as e:
+        with pytest.raises(SyntaxError) as e:
             bre.compile_search(r'\p', re.UNICODE)
 
-        self.assertTrue(str(e), 'Format for inverse Unicode property is \\P{property}!')
+        self.assertEqual(str(e.value), 'Format for Unicode property is \\p{property} or \\pP!')
 
     def test_incomplete_category(self):
         """Test incomplete category."""
 
-        with self.assertRaises(SyntaxError) as e:
+        with pytest.raises(SyntaxError) as e:
             bre.compile_search(r'\P', re.UNICODE)
 
-        self.assertTrue(str(e), 'Format for Unicode property is \\p{property}!')
+        self.assertEqual(str(e.value), 'Format for inverse Unicode property is \\P{property} or \\PP!')
 
     def test_incomplete_unicode_name(self):
         """Test incomplete Unicode name."""
 
-        with self.assertRaises(SyntaxError) as e:
+        with pytest.raises(SyntaxError) as e:
             bre.compile_search(r'\N', re.UNICODE)
 
-        self.assertTrue(str(e), 'Format for Unicode name is \\N{name}!')
+        self.assertEqual(str(e.value), 'Format for Unicode name is \\N{name}!')
 
     def test_bad_left_format_bracket(self):
         """Test bad left format bracket."""

@@ -6,6 +6,7 @@ from backrefs import bregex
 import regex
 import sys
 import pytest
+import _regex_core
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 
@@ -17,6 +18,97 @@ else:
 
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
+
+    def test_comments_v0(self):
+        """Test comments v0."""
+
+        pattern = bregex.compile_search(
+            r'''(?uV0)Test # \R(?#\R\)(?x:
+            Test #\R(?#\R\)
+            (Test # \R
+            )Test #\R
+            )Test # \R'''
+        )
+
+        self.assertEqual(
+            pattern.pattern,
+            r'''(?uV0)Test # (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\)(?x:
+            Test #\\R(?#\\R\)
+            (Test # \\R
+            )Test #\\R
+            )Test # (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)'''
+        )
+
+        self.assertTrue(pattern.match('Test # \nTestTestTestTest # \n') is not None)
+
+    def test_comments_v1(self):
+        """Test comments v1."""
+
+        pattern = bregex.compile_search(
+            r'''(?xuV1)
+            Test # \R
+            (?-x:Test #\R(?#\R\)((?x)
+            Test # \R
+            )Test #\R)
+            Test # \R
+            '''
+        )
+
+        self.assertEqual(
+            pattern.pattern,
+            r'''(?xuV1)
+            Test # \\R
+            (?-x:Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\)((?x)
+            Test # \\R
+            )Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029))
+            Test # \\R
+            '''
+        )
+
+        self.assertTrue(pattern.match('TestTest #\nTestTest #\nTest') is not None)
+
+    def test_trailing_bslash(self):
+        """Test trailing back slash."""
+
+        with pytest.raises(_regex_core.error):
+            pattern = bregex.compile_search('test\\', regex.UNICODE)
+
+        with pytest.raises(_regex_core.error):
+            pattern = bregex.compile_search('test[\\', regex.UNICODE)
+
+        with pytest.raises(_regex_core.error):
+            pattern = bregex.compile_search('test(\\', regex.UNICODE)
+
+        pattern = bregex.compile_search('\\Qtest\\', regex.UNICODE)
+        self.assertEqual(pattern.pattern, 'test\\\\')
+
+    def test_escape_values_in_verbose_comments(self):
+        """Test added escapes in verbose comments."""
+
+        pattern = bregex.compile_search(r'(?x)test # \R', regex.UNICODE)
+        self.assertEqual(pattern.pattern, r'(?x)test # \\R', regex.UNICODE)
+
+    def test_char_group_nested_opening(self):
+        """Test char group with nested opening [."""
+
+        pattern = bregex.compile_search(r'test [[] \R', regex.UNICODE)
+        self.assertEqual(pattern.pattern, r'test [[] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)', regex.UNICODE)
+
+    def test_posix_parse(self):
+        """Test posix in a group."""
+
+        pattern = bregex.compile_search(r'test [[:graph:]] \R', regex.V0)
+        self.assertNotEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)')
+
+        pattern = bregex.compile_search(r'test [[:graph:]] \R', regex.V1)
+        self.assertNotEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)')
+
+    def test_inline_comments(self):
+        """Test that we properly find inline comments and avoid them."""
+        pattern = bregex.compile_search(r'test(?#\l\p{^IsLatin})', regex.UNICODE)
+        m = pattern.match('test')
+        self.assertEqual(pattern.pattern, r'test(?#\l\p{^IsLatin})')
+        self.assertTrue(m is not None)
 
     def test_unrecognized_backrefs(self):
         """Test unrecognized backrefs."""
@@ -46,17 +138,17 @@ class TestSearchTemplate(unittest.TestCase):
         result = bregex.RegexSearchTemplate(r'Testing \Q(quote) with no [end]!').apply()
         self.assertEqual(r'Testing %s' % regex.escape(r'(quote) with no [end]!'), result)
 
-    def test_quote_avoid_char_blocks(self):
-        """Test that quote backrefs are ignored in character groups."""
+    def test_quote_in_char_groups(self):
+        """Test that quote backrefs are handled in character groups."""
 
         result = bregex.RegexSearchTemplate(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').apply()
-        self.assertEqual(r'Testing [char block] [(AVOIDANCE)]!', result)
+        self.assertEqual(r'Testing [char block] [\(AVOIDANCE\)]!', result)
 
-    def test_quote_avoid_with_right_square_bracket_first(self):
-        """Test that quote backrefs are ignored in character groups that have a right square bracket as first char."""
+    def test_quote_in_char_groups_with_right_square_bracket_first(self):
+        """Test that quote backrefs are handled in character groups that have a right square bracket as first char."""
 
         result = bregex.RegexSearchTemplate(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').apply()
-        self.assertEqual(r'Testing [^]char block] [](AVOIDANCE)]!', result)
+        self.assertEqual(r'Testing [^]char block] []\(AVOIDANCE\)]!', result)
 
     def test_extraneous_end_char(self):
         r"""Test that stray '\E's get removed."""
@@ -110,34 +202,10 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bregex.compile_search(r'Some pattern', flags=bregex.VERBOSE | bregex.UNICODE)
         self.assertTrue(pattern.flags & bregex.UNICODE and pattern.flags & bregex.VERBOSE)
 
-    def test_detect_verbose_string_flag(self):
-        """Test verbose string flag (?x)."""
-
-        pattern = bregex.compile_search(
-            r'''(?x)
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            '''
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''(?x)
-            This is a # \Qcomment\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \Qcomment\E
-            '''
-        )
-
     def test_detect_verbose_string_flag_at_end(self):
-        """Test verbose string flag (?x) at end."""
+        """Test verbose string flag `(?x)` at end."""
 
-        pattern = bregex.compile_search(
+        template = bregex.RegexSearchTemplate(
             r'''
             This is a # \Qcomment\E
             This is not a \# \Qcomment\E
@@ -146,17 +214,9 @@ class TestSearchTemplate(unittest.TestCase):
             This\ is\ a # \Qcomment\E (?x)
             '''
         )
+        template.apply()
 
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            This is a # \Qcomment\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \Qcomment\E (?x)
-            '''
-        )
+        self.assertTrue(template.verbose)
 
     def test_ignore_verbose_string(self):
         """Test verbose string flag (?x) in char set."""
@@ -203,32 +263,6 @@ class TestSearchTemplate(unittest.TestCase):
             This is not a [#\ ] comment
             This is not a [\#] comment
             This\ is\ not a # comment
-            '''
-        )
-
-    def test_detect_complex_verbose_string_flag(self):
-        """Test complex verbose string flag (?x)."""
-
-        pattern = bregex.compile_search(
-            r'''
-            (?ixu)
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            '''
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            (?ixu)
-            This is a # \Qcomment\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \Qcomment\E
             '''
         )
 
@@ -326,31 +360,6 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bregex.compile_search(r'Some pattern', flags=bregex.VERBOSE | bregex.V1)
         self.assertTrue(pattern.flags & bregex.V1 and pattern.flags & bregex.VERBOSE)
 
-    def test_detect_verbose(self):
-        """Test verbose."""
-
-        pattern = bregex.compile_search(
-            r'''
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            ''',
-            regex.VERBOSE
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''
-            This is a # \Qcomment\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \Qcomment\E
-            '''
-        )
-
     def test_no_verbose(self):
         """Test no verbose."""
 
@@ -388,33 +397,8 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(
             pattern.pattern,
             r'''(?x)
-            This \bis a # \Qcomment\E
+            This \bis a # comment
             This is\w+ not a \# comment
-            '''
-        )
-
-    def test_detect_verbose_v1(self):
-        """Test verbose."""
-
-        pattern = bregex.compile_search(
-            r'''(?V1)
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E
-            ''',
-            regex.VERBOSE
-        )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'''(?V1)
-            This is a # \Qcomment\E
-            This is not a \# comment
-            This is not a [#\ ] comment
-            This is not a [\#] comment
-            This\ is\ a # \Qcomment\E
             '''
         )
 
@@ -453,7 +437,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(
             pattern.pattern,
             r'''(?xV1)
-            This \bis a # \Qcomment\E
+            This \bis a # comment
             This is\w+ not a \# comment
             '''
         )

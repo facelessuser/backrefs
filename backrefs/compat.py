@@ -14,16 +14,6 @@ if PY3:
     binary_type = bytes
     unichar = chr
 
-    def iterstring(string):
-        """Iterate through a string."""
-
-        if isinstance(string, binary_type):
-            for x in range(0, len(string)):
-                yield string[x:x + 1]
-        else:
-            for c in string:
-                yield c
-
     class Tokens(object):
         """Tokens base for Python 3."""
 
@@ -39,12 +29,6 @@ else:
     string_type = unicode  # noqa F821
     binary_type = str  # noqa F821
     unichar = unichr  # noqa F821
-
-    def iterstring(string):
-        """Iterate through a string."""
-
-        for c in string:
-            yield c
 
     class Tokens(object):
         """Tokens base for Python 2."""
