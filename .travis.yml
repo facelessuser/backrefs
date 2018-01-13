@@ -51,13 +51,13 @@ deploy:
       tags: true
       repo: facelessuser/backrefs
       condition: "$TOXENV = documents"
-  - provider: pages
-    github_token: $GITHUB_TOKEN
-    name: $GITHUB_USER
-    email: $GITHUB_EMAIL
-    skip_cleanup: true
-    local_dir: site
-    on:
-      tags: true
-      repo: facelessuser/backrefs
-      condition: "$TOXENV = documents"
+  # - provider: pages
+  #   github_token: $GITHUB_TOKEN
+  #   name: $GITHUB_USER
+  #   email: $GITHUB_EMAIL
+  #   skip_cleanup: true
+  #   local_dir: site
+  #   on:
+  #     tags: true
+  #     repo: facelessuser/backrefs
+  #     condition: "$TOXENV = documents"
