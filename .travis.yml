@@ -1,5 +1,7 @@
 sudo: false
+
 language: python
+
 matrix:
   include:
     - python: 2.7
@@ -26,13 +28,17 @@ addons:
     packages:
       - aspell
       - aspell-en
+
 install:
   - pip install tox
   - pip install codecov
+
 script:
   - tox
+
 after_success:
   - codecov
+
 deploy:
   - provider: pypi
     user: facelessuser

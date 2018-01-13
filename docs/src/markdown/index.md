@@ -149,9 +149,11 @@ Back\ References      | Description
 `\l`                  | Lowercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\C`                  | Inverse uppercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\L`                  | Inverse lowercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
-`\Q...\E`             | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Will be ignored in character classes `[]`.
+`\Q...\E`             | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
 `\p{UnicodeProperty}` | Unicode property character class. Search string must be a Unicode string. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
+`\pX`                 | Unicode property character class where `X` is the uppercase letter that represents the General Category property.  For instance, `\pL` would be equivalent to `\p{L}` or `\p{Letter}`.
 `\P{UnicodeProperty}` | Inverse Unicode property character class. Search string must be a Unicode string. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
+`\PX`                 | Inverse Unicode property character class where `X` is the uppercase letter that represents the General Category property. For instance, `\PL` would be equivalent to `\P{L}` or `\P{Letter}`.
 `[[:alnum:]]`         | Though not really a back reference, support for Posix style character classes is available. See [Posix Style Properties](#posix-style-properties) for more info.
 `\N{UnicodeName}`     | Named characters are are normally ignored in Re, but Backrefs adds support for them.
 
@@ -159,7 +161,7 @@ Back\ References      | Description
 
 Back\ References | Description
 ---------------- | -----------
-`\Q...\E`        | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Will be ignored in character classes `[]`.
+`\Q...\E`        | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
 `\R`             | Generic line breaks. When searching a Unicode string, this will use an atomic group and match `(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)`, and when applied to byte strings, this will match `(?>\r\n|\n|\x0b|\f|\r|\x85)`. Because it uses atomic groups, which Re does not support, this feature is only for Regex.
 
 ## Replace Back References
