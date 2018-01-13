@@ -2,8 +2,13 @@
 
 ## 2.3.0
 
+- **NEW**: Completely refactored algorithm for search pattern augmentation.
+- **NEW**: Add support for `\R` for generic newlines in the Regex module (Regex only).
 - **NEW**: Support Unicode property form `\pP` and `\PP`.
+- **NEW**: Add support for properly handling per group, scoped verbose flags in the preprocess step (Regex).
+- **NEW**: Handle `(?#comments)` properly in the preprocess step.
 - **FIX**: Fix issue where an invalid general category could sometimes pass and return no characters.
+- **FIX**: Fix `\Q...\E` behavior so it is applied first as a separate step. No longer avoids `\Q...\E` in things like character groups or comments.
 
 ## 2.2.0
 
