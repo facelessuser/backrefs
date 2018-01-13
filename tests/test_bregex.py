@@ -19,6 +19,54 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_comments_v0(self):
+        """Test comments v0."""
+
+        pattern = bregex.compile_search(
+            r'''(?uV0)Test # \R(?#\R\)(?x:
+            Test #\R(?#\R\)
+            (Test # \R
+            )Test #\R
+            )Test # \R'''
+        )
+
+        self.assertEqual(
+            pattern.pattern,
+            r'''(?uV0)Test # (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\)(?x:
+            Test #\\R(?#\\R\)
+            (Test # \\R
+            )Test #\\R
+            )Test # (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)'''
+        )
+
+        self.assertTrue(pattern.match('Test # \nTestTestTestTest # \n') is not None)
+
+    def test_comments_v1(self):
+        """Test comments v1."""
+
+        pattern = bregex.compile_search(
+            r'''(?xuV1)
+            Test # \R
+            (?-x:Test #\R(?#\R\)((?x)
+            Test # \R
+            )Test #\R)
+            Test # \R
+            '''
+        )
+
+        self.assertEqual(
+            pattern.pattern,
+            r'''(?xuV1)
+            Test # \\R
+            (?-x:Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\)((?x)
+            Test # \\R
+            )Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029))
+            Test # \\R
+            '''
+        )
+
+        self.assertTrue(pattern.match('TestTest #\nTestTest #\nTest') is not None)
+
     def test_trailing_bslash(self):
         """Test trailing back slash."""
 

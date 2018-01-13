@@ -102,10 +102,16 @@ if REGEX_SUPPORT:
         "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
         "re_comments": re.compile(r'\(\?\#[^)]*\)'),
         "regex_flags": re.compile(
-            r'\(\?((?:[Laberup]|V0|V1|-?[imsfwx])+)\)'
+            r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)'
         ),
         "regex_flags_v0": re.compile(
-            r'\(\?((?:[Laberup]|V0|V1|[imsfwx])+)\)'
+            r'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)'
+        ),
+        "scoped_regex_flags": re.compile(
+            r'\(\?(?:-?[ixmsfw])+:'
+        ),
+        "scoped_regex_flags_v0": re.compile(
+            r'\(\?(?:[imsfwx])+:'
         ),
         "replace_group_ref": re.compile(
             r'''(?x)
@@ -138,6 +144,7 @@ if REGEX_SUPPORT:
             )|
             (\{)'''
         ),
+        'verbose_off': '-x',
         "line_break": 'R',
         "re_line_break": r'(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)',
         "regex_search_ref": re.compile(r'(\\)|([(EQR])'),
@@ -150,10 +157,16 @@ if REGEX_SUPPORT:
         "re_posix": re.compile(br'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
         "re_comments": re.compile(br'\(\?\#[^)]*\)'),
         "regex_flags": re.compile(
-            br'\(\?((?:[Laberup]|V0|V1|-?[ixmsfw])+)\)'
+            br'\(\?(?:[Laberup]|V0|V1|-?[ixmsfw])+\)'
         ),
         "regex_flags_v0": re.compile(
-            br'\(\?((?:[Laberup]|V0|V1|[imsfwx])+)\)'
+            br'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)'
+        ),
+        "scoped_regex_flags": re.compile(
+            br'\(\?(?:-?[ixmsfw])+:'
+        ),
+        "scoped_regex_flags_v0": re.compile(
+            br'\(\?(?:[imsfwx])+:'
         ),
         "replace_group_ref": re.compile(
             br'''(?x)
@@ -180,6 +193,7 @@ if REGEX_SUPPORT:
             )|
             (\{)'''
         ),
+        'verbose_off': b'-x',
         "line_break": b'R',
         "re_line_break": br'(?>\r\n|\n|\x0b|\f|\r|\x85)',
         "regex_search_ref": re.compile(br'(\\)|([EQR])'),
@@ -188,8 +202,11 @@ if REGEX_SUPPORT:
         "v1": b'V1'
     }
 
-    class FlagsFoundException(Exception):
-        """Flag exception."""
+    class RetryException(Exception):
+        """Retry exception."""
+
+    class GlobalRetryException(Exception):
+        """Global retry exception."""
 
     class RegexSearchTokens(compat.Tokens):
         """Preprocess replace tokens."""
@@ -206,6 +223,8 @@ if REGEX_SUPPORT:
             self._re_posix = tokens["re_posix"]
             self._regex_flags = tokens["regex_flags"]
             self._regex_flags_v0 = tokens["regex_flags_v0"]
+            self._scoped_regex_flags = tokens["scoped_regex_flags"]
+            self._scoped_regex_flags_v0 = tokens["scoped_regex_flags_v0"]
             self._re_comments = tokens["re_comments"]
 
             self.string = string
@@ -217,6 +236,23 @@ if REGEX_SUPPORT:
             """Iterate."""
 
             return self
+
+        def rewind(self, index):
+            """Rewind."""
+
+            self.index = index
+
+        def get_scoped_flags(self, version0=False):
+            """Get scoped flags."""
+
+            text = None
+            pattern = self._scoped_regex_flags if not version0 else self._scoped_regex_flags_v0
+            m = pattern.match(self.string, self.index - 1)
+            if m:
+                text = m.group(0)
+                self.index = m.end(0)
+                self.current = text
+            return text
 
         def get_flags(self, version0=False):
             """Get flags."""
@@ -391,6 +427,7 @@ if REGEX_SUPPORT:
             self._V1 = tokens["v1"]
             self._re_line_break = tokens["re_line_break"]
             self._new_refs = (self._line_break,)
+            self._verbose_off = tokens["verbose_off"]
 
         def process_quotes(self, string):
             """Process quotes."""
@@ -461,18 +498,26 @@ if REGEX_SUPPORT:
         def flags(self, text):
             """Analyze flags."""
 
-            if self._verbose_flag in text:
-                self.live_verbose = True
-                self.flags_updated = True
-            if self._V0 in text:
-                self.live_version = V0
-                self.flags_updated = True
-            elif self._V1 in text:
-                self.live_version = V1
-                self.flags_updated = True
-
-            if (self.live_verbose and self.live_version):
-                raise FlagsFoundException('Flags found!')
+            retry = False
+            global_retry = False
+            if self.version == VERSION1 and self._verbose_off in text and self.verbose:
+                self.verbose = False
+                retry = True
+            elif self._verbose_flag in text and not self.verbose:
+                self.verbose = True
+                retry = True
+            if self._V0 in text and self.version == VERSION1:  # pragma: no cover
+                # Default is V0 if none is selected,
+                # so it is unlikely that this will be selected.
+                self.version = VERSION0
+                global_retry = True
+            elif self._V1 in text and self.version == VERSION0:
+                self.version = VERSION1
+                global_retry = True
+            if global_retry:
+                raise GlobalRetryException('Global Retry')
+            if retry:
+                raise RetryException("Retry")
 
         def reference(self, t, i):
             """Handle references."""
@@ -490,33 +535,53 @@ if REGEX_SUPPORT:
                 current.extend([self._b_slash, t])
             return current
 
-        def parens(self, t, i):
+        def subgroup(self, t, i):
             """Handle parenthesis."""
 
-            current = []
-
+            # (?flags)
             flags = i.get_flags(version0=self.version == VERSION0)
             if flags:
-                if not self.flags_found:
-                    self.flags(flags[2:-1])
-                current.append(flags)
-                return current
+                self.flags(flags[2:-1])
+                return [flags]
 
+            # (?#comment)
             comments = i.get_comments()
             if comments:
-                current.append(comments)
-                return current
+                return [comments]
 
-            try:
-                while t != self._rr_bracket:
-                    if not current:
-                        current.append(t)
-                    else:
-                        current.extend(self.normal(t, i))
+            verbose = self.verbose
 
-                    t = next(i)
-            except StopIteration:
-                pass
+            # (?flags:pattern)
+            flags = i.get_scoped_flags(version0=self.version == VERSION0)
+            if flags:
+                t = flags
+                try:
+                    self.flags(flags[2:-1])
+                except RetryException:
+                    index = i.index
+                    pass
+
+            index = i.index
+            start = t
+            retry = True
+            while retry:
+                t = start
+                retry = False
+                current = []
+                try:
+                    while t != self._rr_bracket:
+                        if not current:
+                            current.append(t)
+                        else:
+                            current.extend(self.normal(t, i))
+
+                        t = next(i)
+                except RetryException:
+                    i.rewind(index)
+                    retry = True
+                except StopIteration:
+                    pass
+            self.verbose = verbose
 
             if t == self._rr_bracket:
                 current.append(t)
@@ -596,8 +661,8 @@ if REGEX_SUPPORT:
             if t == self._b_slash:
                 current.extend(self.reference(t, i))
             elif t == self._lr_bracket:
-                current.extend(self.parens(t, i))
-            elif self.verbose and self._hashtag:
+                current.extend(self.subgroup(t, i))
+            elif self.verbose and t == self._hashtag:
                 current.extend(self.verbose_comment(t, i))
             elif t == self._ls_bracket:
                 current.extend(self.char_groups(t, i))
@@ -610,53 +675,42 @@ if REGEX_SUPPORT:
 
             return self._re_line_break
 
+        def main_group(self, i):
+            """The main group: group 0."""
+
+            current = []
+            while True:
+                try:
+                    t = next(i)
+                    current.extend(self.normal(t, i))
+                except StopIteration:
+                    break
+            return current
+
         def apply(self):
             """Apply search template."""
 
-            retry = False
-            self.original_version = self.re_version
             self.verbose = bool(self.re_verbose)
             self.version = self.re_version if self.re_version else regex.DEFAULT_VERSION
-            self.live_verbose = self.verbose
-            self.live_version = self.version
-            self.flags_updated = False
-            self.flags_found = False
-
-            if self.original_version and self.verbose:
-                self.flags_found
 
             new_pattern = []
             string = self.process_quotes(self.search)
 
             i = RegexSearchTokens(string)
             iter(i)
-            try:
-                for t in i:
-                    new_pattern.extend(self.normal(t, i))
-                if self.flags_updated:
-                    retry = True
-                    self.version = self.live_version
-                    self.verbose = self.live_verbose
-            except FlagsFoundException:
-                retry = True
-                self.version = self.live_version
-                self.verbose = self.live_verbose
-            except Exception as e:  # pragma: no cover
-                if self.flags_updated:
-                    retry = True
-                    self.version = self.live_version
-                    self.verbose = self.live_verbose
-                else:
-                    raise
 
-            if retry:
-                new_pattern = []
-                self.flags_found = True
+            retry = True
+            while retry:
+                retry = False
+                try:
+                    new_pattern = self.main_group(i)
+                except RetryException:
+                    i.rewind(0)
+                    retry = True
+                except GlobalRetryException:
+                    i.rewind(0)
+                    retry = True
 
-                i = RegexSearchTokens(string)
-                iter(i)
-                for t in i:
-                    new_pattern.extend(self.normal(t, i))
             return self._empty.join(new_pattern)
 
     class ReplaceTemplate(object):

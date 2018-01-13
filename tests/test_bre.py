@@ -21,6 +21,28 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_comments(self):
+        """Test comments v0."""
+
+        pattern = bre.compile_search(
+            r'''(?xu)
+            Test # \p{XDigit}
+            (Test (?#\p{XDigit}))
+            Test \p{XDigit}
+            '''
+        )
+
+        self.assertEqual(
+            pattern.pattern,
+            r'''(?xu)
+            Test # \\p{XDigit}
+            (Test (?#\p{XDigit}))
+            Test [0-9A-Fa-f]
+            '''
+        )
+
+        self.assertTrue(pattern.match('TestTestTestA') is not None)
+
     def test_trailing_bslash(self):
         """Test trailing back slash."""
 

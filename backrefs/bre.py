@@ -211,8 +211,12 @@ btokens = {
 }
 
 
-class FlagsFoundException(Exception):
-    """Flag exception."""
+class RetryException(Exception):
+    """Retry exception."""
+
+
+class GlobalRetryException(Exception):
+    """Global retry exception."""
 
 
 # Break apart template patterns into char tokens
@@ -332,6 +336,11 @@ class SearchTokens(compat.Tokens):
         """Iterate."""
 
         return self
+
+    def rewind(self, index):
+        """Rewind."""
+
+        self.index = index
 
     def get_flags(self):
         """Get flags."""
@@ -937,17 +946,17 @@ class SearchTemplate(object):
     def flags(self, text):
         """Analyze flags."""
 
-        if compat.PY3 and self._ascii_flag in text:
-            self.flags_updated = True
-            self.live_ascii = True
-        elif self._unicode_flag in text:
-            self.flags_updated = True
-            self.live_unicode = True
-        if self._verbose_flag in text:
-            self.flags_updated = True
-            self.live_verbose = True
-        if (self.live_unicode or self.live_ascii) and self.live_verbose:
-            raise FlagsFoundException('Flags found!')
+        retry = False
+        if compat.PY3 and self._ascii_flag in text and self.unicode:
+            self.unicode = False
+            retry = True
+        if self._unicode_flag in text and not self.unicode:
+            self.unicode = True
+            retry = True
+        if self._verbose_flag in text and not self.verbose:
+            self.verbose = True
+        if retry:
+            raise GlobalRetryException('Global Retry')
 
     def reference(self, t, i):
         """Handle references."""
@@ -985,33 +994,44 @@ class SearchTemplate(object):
             current.extend([self._b_slash, t])
         return current
 
-    def parens(self, t, i):
+    def subgroup(self, t, i):
         """Handle parenthesis."""
 
         current = []
 
+        # (?flags)
         flags = i.get_flags()
         if flags:
-            if not self.flags_found:
-                self.flags(flags[2:-1])
-            current.append(flags)
-            return current
+            self.flags(flags[2:-1])
+            return [flags]
 
+        # (?#comment)
         comments = i.get_comments()
         if comments:
-            current.append(comments)
-            return current
+            return [comments]
 
-        try:
-            while t != self._rr_bracket:
-                if not current:
-                    current.append(t)
-                else:
-                    current.extend(self.normal(t, i))
+        verbose = self.verbose
+        # index = i.index
+        start = t
+        retry = True
+        while retry:
+            t = start
+            retry = False
+            current = []
+            try:
+                while t != self._rr_bracket:
+                    if not current:
+                        current.append(t)
+                    else:
+                        current.extend(self.normal(t, i))
 
-                t = next(i)
-        except StopIteration:
-            pass
+                    t = next(i)
+            # except RetryException:
+            #     i.rewind(index)
+            #     retry = True
+            except StopIteration:
+                pass
+        self.verbose = verbose
 
         if t == self._rr_bracket:
             current.append(t)
@@ -1092,8 +1112,8 @@ class SearchTemplate(object):
         if t == self._b_slash:
             current.extend(self.reference(t, i))
         elif t == self._lr_bracket:
-            current.extend(self.parens(t, i))
-        elif self.verbose and self._hashtag:
+            current.extend(self.subgroup(t, i))
+        elif self.verbose and t == self._hashtag:
             current.extend(self.verbose_comment(t, i))
         elif t == self._ls_bracket:
             current.extend(self.char_groups(t, i))
@@ -1186,64 +1206,47 @@ class SearchTemplate(object):
             )
         return v
 
+    def main_group(self, i):
+        """The main group: group 0."""
+
+        current = []
+        while True:
+            try:
+                t = next(i)
+                current.extend(self.normal(t, i))
+            except StopIteration:
+                break
+        return current
+
     def apply(self):
         """Apply search template."""
 
-        retry = False
         self.verbose = bool(self.re_verbose)
         self.unicode = bool(self.re_unicode)
         if compat.PY3:
             self.ascii = self.re_unicode is not None and not self.re_unicode
         else:
             self.ascii = False
-        self.live_verbose = self.verbose
-        self.live_unicode = self.unicode
-        self.live_ascii = self.ascii
-        self.flags_updated = False
-        self.flags_found = False
-
-        if (self.unicode or self.ascii) and self.verbose:
-            self.flags_found = True
+        if compat.PY3 and not self.unicode and not self.ascii:
+            self.unicode = True
 
         new_pattern = []
         string = self.process_quotes(self.search)
 
         i = SearchTokens(string)
         iter(i)
-        try:
-            for t in i:
-                new_pattern.extend(self.normal(t, i))
-            if not retry and self.flags_updated:
+
+        retry = True
+        while retry:
+            retry = False
+            try:
+                new_pattern = self.main_group(i)
+            # except RetryException:
+            #     i.rewind(0)
+            #     retry = True
+            except GlobalRetryException:
+                i.rewind(0)
                 retry = True
-                self.verbose = self.live_verbose
-                self.unicode = self.live_unicode
-                self.ascii = self.live_ascii
-        except FlagsFoundException:
-            retry = True
-            self.verbose = self.live_verbose
-            self.unicode = self.live_unicode
-            self.ascii = self.live_ascii
-        except Exception as e:  # pragma: no cover
-            if self.flags_updated:
-                retry = True
-                self.verbose = self.live_verbose
-                self.unicode = self.live_unicode
-                self.ascii = self.live_ascii
-            else:
-                raise
-
-        if compat.PY3 and not self.live_unicode and not self.live_ascii:
-            retry = True
-            self.unicode = True
-
-        if retry:
-            new_pattern = []
-            self.flags_found = True
-
-            i = SearchTokens(string)
-            iter(i)
-            for t in i:
-                new_pattern.extend(self.normal(t, i))
 
         return self._empty.join(new_pattern)
 
