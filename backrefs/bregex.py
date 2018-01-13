@@ -635,7 +635,7 @@ if REGEX_SUPPORT:
                 retry = True
                 self.version = self.live_version
                 self.verbose = self.live_verbose
-            except Exception as e:
+            except Exception as e:  # pragma: no cover
                 if self.flags_updated:
                     retry = True
                     self.version = self.live_version

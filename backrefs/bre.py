@@ -1223,7 +1223,7 @@ class SearchTemplate(object):
             self.verbose = self.live_verbose
             self.unicode = self.live_unicode
             self.ascii = self.live_ascii
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             if self.flags_updated:
                 retry = True
                 self.verbose = self.live_verbose

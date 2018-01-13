@@ -40,6 +40,21 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bregex.compile_search(r'(?x)test # \R', regex.UNICODE)
         self.assertEqual(pattern.pattern, r'(?x)test # \\R', regex.UNICODE)
 
+    def test_char_group_nested_opening(self):
+        """Test char group with nested opening [."""
+
+        pattern = bregex.compile_search(r'test [[] \R', regex.UNICODE)
+        self.assertEqual(pattern.pattern, r'test [[] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)', regex.UNICODE)
+
+    def test_posix_parse(self):
+        """Test posix in a group."""
+
+        pattern = bregex.compile_search(r'test [[:graph:]] \R', regex.V0)
+        self.assertNotEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)')
+
+        pattern = bregex.compile_search(r'test [[:graph:]] \R', regex.V1)
+        self.assertNotEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)')
+
     def test_inline_comments(self):
         """Test that we properly find inline comments and avoid them."""
         pattern = bregex.compile_search(r'test(?#\l\p{^IsLatin})', regex.UNICODE)

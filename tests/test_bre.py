@@ -42,6 +42,12 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bre.compile_search(r'(?x)test # \l \p{numbers}', re.UNICODE)
         self.assertEqual(pattern.pattern, r'(?x)test # \\l \\p{numbers}', re.UNICODE)
 
+    def test_char_group_nested_opening(self):
+        """Test char group with nested opening [."""
+
+        pattern = bre.compile_search(r'test [[] \N{black club suit}', re.UNICODE)
+        self.assertEqual(pattern.pattern, 'test [[] \u2663', re.UNICODE)
+
     def test_inline_comments(self):
         """Test that we properly find inline comments and avoid them."""
         pattern = bre.compile_search(r'test(?#\l\p{^IsLatin})', re.UNICODE)
