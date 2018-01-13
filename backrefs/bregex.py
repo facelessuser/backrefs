@@ -102,7 +102,10 @@ if REGEX_SUPPORT:
         "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
         "re_comments": re.compile(r'\(\?\#[^)]*\)'),
         "regex_flags": re.compile(
-            r'\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]'
+            r'\(\?((?:[Laberup]|V0|V1|-?[imsfwx])+)\)'
+        ),
+        "regex_flags_v0": re.compile(
+            r'\(\?((?:[Laberup]|V0|V1|[imsfwx])+)\)'
         ),
         "replace_group_ref": re.compile(
             r'''(?x)
@@ -147,7 +150,10 @@ if REGEX_SUPPORT:
         "re_posix": re.compile(br'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
         "re_comments": re.compile(br'\(\?\#[^)]*\)'),
         "regex_flags": re.compile(
-            br'\(\?((?:[Laberuxp]|V0|V1|-?[imsfw])+)[):]'
+            br'\(\?((?:[Laberup]|V0|V1|-?[ixmsfw])+)\)'
+        ),
+        "regex_flags_v0": re.compile(
+            br'\(\?((?:[Laberup]|V0|V1|[imsfwx])+)\)'
         ),
         "replace_group_ref": re.compile(
             br'''(?x)
@@ -199,6 +205,7 @@ if REGEX_SUPPORT:
             self.string = string
             self._re_posix = tokens["re_posix"]
             self._regex_flags = tokens["regex_flags"]
+            self._regex_flags_v0 = tokens["regex_flags_v0"]
             self._re_comments = tokens["re_comments"]
 
             self.string = string
@@ -211,11 +218,12 @@ if REGEX_SUPPORT:
 
             return self
 
-        def get_flags(self):
+        def get_flags(self, version0=False):
             """Get flags."""
 
             text = None
-            m = self._regex_flags.match(self.string, self.index - 1)
+            pattern = self._regex_flags if not version0 else self._regex_flags_v0
+            m = pattern.match(self.string, self.index - 1)
             if m:
                 text = m.group(0)
                 self.index = m.end(0)
@@ -487,19 +495,17 @@ if REGEX_SUPPORT:
 
             current = []
 
-            flags = i.get_flags()
+            flags = i.get_flags(version0=self.version == VERSION0)
             if flags:
                 if not self.flags_found:
                     self.flags(flags[2:-1])
                 current.append(flags)
-                if flags[-1:] == self._rr_bracket:
-                    return current
+                return current
 
-            if not flags:
-                comments = i.get_comments()
-                if comments:
-                    current.append(comments)
-                    return current
+            comments = i.get_comments()
+            if comments:
+                current.append(comments)
+                return current
 
             try:
                 while t != self._rr_bracket:
