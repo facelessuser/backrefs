@@ -105,19 +105,25 @@ FORMAT = 1
 _UPPER = 0
 _LOWER = 1
 
+if compat.PY3:
+    _SEARCH_ASCII = re.ASCII
+else:
+    _SEARCH_ASCII = 0
+
 # Unicode string related references
 utokens = {
-    "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
-    "re_comments": re.compile(r'\(\?\#[^)]*\)'),
-    "re_flags": re.compile(r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'),
-    "re_uniprops": re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[A-Z])?'),
-    "re_named_props": re.compile(r'N(?:\{[\w ]+\})?'),
-    "re_property_strip": re.compile(r'[\-_ ]'),
+    "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
+    "re_comments": re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII),
+    "re_flags": re.compile((r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'), _SEARCH_ASCII),
+    "re_uniprops": re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[A-Z])?', _SEARCH_ASCII),
+    "re_named_props": re.compile(r'N(?:\{[\w ]+\})?', _SEARCH_ASCII),
+    "re_property_strip": re.compile(r'[\-_ ]', _SEARCH_ASCII),
     "re_property_gc": re.compile(
         r'''(?x)
         (?:((?:\\.|[^\\}]+)+?)[=:])?
         ((?:\\.|[^\\}]+)+)
-        '''
+        ''',
+        _SEARCH_ASCII
     ),
     "replace_group_ref": re.compile(
         r'''(?x)
@@ -132,7 +138,8 @@ utokens = {
             x(?:[0-9a-fA-F]{2})?|
             N(?:\{[\w ]+\})?
         )
-        '''
+        ''',
+        _SEARCH_ASCII
     ),
     "format_replace_ref": re.compile(
         r'''(?x)
@@ -148,7 +155,8 @@ utokens = {
             )|
             N(?:\{[\w ]+\})?
         )|
-        (\{)'''
+        (\{)''',
+        _SEARCH_ASCII
     ),
     "uni_prop": "p",
     "inverse_uni_prop": "P",
@@ -160,17 +168,18 @@ utokens = {
 
 # Byte string related references
 btokens = {
-    "re_posix": re.compile(br'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
-    "re_comments": re.compile(br'\(\?\#[^)]\)'),
-    "re_flags": re.compile(br'\(\?([aiLmsux]+)\)' if compat.PY3 else br'\(\?([iLmsux]+)\)'),
+    "re_posix": re.compile(br'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
+    "re_comments": re.compile(br'\(\?\#[^)]\)', _SEARCH_ASCII),
+    "re_flags": re.compile((br'\(\?([aiLmsux]+)\)' if compat.PY3 else br'\(\?([iLmsux]+)\)'), _SEARCH_ASCII),
     "re_uniprops": None,
     "re_named_props": None,
-    "re_property_strip": re.compile(br'[\-_ ]'),
+    "re_property_strip": re.compile(br'[\-_ ]', _SEARCH_ASCII),
     "re_property_gc": re.compile(
         br'''(?x)
         (?:((?:\\.|[^\\}]+)+?)[=:])?
         ((?:\\.|[^\\}]+)+)
-        '''
+        ''',
+        _SEARCH_ASCII
     ),
     "replace_group_ref": re.compile(
         br'''(?x)
@@ -182,7 +191,8 @@ btokens = {
             g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
             x(?:[0-9a-fA-F]{2})?
         )
-        '''
+        ''',
+        _SEARCH_ASCII
     ),
     "format_replace_ref": re.compile(
         br'''(?x)
@@ -195,7 +205,8 @@ btokens = {
                 g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
             )
         )|
-        (\{)'''
+        (\{)''',
+        _SEARCH_ASCII
     ),
     "uni_prop": b"p",
     "inverse_uni_prop": b"P",

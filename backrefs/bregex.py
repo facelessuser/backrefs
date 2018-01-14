@@ -98,21 +98,18 @@ if REGEX_SUPPORT:
     _UPPER = 0
     _LOWER = 1
 
+    if compat.PY3:
+        _SEARCH_ASCII = re.ASCII
+    else:
+        _SEARCH_ASCII = 0
+
     utokens = {
-        "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
-        "re_comments": re.compile(r'\(\?\#[^)]*\)'),
-        "regex_flags": re.compile(
-            r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)'
-        ),
-        "regex_flags_v0": re.compile(
-            r'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)'
-        ),
-        "scoped_regex_flags": re.compile(
-            r'\(\?(?:-?[ixmsfw])+:'
-        ),
-        "scoped_regex_flags_v0": re.compile(
-            r'\(\?(?:[imsfwx])+:'
-        ),
+        "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
+        "re_comments": re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII),
+        "regex_flags": re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)', _SEARCH_ASCII),
+        "regex_flags_v0": re.compile(r'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)', _SEARCH_ASCII),
+        "scoped_regex_flags": re.compile(r'\(\?(?:-?[ixmsfw])+:', _SEARCH_ASCII),
+        "scoped_regex_flags_v0": re.compile(r'\(\?(?:[imsfwx])+:', _SEARCH_ASCII),
         "replace_group_ref": re.compile(
             r'''(?x)
             (\\)|
@@ -126,7 +123,8 @@ if REGEX_SUPPORT:
                 x(?:[0-9a-fA-F]{2})?|
                 N(?:\{[\w ]+\})?
             )
-            '''
+            ''',
+            _SEARCH_ASCII
         ),
         "format_replace_ref": re.compile(
             r'''(?x)
@@ -142,7 +140,8 @@ if REGEX_SUPPORT:
                 )|
                 N(?:\{[\w ]+\})?
             )|
-            (\{)'''
+            (\{)''',
+            _SEARCH_ASCII
         ),
         'verbose_off': '-x',
         "line_break": 'R',
@@ -153,20 +152,12 @@ if REGEX_SUPPORT:
     }
 
     btokens = {
-        "re_posix": re.compile(br'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
-        "re_comments": re.compile(br'\(\?\#[^)]*\)'),
-        "regex_flags": re.compile(
-            br'\(\?(?:[Laberup]|V0|V1|-?[ixmsfw])+\)'
-        ),
-        "regex_flags_v0": re.compile(
-            br'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)'
-        ),
-        "scoped_regex_flags": re.compile(
-            br'\(\?(?:-?[ixmsfw])+:'
-        ),
-        "scoped_regex_flags_v0": re.compile(
-            br'\(\?(?:[imsfwx])+:'
-        ),
+        "re_posix": re.compile(br'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
+        "re_comments": re.compile(br'\(\?\#[^)]*\)', _SEARCH_ASCII),
+        "regex_flags": re.compile(br'\(\?(?:[Laberup]|V0|V1|-?[ixmsfw])+\)', _SEARCH_ASCII),
+        "regex_flags_v0": re.compile(br'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)', _SEARCH_ASCII),
+        "scoped_regex_flags": re.compile(br'\(\?(?:-?[ixmsfw])+:', _SEARCH_ASCII),
+        "scoped_regex_flags_v0": re.compile(br'\(\?(?:[imsfwx])+:', _SEARCH_ASCII),
         "replace_group_ref": re.compile(
             br'''(?x)
             (\\)|
@@ -177,7 +168,8 @@ if REGEX_SUPPORT:
                 g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
                 x(?:[0-9a-fA-F]{2})?
             )
-            '''
+            ''',
+            _SEARCH_ASCII
         ),
         "format_replace_ref": re.compile(
             br'''(?x)
@@ -190,7 +182,8 @@ if REGEX_SUPPORT:
                     g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
                 )
             )|
-            (\{)'''
+            (\{)''',
+            _SEARCH_ASCII
         ),
         'verbose_off': b'-x',
         "line_break": b'R',
