@@ -105,17 +105,13 @@ FORMAT = 1
 _UPPER = 0
 _LOWER = 1
 
-# Regex pattern for unicode properties
-_UNAME = r'N(?:\{[\w ]+\})?'
-
 # Unicode string related references
 utokens = {
     "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
     "re_comments": re.compile(r'\(\?\#[^)]*\)'),
+    "re_flags": re.compile(r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'),
     "re_uniprops": re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[A-Z])?'),
     "re_named_props": re.compile(r'N(?:\{[\w ]+\})?'),
-    "property_amp": '&',
-    "property_c": 'c',
     "re_property_strip": re.compile(r'[\-_ ]'),
     "re_property_gc": re.compile(
         r'''(?x)
@@ -158,18 +154,17 @@ utokens = {
     "inverse_uni_prop": "P",
     "ascii_lower": 'lower',
     "ascii_upper": 'upper',
-    "re_flags": re.compile(r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'),
-    "ascii_flag": "a"
+    "ascii_flag": "a",
+    "new_refs": ("l", "L", "c", "C", "p", "P", "N", "Q", "E")
 }
 
 # Byte string related references
 btokens = {
     "re_posix": re.compile(br'(?i)\[:(?:\\.|[^\\:}]+)+:\]'),
     "re_comments": re.compile(br'\(\?\#[^)]\)'),
+    "re_flags": re.compile(br'\(\?([aiLmsux]+)\)' if compat.PY3 else br'\(\?([iLmsux]+)\)'),
     "re_uniprops": None,
     "re_named_props": None,
-    "property_amp": b'&',
-    "property_c": b'c',
     "re_property_strip": re.compile(br'[\-_ ]'),
     "re_property_gc": re.compile(
         br'''(?x)
@@ -206,8 +201,8 @@ btokens = {
     "inverse_uni_prop": b"P",
     "ascii_lower": b"lower",
     "ascii_upper": b"upper",
-    "re_flags": re.compile(br'\(\?([aiLmsux]+)\)' if compat.PY3 else br'\(\?([iLmsux]+)\)'),
-    "ascii_flag": b"a"
+    "ascii_flag": b"a",
+    "new_refs": (b"l", b"L", b"c", b"C", b"Q", b"E")
 }
 
 
@@ -270,7 +265,7 @@ class ReplaceTokens(compat.Tokens):
 
         char = self.string[self.index:self.index + 1]
         if char == self._b_slash:
-            m = self._replace_ref.match(self.string[self.index + 1:])
+            m = self._replace_ref.match(self.string, self.index + 1)
             if m:
                 ref = m.group(0)
                 if len(ref) == 1 and ref in self._long_replace_refs:
@@ -290,7 +285,7 @@ class ReplaceTokens(compat.Tokens):
                 if not self.use_format or not m.group(4):
                     char += m.group(1) if m.group(1) else m.group(2)
         elif self.use_format and char in (self._lc_bracket, self._rc_bracket):
-            m = self._format_replace_group.match(self.string[self.index:])
+            m = self._format_replace_group.match(self.string, self.index)
             if m:
                 if m.group(2):
                     char = m.group(2)
@@ -844,14 +839,11 @@ class SearchTemplate(object):
         self._ls_bracket = ctokens["ls_bracket"]
         self._rs_bracket = ctokens["rs_bracket"]
         self._lc_bracket = ctokens["lc_bracket"]
-        self._rc_bracket = ctokens["rc_bracket"]
         self._unicode_flag = ctokens["unicode_flag"]
         self._ascii_flag = tokens["ascii_flag"]
         self._end = ctokens["end"]
         self._re_property_strip = tokens['re_property_strip']
         self._re_property_gc = tokens.get('re_property_gc', None)
-        self._property_amp = tokens["property_amp"]
-        self._property_c = tokens["property_c"]
         self._uni_prop = tokens["uni_prop"]
         self._inverse_uni_prop = tokens["inverse_uni_prop"]
         self._lc = ctokens["lc"]
@@ -869,13 +861,10 @@ class SearchTemplate(object):
         self._rr_bracket = ctokens["rr_bracket"]
         self._hashtag = ctokens["hashtag"]
         self._unicode_name = ctokens["unicode_name"]
+        self._new_refs = tokens["new_refs"]
         self.search = search
         self.re_verbose = re_verbose
         self.re_unicode = re_unicode
-        self._new_refs = (
-            self._lc, self._lc_span, self._uc,
-            self._uc_span, self._uni_prop, self._inverse_uni_prop, self._unicode_name
-        )
 
     def process_quotes(self, string):
         """Process quotes."""
@@ -1173,10 +1162,11 @@ class SearchTemplate(object):
         if m.group(1):
             if uniprops.is_enum(m.group(1)):
                 category = m.group(1)
-            elif m.group(2) in ('y', 'n', 'yes', 'no', 't', 'f', 'true', 'false'):
-                if m.group(2) in ('n', 'no', 'f', 'false'):
-                    negate = not negate
+            elif props in ('y', 'yes', 't', 'true'):
                 category = 'binary'
+            elif props in ('n', 'no', 'f', 'false'):
+                category = 'binary'
+                negate = not negate
             else:
                 raise ValueError('Invalid Unicode property!')
 

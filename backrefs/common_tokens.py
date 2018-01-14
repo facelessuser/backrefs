@@ -8,11 +8,7 @@ import re
 
 # Unicode string related references
 utokens = {
-    "replace_tokens": set("cCElL"),
-    "verbose_tokens": set("# "),
     "empty": "",
-    "ls_bracket": "[",
-    "rs_bracket": "]",
     "b_slash": "\\",
     "esc_end": "\\E",
     "end": "E",
@@ -26,11 +22,13 @@ utokens = {
     "negate": '^',
     "verbose_flag": 'x',
     "unicode_flag": 'u',
-    "group": "g",
+    "ls_bracket": "[",
+    "rs_bracket": "]",
     "lc_bracket": "{",
     "rc_bracket": "}",
     "lr_bracket": "(",
     "rr_bracket": ")",
+    "group": "g",
     "group_start": r"\g<",
     "group_end": ">",
     "format_replace_group": re.compile(
@@ -49,13 +47,7 @@ utokens = {
 
 # Byte string related references
 btokens = {
-    "replace_tokens": set(
-        [b"c", b"C", b"E", b"l", b"L"]
-    ),
-    "verbose_tokens": set([b"#", b" "]),
     "empty": b"",
-    "ls_bracket": b"[",
-    "rs_bracket": b"]",
     "b_slash": b"\\",
     "esc_end": b"\\E",
     "end": b"E",
@@ -69,11 +61,13 @@ btokens = {
     "negate": b'^',
     "verbose_flag": b'x',
     "unicode_flag": b'u',
-    "group": b"g",
+    "ls_bracket": b"[",
+    "rs_bracket": b"]",
     "lc_bracket": b"{",
     "rc_bracket": b"}",
     "lr_bracket": b"(",
     "rr_bracket": b")",
+    "group": b"g",
     "group_start": br"\g<",
     "group_end": b">",
     "format_replace_group": re.compile(

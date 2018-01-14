@@ -147,10 +147,9 @@ if REGEX_SUPPORT:
         'verbose_off': '-x',
         "line_break": 'R',
         "re_line_break": r'(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)',
-        "regex_search_ref": re.compile(r'(\\)|([(EQR])'),
-        "regex_search_ref_verbose": re.compile(r'(\\)|([(EQR#])'),
         "v0": 'V0',
-        "v1": 'V1'
+        "v1": 'V1',
+        "new_refs": ("R", "Q", "E")
     }
 
     btokens = {
@@ -196,10 +195,9 @@ if REGEX_SUPPORT:
         'verbose_off': b'-x',
         "line_break": b'R',
         "re_line_break": br'(?>\r\n|\n|\x0b|\f|\r|\x85)',
-        "regex_search_ref": re.compile(br'(\\)|([EQR])'),
-        "regex_search_ref_verbose": re.compile(br'(\\)|([EQR#])'),
         "v0": b'V0',
-        "v1": b'V1'
+        "v1": b'V1',
+        "new_refs": (b"R", b"Q", b"E")
     }
 
     class RetryException(Exception):
@@ -355,7 +353,7 @@ if REGEX_SUPPORT:
 
             char = self.string[self.index:self.index + 1]
             if char == self._b_slash:
-                m = self._replace_ref.match(self.string[self.index + 1:])
+                m = self._replace_ref.match(self.string, self.index + 1)
                 if m:
                     ref = m.group(0)
                     if len(ref) == 1 and ref in self._long_replace_refs:
@@ -375,7 +373,7 @@ if REGEX_SUPPORT:
                     if not self.use_format or not m.group(4):
                         char += m.group(1) if m.group(1) else m.group(2)
             elif self.use_format and char in (self._lc_bracket, self._rc_bracket):
-                m = self._format_replace_group.match(self.string[self.index:])
+                m = self._format_replace_group.match(self.string, self.index)
                 if m:
                     if m.group(2):
                         char = m.group(2)
@@ -408,8 +406,6 @@ if REGEX_SUPPORT:
             self._b_slash = ctokens["b_slash"]
             self._ls_bracket = ctokens["ls_bracket"]
             self._rs_bracket = ctokens["rs_bracket"]
-            self._lc_bracket = ctokens["lc_bracket"]
-            self._rc_bracket = ctokens["rc_bracket"]
             self._end = ctokens["end"]
             self._quote = ctokens["quote"]
             self._negate = ctokens["negate"]
@@ -419,15 +415,15 @@ if REGEX_SUPPORT:
             self._lr_bracket = ctokens["lr_bracket"]
             self._rr_bracket = ctokens["rr_bracket"]
             self._hashtag = ctokens["hashtag"]
-            self.search = search
-            self.re_verbose = re_verbose
-            self.re_version = re_version
             self._line_break = tokens["line_break"]
             self._V0 = tokens["v0"]
             self._V1 = tokens["v1"]
             self._re_line_break = tokens["re_line_break"]
             self._new_refs = (self._line_break,)
             self._verbose_off = tokens["verbose_off"]
+            self.search = search
+            self.re_verbose = re_verbose
+            self.re_version = re_version
 
         def process_quotes(self, string):
             """Process quotes."""
@@ -731,9 +727,9 @@ if REGEX_SUPPORT:
             self._original = template
             self._esc_end = ctokens["esc_end"]
             self._end = ctokens["end"]
-            self._lc = ctokens["lc"]
             self._ls_bracket = ctokens["ls_bracket"]
             self._lc_bracket = ctokens["lc_bracket"]
+            self._lc = ctokens["lc"]
             self._lc_span = ctokens["lc_span"]
             self._uc = ctokens["uc"]
             self._uc_span = ctokens["uc_span"]
