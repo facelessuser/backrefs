@@ -98,10 +98,10 @@ class TestSearchTemplate(unittest.TestCase):
         """Test posix in a group."""
 
         pattern = bregex.compile_search(r'test [[:graph:]] \R', regex.V0)
-        self.assertNotEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)')
+        self.assertEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)')
 
         pattern = bregex.compile_search(r'test [[:graph:]] \R', regex.V1)
-        self.assertNotEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)')
+        self.assertEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)')
 
     def test_inline_comments(self):
         """Test that we properly find inline comments and avoid them."""
