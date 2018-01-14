@@ -284,7 +284,7 @@ if REGEX_SUPPORT:
             m = self._re_posix.match(self.string, self.index - 1)
             if m:
                 self.index = m.end(0)
-                text = m.group(0)[2:-2] if m else None
+                text = m.group(0) if m else None
                 self.current = text
             return text
 
