@@ -1085,7 +1085,7 @@ class SearchTemplate(object):
                     first = pos
                     current.append(t)
                 elif t == self._ls_bracket:
-                    posix = i.get_posix()
+                    posix = None if self.binary else i.get_posix()
                     if posix:
                         current.extend(self.posix_props(posix))
                         pos = i.index - 2

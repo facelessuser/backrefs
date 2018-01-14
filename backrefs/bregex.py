@@ -604,7 +604,7 @@ if REGEX_SUPPORT:
                         current.append(t)
                     elif t == self._ls_bracket and found and self.version == V1:
                         # Start of sub char set found
-                        posix = i.get_posix()
+                        posix = None if self.binary else i.get_posix()
                         if posix:
                             current.append(posix)
                             pos = i.index - 2
@@ -613,7 +613,7 @@ if REGEX_SUPPORT:
                             sub_first = pos
                             current.append(t)
                     elif t == self._ls_bracket:
-                        posix = i.get_posix()
+                        posix = None if self.binary else i.get_posix()
                         if posix:
                             current.append(posix)
                             pos = i.index - 2
