@@ -98,10 +98,7 @@ if REGEX_SUPPORT:
     _UPPER = 0
     _LOWER = 1
 
-    if compat.PY3:
-        _SEARCH_ASCII = re.ASCII
-    else:
-        _SEARCH_ASCII = 0
+    _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 
     utokens = {
         "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
@@ -141,6 +138,10 @@ if REGEX_SUPPORT:
                 N(?:\{[\w ]+\})?
             )|
             (\{)''',
+            _SEARCH_ASCII
+        ),
+        "format_replace_group": re.compile(
+            r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
             _SEARCH_ASCII
         ),
         'verbose_off': '-x',
@@ -183,6 +184,10 @@ if REGEX_SUPPORT:
                 )
             )|
             (\{)''',
+            _SEARCH_ASCII
+        ),
+        "format_replace_group": re.compile(
+            br'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
             _SEARCH_ASCII
         ),
         'verbose_off': b'-x',
@@ -321,7 +326,7 @@ if REGEX_SUPPORT:
             self._group = ctokens["group"]
             self._unicode_name = ctokens["unicode_name"]
             self._long_replace_refs = ctokens["long_replace_refs"]
-            self._format_replace_group = ctokens["format_replace_group"]
+            self._format_replace_group = tokens["format_replace_group"]
             self._lc_bracket = ctokens["lc_bracket"]
             self._rc_bracket = ctokens["rc_bracket"]
             self._b_slash = ctokens["b_slash"]

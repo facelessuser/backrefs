@@ -105,10 +105,7 @@ FORMAT = 1
 _UPPER = 0
 _LOWER = 1
 
-if compat.PY3:
-    _SEARCH_ASCII = re.ASCII
-else:
-    _SEARCH_ASCII = 0
+_SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 
 # Unicode string related references
 utokens = {
@@ -156,6 +153,10 @@ utokens = {
             N(?:\{[\w ]+\})?
         )|
         (\{)''',
+        _SEARCH_ASCII
+    ),
+    "format_replace_group": re.compile(
+        r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
         _SEARCH_ASCII
     ),
     "uni_prop": "p",
@@ -208,6 +209,10 @@ btokens = {
         (\{)''',
         _SEARCH_ASCII
     ),
+    "format_replace_group": re.compile(
+        br'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
+        _SEARCH_ASCII
+    ),
     "uni_prop": b"p",
     "inverse_uni_prop": b"P",
     "ascii_lower": b"lower",
@@ -245,7 +250,7 @@ class ReplaceTokens(compat.Tokens):
             self._replace_ref = tokens["format_replace_ref"]
         else:
             self._replace_ref = tokens["replace_group_ref"]
-        self._format_replace_group = ctokens["format_replace_group"]
+        self._format_replace_group = tokens["format_replace_group"]
         self._unicode_narrow = ctokens["unicode_narrow"]
         self._unicode_wide = ctokens["unicode_wide"]
         self._hex = ctokens["hex"]
