@@ -9,13 +9,17 @@ if PY3:
 else:
     binary_type = str  # noqa
 
+POSIX = 0
+POSIX_BINARY = 1
+POSIX_UNICODE = 2
 
-def get_posix_property(value, uni=False):
+
+def get_posix_property(value, mode=POSIX):
     """Retrieve the posix category."""
 
-    if isinstance(value, binary_type):
-        return unidata.bposix_properties[value.decode('utf-8')]
-    elif uni:
+    if mode == POSIX_BINARY:
+        return unidata.bposix_properties[value]
+    elif mode == POSIX_UNICODE:
         return unidata.unicode_binary[
             ('^posix' + value[1:]) if value.startswith('^') else ('posix' + value)
         ]

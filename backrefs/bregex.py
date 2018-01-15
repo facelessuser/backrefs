@@ -100,7 +100,7 @@ if REGEX_SUPPORT:
 
     _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 
-    utokens = {
+    tokens = {
         "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
         "re_comments": re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII),
         "regex_flags": re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)', _SEARCH_ASCII),
@@ -123,6 +123,19 @@ if REGEX_SUPPORT:
             ''',
             _SEARCH_ASCII
         ),
+        "binary_replace_group_ref": re.compile(
+            r'''(?x)
+            (\\)|
+            (
+                [0-7]{3}|
+                [1-9][0-9]?|
+                [cClLEabfrtnv]|
+                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
+                x(?:[0-9a-fA-F]{2})?
+            )
+            ''',
+            _SEARCH_ASCII
+        ),
         "format_replace_ref": re.compile(
             r'''(?x)
             (\\)|
@@ -140,40 +153,8 @@ if REGEX_SUPPORT:
             (\{)''',
             _SEARCH_ASCII
         ),
-        "format_replace_group": re.compile(
-            r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
-            _SEARCH_ASCII
-        ),
-        'verbose_off': '-x',
-        "line_break": 'R',
-        "re_line_break": r'(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)',
-        "v0": 'V0',
-        "v1": 'V1',
-        "new_refs": ("R", "Q", "E")
-    }
-
-    btokens = {
-        "re_posix": re.compile(br'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
-        "re_comments": re.compile(br'\(\?\#[^)]*\)', _SEARCH_ASCII),
-        "regex_flags": re.compile(br'\(\?(?:[Laberup]|V0|V1|-?[ixmsfw])+\)', _SEARCH_ASCII),
-        "regex_flags_v0": re.compile(br'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)', _SEARCH_ASCII),
-        "scoped_regex_flags": re.compile(br'\(\?(?:-?[ixmsfw])+:', _SEARCH_ASCII),
-        "scoped_regex_flags_v0": re.compile(br'\(\?(?:[imsfwx])+:', _SEARCH_ASCII),
-        "replace_group_ref": re.compile(
-            br'''(?x)
-            (\\)|
-            (
-                [0-7]{3}|
-                [1-9][0-9]?|
-                [cClLEabfrtnv]|
-                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
-                x(?:[0-9a-fA-F]{2})?
-            )
-            ''',
-            _SEARCH_ASCII
-        ),
-        "format_replace_ref": re.compile(
-            br'''(?x)
+        "binary_format_replace_ref": re.compile(
+            r'''(?x)
             (\\)|
             (
                 [cClLEabfrtnv]|
@@ -187,15 +168,17 @@ if REGEX_SUPPORT:
             _SEARCH_ASCII
         ),
         "format_replace_group": re.compile(
-            br'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
+            r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
             _SEARCH_ASCII
         ),
-        'verbose_off': b'-x',
-        "line_break": b'R',
-        "re_line_break": br'(?>\r\n|\n|\x0b|\f|\r|\x85)',
-        "v0": b'V0',
-        "v1": b'V1',
-        "new_refs": (b"R", b"Q", b"E")
+        'verbose_off': '-x',
+        "line_break": 'R',
+        "re_line_break": r'(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)',
+        "binary_re_line_break": r'(?>\r\n|\n|\x0b|\f|\r|\x85)',
+        "v0": 'V0',
+        "v1": 'V1',
+        "new_refs": ("R", "Q", "E"),
+        "binary_new_refs": ("R", "Q", "E")
     }
 
     class RetryException(Exception):
@@ -207,15 +190,17 @@ if REGEX_SUPPORT:
     class RegexSearchTokens(compat.Tokens):
         """Preprocess replace tokens."""
 
-        def __init__(self, string):
+        def __init__(self, string, is_binary=False):
             """Initialize."""
 
             if isinstance(string, compat.binary_type):
-                tokens = btokens
+                self.string = string.decode('latin-1')
+                is_binary = True
             else:
-                tokens = utokens
+                self.string = string
 
-            self.string = string
+            self.binary = is_binary
+
             self._re_posix = tokens["re_posix"]
             self._regex_flags = tokens["regex_flags"]
             self._regex_flags_v0 = tokens["regex_flags_v0"]
@@ -223,7 +208,6 @@ if REGEX_SUPPORT:
             self._scoped_regex_flags_v0 = tokens["scoped_regex_flags_v0"]
             self._re_comments = tokens["re_comments"]
 
-            self.string = string
             self.max_index = len(string) - 1
             self.index = 0
             self.current = None
@@ -294,7 +278,7 @@ if REGEX_SUPPORT:
             if self.index > self.max_index:
                 raise StopIteration
 
-            char = self.string[self.index:self.index + 1]
+            char = self.string[self.index]
 
             self.index += 1
             self.current = char
@@ -304,22 +288,30 @@ if REGEX_SUPPORT:
     class ReplaceTokens(compat.Tokens):
         """Preprocess replace tokens."""
 
-        def __init__(self, string, use_format=False):
+        def __init__(self, string, use_format=False, is_binary=False):
             """Initialize."""
 
             if isinstance(string, compat.binary_type):
-                ctokens = ctok.btokens
-                tokens = btokens
+                self.string = string.decode('latin-1')
+                is_binary = True
             else:
-                ctokens = ctok.utokens
-                tokens = utokens
+                self.string = string
 
-            self.string = string
+            self.binary = is_binary
+
+            ctokens = ctok.tokens
+
             self.use_format = use_format
-            if use_format:
-                self._replace_ref = tokens["format_replace_ref"]
+            if self.binary:
+                if use_format:
+                    self._replace_ref = tokens["binary_format_replace_ref"]
+                else:
+                    self._replace_ref = tokens["binary_replace_group_ref"]
             else:
-                self._replace_ref = tokens["replace_group_ref"]
+                if use_format:
+                    self._replace_ref = tokens["format_replace_ref"]
+                else:
+                    self._replace_ref = tokens["replace_group_ref"]
             self._unicode_narrow = ctokens["unicode_narrow"]
             self._unicode_wide = ctokens["unicode_wide"]
             self._hex = ctokens["hex"]
@@ -349,7 +341,7 @@ if REGEX_SUPPORT:
             if self.index > self.max_index:
                 raise StopIteration
 
-            char = self.string[self.index:self.index + 1]
+            char = self.string[self.index]
             if char == self._b_slash:
                 m = self._replace_ref.match(self.string, self.index + 1)
                 if m:
@@ -392,12 +384,10 @@ if REGEX_SUPPORT:
 
             if isinstance(search, compat.binary_type):
                 self.binary = True
-                tokens = btokens
-                ctokens = ctok.btokens
             else:
                 self.binary = False
-                tokens = utokens
-                ctokens = ctok.utokens
+
+            ctokens = ctok.tokens
 
             self._verbose_flag = ctokens["verbose_flag"]
             self._empty = ctokens["empty"]
@@ -416,12 +406,16 @@ if REGEX_SUPPORT:
             self._line_break = tokens["line_break"]
             self._V0 = tokens["v0"]
             self._V1 = tokens["v1"]
-            self._re_line_break = tokens["re_line_break"]
-            self._new_refs = (self._line_break,)
+            if self.binary:
+                self._re_line_break = tokens["binary_re_line_break"]
+                self._new_refs = tokens["binary_new_refs"]
+            else:
+                self._new_refs = tokens["new_refs"]
+                self._re_line_break = tokens["re_line_break"]
             self._verbose_off = tokens["verbose_off"]
-            self.search = search
             self.re_verbose = re_verbose
             self.re_version = re_version
+            self.search = search
 
         def process_quotes(self, string):
             """Process quotes."""
@@ -430,7 +424,7 @@ if REGEX_SUPPORT:
             in_quotes = False
             current = []
             quoted = []
-            i = RegexSearchTokens(string)
+            i = RegexSearchTokens(string, is_binary=self.binary)
             iter(i)
             for t in i:
                 if not escaped and t == self._b_slash:
@@ -688,9 +682,9 @@ if REGEX_SUPPORT:
             self.version = self.re_version if self.re_version else regex.DEFAULT_VERSION
 
             new_pattern = []
-            string = self.process_quotes(self.search)
+            string = self.process_quotes(self.search.decode('latin-1') if self.binary else self.search)
 
-            i = RegexSearchTokens(string)
+            i = RegexSearchTokens(string, is_binary=self.binary)
             iter(i)
 
             retry = True
@@ -705,7 +699,7 @@ if REGEX_SUPPORT:
                     i.rewind(0)
                     retry = True
 
-            return self._empty.join(new_pattern)
+            return self._empty.join(new_pattern).encode('latin-1') if self.binary else self._empty.join(new_pattern)
 
     class ReplaceTemplate(object):
         """Pre-replace template."""
@@ -715,14 +709,14 @@ if REGEX_SUPPORT:
 
             if isinstance(template, compat.binary_type):
                 self.binary = True
-                ctokens = ctok.btokens
             else:
                 self.binary = False
-                ctokens = ctok.utokens
 
-            self.string_convert = compat.int2bytes if self.binary else compat.int2str
+            ctokens = ctok.tokens
+
             self.use_format = use_format
             self._original = template
+            self._ascii_letters = ctokens["ascii_letters"]
             self._esc_end = ctokens["esc_end"]
             self._end = ctokens["end"]
             self._ls_bracket = ctokens["ls_bracket"]
@@ -783,7 +777,11 @@ if REGEX_SUPPORT:
         def parse_template(self, pattern):
             """Parse template."""
 
-            i = ReplaceTokens(self._original, use_format=self.use_format)
+            i = ReplaceTokens(
+                (self._original.decode('latin-1') if self.binary else self._original),
+                use_format=self.use_format,
+                is_binary=self.binary
+            )
             iter(i)
             self.result = [self._empty]
 
@@ -801,7 +799,7 @@ if REGEX_SUPPORT:
                                     raise ValueError("octal escape value outside of range 0-0o377!")
                                 self.result.append('\\u%04x' % value)
                             else:
-                                self.result.append(self.string_convert('\\%03o' % value))
+                                self.result.append('\\%03o' % value)
                         elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                             self.handle_group(t)
                         elif c == self._lc:
@@ -826,14 +824,30 @@ if REGEX_SUPPORT:
                 self.result.append(self._empty)
                 self.slot += 1
 
-            self._template = self._empty.join(self.literal_slots)
+            if self.binary:
+                self._template = self._empty.join(self.literal_slots).encode('latin-1')
+            else:
+                self._template = self._empty.join(self.literal_slots)
             self.groups, self.literals = self.regex_parse_template(self._template, pattern)
+
+        def convert_case(self, value, case):
+            """Convert case."""
+
+            if self.binary:
+                cased = []
+                for c in value:
+                    if c in self._ascii_letters:
+                        cased.append(c.lower() if case == _LOWER else c.upper())
+                    else:
+                        cased.append(c)
+                return self._empty.join(cased)
+            else:
+                return value.lower() if case == _LOWER else value.upper()
 
         def span_case(self, i, case):
             """Uppercase or lowercase the next range of characters until end marker is found."""
 
-            attr = "lower" if case == _LOWER else "upper"
-            self.span_stack.append(attr)
+            self.span_stack.append(case)
             try:
                 t = next(i)
                 while t != self._esc_end:
@@ -849,14 +863,14 @@ if REGEX_SUPPORT:
                                     if value > 0xFF:
                                         # Re fails on octal greater than 0o377 or 0xFF
                                         raise ValueError("octal escape value outside of range 0-0o377!")
-                                    text = getattr(compat.uchr(value), attr)()
+                                    text = self.convert_case(compat.uchr(value), case)
                                     single = self.get_single_stack()
-                                    value = ord(getattr(text, single)()) if single is not None else ord(text)
-                                    self.result.append(self.string_convert('\\%03o' % value))
+                                    value = ord(self.convert_case(text, single)()) if single is not None else ord(text)
+                                    self.result.append('\\%03o' % value)
                                 else:
-                                    text = getattr(compat.uchr(value), attr)()
+                                    text = self.convert_case(compat.uchr(value), case)
                                     single = self.get_single_stack()
-                                    value = ord(getattr(text, single)()) if single is not None else ord(text)
+                                    value = ord(self.convert_case(text, single)) if single is not None else ord(text)
                                     self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
                             elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                                 self.handle_group(t)
@@ -870,35 +884,35 @@ if REGEX_SUPPORT:
                                 self.span_case(i, _LOWER)
                             elif not self.binary and first == self._unicode_name:
                                 uc = unicodedata.lookup(t[3:-1])
-                                text = getattr(uc, attr)()
+                                text = self.convert_case(uc, case)
                                 single = self.get_single_stack()
-                                value = ord(getattr(text, single)()) if single is not None else ord(text)
+                                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
                                 self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                             elif (
                                 not self.binary and
                                 (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
                             ):
                                 uc = compat.uchr(int(t[2:], 16))
-                                text = getattr(uc, attr)()
+                                text = self.convert_case(uc, case)
                                 single = self.get_single_stack()
-                                value = ord(getattr(text, single)()) if single is not None else ord(text)
+                                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
                                 self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                             elif first == self._hex:
                                 hc = chr(int(t[2:], 16))
-                                text = getattr(hc, attr)()
+                                text = self.convert_case(hc, case)
                                 single = self.get_single_stack()
-                                value = ord(getattr(text, single)()) if single is not None else ord(text)
-                                self.result.append(self.string_convert("\\x%02x" % value))
+                                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
+                                self.result.append("\\x%02x" % value)
                             else:
                                 self.get_single_stack()
                                 self.result.append(t)
                     elif self.single_stack:
                         single = self.get_single_stack()
-                        text = getattr(t, attr)()
+                        text = self.convert_case(t, case)
                         if single is not None:
-                            self.result.append(getattr(text[0:1], single)() + text[1:])
+                            self.result.append(self.convert_case(text[0:1], single) + text[1:])
                     else:
-                        self.result.append(getattr(t, attr)())
+                        self.result.append(self.convert_case(t, case))
                     if self.end_found:
                         self.end_found = False
                         break
@@ -910,8 +924,7 @@ if REGEX_SUPPORT:
         def single_case(self, i, case):
             """Uppercase or lowercase the next character."""
 
-            attr = "lower" if case == _LOWER else "upper"
-            self.single_stack.append(attr)
+            self.single_stack.append(case)
             try:
                 t = next(i)
                 if len(t) > 1:
@@ -926,10 +939,10 @@ if REGEX_SUPPORT:
                                 if value > 0xFF:
                                     # Re fails on octal greater than 0o377 or 0xFF
                                     raise ValueError("octal escape value outside of range 0-0o377!")
-                                value = ord(getattr(compat.uchr(value), self.get_single_stack())())
-                                self.result.append(self.string_convert('\\%03o' % value))
+                                value = ord(self.convert_case(compat.uchr(value), self.get_single_stack()))
+                                self.result.append('\\%03o' % value)
                             else:
-                                value = ord(getattr(compat.uchr(value), self.get_single_stack())())
+                                value = ord(self.convert_case(compat.uchr(value), self.get_single_stack()))
                                 self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
                         elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
                                 self.handle_group(t)
@@ -945,25 +958,25 @@ if REGEX_SUPPORT:
                             self.end_found = True
                         elif not self.binary and first == self._unicode_name:
                             uc = unicodedata.lookup(t[3:-1])
-                            value = ord(getattr(uc, self.get_single_stack())())
+                            value = ord(self.convert_case(uc, self.get_single_stack()))
                             self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                         elif (
                             not self.binary and
                             (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
                         ):
                             uc = compat.uchr(int(t[2:], 16))
-                            value = ord(getattr(uc, self.get_single_stack())())
+                            value = ord(self.convert_case(uc, self.get_single_stack()))
                             self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                         elif first == self._hex:
                             hc = chr(int(t[2:], 16))
                             self.result.append(
-                                self.string_convert("\\x%02x" % ord(getattr(hc, self.get_single_stack())()))
+                                "\\x%02x" % ord(self.convert_case(hc, self.get_single_stack()))
                             )
                         else:
                             self.get_single_stack()
                             self.result.append(t)
                 else:
-                    self.result.append(getattr(t, self.get_single_stack())())
+                    self.result.append(self.convert_case(t, self.get_single_stack()))
 
             except StopIteration:
                 pass
@@ -1006,11 +1019,11 @@ if REGEX_SUPPORT:
             # Handle auto or manual format
             if text == self._empty:
                 if self.auto:
-                    text = self.string_convert(self.auto_index)
+                    text = compat.int2str(self.auto_index)
                     self.auto_index += 1
                 elif not self.manual and not self.auto:
                     self.auto = True
-                    text = self.string_convert(self.auto_index)
+                    text = compat.int2str(self.auto_index)
                     self.auto_index += 1
                 else:
                     raise ValueError("Cannot switch to auto format during manual format!")
@@ -1100,18 +1113,7 @@ if REGEX_SUPPORT:
         def __init__(self, match, template):
             """Initialize."""
 
-            if template.binary:
-                ctokens = ctok.btokens
-            else:
-                ctokens = ctok.utokens
-
             self.template = template
-            self._esc_end = ctokens["esc_end"]
-            self._end = ctokens["end"]
-            self._lc = ctokens["lc"]
-            self._lc_span = ctokens["lc_span"]
-            self._uc = ctokens["uc"]
-            self._uc_span = ctokens["uc_span"]
             self.index = -1
             self.end_found = False
             self.parent_span = []
@@ -1134,9 +1136,15 @@ if REGEX_SUPPORT:
                     except IndexError:
                         raise IndexError("'%d' is out of range!" % capture)
                     if span_case is not None:
-                        l = getattr(l, span_case)()
+                        if span_case == _LOWER:
+                            l = l.lower()
+                        else:
+                            l = l.upper()
                     if single_case is not None:
-                        l = getattr(l[0:1], single_case)() + l[1:]
+                        if single_case == _LOWER:
+                            l = l[0:1].lower() + l[1:]
+                        else:
+                            l = l[0:1].upper() + l[1:]
                 text.append(l)
 
             return sep.join(text)

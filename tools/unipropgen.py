@@ -619,7 +619,7 @@ def gen_posix(output, binary=False, append=False):
         count = len(posix_table) - 1
         i = 0
         for k1, v1 in sorted(posix_table.items()):
-            f.write('    "%s": %s"%s"' % (k1, prefix, v1))
+            f.write('    "%s": "%s"' % (k1, v1))
             if i == count:
                 f.write('\n}\n')
             else:
