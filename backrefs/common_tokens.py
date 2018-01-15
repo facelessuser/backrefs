@@ -6,7 +6,13 @@ Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
 """
 
 # Unicode string related references
-utokens = {
+tokens = {
+    "ascii_letters": (
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+        'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+    ),
     "empty": "",
     "b_slash": "\\",
     "esc_end": "\\E",
@@ -39,40 +45,4 @@ utokens = {
     "unicode_wide": "U",
     "unicode_name": "N",
     "long_replace_refs": ("u", "U", "g", "x", "N")
-}
-
-# Byte string related references
-btokens = {
-    "empty": b"",
-    "b_slash": b"\\",
-    "esc_end": b"\\E",
-    "end": b"E",
-    "quote": b"Q",
-    "lc": b"l",
-    "lc_span": b"L",
-    "uc": b"c",
-    "uc_span": b"C",
-    "hashtag": b'#',
-    "nl": b'\n',
-    "negate": b'^',
-    "verbose_flag": b'x',
-    "unicode_flag": b'u',
-    "ls_bracket": b"[",
-    "rs_bracket": b"]",
-    "lc_bracket": b"{",
-    "rc_bracket": b"}",
-    "lr_bracket": b"(",
-    "rr_bracket": b")",
-    "group": b"g",
-    "group_start": br"\g<",
-    "group_end": b">",
-    "minus": b"-",
-    "binary": b"b",
-    "octal": b"o",
-    "hex": b"x",
-    "zero": b"0",
-    "unicode_narrow": b"u",
-    "unicode_wide": b"U",
-    "unicode_name": b"N",
-    "long_replace_refs": (b"g", b"x")
 }

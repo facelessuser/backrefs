@@ -394,13 +394,13 @@ class TestUniprops(unittest.TestCase):
     def test_posix_binary(self):
         """Test binary `posix` Category."""
 
-        result = uniprops.get_posix_property(b'punct')
+        result = uniprops.get_posix_property('punct', uniprops.POSIX_BINARY)
         self.assertEqual(result, uniprops.unidata.bposix_properties['punct'])
 
     def test_inverse_posix_binary(self):
         """Test inverse binary `posix` Category."""
 
-        result = uniprops.get_posix_property(b'^punct')
+        result = uniprops.get_posix_property('^punct', uniprops.POSIX_BINARY)
         self.assertEqual(result, uniprops.unidata.bposix_properties['^punct'])
 
     def test_posix(self):
@@ -418,11 +418,11 @@ class TestUniprops(unittest.TestCase):
     def test_uposix(self):
         """Test Unicode `posix` Category."""
 
-        result = uniprops.get_posix_property('punct', uni=True)
+        result = uniprops.get_posix_property('punct', uniprops.POSIX_UNICODE)
         self.assertEqual(result, uniprops.unidata.unicode_binary['posixpunct'])
 
     def test_inverse_uposix(self):
         """Test inverse Unicode `posix` Category."""
 
-        result = uniprops.get_posix_property('^punct', uni=True)
+        result = uniprops.get_posix_property('^punct', uniprops.POSIX_UNICODE)
         self.assertEqual(result, uniprops.unidata.unicode_binary['^posixpunct'])
