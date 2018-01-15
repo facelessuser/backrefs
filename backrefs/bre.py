@@ -979,12 +979,12 @@ class SearchTemplate(object):
         elif t == self._uc_span:
             current.extend(self.letter_case_props(_UPPER, False, negate=True))
 
-        elif not self.binary and t == self._uni_prop:
+        elif t == self._uni_prop:
             text = i.get_unicode_property()
             if text.startswith(self._lc_bracket):
                 text = text[1:-1]
             current.extend(self.unicode_props(text, False))
-        elif not self.binary and t == self._inverse_uni_prop:
+        elif t == self._inverse_uni_prop:
             text = i.get_unicode_property()
             if text.startswith(self._lc_bracket):
                 text = text[1:-1]
@@ -1047,6 +1047,7 @@ class SearchTemplate(object):
         found = False
         escaped = False
         first = None
+        found_property = False
 
         try:
             while True:
@@ -1064,16 +1065,18 @@ class SearchTemplate(object):
                         current.extend(self.letter_case_props(_UPPER, True))
                     elif t == self._uc_span:
                         current.extend(self.letter_case_props(_UPPER, True, negate=True))
-                    elif not self.binary and t == self._uni_prop:
+                    elif t == self._uni_prop:
                         text = i.get_unicode_property()
                         if text.startswith(self._lc_bracket):
                             text = text[1:-1]
                         current.extend(self.unicode_props(text, True))
-                    elif not self.binary and t == self._inverse_uni_prop:
+                        found_property = True
+                    elif t == self._inverse_uni_prop:
                         text = i.get_unicode_property()
                         if text.startswith(self._lc_bracket):
                             text = text[1:-1]
                         current.extend(self.unicode_props(text, True, negate=True))
+                        found_property = True
                     elif not self.binary and t == self._unicode_name:
                         text = i.get_named_property()[1:-1]
                         current.extend(self.unicode_name(text))
@@ -1086,7 +1089,8 @@ class SearchTemplate(object):
                 elif t == self._ls_bracket:
                     posix = i.get_posix()
                     if posix:
-                        current.extend(self.posix_props(posix))
+                        current.extend(self.posix_props(posix, in_group=True))
+                        found_property = True
                         pos = i.index - 2
                     else:
                         current.append(t)
@@ -1106,6 +1110,22 @@ class SearchTemplate(object):
 
         if escaped:
             current.append(t)
+
+        # Handle properties that return an empty string.
+        # This will occur when a property's values exceed
+        # either the Unicode char limit on a narrow system,
+        # or the ASCII limit in a byte string pattern.
+        if found_property:
+            value = self._empty.join(current)
+            if value == '[]':
+                # We specified some properities, but they are all
+                # out of reach.  Therefore we can match nothing.
+                current = ['[^%s]' % ('\x00-\xff' if self.binary else uniprops.UNICODE_RANGE)]
+            elif value == '[^]':
+                current = ['[%s]' % ('\x00-\xff' if self.binary else uniprops.UNICODE_RANGE)]
+            else:
+                current = [value]
+
         return current
 
     def normal(self, t, i):
@@ -1125,7 +1145,7 @@ class SearchTemplate(object):
             current.append(t)
         return current
 
-    def posix_props(self, prop):
+    def posix_props(self, prop, in_group=False):
         """
         Insert POSIX properties.
 
@@ -1136,11 +1156,13 @@ class SearchTemplate(object):
 
         try:
             if self.binary or not self.unicode:
-                pattern = uniprops.get_posix_property(prop, uniprops.POSIX_BINARY if self.binary else uniprops.POSIX)
+                pattern = uniprops.get_posix_property(prop, (uniprops.POSIX_BINARY if self.binary else uniprops.POSIX))
             else:
                 pattern = uniprops.get_posix_property(prop, uniprops.POSIX_UNICODE)
         except Exception:
             raise ValueError('Invalid POSIX property!')
+        if not in_group and not pattern:
+            pattern = '^%s' % ('\x00-\xff' if self.binary else uniprops.UNICODE_RANGE)
 
         return [pattern]
 
@@ -1185,8 +1207,10 @@ class SearchTemplate(object):
             else:
                 raise ValueError('Invalid Unicode property!')
 
-        v = uniprops.get_unicode_property((self._negate if negate else self._empty) + props, category)
+        v = uniprops.get_unicode_property((self._negate if negate else self._empty) + props, category, self.binary)
         if not in_group:
+            if not v:
+                v = '^%s' % ('\x00-\xff' if self.binary else uniprops.UNICODE_RANGE)
             v = self._ls_bracket + v + self._rs_bracket
         properties = [v]
 
@@ -1201,13 +1225,15 @@ class SearchTemplate(object):
         if not in_group:
             v = self.posix_props(
                 (self._negate if negate else self._empty) +
-                (self._ascii_upper if case == _UPPER else self._ascii_lower)
+                (self._ascii_upper if case == _UPPER else self._ascii_lower),
+                in_group=in_group
             )
             v[0] = self._ls_bracket + v[0] + self._rs_bracket
         else:
             v = self.posix_props(
                 (self._negate if negate else self._empty) +
-                (self._ascii_upper if case == _UPPER else self._ascii_lower)
+                (self._ascii_upper if case == _UPPER else self._ascii_lower),
+                in_group=in_group
             )
         return v
 

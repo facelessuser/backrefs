@@ -79,13 +79,13 @@ class TestUniprops(unittest.TestCase):
         """Test `canonical combining class type` Category."""
 
         result = uniprops.get_unicode_property('200', 'ccc')
-        self.assertEqual(result, uniprops.unidata.uniocde_canonical_combining_class['200'])
+        self.assertEqual(result, uniprops.unidata.unicode_canonical_combining_class['200'])
 
     def test_inverse_canonical(self):
         """Test inverse `canonical combining class type` Category."""
 
         result = uniprops.get_unicode_property('^200', 'ccc')
-        self.assertEqual(result, uniprops.unidata.uniocde_canonical_combining_class['^200'])
+        self.assertEqual(result, uniprops.unidata.unicode_canonical_combining_class['^200'])
 
     def test_eastasianwidth(self):
         """Test `east asian width` Category."""
@@ -395,25 +395,25 @@ class TestUniprops(unittest.TestCase):
         """Test binary `posix` Category."""
 
         result = uniprops.get_posix_property('punct', uniprops.POSIX_BINARY)
-        self.assertEqual(result, uniprops.unidata.bposix_properties['punct'])
+        self.assertEqual(result, uniprops.unidata.ascii_posix_properties['punct'])
 
     def test_inverse_posix_binary(self):
         """Test inverse binary `posix` Category."""
 
         result = uniprops.get_posix_property('^punct', uniprops.POSIX_BINARY)
-        self.assertEqual(result, uniprops.unidata.bposix_properties['^punct'])
+        self.assertEqual(result, uniprops.unidata.ascii_posix_properties['^punct'])
 
     def test_posix(self):
         """Test `posix` Category."""
 
         result = uniprops.get_posix_property('punct')
-        self.assertEqual(result, uniprops.unidata.posix_properties['punct'])
+        self.assertEqual(result, uniprops.unidata.unicode_posix_properties['punct'])
 
     def test_inverse_posix(self):
         """Test inverse `posix` Category."""
 
         result = uniprops.get_posix_property('^punct')
-        self.assertEqual(result, uniprops.unidata.posix_properties['^punct'])
+        self.assertEqual(result, uniprops.unidata.unicode_posix_properties['^punct'])
 
     def test_uposix(self):
         """Test Unicode `posix` Category."""

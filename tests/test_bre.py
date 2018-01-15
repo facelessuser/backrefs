@@ -518,23 +518,45 @@ class TestSearchTemplate(unittest.TestCase):
         m = pattern.match(r'P')
         self.assertTrue(m is None)
 
-    def test_binary_unicode_ignore(self):
-        r"""Binary patterns should not process `\p` references."""
-        import sre_constants
+    def test_binary_property(self):
+        r"""Binary patterns should match `\p` references."""
 
-        if PY36_PLUS:
-            def no_unicode():
-                """Should fail on Unicode back reference."""
-                bre.compile_search(br'EX\p{Lu}MPLE')
+        pattern = bre.compile_search(br'EX\p{Lu}MPLE')
+        m = pattern.match(br'EXAMPLE')
+        self.assertTrue(m is not None)
 
-            # Python 3.6+ fails on invalid back references (which ours are)
-            # Since this one is not valid in a bytes string, it shouldn't
-            # be used.  It is okay that Python fails on this.
-            self.assertRaises(sre_constants.error, no_unicode)
-        else:
-            pattern = bre.compile_search(br'EX\p{Lu}MPLE')
-            m = pattern.match(br'EXp{Lu}MPLE')
-            self.assertTrue(m is not None)
+    def test_binary_property_no_value(self):
+        """Test when a property returns nothing in byte string."""
+
+        pattern = bre.compile_search(br'EX\p{OtherAlphabetic}MPLE')
+        self.assertEqual(pattern.pattern, b'EX[^\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX\P{OtherAlphabetic}MPLE')
+        self.assertEqual(pattern.pattern, b'EX[\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX[\p{OtherAlphabetic}]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[^\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX[\P{OtherAlphabetic}]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX[^\p{OtherAlphabetic}]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX[^\P{OtherAlphabetic}]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[^\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX[\p{OtherAlphabetic}a]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[a]MPLE')
+
+        pattern = bre.compile_search(br'EX[\P{OtherAlphabetic}a]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[\x00-\xffa]MPLE')
+
+        pattern = bre.compile_search(br'EX[^\p{OtherAlphabetic}a]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[^a]MPLE')
+
+        pattern = bre.compile_search(br'EX[^\P{OtherAlphabetic}a]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[^\x00-\xffa]MPLE')
 
     def test_unicode_and_verbose_flag(self):
         """Test that `VERBOSE` and `UNICODE` together come through."""
