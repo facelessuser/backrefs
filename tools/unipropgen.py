@@ -1103,6 +1103,13 @@ def build_ascii_property_table(output):
     gen_properties(output, ascii_props=True, append=True)
 
 
+def build_tables(output):
+    """Build output tables."""
+
+    build_unicode_property_table(output)
+    build_ascii_property_table(output)
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -1111,5 +1118,4 @@ if __name__ == '__main__':
     parser.add_argument('output', default=None, help='Output file.')
     args = parser.parse_args()
 
-    build_unicode_property_table(args.output)
-    build_ascii_property_table(args.output)
+    build_tables(args.output)
