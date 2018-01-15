@@ -55,9 +55,3 @@ def int2str(number):
     """Convert number to string."""
 
     return string_type(number)
-
-
-def int2bytes(number):
-    """Convert number to bytes."""
-
-    return string_type(number).encode('ascii')
