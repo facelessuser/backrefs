@@ -1546,6 +1546,11 @@ class TestExceptions(unittest.TestCase):
 
         self.assertEqual(str(e.value), 'Invalid Unicode property!')
 
+        with pytest.raises(ValueError) as e:
+            bre.compile_search(r'\p{bad_binary:y}', re.UNICODE)
+
+        self.assertEqual(str(e.value), 'Invalid Unicode property!')
+
     def test_bad_category(self):
         """Test bad category."""
 

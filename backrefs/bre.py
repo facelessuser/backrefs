@@ -1161,7 +1161,7 @@ class SearchTemplate(object):
                 pattern = uniprops.get_posix_property(prop, uniprops.POSIX_UNICODE)
         except Exception:
             raise ValueError('Invalid POSIX property!')
-        if not in_group and not pattern:
+        if not in_group and not pattern:  # pragma: no cover
             pattern = '^%s' % ('\x00-\xff' if self.binary else uniprops.UNICODE_RANGE)
 
         return [pattern]
