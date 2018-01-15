@@ -16,6 +16,8 @@ tokens = {
     "empty": "",
     "b_slash": "\\",
     "esc_end": "\\E",
+    "escape": "e",
+    "re_escape": r"\x1b",
     "end": "E",
     "quote": "Q",
     "lc": "l",

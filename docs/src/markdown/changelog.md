@@ -3,6 +3,7 @@
 ## 2.3.0
 
 - **NEW**: Completely refactored algorithm for search pattern augmentation.
+- **NEW**: Add support for `\e` for escape character `\x1b` in both Re and Regex.
 - **NEW**: Add support for `\R` for generic newlines in the Regex module (Regex only).
 - **NEW**: Support Unicode property form `\pP` and `\PP`.
 - **NEW**: Add support for properly handling per group, scoped verbose flags in the preprocess step (Regex).

@@ -19,6 +19,20 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_escape_char(self):
+        """Test escape char."""
+
+        pattern = bregex.compile_search(
+            r'test\etest[\e]{2}'
+        )
+
+        self.assertEqual(
+            pattern.pattern,
+            r'test\x1btest[\x1b]{2}'
+        )
+
+        self.assertTrue(pattern.match('test\x1btest\x1b\x1b') is not None)
+
     def test_comments_v0(self):
         """Test comments v0."""
 
@@ -193,8 +207,8 @@ class TestSearchTemplate(unittest.TestCase):
     def test_normal_escaping2(self):
         """Normal escaping should be unaltered part2."""
 
-        result = bregex.RegexSearchTemplate(r'\e \\e \\\e \\\\e \\\\\e').apply()
-        self.assertEqual(r'\e \\e \\\e \\\\e \\\\\e', result)
+        result = bregex.RegexSearchTemplate(r'\y \\y \\\y \\\\y \\\\\y').apply()
+        self.assertEqual(r'\y \\y \\\y \\\\y \\\\\y', result)
 
     def test_unicode_and_verbose_flag(self):
         """Test that VERBOSE and UNICODE together come through."""

@@ -177,8 +177,8 @@ if REGEX_SUPPORT:
         "binary_re_line_break": r'(?>\r\n|\n|\x0b|\f|\r|\x85)',
         "v0": 'V0',
         "v1": 'V1',
-        "new_refs": ("R", "Q", "E"),
-        "binary_new_refs": ("R", "Q", "E")
+        "new_refs": ("e", "R", "Q", "E"),
+        "binary_new_refs": ("e", "R", "Q", "E")
     }
 
     class RetryException(Exception):
@@ -394,6 +394,8 @@ if REGEX_SUPPORT:
             self._rr_bracket = ctokens["rr_bracket"]
             self._hashtag = ctokens["hashtag"]
             self._line_break = tokens["line_break"]
+            self._escape = ctokens["escape"]
+            self._re_escape = ctokens["re_escape"]
             self._V0 = tokens["v0"]
             self._V1 = tokens["v1"]
             if self.binary:
@@ -508,7 +510,9 @@ if REGEX_SUPPORT:
                 return [t]
 
             if t == self._line_break:
-                current.append(self.linebreak())
+                current.append(self._re_line_break)
+            elif t == self._escape:
+                current.extend(self._re_escape)
             else:
                 current.extend([self._b_slash, t])
             return current
@@ -581,7 +585,10 @@ if REGEX_SUPPORT:
                         escaped = True
                     elif escaped:
                         escaped = False
-                        current.extend([self._b_slash, t])
+                        if t == self._escape:
+                            current.append(self._re_escape)
+                        else:
+                            current.extend([self._b_slash, t])
                     elif t == self._ls_bracket and not found:
                         found += 1
                         first = pos
@@ -647,11 +654,6 @@ if REGEX_SUPPORT:
             else:
                 current.append(t)
             return current
-
-        def linebreak(self):
-            """Handle line breaks."""
-
-            return self._re_line_break
 
         def main_group(self, i):
             """The main group: group 0."""

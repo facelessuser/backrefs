@@ -21,6 +21,20 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_escape_char(self):
+        """Test escape char."""
+
+        pattern = bre.compile_search(
+            r'test\etest[\e]{2}'
+        )
+
+        self.assertEqual(
+            pattern.pattern,
+            r'test\x1btest[\x1b]{2}'
+        )
+
+        self.assertTrue(pattern.match('test\x1btest\x1b\x1b') is not None)
+
     def test_comments(self):
         """Test comments v0."""
 
@@ -355,8 +369,8 @@ class TestSearchTemplate(unittest.TestCase):
     def test_normal_escaping2(self):
         """Normal escaping should be unaltered part2."""
 
-        result = bre.SearchTemplate(r'\e \\e \\\e \\\\e \\\\\e').apply()
-        self.assertEqual(r'\e \\e \\\e \\\\e \\\\\e', result)
+        result = bre.SearchTemplate(r'\y \\y \\\y \\\\y \\\\\y').apply()
+        self.assertEqual(r'\y \\y \\\y \\\\y \\\\\y', result)
 
     def test_unicode_shorthand_properties_capital(self):
         """

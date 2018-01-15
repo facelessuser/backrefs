@@ -191,8 +191,8 @@ tokens = {
     "ascii_lower": 'lower',
     "ascii_upper": 'upper',
     "ascii_flag": "a",
-    "new_refs": ("l", "L", "c", "C", "p", "P", "N", "Q", "E"),
-    "binary_new_refs": ("l", "L", "c", "C", "Q", "E")
+    "new_refs": ("e", "l", "L", "c", "C", "p", "P", "N", "Q", "E"),
+    "binary_new_refs": ("e", "l", "L", "c", "C", "Q", "E")
 }
 
 
@@ -867,6 +867,8 @@ class SearchTemplate(object):
         self._rr_bracket = ctokens["rr_bracket"]
         self._hashtag = ctokens["hashtag"]
         self._unicode_name = ctokens["unicode_name"]
+        self._escape = ctokens["escape"]
+        self._re_escape = ctokens["re_escape"]
         if self.binary:
             self._new_refs = tokens["binary_new_refs"]
         else:
@@ -966,7 +968,9 @@ class SearchTemplate(object):
         except StopIteration:
             return [t]
 
-        if t == self._lc:
+        if t == self._escape:
+            current.append(self._re_escape)
+        elif t == self._lc:
             current.extend(self.letter_case_props(_LOWER, False))
         elif t == self._lc_span:
             current.extend(self.letter_case_props(_LOWER, False, negate=True))
@@ -1050,7 +1054,9 @@ class SearchTemplate(object):
                     escaped = True
                 elif escaped:
                     escaped = False
-                    if t == self._lc:
+                    if t == self._escape:
+                        current.append(self._re_escape)
+                    elif t == self._lc:
                         current.extend(self.letter_case_props(_LOWER, True))
                     elif t == self._lc_span:
                         current.extend(self.letter_case_props(_LOWER, True, negate=True))
