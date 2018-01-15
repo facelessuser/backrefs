@@ -193,12 +193,7 @@ if REGEX_SUPPORT:
         def __init__(self, string, is_binary=False):
             """Initialize."""
 
-            if isinstance(string, compat.binary_type):
-                self.string = string.decode('latin-1')
-                is_binary = True
-            else:
-                self.string = string
-
+            self.string = string
             self.binary = is_binary
 
             self._re_posix = tokens["re_posix"]
@@ -291,12 +286,7 @@ if REGEX_SUPPORT:
         def __init__(self, string, use_format=False, is_binary=False):
             """Initialize."""
 
-            if isinstance(string, compat.binary_type):
-                self.string = string.decode('latin-1')
-                is_binary = True
-            else:
-                self.string = string
-
+            self.string = string
             self.binary = is_binary
 
             ctokens = ctok.tokens
