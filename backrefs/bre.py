@@ -680,11 +680,11 @@ class ReplaceTemplate(object):
         # Handle auto or manual format
         if text == "":
             if self.auto:
-                text = compat.int2str(self.auto_index)
+                text = compat.string_type(self.auto_index)
                 self.auto_index += 1
             elif not self.manual and not self.auto:
                 self.auto = True
-                text = compat.int2str(self.auto_index)
+                text = compat.string_type(self.auto_index)
                 self.auto_index += 1
             else:
                 raise ValueError("Cannot switch to auto format during manual format!")
