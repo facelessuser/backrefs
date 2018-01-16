@@ -36,8 +36,8 @@ class TestSearchTemplate(unittest.TestCase):
 
         if PY36_PLUS:
             pattern = bre.compile_search(
-                r'''(?u)Test # \e(?#\e\)(?x:
-                Test #\e(?#\e\)
+                r'''(?u)Test # \e(?#\e)(?x:
+                Test #\e(?#\e)
                 (Test # \e
                 )Test #\e
                 )Test # \e'''
@@ -45,8 +45,8 @@ class TestSearchTemplate(unittest.TestCase):
 
             self.assertEqual(
                 pattern.pattern,
-                r'''(?u)Test # \x1b(?#\e\)(?x:
-                Test #\\e(?#\\e\)
+                r'''(?u)Test # \x1b(?#\e)(?x:
+                Test #\\e(?#\\e)
                 (Test # \\e
                 )Test #\\e
                 )Test # \x1b'''

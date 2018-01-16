@@ -112,7 +112,7 @@ _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 # Unicode string related references
 tokens = {
     "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
-    "re_comments": re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII),
+    "re_comments": re.compile(r'\(\?\#(?:\\.|[^)])*\)', _SEARCH_ASCII),
     "re_flags": re.compile((r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'), _SEARCH_ASCII),
     "re_uniprops": re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[A-Z])?', _SEARCH_ASCII),
     "re_named_props": re.compile(r'N(?:\{[\w ]+\})?', _SEARCH_ASCII),
