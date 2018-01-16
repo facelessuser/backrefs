@@ -8,6 +8,9 @@
 - **NEW**: Support Unicode property form `\pP` and `\PP`.
 - **NEW**: Add support for properly handling per group, scoped verbose flags in the preprocess step (Regex).
 - **NEW**: Handle `(?#comments)` properly in the preprocess step.
+- **NEW**: Add support for `\N` in byte strings (characters out of range won't be included).
+- **NEW**: Add support for `\p` and `\P` in byte strings (characters out of range won't be included).
+- **FIX**: Missing block properties on narrow systems when the property starts beyond the narrow limit.
 - **FIX**: Fix issue where an invalid general category could sometimes pass and return no characters.
 - **FIX**: Fix `\Q...\E` behavior so it is applied first as a separate step. No longer avoids `\Q...\E` in things like character groups or comments.
 
