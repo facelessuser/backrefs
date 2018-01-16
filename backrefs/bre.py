@@ -69,7 +69,6 @@ import functools
 import re
 import unicodedata
 from collections import namedtuple
-from . import common_tokens as ctok
 from . import compat
 from . import uniprops
 
@@ -107,22 +106,20 @@ _LOWER = 1
 
 _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 
-# Unicode string related references
-tokens = {
-    "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
-    "re_comments": re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII),
-    "re_flags": re.compile((r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'), _SEARCH_ASCII),
-    "re_uniprops": re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[A-Z])?', _SEARCH_ASCII),
-    "re_named_props": re.compile(r'N(?:\{[\w ]+\})?', _SEARCH_ASCII),
-    "re_property_strip": re.compile(r'[\-_ ]', _SEARCH_ASCII),
-    "re_property_gc": re.compile(
-        r'''(?x)
-        (?:((?:\\.|[^\\}]+)+?)[=:])?
-        ((?:\\.|[^\\}]+)+)
-        ''',
-        _SEARCH_ASCII
-    ),
-    "replace_group_ref": re.compile(
+
+class RetryException(Exception):
+    """Retry exception."""
+
+
+class GlobalRetryException(Exception):
+    """Global retry exception."""
+
+
+# Break apart template patterns into char tokens
+class ReplaceTokens(compat.Tokens):
+    """Preprocess replace tokens."""
+
+    _replace_group_ref = re.compile(
         r'''(?x)
         (\\)|
         (
@@ -137,8 +134,8 @@ tokens = {
         )
         ''',
         _SEARCH_ASCII
-    ),
-    "binary_replace_group_ref": re.compile(
+    )
+    _binary_replace_group_ref = re.compile(
         r'''(?x)
         (\\)|
         (
@@ -150,8 +147,8 @@ tokens = {
         )
         ''',
         _SEARCH_ASCII
-    ),
-    "format_replace_ref": re.compile(
+    )
+    _format_replace_ref = re.compile(
         r'''(?x)
         (\\)|
         (
@@ -167,8 +164,8 @@ tokens = {
         )|
         (\{)''',
         _SEARCH_ASCII
-    ),
-    "binary_format_replace_ref": re.compile(
+    )
+    _binary_format_replace_ref = re.compile(
         r'''(?x)
         (\\)|
         (
@@ -181,61 +178,29 @@ tokens = {
         )|
         (\{)''',
         _SEARCH_ASCII
-    ),
-    "format_replace_group": re.compile(
+    )
+    _format_replace_group = re.compile(
         r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
         _SEARCH_ASCII
-    ),
-    "uni_prop": "p",
-    "inverse_uni_prop": "P",
-    "ascii_lower": 'lower',
-    "ascii_upper": 'upper',
-    "ascii_flag": "a",
-    "new_refs": ("e", "l", "L", "c", "C", "p", "P", "N", "Q", "E")
-}
-
-
-class RetryException(Exception):
-    """Retry exception."""
-
-
-class GlobalRetryException(Exception):
-    """Global retry exception."""
-
-
-# Break apart template patterns into char tokens
-class ReplaceTokens(compat.Tokens):
-    """Preprocess replace tokens."""
+    )
+    _long_replace_refs = ("u", "U", "g", "x", "N")
 
     def __init__(self, string, use_format=False, is_binary=False):
         """Initialize."""
 
         self.string = string
         self.binary = is_binary
-
-        ctokens = ctok.tokens
-
         self.use_format = use_format
         if self.binary:
             if use_format:
-                self._replace_ref = tokens["binary_format_replace_ref"]
+                self._replace_ref = self._binary_format_replace_ref
             else:
-                self._replace_ref = tokens["binary_replace_group_ref"]
+                self._replace_ref = self._binary_replace_group_ref
         else:
             if use_format:
-                self._replace_ref = tokens["format_replace_ref"]
+                self._replace_ref = self._format_replace_ref
             else:
-                self._replace_ref = tokens["replace_group_ref"]
-        self._format_replace_group = tokens["format_replace_group"]
-        self._unicode_narrow = ctokens["unicode_narrow"]
-        self._unicode_wide = ctokens["unicode_wide"]
-        self._hex = ctokens["hex"]
-        self._group = ctokens["group"]
-        self._unicode_name = ctokens["unicode_name"]
-        self._long_replace_refs = ctokens["long_replace_refs"]
-        self._lc_bracket = ctokens["lc_bracket"]
-        self._rc_bracket = ctokens["rc_bracket"]
-        self._b_slash = ctokens["b_slash"]
+                self._replace_ref = self._replace_group_ref
         self.max_index = len(string) - 1
         self.index = 0
         self.current = None
@@ -256,27 +221,27 @@ class ReplaceTokens(compat.Tokens):
             raise StopIteration
 
         char = self.string[self.index]
-        if char == self._b_slash:
+        if char == "\\":
             m = self._replace_ref.match(self.string, self.index + 1)
             if m:
                 ref = m.group(0)
                 if len(ref) == 1 and ref in self._long_replace_refs:
-                    if ref == self._hex:
+                    if ref == "x":
                         raise SyntaxError('Format for byte is \\xXX!')
-                    elif ref == self._group:
+                    elif ref == "g":
                         raise SyntaxError('Format for group is \\g<group_name_or_index>!')
-                    elif ref == self._unicode_name:
+                    elif ref == "N":
                         raise SyntaxError('Format for Unicode name is \\N{name}!')
-                    elif ref == self._unicode_narrow:  # pragma: no cover
+                    elif ref == "u":  # pragma: no cover
                         raise SyntaxError('Format for Unicode is \\uXXXX!')
-                    elif ref == self._unicode_wide:  # pragma: no cover
+                    elif ref == "U":  # pragma: no cover
                         raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
                 if self.use_format and (m.group(3) or m.group(4)):
-                    char += self._b_slash
+                    char += "\\"
                     self.index -= 1
                 if not self.use_format or not m.group(4):
                     char += m.group(1) if m.group(1) else m.group(2)
-        elif self.use_format and char in (self._lc_bracket, self._rc_bracket):
+        elif self.use_format and char in ("{", "}"):
             m = self._format_replace_group.match(self.string, self.index)
             if m:
                 if m.group(2):
@@ -294,23 +259,17 @@ class ReplaceTokens(compat.Tokens):
 class SearchTokens(compat.Tokens):
     """Preprocess replace tokens."""
 
+    _re_uniprops = re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[A-Z])?', _SEARCH_ASCII)
+    _re_named_props = re.compile(r'N(?:\{[\w ]+\})?', _SEARCH_ASCII)
+    _re_posix = re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII)
+    _re_flags = re.compile((r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'), _SEARCH_ASCII)
+    _re_comments = re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII)
+
     def __init__(self, string, is_binary=False):
         """Initialize."""
 
         self.string = string
         self.binary = is_binary
-
-        ctokens = ctok.tokens
-
-        self._re_uniprops = tokens["re_uniprops"]
-        self._re_named_props = tokens["re_named_props"]
-        self._re_posix = tokens["re_posix"]
-        self._unicode_name = ctokens["unicode_name"]
-        self._re_flags = tokens["re_flags"]
-        self._re_comments = tokens["re_comments"]
-        self._uni_prop = tokens["uni_prop"]
-        self._inverse_uni_prop = tokens["inverse_uni_prop"]
-
         self.max_index = len(string) - 1
         self.index = 0
         self.current = None
@@ -365,7 +324,7 @@ class SearchTokens(compat.Tokens):
         m = self._re_named_props.match(self.string, self.index - 1)
         if m:
             text = m.group(0)
-            if text == self._unicode_name:
+            if text == "N":
                 raise SyntaxError('Format for Unicode name is \\N{name}!')
             self.index = m.end(0)
             self.current = text
@@ -379,9 +338,9 @@ class SearchTokens(compat.Tokens):
         m = self._re_uniprops.match(self.string, self.index - 1)
         if m:
             text = m.group(0)
-            if text == self._uni_prop:
+            if text == 'p':
                 raise SyntaxError('Format for Unicode property is \\p{property} or \\pP!')
-            elif text == self._inverse_uni_prop:
+            elif text == 'P':
                 raise SyntaxError('Format for inverse Unicode property is \\P{property} or \\PP!')
             self.index = m.end(0)
             self.current = text
@@ -409,6 +368,13 @@ class SearchTokens(compat.Tokens):
 class ReplaceTemplate(object):
     """Pre-replace template."""
 
+    _ascii_letters = (
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+        'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+    )
+
     def __init__(self, pattern, template, use_format=False):
         """Initialize."""
 
@@ -417,31 +383,8 @@ class ReplaceTemplate(object):
         else:
             self.binary = False
 
-        ctokens = ctok.tokens
-
         self._original = template
         self.use_format = use_format
-        self._ascii_letters = ctokens["ascii_letters"]
-        self._esc_end = ctokens["esc_end"]
-        self._end = ctokens["end"]
-        self._lc = ctokens["lc"]
-        self._ls_bracket = ctokens["ls_bracket"]
-        self._lc_bracket = ctokens["lc_bracket"]
-        self._lc_span = ctokens["lc_span"]
-        self._uc = ctokens["uc"]
-        self._uc_span = ctokens["uc_span"]
-        self._group = ctokens["group"]
-        self._empty = ctokens["empty"]
-        self._group_start = ctokens["group_start"]
-        self._group_end = ctokens["group_end"]
-        self._binary = ctokens["binary"]
-        self._octal = ctokens["octal"]
-        self._hex = ctokens["hex"]
-        self._unicode_name = ctokens['unicode_name']
-        self._minus = ctokens["minus"]
-        self._zero = ctokens["zero"]
-        self._unicode_narrow = ctokens["unicode_narrow"]
-        self._unicode_wide = ctokens["unicode_wide"]
         self.end_found = False
         self.group_slots = []
         self.literal_slots = []
@@ -465,11 +408,11 @@ class ReplaceTemplate(object):
             is_binary=self.binary
         )
         iter(i)
-        self.result = [self._empty]
+        self.result = [""]
 
         for t in i:
             if len(t) > 1:
-                if self.use_format and t[0] == self._lc_bracket:
+                if self.use_format and t[0] == "{":
                     self.handle_format_group(t[1:-1].strip())
                 else:
                     c = t[1:]
@@ -483,20 +426,20 @@ class ReplaceTemplate(object):
                             self.result.append(compat.uchr(value))
                         else:
                             self.result.append('\\%03o' % value)
-                    elif not self.use_format and (c[0].isdigit() or c[0] == self._group):
+                    elif not self.use_format and (c[0].isdigit() or c[0] == "g"):
                         self.handle_group(t)
-                    elif c == self._lc:
+                    elif c == "l":
                         self.single_case(i, _LOWER)
-                    elif c == self._lc_span:
+                    elif c == "L":
                         self.span_case(i, _LOWER)
-                    elif c == self._uc:
+                    elif c == "c":
                         self.single_case(i, _UPPER)
-                    elif c == self._uc_span:
+                    elif c == "C":
                         self.span_case(i, _UPPER)
-                    elif c == self._end:
+                    elif c == "E":
                         # This is here just as a reminder that \E is ignored
                         pass
-                    elif not self.binary and first == self._unicode_name:
+                    elif not self.binary and first == "N":
                         value = ord(unicodedata.lookup(t[3:-1]))
                         if value <= 0xFF:
                             self.result.append('\\%03o' % value)
@@ -504,14 +447,14 @@ class ReplaceTemplate(object):
                             self.result.append(compat.uchr(value))
                     elif (
                         not self.binary and
-                        (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
+                        (first == "u" or (not NARROW and first == "U"))
                     ):
                         value = int(t[2:], 16)
                         if value <= 0xFF:
                             self.result.append('\\%03o' % value)
                         else:
                             self.result.append(compat.uchr(value))
-                    elif first == self._hex:
+                    elif first == "x":
                         self.result.append('\\%03o' % int(t[2:], 16))
                     else:
                         self.result.append(t)
@@ -519,15 +462,15 @@ class ReplaceTemplate(object):
                 self.result.append(t)
 
         if len(self.result) > 1:
-            self.literal_slots.append(self._empty.join(self.result))
+            self.literal_slots.append("".join(self.result))
             del self.result[:]
-            self.result.append(self._empty)
+            self.result.append("")
             self.slot += 1
 
         if self.binary:
-            self._template = self._empty.join(self.literal_slots).encode('latin-1')
+            self._template = "".join(self.literal_slots).encode('latin-1')
         else:
-            self._template = self._empty.join(self.literal_slots)
+            self._template = "".join(self.literal_slots)
         self.groups, self.literals = sre_parse.parse_template(self._template, pattern)
 
     def span_case(self, i, case):
@@ -536,9 +479,9 @@ class ReplaceTemplate(object):
         self.span_stack.append(case)
         try:
             t = next(i)
-            while t != self._esc_end:
+            while t != "\\E":
                 if len(t) > 1:
-                    if self.use_format and t[0] == self._lc_bracket:
+                    if self.use_format and t[0] == "{":
                         self.handle_format_group(t[1:-1].strip())
                     else:
                         c = t[1:]
@@ -561,17 +504,17 @@ class ReplaceTemplate(object):
                                     self.result.append('\\%03o' % value)
                                 else:
                                     self.result.append(compat.uchr(value))
-                        elif not self.use_format and (c[0].isdigit() or c[0] == self._group):
+                        elif not self.use_format and (c[0].isdigit() or c[0] == "g"):
                             self.handle_group(t)
-                        elif c == self._uc:
+                        elif c == "c":
                             self.single_case(i, _UPPER)
-                        elif c == self._lc:
+                        elif c == "l":
                             self.single_case(i, _LOWER)
-                        elif c == self._uc_span:
+                        elif c == "C":
                             self.span_case(i, _UPPER)
-                        elif c == self._lc_span:
+                        elif c == "L":
                             self.span_case(i, _LOWER)
-                        elif not self.binary and first == self._unicode_name:
+                        elif not self.binary and first == "N":
                             uc = unicodedata.lookup(t[3:-1])
                             text = self.convert_case(uc, case)
                             single = self.get_single_stack()
@@ -582,7 +525,7 @@ class ReplaceTemplate(object):
                                 self.result.append(compat.uchr(value))
                         elif (
                             not self.binary and
-                            (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
+                            (first == "u" or (not NARROW and first == "U"))
                         ):
                             uc = compat.uchr(int(t[2:], 16))
                             text = self.convert_case(uc, case)
@@ -592,7 +535,7 @@ class ReplaceTemplate(object):
                                 self.result.append('\\%03o' % value)
                             else:
                                 self.result.append(compat.uchr(value))
-                        elif first == self._hex:
+                        elif first == "x":
                             hc = chr(int(t[2:], 16))
                             text = self.convert_case(hc, case)
                             single = self.get_single_stack()
@@ -626,7 +569,7 @@ class ReplaceTemplate(object):
                     cased.append(c.lower() if case == _LOWER else c.upper())
                 else:
                     cased.append(c)
-            return self._empty.join(cased)
+            return "".join(cased)
         else:
             return value.lower() if case == _LOWER else value.upper()
 
@@ -637,7 +580,7 @@ class ReplaceTemplate(object):
         try:
             t = next(i)
             if len(t) > 1:
-                if self.use_format and t[0:1] == self._lc_bracket:
+                if self.use_format and t[0:1] == "{":
                     self.handle_format_group(t[1:-1].strip())
                 else:
                     c = t[1:]
@@ -656,19 +599,19 @@ class ReplaceTemplate(object):
                                 self.result.append('\\%03o' % value)
                             else:
                                 self.result.append(compat.uchr(value))
-                    elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                    elif not self.use_format and (c[0:1].isdigit() or c[0:1] == "g"):
                         self.handle_group(t)
-                    elif c == self._uc:
+                    elif c == "c":
                         self.single_case(i, _UPPER)
-                    elif c == self._lc:
+                    elif c == "l":
                         self.single_case(i, _LOWER)
-                    elif c == self._uc_span:
+                    elif c == "C":
                         self.span_case(i, _UPPER)
-                    elif c == self._lc_span:
+                    elif c == "L":
                         self.span_case(i, _LOWER)
-                    elif c == self._end:
+                    elif c == "E":
                         self.end_found = True
-                    elif not self.binary and first == self._unicode_name:
+                    elif not self.binary and first == "N":
                         uc = unicodedata.lookup(t[3:-1])
                         value = ord(self.convert_case(uc, self.get_single_stack()))
                         if value <= 0xFF:
@@ -677,7 +620,7 @@ class ReplaceTemplate(object):
                             self.result.append(compat.uchr(value))
                     elif (
                         not self.binary and
-                        (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
+                        (first == "u" or (not NARROW and first == "U"))
                     ):
                         uc = compat.uchr(int(t[2:], 16))
                         value = ord(self.convert_case(uc, self.get_single_stack()))
@@ -685,7 +628,7 @@ class ReplaceTemplate(object):
                             self.result.append('\\%03o' % value)
                         else:
                             self.result.append(compat.uchr(value))
-                    elif first == self._hex:
+                    elif first == "x":
                         hc = chr(int(t[2:], 16))
                         self.result.append(
                             "\\%03o" % ord(self.convert_case(hc, self.get_single_stack()))
@@ -713,17 +656,17 @@ class ReplaceTemplate(object):
         capture = -1
         base = 10
         try:
-            index = text.index(self._ls_bracket)
+            index = text.index("[")
             capture = text[index + 1:-1]
             text = text[:index]
-            prefix = capture[1:3] if capture[0:1] == self._minus else capture[:2]
-            if prefix[0:1] == self._zero:
+            prefix = capture[1:3] if capture[0:1] == "-" else capture[:2]
+            if prefix[0:1] == "0":
                 char = prefix[-1:]
-                if char == self._binary:
+                if char == "b":
                     base = 2
-                elif char == self._octal:
+                elif char == "o":
                     base = 8
-                elif char == self._hex:
+                elif char == "x":
                     base = 16
         except ValueError:
             pass
@@ -735,7 +678,7 @@ class ReplaceTemplate(object):
                 raise ValueError("Capture index must be an integer!")
 
         # Handle auto or manual format
-        if text == self._empty:
+        if text == "":
             if self.auto:
                 text = compat.int2str(self.auto_index)
                 self.auto_index += 1
@@ -751,13 +694,13 @@ class ReplaceTemplate(object):
             raise ValueError("Cannot switch to manual format during auto format!")
 
         if len(self.result) > 1:
-            self.literal_slots.append(self._empty.join(self.result))
-            self.literal_slots.extend([self._group_start, text, self._group_end])
+            self.literal_slots.append("".join(self.result))
+            self.literal_slots.extend(["\\g<", text, ">"])
             del self.result[:]
-            self.result.append(self._empty)
+            self.result.append("")
             self.slot += 1
         else:
-            self.literal_slots.extend([self._group_start, text, self._group_end])
+            self.literal_slots.extend(["\\g<", text, ">"])
 
         single = self.get_single_stack()
 
@@ -777,10 +720,10 @@ class ReplaceTemplate(object):
         """Handle groups."""
 
         if len(self.result) > 1:
-            self.literal_slots.append(self._empty.join(self.result))
+            self.literal_slots.append("".join(self.result))
             self.literal_slots.append(text)
             del self.result[:]
-            self.result.append(self._empty)
+            self.result.append("")
             self.slot += 1
         else:
             self.literal_slots.append(text)
@@ -828,6 +771,17 @@ class ReplaceTemplate(object):
 class SearchTemplate(object):
     """Search Template."""
 
+    _new_refs = ("e", "l", "L", "c", "C", "p", "P", "N", "Q", "E")
+    _re_escape = r"\x1b"
+    _re_property_strip = re.compile(r'[\-_ ]', _SEARCH_ASCII)
+    _re_property_gc = re.compile(
+        r'''(?x)
+        (?:((?:\\.|[^\\}]+)+?)[=:])?
+        ((?:\\.|[^\\}]+)+)
+        ''',
+        _SEARCH_ASCII
+    )
+
     def __init__(self, search, re_verbose=False, re_unicode=None):
         """Initialize."""
 
@@ -836,39 +790,6 @@ class SearchTemplate(object):
         else:
             self.binary = False
 
-        ctokens = ctok.tokens
-
-        self._verbose_flag = ctokens["verbose_flag"]
-        self._empty = ctokens["empty"]
-        self._b_slash = ctokens["b_slash"]
-        self._ls_bracket = ctokens["ls_bracket"]
-        self._rs_bracket = ctokens["rs_bracket"]
-        self._lc_bracket = ctokens["lc_bracket"]
-        self._unicode_flag = ctokens["unicode_flag"]
-        self._ascii_flag = tokens["ascii_flag"]
-        self._end = ctokens["end"]
-        self._re_property_strip = tokens['re_property_strip']
-        self._re_property_gc = tokens.get('re_property_gc', None)
-        self._uni_prop = tokens["uni_prop"]
-        self._inverse_uni_prop = tokens["inverse_uni_prop"]
-        self._lc = ctokens["lc"]
-        self._lc_span = ctokens["lc_span"]
-        self._uc = ctokens["uc"]
-        self._uc_span = ctokens["uc_span"]
-        self._quote = ctokens["quote"]
-        self._negate = ctokens["negate"]
-        self._ascii_upper = tokens["ascii_upper"]
-        self._ascii_lower = tokens["ascii_lower"]
-        self._re_flags = tokens["re_flags"]
-        self._re_posix = tokens["re_posix"]
-        self._nl = ctokens["nl"]
-        self._lr_bracket = ctokens["lr_bracket"]
-        self._rr_bracket = ctokens["rr_bracket"]
-        self._hashtag = ctokens["hashtag"]
-        self._unicode_name = ctokens["unicode_name"]
-        self._escape = ctokens["escape"]
-        self._re_escape = ctokens["re_escape"]
-        self._new_refs = tokens["new_refs"]
         self.search = search
         self.re_verbose = re_verbose
         self.re_unicode = re_unicode
@@ -883,35 +804,35 @@ class SearchTemplate(object):
         i = SearchTokens(string, is_binary=self.binary)
         iter(i)
         for t in i:
-            if not escaped and t == self._b_slash:
+            if not escaped and t == "\\":
                 escaped = True
             elif escaped:
                 escaped = False
-                if t == self._end:
+                if t == "E":
                     if in_quotes:
-                        current.append(escape(self._empty.join(quoted)))
+                        current.append(escape("".join(quoted)))
                         quoted = []
                         in_quotes = False
-                elif t == self._quote and not in_quotes:
+                elif t == "Q" and not in_quotes:
                     in_quotes = True
                 elif in_quotes:
-                    quoted.extend([self._b_slash, t])
+                    quoted.extend(["\\", t])
                 else:
-                    current.extend([self._b_slash, t])
+                    current.extend(["\\", t])
             elif in_quotes:
                 quoted.extend(t)
             else:
                 current.append(t)
 
         if in_quotes and escaped:
-            quoted.append(self._b_slash)
+            quoted.append("\\")
         elif escaped:
-            current.append(self._b_slash)
+            current.append("\\")
 
         if quoted:
-            current.append(escape(self._empty.join(quoted)))
+            current.append(escape("".join(quoted)))
 
-        return self._empty.join(current)
+        return "".join(current)
 
     def verbose_comment(self, t, i):
         """Handle verbose comments."""
@@ -920,14 +841,14 @@ class SearchTemplate(object):
         escaped = False
 
         try:
-            while t != self._nl:
-                if not escaped and t == self._b_slash:
+            while t != "\n":
+                if not escaped and t == "\\":
                     escaped = True
                     current.append(t)
                 elif escaped:
                     escaped = False
                     if t in self._new_refs:
-                        current.append(self._b_slash)
+                        current.append("\\")
                     current.append(t)
                 else:
                     current.append(t)
@@ -935,7 +856,7 @@ class SearchTemplate(object):
         except StopIteration:
             pass
 
-        if t == self._nl:
+        if t == "\n":
             current.append(t)
         return current
 
@@ -943,13 +864,13 @@ class SearchTemplate(object):
         """Analyze flags."""
 
         retry = False
-        if compat.PY3 and self._ascii_flag in text and self.unicode:
+        if compat.PY3 and 'a' in text and self.unicode:
             self.unicode = False
             retry = True
-        if self._unicode_flag in text and not self.unicode:
+        if 'u' in text and not self.unicode:
             self.unicode = True
             retry = True
-        if self._verbose_flag in text and not self.verbose:
+        if 'x' in text and not self.verbose:
             self.verbose = True
         if retry:
             raise GlobalRetryException('Global Retry')
@@ -964,32 +885,32 @@ class SearchTemplate(object):
         except StopIteration:
             return [t]
 
-        if t == self._escape:
+        if t == "e":
             current.append(self._re_escape)
-        elif t == self._lc:
+        elif t == "l":
             current.extend(self.letter_case_props(_LOWER, False))
-        elif t == self._lc_span:
+        elif t == "L":
             current.extend(self.letter_case_props(_LOWER, False, negate=True))
-        elif t == self._uc:
+        elif t == "c":
             current.extend(self.letter_case_props(_UPPER, False))
-        elif t == self._uc_span:
+        elif t == "C":
             current.extend(self.letter_case_props(_UPPER, False, negate=True))
 
-        elif t == self._uni_prop:
+        elif t == 'p':
             text = i.get_unicode_property()
-            if text.startswith(self._lc_bracket):
+            if text.startswith("{"):
                 text = text[1:-1]
             current.extend(self.unicode_props(text, False))
-        elif t == self._inverse_uni_prop:
+        elif t == 'P':
             text = i.get_unicode_property()
-            if text.startswith(self._lc_bracket):
+            if text.startswith("{"):
                 text = text[1:-1]
             current.extend(self.unicode_props(text, False, negate=True))
-        elif t == self._unicode_name:
+        elif t == "N":
             text = i.get_named_property()[1:-1]
             current.extend(self.unicode_name(text, False))
         else:
-            current.extend([self._b_slash, t])
+            current.extend(["\\", t])
         return current
 
     def subgroup(self, t, i):
@@ -1017,7 +938,7 @@ class SearchTemplate(object):
             retry = False
             current = []
             try:
-                while t != self._rr_bracket:
+                while t != ")":
                     if not current:
                         current.append(t)
                     else:
@@ -1031,7 +952,7 @@ class SearchTemplate(object):
                 pass
         self.verbose = verbose
 
-        if t == self._rr_bracket:
+        if t == ")":
             current.append(t)
         return current
 
@@ -1047,43 +968,43 @@ class SearchTemplate(object):
 
         try:
             while True:
-                if not escaped and t == self._b_slash:
+                if not escaped and t == "\\":
                     escaped = True
                 elif escaped:
                     escaped = False
-                    if t == self._escape:
+                    if t == "e":
                         current.append(self._re_escape)
-                    elif t == self._lc:
+                    elif t == "l":
                         current.extend(self.letter_case_props(_LOWER, True))
-                    elif t == self._lc_span:
+                    elif t == "L":
                         current.extend(self.letter_case_props(_LOWER, True, negate=True))
-                    elif t == self._uc:
+                    elif t == "c":
                         current.extend(self.letter_case_props(_UPPER, True))
-                    elif t == self._uc_span:
+                    elif t == "C":
                         current.extend(self.letter_case_props(_UPPER, True, negate=True))
-                    elif t == self._uni_prop:
+                    elif t == 'p':
                         text = i.get_unicode_property()
-                        if text.startswith(self._lc_bracket):
+                        if text.startswith("{"):
                             text = text[1:-1]
                         current.extend(self.unicode_props(text, True))
                         found_property = True
-                    elif t == self._inverse_uni_prop:
+                    elif t == 'P':
                         text = i.get_unicode_property()
-                        if text.startswith(self._lc_bracket):
+                        if text.startswith("{"):
                             text = text[1:-1]
                         current.extend(self.unicode_props(text, True, negate=True))
                         found_property = True
-                    elif t == self._unicode_name:
+                    elif t == "N":
                         text = i.get_named_property()[1:-1]
                         current.extend(self.unicode_name(text, True))
                         found_property = True
                     else:
-                        current.extend([self._b_slash, t])
-                elif t == self._ls_bracket and not found:
+                        current.extend(["\\", t])
+                elif t == "[" and not found:
                     found = True
                     first = pos
                     current.append(t)
-                elif t == self._ls_bracket:
+                elif t == "[":
                     posix = i.get_posix()
                     if posix:
                         current.extend(self.posix_props(posix, in_group=True))
@@ -1091,10 +1012,10 @@ class SearchTemplate(object):
                         pos = i.index - 2
                     else:
                         current.append(t)
-                elif t == self._negate and found and (pos == first + 1):
+                elif t == "^" and found and (pos == first + 1):
                     first = pos
                     current.append(t)
-                elif t == self._rs_bracket and found and (pos != first + 1):
+                elif t == "]" and found and (pos != first + 1):
                     found = False
                     current.append(t)
                     break
@@ -1113,7 +1034,7 @@ class SearchTemplate(object):
         # either the Unicode char limit on a narrow system,
         # or the ASCII limit in a byte string pattern.
         if found_property:
-            value = self._empty.join(current)
+            value = "".join(current)
             if value == '[]':
                 # We specified some properities, but they are all
                 # out of reach.  Therefore we can match nothing.
@@ -1130,13 +1051,13 @@ class SearchTemplate(object):
 
         current = []
 
-        if t == self._b_slash:
+        if t == "\\":
             current.extend(self.reference(t, i))
-        elif t == self._lr_bracket:
+        elif t == "(":
             current.extend(self.subgroup(t, i))
-        elif self.verbose and t == self._hashtag:
+        elif self.verbose and t == "#":
             current.extend(self.verbose_comment(t, i))
-        elif t == self._ls_bracket:
+        elif t == "[":
             current.extend(self.char_groups(t, i))
         else:
             current.append(t)
@@ -1168,10 +1089,10 @@ class SearchTemplate(object):
 
         value = ord(unicodedata.lookup(name))
         if (self.binary and value > 0xFF) or (not self.binary and NARROW and value > MAXUNICODE):
-            value = self._empty
-        if not in_group and value == self._empty:
+            value = ""
+        if not in_group and value == "":
             return '[^%s]' % ('\x00-\xff' if self.binary else uniprops.UNICODE_RANGE)
-        elif value == self._empty:
+        elif value == "":
             return value
         else:
             return ['\\%03o' % value if value <= 0xFF else compat.uchr(value)]
@@ -1185,13 +1106,13 @@ class SearchTemplate(object):
         """
 
         # 'GC = Some_Unpredictable-Category Name' -> 'gc=someunpredictablecategoryname'
-        props = self._re_property_strip.sub(self._empty, props.lower())
+        props = self._re_property_strip.sub("", props.lower())
         category = None
 
         # \p{^negated} Strip off the caret after evaluation.
-        if props.startswith(self._negate):
+        if props.startswith("^"):
             negate = not negate
-        if props.startswith(self._negate):
+        if props.startswith("^"):
             props = props[1:]
 
         # Get the property and value.
@@ -1211,11 +1132,11 @@ class SearchTemplate(object):
             else:
                 raise ValueError('Invalid Unicode property!')
 
-        v = uniprops.get_unicode_property((self._negate if negate else self._empty) + props, category, self.binary)
+        v = uniprops.get_unicode_property(("^" if negate else "") + props, category, self.binary)
         if not in_group:
             if not v:
                 v = '^%s' % ('\x00-\xff' if self.binary else uniprops.UNICODE_RANGE)
-            v = self._ls_bracket + v + self._rs_bracket
+            v = "[%s]" % v
         properties = [v]
 
         return properties
@@ -1227,18 +1148,10 @@ class SearchTemplate(object):
         #    1. The strings fed in are not binary
         #    2. And the the unicode flag was used
         if not in_group:
-            v = self.posix_props(
-                (self._negate if negate else self._empty) +
-                (self._ascii_upper if case == _UPPER else self._ascii_lower),
-                in_group=in_group
-            )
-            v[0] = self._ls_bracket + v[0] + self._rs_bracket
+            v = self.posix_props(("^" if negate else "") + ("upper" if case == _UPPER else "lower"), in_group=in_group)
+            v[0] = "[%s]" % v[0]
         else:
-            v = self.posix_props(
-                (self._negate if negate else self._empty) +
-                (self._ascii_upper if case == _UPPER else self._ascii_lower),
-                in_group=in_group
-            )
+            v = self.posix_props(("^" if negate else "") + ("upper" if case == _UPPER else "lower"), in_group=in_group)
         return v
 
     def main_group(self, i):
@@ -1283,7 +1196,7 @@ class SearchTemplate(object):
                 i.rewind(0)
                 retry = True
 
-        return self._empty.join(new_pattern).encode('latin-1') if self.binary else self._empty.join(new_pattern)
+        return "".join(new_pattern).encode('latin-1') if self.binary else "".join(new_pattern)
 
 
 # Template expander

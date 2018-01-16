@@ -41,7 +41,6 @@ import functools
 import unicodedata
 from collections import namedtuple
 from . import compat
-from . import common_tokens as ctok
 try:
     import regex
     REGEX_SUPPORT = True
@@ -100,86 +99,6 @@ if REGEX_SUPPORT:
 
     _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 
-    tokens = {
-        "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
-        "re_comments": re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII),
-        "regex_flags": re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)', _SEARCH_ASCII),
-        "regex_flags_v0": re.compile(r'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)', _SEARCH_ASCII),
-        "scoped_regex_flags": re.compile(r'\(\?(?:-?[ixmsfw])+:', _SEARCH_ASCII),
-        "scoped_regex_flags_v0": re.compile(r'\(\?(?:[imsfwx])+:', _SEARCH_ASCII),
-        "replace_group_ref": re.compile(
-            r'''(?x)
-            (\\)|
-            (
-                [0-7]{3}|
-                [1-9][0-9]?|
-                [cClLEabfrtnv]|
-                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
-                U(?:[0-9a-fA-F]{8})?|
-                u(?:[0-9a-fA-F]{4})?|
-                x(?:[0-9a-fA-F]{2})?|
-                N(?:\{[\w ]+\})?
-            )
-            ''',
-            _SEARCH_ASCII
-        ),
-        "binary_replace_group_ref": re.compile(
-            r'''(?x)
-            (\\)|
-            (
-                [0-7]{3}|
-                [1-9][0-9]?|
-                [cClLEabfrtnv]|
-                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
-                x(?:[0-9a-fA-F]{2})?
-            )
-            ''',
-            _SEARCH_ASCII
-        ),
-        "format_replace_ref": re.compile(
-            r'''(?x)
-            (\\)|
-            (
-                [cClLEabfrtnv]|
-                U(?:[0-9a-fA-F]{8})?|
-                u(?:[0-9a-fA-F]{4})?|
-                x(?:[0-9a-fA-F]{2})?|
-                [0-7]{1,3}|
-                (
-                    g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
-                )|
-                N(?:\{[\w ]+\})?
-            )|
-            (\{)''',
-            _SEARCH_ASCII
-        ),
-        "binary_format_replace_ref": re.compile(
-            r'''(?x)
-            (\\)|
-            (
-                [cClLEabfrtnv]|
-                x(?:[0-9a-fA-F]{2})?|
-                [0-7]{1,3}|
-                (
-                    g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
-                )
-            )|
-            (\{)''',
-            _SEARCH_ASCII
-        ),
-        "format_replace_group": re.compile(
-            r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
-            _SEARCH_ASCII
-        ),
-        'verbose_off': '-x',
-        "line_break": 'R',
-        "re_line_break": r'(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)',
-        "binary_re_line_break": r'(?>\r\n|\n|\x0b|\f|\r|\x85)',
-        "v0": 'V0',
-        "v1": 'V1',
-        "new_refs": ("e", "R", "Q", "E")
-    }
-
     class RetryException(Exception):
         """Retry exception."""
 
@@ -189,19 +108,18 @@ if REGEX_SUPPORT:
     class RegexSearchTokens(compat.Tokens):
         """Preprocess replace tokens."""
 
+        _re_posix = re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII)
+        _re_comments = re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII)
+        _regex_flags = re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)', _SEARCH_ASCII)
+        _regex_flags_v0 = re.compile(r'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)', _SEARCH_ASCII)
+        _scoped_regex_flags = re.compile(r'\(\?(?:-?[ixmsfw])+:', _SEARCH_ASCII)
+        _scoped_regex_flags_v0 = re.compile(r'\(\?(?:[imsfwx])+:', _SEARCH_ASCII)
+
         def __init__(self, string, is_binary=False):
             """Initialize."""
 
             self.string = string
             self.binary = is_binary
-
-            self._re_posix = tokens["re_posix"]
-            self._regex_flags = tokens["regex_flags"]
-            self._regex_flags_v0 = tokens["regex_flags_v0"]
-            self._scoped_regex_flags = tokens["scoped_regex_flags"]
-            self._scoped_regex_flags_v0 = tokens["scoped_regex_flags_v0"]
-            self._re_comments = tokens["re_comments"]
-
             self.max_index = len(string) - 1
             self.index = 0
             self.current = None
@@ -282,35 +200,89 @@ if REGEX_SUPPORT:
     class ReplaceTokens(compat.Tokens):
         """Preprocess replace tokens."""
 
+        _long_replace_refs = ("u", "U", "g", "x", "N")
+        _replace_group_ref = re.compile(
+            r'''(?x)
+            (\\)|
+            (
+                [0-7]{3}|
+                [1-9][0-9]?|
+                [cClLEabfrtnv]|
+                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
+                U(?:[0-9a-fA-F]{8})?|
+                u(?:[0-9a-fA-F]{4})?|
+                x(?:[0-9a-fA-F]{2})?|
+                N(?:\{[\w ]+\})?
+            )
+            ''',
+            _SEARCH_ASCII
+        )
+        _binary_replace_group_ref = re.compile(
+            r'''(?x)
+            (\\)|
+            (
+                [0-7]{3}|
+                [1-9][0-9]?|
+                [cClLEabfrtnv]|
+                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
+                x(?:[0-9a-fA-F]{2})?
+            )
+            ''',
+            _SEARCH_ASCII
+        )
+        _format_replace_ref = re.compile(
+            r'''(?x)
+            (\\)|
+            (
+                [cClLEabfrtnv]|
+                U(?:[0-9a-fA-F]{8})?|
+                u(?:[0-9a-fA-F]{4})?|
+                x(?:[0-9a-fA-F]{2})?|
+                [0-7]{1,3}|
+                (
+                    g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
+                )|
+                N(?:\{[\w ]+\})?
+            )|
+            (\{)''',
+            _SEARCH_ASCII
+        )
+        _binary_format_replace_ref = re.compile(
+            r'''(?x)
+            (\\)|
+            (
+                [cClLEabfrtnv]|
+                x(?:[0-9a-fA-F]{2})?|
+                [0-7]{1,3}|
+                (
+                    g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
+                )
+            )|
+            (\{)''',
+            _SEARCH_ASCII
+        )
+        _format_replace_group = re.compile(
+            r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
+            _SEARCH_ASCII
+        )
+
         def __init__(self, string, use_format=False, is_binary=False):
             """Initialize."""
 
             self.string = string
             self.binary = is_binary
 
-            ctokens = ctok.tokens
-
             self.use_format = use_format
             if self.binary:
                 if use_format:
-                    self._replace_ref = tokens["binary_format_replace_ref"]
+                    self._replace_ref = self._binary_format_replace_ref
                 else:
-                    self._replace_ref = tokens["binary_replace_group_ref"]
+                    self._replace_ref = self._binary_replace_group_ref
             else:
                 if use_format:
-                    self._replace_ref = tokens["format_replace_ref"]
+                    self._replace_ref = self._format_replace_ref
                 else:
-                    self._replace_ref = tokens["replace_group_ref"]
-            self._unicode_narrow = ctokens["unicode_narrow"]
-            self._unicode_wide = ctokens["unicode_wide"]
-            self._hex = ctokens["hex"]
-            self._group = ctokens["group"]
-            self._unicode_name = ctokens["unicode_name"]
-            self._long_replace_refs = ctokens["long_replace_refs"]
-            self._format_replace_group = tokens["format_replace_group"]
-            self._lc_bracket = ctokens["lc_bracket"]
-            self._rc_bracket = ctokens["rc_bracket"]
-            self._b_slash = ctokens["b_slash"]
+                    self._replace_ref = self._replace_group_ref
             self.max_index = len(string) - 1
             self.index = 0
             self.current = None
@@ -331,27 +303,27 @@ if REGEX_SUPPORT:
                 raise StopIteration
 
             char = self.string[self.index]
-            if char == self._b_slash:
+            if char == "\\":
                 m = self._replace_ref.match(self.string, self.index + 1)
                 if m:
                     ref = m.group(0)
                     if len(ref) == 1 and ref in self._long_replace_refs:
-                        if ref == self._hex:
+                        if ref == "x":
                             raise SyntaxError('Format for byte is \\xXX!')
-                        elif ref == self._group:
+                        elif ref == "g":
                             raise SyntaxError('Format for group is \\g<group_name_or_index>!')
-                        elif ref == self._unicode_name:
+                        elif ref == "N":
                             raise SyntaxError('Format for Unicode name is \\N{name}!')
-                        elif ref == self._unicode_narrow:  # pragma: no cover
+                        elif ref == "u":  # pragma: no cover
                             raise SyntaxError('Format for Unicode is \\uXXXX!')
-                        elif ref == self._unicode_wide:  # pragma: no cover
+                        elif ref == "U":  # pragma: no cover
                             raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
                     if self.use_format and (m.group(3) or m.group(4)):
-                        char += self._b_slash
+                        char += "\\"
                         self.index -= 1
                     if not self.use_format or not m.group(4):
                         char += m.group(1) if m.group(1) else m.group(2)
-            elif self.use_format and char in (self._lc_bracket, self._rc_bracket):
+            elif self.use_format and char in ("{", "}"):
                 m = self._format_replace_group.match(self.string, self.index)
                 if m:
                     if m.group(2):
@@ -368,6 +340,11 @@ if REGEX_SUPPORT:
     class RegexSearchTemplate(object):
         """Search Template."""
 
+        _new_refs = ("e", "R", "Q", "E")
+        _re_escape = r"\x1b"
+        _line_break = r'(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)'
+        _binary_line_break = r'(?>\r\n|\n|\x0b|\f|\r|\x85)'
+
         def __init__(self, search, re_verbose=False, re_version=0):
             """Initialize."""
 
@@ -376,33 +353,10 @@ if REGEX_SUPPORT:
             else:
                 self.binary = False
 
-            ctokens = ctok.tokens
-
-            self._verbose_flag = ctokens["verbose_flag"]
-            self._empty = ctokens["empty"]
-            self._b_slash = ctokens["b_slash"]
-            self._ls_bracket = ctokens["ls_bracket"]
-            self._rs_bracket = ctokens["rs_bracket"]
-            self._end = ctokens["end"]
-            self._quote = ctokens["quote"]
-            self._negate = ctokens["negate"]
-            self._regex_flags = tokens["regex_flags"]
-            self._re_posix = tokens["re_posix"]
-            self._nl = ctokens["nl"]
-            self._lr_bracket = ctokens["lr_bracket"]
-            self._rr_bracket = ctokens["rr_bracket"]
-            self._hashtag = ctokens["hashtag"]
-            self._line_break = tokens["line_break"]
-            self._escape = ctokens["escape"]
-            self._re_escape = ctokens["re_escape"]
-            self._V0 = tokens["v0"]
-            self._V1 = tokens["v1"]
             if self.binary:
-                self._re_line_break = tokens["binary_re_line_break"]
+                self._re_line_break = self._binary_line_break
             else:
-                self._re_line_break = tokens["re_line_break"]
-            self._new_refs = tokens["new_refs"]
-            self._verbose_off = tokens["verbose_off"]
+                self._re_line_break = self._line_break
             self.re_verbose = re_verbose
             self.re_version = re_version
             self.search = search
@@ -417,35 +371,35 @@ if REGEX_SUPPORT:
             i = RegexSearchTokens(string, is_binary=self.binary)
             iter(i)
             for t in i:
-                if not escaped and t == self._b_slash:
+                if not escaped and t == "\\":
                     escaped = True
                 elif escaped:
                     escaped = False
-                    if t == self._end:
+                    if t == "E":
                         if in_quotes:
-                            current.append(escape(self._empty.join(quoted)))
+                            current.append(escape("".join(quoted)))
                             quoted = []
                             in_quotes = False
-                    elif t == self._quote and not in_quotes:
+                    elif t == "Q" and not in_quotes:
                         in_quotes = True
                     elif in_quotes:
-                        quoted.extend([self._b_slash, t])
+                        quoted.extend(["\\", t])
                     else:
-                        current.extend([self._b_slash, t])
+                        current.extend(["\\", t])
                 elif in_quotes:
                     quoted.extend(t)
                 else:
                     current.append(t)
 
             if in_quotes and escaped:
-                quoted.append(self._b_slash)
+                quoted.append("\\")
             elif escaped:
-                current.append(self._b_slash)
+                current.append("\\")
 
             if quoted:
-                current.append(escape(self._empty.join(quoted)))
+                current.append(escape("".join(quoted)))
 
-            return self._empty.join(current)
+            return "".join(current)
 
         def verbose_comment(self, t, i):
             """Handle verbose comments."""
@@ -454,14 +408,14 @@ if REGEX_SUPPORT:
             escaped = False
 
             try:
-                while t != self._nl:
-                    if not escaped and t == self._b_slash:
+                while t != "\n":
+                    if not escaped and t == "\\":
                         escaped = True
                         current.append(t)
                     elif escaped:
                         escaped = False
                         if t in self._new_refs:
-                            current.append(self._b_slash)
+                            current.append("\\")
                         current.append(t)
                     else:
                         current.append(t)
@@ -469,7 +423,7 @@ if REGEX_SUPPORT:
             except StopIteration:
                 pass
 
-            if t == self._nl:
+            if t == "\n":
                 current.append(t)
             return current
 
@@ -478,18 +432,18 @@ if REGEX_SUPPORT:
 
             retry = False
             global_retry = False
-            if self.version == VERSION1 and self._verbose_off in text and self.verbose:
+            if self.version == VERSION1 and '-x' in text and self.verbose:
                 self.verbose = False
                 retry = True
-            elif self._verbose_flag in text and not self.verbose:
+            elif 'x' in text and not self.verbose:
                 self.verbose = True
                 retry = True
-            if self._V0 in text and self.version == VERSION1:  # pragma: no cover
+            if "V0" in text and self.version == VERSION1:  # pragma: no cover
                 # Default is V0 if none is selected,
                 # so it is unlikely that this will be selected.
                 self.version = VERSION0
                 global_retry = True
-            elif self._V1 in text and self.version == VERSION0:
+            elif "V1" in text and self.version == VERSION0:
                 self.version = VERSION1
                 global_retry = True
             if global_retry:
@@ -507,12 +461,12 @@ if REGEX_SUPPORT:
             except StopIteration:
                 return [t]
 
-            if t == self._line_break:
+            if t == "R":
                 current.append(self._re_line_break)
-            elif t == self._escape:
+            elif t == 'e':
                 current.extend(self._re_escape)
             else:
-                current.extend([self._b_slash, t])
+                current.extend(["\\", t])
             return current
 
         def subgroup(self, t, i):
@@ -549,7 +503,7 @@ if REGEX_SUPPORT:
                 retry = False
                 current = []
                 try:
-                    while t != self._rr_bracket:
+                    while t != ")":
                         if not current:
                             current.append(t)
                         else:
@@ -563,7 +517,7 @@ if REGEX_SUPPORT:
                     pass
             self.verbose = verbose
 
-            if t == self._rr_bracket:
+            if t == ")":
                 current.append(t)
             return current
 
@@ -579,19 +533,19 @@ if REGEX_SUPPORT:
 
             try:
                 while True:
-                    if not escaped and t == self._b_slash:
+                    if not escaped and t == "\\":
                         escaped = True
                     elif escaped:
                         escaped = False
-                        if t == self._escape:
+                        if t == 'e':
                             current.append(self._re_escape)
                         else:
-                            current.extend([self._b_slash, t])
-                    elif t == self._ls_bracket and not found:
+                            current.extend(["\\", t])
+                    elif t == "[" and not found:
                         found += 1
                         first = pos
                         current.append(t)
-                    elif t == self._ls_bracket and found and self.version == V1:
+                    elif t == "[" and found and self.version == V1:
                         # Start of sub char set found
                         posix = None if self.binary else i.get_posix()
                         if posix:
@@ -601,27 +555,27 @@ if REGEX_SUPPORT:
                             found += 1
                             sub_first = pos
                             current.append(t)
-                    elif t == self._ls_bracket:
+                    elif t == "[":
                         posix = None if self.binary else i.get_posix()
                         if posix:
                             current.append(posix)
                             pos = i.index - 2
                         else:
                             current.append(t)
-                    elif t == self._negate and found == 1 and (pos == first + 1):
+                    elif t == "^" and found == 1 and (pos == first + 1):
                         # Found ^ at start of first char set; adjust 1st char pos
                         current.append(t)
                         first = pos
-                    elif self.version == V1 and t == self._negate and found > 1 and (pos == sub_first + 1):
+                    elif self.version == V1 and t == "^" and found > 1 and (pos == sub_first + 1):
                         # Found ^ at start of sub char set; adjust 1st char sub pos
                         current.append(t)
                         sub_first = pos
-                    elif t == self._rs_bracket and found == 1 and (pos != first + 1):
+                    elif t == "]" and found == 1 and (pos != first + 1):
                         # First char set closed; log range
                         current.append(t)
                         found = 0
                         break
-                    elif self.version == V1 and t == self._rs_bracket and found > 1 and (pos != sub_first + 1):
+                    elif self.version == V1 and t == "]" and found > 1 and (pos != sub_first + 1):
                         # Sub char set closed; decrement depth counter
                         found -= 1
                         current.append(t)
@@ -641,13 +595,13 @@ if REGEX_SUPPORT:
 
             current = []
 
-            if t == self._b_slash:
+            if t == "\\":
                 current.extend(self.reference(t, i))
-            elif t == self._lr_bracket:
+            elif t == "(":
                 current.extend(self.subgroup(t, i))
-            elif self.verbose and t == self._hashtag:
+            elif self.verbose and t == "#":
                 current.extend(self.verbose_comment(t, i))
-            elif t == self._ls_bracket:
+            elif t == "[":
                 current.extend(self.char_groups(t, i))
             else:
                 current.append(t)
@@ -689,10 +643,17 @@ if REGEX_SUPPORT:
                     i.rewind(0)
                     retry = True
 
-            return self._empty.join(new_pattern).encode('latin-1') if self.binary else self._empty.join(new_pattern)
+            return "".join(new_pattern).encode('latin-1') if self.binary else "".join(new_pattern)
 
     class ReplaceTemplate(object):
         """Pre-replace template."""
+
+        _ascii_letters = (
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+            'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+        )
 
         def __init__(self, pattern, template, use_format=False):
             """Initialize."""
@@ -702,31 +663,8 @@ if REGEX_SUPPORT:
             else:
                 self.binary = False
 
-            ctokens = ctok.tokens
-
             self.use_format = use_format
             self._original = template
-            self._ascii_letters = ctokens["ascii_letters"]
-            self._esc_end = ctokens["esc_end"]
-            self._end = ctokens["end"]
-            self._ls_bracket = ctokens["ls_bracket"]
-            self._lc_bracket = ctokens["lc_bracket"]
-            self._lc = ctokens["lc"]
-            self._lc_span = ctokens["lc_span"]
-            self._uc = ctokens["uc"]
-            self._uc_span = ctokens["uc_span"]
-            self._group = ctokens["group"]
-            self._empty = ctokens["empty"]
-            self._group_start = ctokens["group_start"]
-            self._group_end = ctokens["group_end"]
-            self._binary = ctokens["binary"]
-            self._octal = ctokens["octal"]
-            self._hex = ctokens["hex"]
-            self._minus = ctokens["minus"]
-            self._zero = ctokens["zero"]
-            self._unicode_name = ctokens["unicode_name"]
-            self._unicode_narrow = ctokens["unicode_narrow"]
-            self._unicode_wide = ctokens["unicode_wide"]
             self.end_found = False
             self.group_slots = []
             self.literal_slots = []
@@ -773,11 +711,11 @@ if REGEX_SUPPORT:
                 is_binary=self.binary
             )
             iter(i)
-            self.result = [self._empty]
+            self.result = [""]
 
             for t in i:
                 if len(t) > 1:
-                    if self.use_format and t[0:1] == self._lc_bracket:
+                    if self.use_format and t[0:1] == "{":
                         self.handle_format_group(t[1:-1].strip())
                     else:
                         c = t[1:]
@@ -790,17 +728,17 @@ if REGEX_SUPPORT:
                                 self.result.append('\\u%04x' % value)
                             else:
                                 self.result.append('\\%03o' % value)
-                        elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                        elif not self.use_format and (c[0:1].isdigit() or c[0:1] == "g"):
                             self.handle_group(t)
-                        elif c == self._lc:
+                        elif c == "l":
                             self.single_case(i, _LOWER)
-                        elif c == self._lc_span:
+                        elif c == "L":
                             self.span_case(i, _LOWER)
-                        elif c == self._uc:
+                        elif c == "c":
                             self.single_case(i, _UPPER)
-                        elif c == self._uc_span:
+                        elif c == "C":
                             self.span_case(i, _UPPER)
-                        elif c == self._end:
+                        elif c == "E":
                             # This is here just as a reminder that \E is ignored
                             pass
                         else:
@@ -809,15 +747,15 @@ if REGEX_SUPPORT:
                     self.result.append(t)
 
             if len(self.result) > 1:
-                self.literal_slots.append(self._empty.join(self.result))
+                self.literal_slots.append("".join(self.result))
                 del self.result[:]
-                self.result.append(self._empty)
+                self.result.append("")
                 self.slot += 1
 
             if self.binary:
-                self._template = self._empty.join(self.literal_slots).encode('latin-1')
+                self._template = "".join(self.literal_slots).encode('latin-1')
             else:
-                self._template = self._empty.join(self.literal_slots)
+                self._template = "".join(self.literal_slots)
             self.groups, self.literals = self.regex_parse_template(self._template, pattern)
 
         def convert_case(self, value, case):
@@ -830,7 +768,7 @@ if REGEX_SUPPORT:
                         cased.append(c.lower() if case == _LOWER else c.upper())
                     else:
                         cased.append(c)
-                return self._empty.join(cased)
+                return "".join(cased)
             else:
                 return value.lower() if case == _LOWER else value.upper()
 
@@ -840,9 +778,9 @@ if REGEX_SUPPORT:
             self.span_stack.append(case)
             try:
                 t = next(i)
-                while t != self._esc_end:
+                while t != "\\E":
                     if len(t) > 1:
-                        if self.use_format and t[0:1] == self._lc_bracket:
+                        if self.use_format and t[0:1] == "{":
                             self.handle_format_group(t[1:-1].strip())
                         else:
                             c = t[1:]
@@ -862,17 +800,17 @@ if REGEX_SUPPORT:
                                     single = self.get_single_stack()
                                     value = ord(self.convert_case(text, single)) if single is not None else ord(text)
                                     self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
-                            elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                            elif not self.use_format and (c[0:1].isdigit() or c[0:1] == "g"):
                                 self.handle_group(t)
-                            elif c == self._uc:
+                            elif c == "c":
                                 self.single_case(i, _UPPER)
-                            elif c == self._lc:
+                            elif c == "l":
                                 self.single_case(i, _LOWER)
-                            elif c == self._uc_span:
+                            elif c == "C":
                                 self.span_case(i, _UPPER)
-                            elif c == self._lc_span:
+                            elif c == "L":
                                 self.span_case(i, _LOWER)
-                            elif not self.binary and first == self._unicode_name:
+                            elif not self.binary and first == "N":
                                 uc = unicodedata.lookup(t[3:-1])
                                 text = self.convert_case(uc, case)
                                 single = self.get_single_stack()
@@ -880,14 +818,14 @@ if REGEX_SUPPORT:
                                 self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                             elif (
                                 not self.binary and
-                                (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
+                                (first == "u" or (not NARROW and first == "U"))
                             ):
                                 uc = compat.uchr(int(t[2:], 16))
                                 text = self.convert_case(uc, case)
                                 single = self.get_single_stack()
                                 value = ord(self.convert_case(text, single)) if single is not None else ord(text)
                                 self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
-                            elif first == self._hex:
+                            elif first == "x":
                                 hc = chr(int(t[2:], 16))
                                 text = self.convert_case(hc, case)
                                 single = self.get_single_stack()
@@ -918,7 +856,7 @@ if REGEX_SUPPORT:
             try:
                 t = next(i)
                 if len(t) > 1:
-                    if self.use_format and t[0:1] == self._lc_bracket:
+                    if self.use_format and t[0:1] == "{":
                         self.handle_format_group(t[1:-1].strip())
                     else:
                         c = t[1:]
@@ -934,30 +872,30 @@ if REGEX_SUPPORT:
                             else:
                                 value = ord(self.convert_case(compat.uchr(value), self.get_single_stack()))
                                 self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
-                        elif not self.use_format and (c[0:1].isdigit() or c[0:1] == self._group):
+                        elif not self.use_format and (c[0:1].isdigit() or c[0:1] == "g"):
                                 self.handle_group(t)
-                        elif c == self._uc:
+                        elif c == "c":
                             self.single_case(i, _UPPER)
-                        elif c == self._lc:
+                        elif c == "l":
                             self.single_case(i, _LOWER)
-                        elif c == self._uc_span:
+                        elif c == "C":
                             self.span_case(i, _UPPER)
-                        elif c == self._lc_span:
+                        elif c == "L":
                             self.span_case(i, _LOWER)
-                        elif c == self._end:
+                        elif c == "E":
                             self.end_found = True
-                        elif not self.binary and first == self._unicode_name:
+                        elif not self.binary and first == "N":
                             uc = unicodedata.lookup(t[3:-1])
                             value = ord(self.convert_case(uc, self.get_single_stack()))
                             self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
                         elif (
                             not self.binary and
-                            (first == self._unicode_narrow or (not NARROW and first == self._unicode_wide))
+                            (first == "u" or (not NARROW and first == "U"))
                         ):
                             uc = compat.uchr(int(t[2:], 16))
                             value = ord(self.convert_case(uc, self.get_single_stack()))
                             self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
-                        elif first == self._hex:
+                        elif first == "x":
                             hc = chr(int(t[2:], 16))
                             self.result.append(
                                 "\\x%02x" % ord(self.convert_case(hc, self.get_single_stack()))
@@ -985,17 +923,17 @@ if REGEX_SUPPORT:
             capture = -1
             base = 10
             try:
-                index = text.index(self._ls_bracket)
+                index = text.index("[")
                 capture = text[index + 1:-1]
                 text = text[:index]
-                prefix = capture[1:3] if capture[0:1] == self._minus else capture[:2]
-                if prefix[0:1] == self._zero:
+                prefix = capture[1:3] if capture[0:1] == "-" else capture[:2]
+                if prefix[0:1] == "0":
                     char = prefix[-1:]
-                    if char == self._binary:
+                    if char == "b":
                         base = 2
-                    elif char == self._octal:
+                    elif char == "o":
                         base = 8
-                    elif char == self._hex:
+                    elif char == "x":
                         base = 16
             except ValueError:
                 pass
@@ -1007,7 +945,7 @@ if REGEX_SUPPORT:
                     raise ValueError("Capture index must be an integer!")
 
             # Handle auto or manual format
-            if text == self._empty:
+            if text == "":
                 if self.auto:
                     text = compat.int2str(self.auto_index)
                     self.auto_index += 1
@@ -1023,13 +961,13 @@ if REGEX_SUPPORT:
                 raise ValueError("Cannot switch to manual format during auto format!")
 
             if len(self.result) > 1:
-                self.literal_slots.append(self._empty.join(self.result))
-                self.literal_slots.extend([self._group_start, text, self._group_end])
+                self.literal_slots.append("".join(self.result))
+                self.literal_slots.extend(["\\g<", text, ">"])
                 del self.result[:]
-                self.result.append(self._empty)
+                self.result.append("")
                 self.slot += 1
             else:
-                self.literal_slots.extend([self._group_start, text, self._group_end])
+                self.literal_slots.extend(["\\g<", text, ">"])
 
             single = self.get_single_stack()
 
@@ -1049,10 +987,10 @@ if REGEX_SUPPORT:
             """Handle groups."""
 
             if len(self.result) > 1:
-                self.literal_slots.append(self._empty.join(self.result))
+                self.literal_slots.append("".join(self.result))
                 self.literal_slots.append(text)
                 del self.result[:]
-                self.result.append(self._empty)
+                self.result.append("")
                 self.slot += 1
             else:
                 self.literal_slots.append(text)
