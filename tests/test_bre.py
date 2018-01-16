@@ -21,6 +21,44 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_byte_string_named_chars(self):
+        """Test byte string named char."""
+
+        pattern = bre.compile_search(br'\N{Latin small letter a}')
+        self.assertEqual(
+            pattern.pattern,
+            br'\141'
+        )
+        self.assertTrue(pattern.match(b'a') is not None)
+
+        pattern = bre.compile_search(br'[^\N{Latin small letter a}]')
+        self.assertEqual(
+            pattern.pattern,
+            br'[^\141]'
+        )
+        self.assertTrue(pattern.match(b'b') is not None)
+
+        pattern = bre.compile_search(br'\N{black club suit}')
+        self.assertEqual(
+            pattern.pattern,
+            b'[^\x00-\xff]'
+        )
+        self.assertTrue(pattern.match(b'a') is None)
+
+        pattern = bre.compile_search(br'[\N{black club suit}]')
+        self.assertEqual(
+            pattern.pattern,
+            b'[^\x00-\xff]'
+        )
+        self.assertTrue(pattern.match(b'a') is None)
+
+        pattern = bre.compile_search(br'[^\N{black club suit}]')
+        self.assertEqual(
+            pattern.pattern,
+            b'[\x00-\xff]'
+        )
+        self.assertTrue(pattern.match(b'a') is not None)
+
     def test_escape_char(self):
         """Test escape char."""
 

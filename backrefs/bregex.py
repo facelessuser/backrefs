@@ -177,8 +177,7 @@ if REGEX_SUPPORT:
         "binary_re_line_break": r'(?>\r\n|\n|\x0b|\f|\r|\x85)',
         "v0": 'V0',
         "v1": 'V1',
-        "new_refs": ("e", "R", "Q", "E"),
-        "binary_new_refs": ("e", "R", "Q", "E")
+        "new_refs": ("e", "R", "Q", "E")
     }
 
     class RetryException(Exception):
@@ -400,10 +399,9 @@ if REGEX_SUPPORT:
             self._V1 = tokens["v1"]
             if self.binary:
                 self._re_line_break = tokens["binary_re_line_break"]
-                self._new_refs = tokens["binary_new_refs"]
             else:
-                self._new_refs = tokens["new_refs"]
                 self._re_line_break = tokens["re_line_break"]
+            self._new_refs = tokens["new_refs"]
             self._verbose_off = tokens["verbose_off"]
             self.re_verbose = re_verbose
             self.re_version = re_version

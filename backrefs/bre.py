@@ -191,8 +191,7 @@ tokens = {
     "ascii_lower": 'lower',
     "ascii_upper": 'upper',
     "ascii_flag": "a",
-    "new_refs": ("e", "l", "L", "c", "C", "p", "P", "N", "Q", "E"),
-    "binary_new_refs": ("e", "l", "L", "c", "C", "Q", "E")
+    "new_refs": ("e", "l", "L", "c", "C", "p", "P", "N", "Q", "E")
 }
 
 
@@ -869,10 +868,7 @@ class SearchTemplate(object):
         self._unicode_name = ctokens["unicode_name"]
         self._escape = ctokens["escape"]
         self._re_escape = ctokens["re_escape"]
-        if self.binary:
-            self._new_refs = tokens["binary_new_refs"]
-        else:
-            self._new_refs = tokens["new_refs"]
+        self._new_refs = tokens["new_refs"]
         self.search = search
         self.re_verbose = re_verbose
         self.re_unicode = re_unicode
@@ -989,9 +985,9 @@ class SearchTemplate(object):
             if text.startswith(self._lc_bracket):
                 text = text[1:-1]
             current.extend(self.unicode_props(text, False, negate=True))
-        elif not self.binary and t == self._unicode_name:
+        elif t == self._unicode_name:
             text = i.get_named_property()[1:-1]
-            current.extend(self.unicode_name(text))
+            current.extend(self.unicode_name(text, False))
         else:
             current.extend([self._b_slash, t])
         return current
@@ -1077,9 +1073,10 @@ class SearchTemplate(object):
                             text = text[1:-1]
                         current.extend(self.unicode_props(text, True, negate=True))
                         found_property = True
-                    elif not self.binary and t == self._unicode_name:
+                    elif t == self._unicode_name:
                         text = i.get_named_property()[1:-1]
-                        current.extend(self.unicode_name(text))
+                        current.extend(self.unicode_name(text, True))
+                        found_property = True
                     else:
                         current.extend([self._b_slash, t])
                 elif t == self._ls_bracket and not found:
@@ -1166,11 +1163,18 @@ class SearchTemplate(object):
 
         return [pattern]
 
-    def unicode_name(self, name):
+    def unicode_name(self, name, in_group=False):
         """Insert Unicode value by its name."""
 
         value = ord(unicodedata.lookup(name))
-        return ['\\%03o' % value if value <= 0xFF else compat.uchr(value)]
+        if (self.binary and value > 0xFF) or (not self.binary and NARROW and value > MAXUNICODE):
+            value = self._empty
+        if not in_group and value == self._empty:
+            return '[^%s]' % ('\x00-\xff' if self.binary else uniprops.UNICODE_RANGE)
+        elif value == self._empty:
+            return value
+        else:
+            return ['\\%03o' % value if value <= 0xFF else compat.uchr(value)]
 
     def unicode_props(self, props, in_group, negate=False):
         """

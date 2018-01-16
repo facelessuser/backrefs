@@ -156,7 +156,7 @@ Back\ References      | Description
 `\P{UnicodeProperty}` | Inverse Unicode property character class. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
 `\PX`                 | Inverse Unicode property character class where `X` is the uppercase letter that represents the General Category property. For instance, `\PL` would be equivalent to `\P{L}` or `\P{Letter}`.
 `[[:alnum:]]`         | Though not really a back reference, support for Posix style character classes is available. See [Posix Style Properties](#posix-style-properties) for more info.
-`\N{UnicodeName}`     | Named characters are are normally ignored in Re, but Backrefs adds support for them. Like `\p` and `\P`, search string must be a Unicode string.
+`\N{UnicodeName}`     | Named characters are are normally ignored in Re, but Backrefs adds support for them.
 
 ### Regex
 
@@ -195,7 +195,7 @@ Back&nbsp;References | Description
 
 There are quite a few properties that are also supported and an exhaustive list is not currently provided. This documentation will only briefly touch on `General_Category`, `Block`, `Script`, and binary properties.
 
-Unicode properties can be used with the format: `\p{property=value}`, `\p{property:value}`, `\p{value}`, `\p{^property=value}`, `\p{^value}`.  Though you don't have to specify the `UNICODE` flag, the search pattern must be a Unicode string and the search buffer must also be Unicode.
+Unicode properties can be used with the format: `\p{property=value}`, `\p{property:value}`, `\p{value}`, `\p{^property=value}`, `\p{^value}`. Unicode properties can be used in byte strings, but the patterns will be restricted to the range `\x00-\xff`.
 
 The inverse of properties can also be used to specify everything not in a Unicode property: `\P{value}` or `\p{^value}` etc.  They are only used in the search patterns. Only one property may specified between the curly braces.  If you want to use multiple properties, you can place them in a character class: `[\p{UnicodeProperty}\p{OtherUnicodeProperty}]`.
 
