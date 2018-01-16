@@ -58,7 +58,7 @@ def generate_unicode_table():
     fp, pathname, desc = imp.find_module('unipropgen', [path])
     try:
         unipropgen = imp.load_module('unipropgen', fp, pathname, desc)
-        unipropgen.build_unicode_property_table(
+        unipropgen.build_tables(
             os.path.join(
                 os.path.dirname(__file__),
                 'backrefs', 'uniprops', 'unidata'

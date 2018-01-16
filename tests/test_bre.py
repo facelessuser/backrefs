@@ -21,6 +21,58 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_byte_string_named_chars(self):
+        """Test byte string named char."""
+
+        pattern = bre.compile_search(br'\N{Latin small letter a}')
+        self.assertEqual(
+            pattern.pattern,
+            br'\141'
+        )
+        self.assertTrue(pattern.match(b'a') is not None)
+
+        pattern = bre.compile_search(br'[^\N{Latin small letter a}]')
+        self.assertEqual(
+            pattern.pattern,
+            br'[^\141]'
+        )
+        self.assertTrue(pattern.match(b'b') is not None)
+
+        pattern = bre.compile_search(br'\N{black club suit}')
+        self.assertEqual(
+            pattern.pattern,
+            b'[^\x00-\xff]'
+        )
+        self.assertTrue(pattern.match(b'a') is None)
+
+        pattern = bre.compile_search(br'[\N{black club suit}]')
+        self.assertEqual(
+            pattern.pattern,
+            b'[^\x00-\xff]'
+        )
+        self.assertTrue(pattern.match(b'a') is None)
+
+        pattern = bre.compile_search(br'[^\N{black club suit}]')
+        self.assertEqual(
+            pattern.pattern,
+            b'[\x00-\xff]'
+        )
+        self.assertTrue(pattern.match(b'a') is not None)
+
+    def test_escape_char(self):
+        """Test escape char."""
+
+        pattern = bre.compile_search(
+            r'test\etest[\e]{2}'
+        )
+
+        self.assertEqual(
+            pattern.pattern,
+            r'test\x1btest[\x1b]{2}'
+        )
+
+        self.assertTrue(pattern.match('test\x1btest\x1b\x1b') is not None)
+
     def test_comments(self):
         """Test comments v0."""
 
@@ -355,8 +407,8 @@ class TestSearchTemplate(unittest.TestCase):
     def test_normal_escaping2(self):
         """Normal escaping should be unaltered part2."""
 
-        result = bre.SearchTemplate(r'\e \\e \\\e \\\\e \\\\\e').apply()
-        self.assertEqual(r'\e \\e \\\e \\\\e \\\\\e', result)
+        result = bre.SearchTemplate(r'\y \\y \\\y \\\\y \\\\\y').apply()
+        self.assertEqual(r'\y \\y \\\y \\\\y \\\\\y', result)
 
     def test_unicode_shorthand_properties_capital(self):
         """
@@ -504,23 +556,45 @@ class TestSearchTemplate(unittest.TestCase):
         m = pattern.match(r'P')
         self.assertTrue(m is None)
 
-    def test_binary_unicode_ignore(self):
-        r"""Binary patterns should not process `\p` references."""
-        import sre_constants
+    def test_binary_property(self):
+        r"""Binary patterns should match `\p` references."""
 
-        if PY36_PLUS:
-            def no_unicode():
-                """Should fail on Unicode back reference."""
-                bre.compile_search(br'EX\p{Lu}MPLE')
+        pattern = bre.compile_search(br'EX\p{Lu}MPLE')
+        m = pattern.match(br'EXAMPLE')
+        self.assertTrue(m is not None)
 
-            # Python 3.6+ fails on invalid back references (which ours are)
-            # Since this one is not valid in a bytes string, it shouldn't
-            # be used.  It is okay that Python fails on this.
-            self.assertRaises(sre_constants.error, no_unicode)
-        else:
-            pattern = bre.compile_search(br'EX\p{Lu}MPLE')
-            m = pattern.match(br'EXp{Lu}MPLE')
-            self.assertTrue(m is not None)
+    def test_binary_property_no_value(self):
+        """Test when a property returns nothing in byte string."""
+
+        pattern = bre.compile_search(br'EX\p{OtherAlphabetic}MPLE')
+        self.assertEqual(pattern.pattern, b'EX[^\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX\P{OtherAlphabetic}MPLE')
+        self.assertEqual(pattern.pattern, b'EX[\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX[\p{OtherAlphabetic}]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[^\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX[\P{OtherAlphabetic}]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX[^\p{OtherAlphabetic}]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX[^\P{OtherAlphabetic}]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[^\x00-\xff]MPLE')
+
+        pattern = bre.compile_search(br'EX[\p{OtherAlphabetic}a]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[a]MPLE')
+
+        pattern = bre.compile_search(br'EX[\P{OtherAlphabetic}a]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[\x00-\xffa]MPLE')
+
+        pattern = bre.compile_search(br'EX[^\p{OtherAlphabetic}a]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[^a]MPLE')
+
+        pattern = bre.compile_search(br'EX[^\P{OtherAlphabetic}a]MPLE')
+        self.assertEqual(pattern.pattern, b'EX[^\x00-\xffa]MPLE')
 
     def test_unicode_and_verbose_flag(self):
         """Test that `VERBOSE` and `UNICODE` together come through."""
@@ -1507,6 +1581,11 @@ class TestExceptions(unittest.TestCase):
 
         with pytest.raises(ValueError) as e:
             bre.compile_search(r'\p{bad_binary:n}', re.UNICODE)
+
+        self.assertEqual(str(e.value), 'Invalid Unicode property!')
+
+        with pytest.raises(ValueError) as e:
+            bre.compile_search(r'\p{bad_binary:y}', re.UNICODE)
 
         self.assertEqual(str(e.value), 'Invalid Unicode property!')
 

@@ -145,14 +145,15 @@ Added features available for search patterns. Features are broken up to show wha
 
 Back\ References      | Description
 --------------------- |------------
+'\e'                  | Escape character `\x1b`.
 `\c`                  | Uppercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\l`                  | Lowercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\C`                  | Inverse uppercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\L`                  | Inverse lowercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\Q...\E`             | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
-`\p{UnicodeProperty}` | Unicode property character class. Search string must be a Unicode string. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
+`\p{UnicodeProperty}` | Unicode property character class. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
 `\pX`                 | Unicode property character class where `X` is the uppercase letter that represents the General Category property.  For instance, `\pL` would be equivalent to `\p{L}` or `\p{Letter}`.
-`\P{UnicodeProperty}` | Inverse Unicode property character class. Search string must be a Unicode string. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
+`\P{UnicodeProperty}` | Inverse Unicode property character class. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
 `\PX`                 | Inverse Unicode property character class where `X` is the uppercase letter that represents the General Category property. For instance, `\PL` would be equivalent to `\P{L}` or `\P{Letter}`.
 `[[:alnum:]]`         | Though not really a back reference, support for Posix style character classes is available. See [Posix Style Properties](#posix-style-properties) for more info.
 `\N{UnicodeName}`     | Named characters are are normally ignored in Re, but Backrefs adds support for them.
@@ -161,6 +162,7 @@ Back\ References      | Description
 
 Back\ References | Description
 ---------------- | -----------
+'\e'             | Escape character `\x1b`.
 `\Q...\E`        | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
 `\R`             | Generic line breaks. When searching a Unicode string, this will use an atomic group and match `(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)`, and when applied to byte strings, this will match `(?>\r\n|\n|\x0b|\f|\r|\x85)`. Because it uses atomic groups, which Re does not support, this feature is only for Regex.
 
@@ -193,7 +195,7 @@ Back&nbsp;References | Description
 
 There are quite a few properties that are also supported and an exhaustive list is not currently provided. This documentation will only briefly touch on `General_Category`, `Block`, `Script`, and binary properties.
 
-Unicode properties can be used with the format: `\p{property=value}`, `\p{property:value}`, `\p{value}`, `\p{^property=value}`, `\p{^value}`.  Though you don't have to specify the `UNICODE` flag, the search pattern must be a Unicode string and the search buffer must also be Unicode.
+Unicode properties can be used with the format: `\p{property=value}`, `\p{property:value}`, `\p{value}`, `\p{^property=value}`, `\p{^value}`. Unicode properties can be used in byte strings, but the patterns will be restricted to the range `\x00-\xff`.
 
 The inverse of properties can also be used to specify everything not in a Unicode property: `\P{value}` or `\p{^value}` etc.  They are only used in the search patterns. Only one property may specified between the curly braces.  If you want to use multiple properties, you can place them in a character class: `[\p{UnicodeProperty}\p{OtherUnicodeProperty}]`.
 
@@ -278,7 +280,9 @@ A number of Posix property names are also available.  In general, when used in t
 
 ## Posix Style Properties
 
-Posix properties in the form of `[:posix:]` and the inverse `[:^posix:]` are available.  These character classes are only available inside a character group `[]`.  If needed, you can use the alternate form of `\p{Posix}` to use inside and outside a character group.
+Posix properties in the form of `[:posix:]` and the inverse `[:^posix:]` are available. Posix style properties are supported in byte string and Unicode string searches. These character classes are only available inside a character group `[]`.  If needed, you can use the alternate form of `\p{Posix}` to use inside and outside a character group.
+
+If the search pattern is a byte string or the `UNICODE` flag is not included (or `ASCII` flag is include), the ASCII variant will be used.  Unicode variants are used for Unicode strings with the Unicode flag (which is the default in Python 3).
 
 !!! caution "Posix Values in `p{}`"
     If using the `\p{Posix}` form, the return will always be Unicode and properties like `punct` will revert to the Unicode property form opposed the Posix unless `posix` is prefixed to the name.  Example: the Unicode property `punct` = `[\p{P}]`, but the Posix `posixpunct` = `[\p{P}\p{S}]`.
