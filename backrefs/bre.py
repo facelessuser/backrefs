@@ -73,6 +73,8 @@ from . import common_tokens as ctok
 from . import compat
 from . import uniprops
 
+_SCOPED_FLAG_SUPPORT = compat.PY36
+
 MAXUNICODE = sys.maxunicode
 NARROW = sys.maxunicode == 0xFFFF
 
@@ -294,6 +296,8 @@ class ReplaceTokens(compat.Tokens):
 class SearchTokens(compat.Tokens):
     """Preprocess replace tokens."""
 
+    _scoped_regex_flags = re.compile(r'\(\?(?:-?[imsx])+:', _SEARCH_ASCII)
+
     def __init__(self, string, is_binary=False):
         """Initialize."""
 
@@ -324,6 +328,22 @@ class SearchTokens(compat.Tokens):
         """Rewind."""
 
         self.index = index
+
+    def get_scoped_flags(self):
+        """Get scoped flags."""
+
+        # Only PY36+ allow scoped flags
+        if not _SCOPED_FLAG_SUPPORT:
+            return None
+
+        text = None
+        pattern = self._scoped_regex_flags
+        m = pattern.match(self.string, self.index - 1)
+        if m:
+            text = m.group(0)
+            self.index = m.end(0)
+            self.current = text
+        return text
 
     def get_flags(self):
         """Get flags."""
@@ -939,20 +959,31 @@ class SearchTemplate(object):
             current.append(t)
         return current
 
-    def flags(self, text):
+    def flags(self, text, scoped=False):
         """Analyze flags."""
 
         retry = False
+        global_retry = False
         if compat.PY3 and self._ascii_flag in text and self.unicode:
             self.unicode = False
-            retry = True
+            global_retry = True
         if self._unicode_flag in text and not self.unicode:
             self.unicode = True
-            retry = True
-        if self._verbose_flag in text and not self.verbose:
+            global_retry = True
+        if _SCOPED_FLAG_SUPPORT and '-x' in text and self.verbose:
+            self.verbose = False
+            self.retry
+        elif self._verbose_flag in text and not self.verbose:
             self.verbose = True
-        if retry:
+            if _SCOPED_FLAG_SUPPORT and scoped:
+                retry = True
+            else:
+                global_retry = True
+
+        if global_retry:
             raise GlobalRetryException('Global Retry')
+        elif retry:
+            raise RetryException("Retry")
 
     def reference(self, t, i):
         """Handle references."""
@@ -1009,7 +1040,18 @@ class SearchTemplate(object):
             return [comments]
 
         verbose = self.verbose
-        # index = i.index
+
+        # (?flags:pattern)
+        flags = i.get_scoped_flags()
+        if flags:
+            t = flags
+            try:
+                self.flags(flags[2:-1], scoped=True)
+            except RetryException:
+                index = i.index
+                pass
+
+        index = i.index
         start = t
         retry = True
         while retry:
@@ -1024,9 +1066,9 @@ class SearchTemplate(object):
                         current.extend(self.normal(t, i))
 
                     t = next(i)
-            # except RetryException:
-            #     i.rewind(index)
-            #     retry = True
+            except RetryException:
+                i.rewind(index)
+                retry = True
             except StopIteration:
                 pass
         self.verbose = verbose
@@ -1276,9 +1318,9 @@ class SearchTemplate(object):
             retry = False
             try:
                 new_pattern = self.main_group(i)
-            # except RetryException:
-            #     i.rewind(0)
-            #     retry = True
+            except RetryException:
+                i.rewind(0)
+                retry = True
             except GlobalRetryException:
                 i.rewind(0)
                 retry = True

@@ -21,6 +21,29 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_comments_with_scoped_verbose(self):
+        """Test scoped verbose with comments (PY36+)."""
+
+        if PY36_PLUS:
+            pattern = bre.compile_search(
+                r'''(?u)Test # \e(?#\e\)(?x:
+                Test #\e(?#\e\)
+                (Test # \e
+                )Test #\e
+                )Test # \e'''
+            )
+
+            self.assertEqual(
+                pattern.pattern,
+                r'''(?u)Test # \x1b(?#\e\)(?x:
+                Test #\\e(?#\\e\)
+                (Test # \\e
+                )Test #\\e
+                )Test # \x1b'''
+            )
+
+            self.assertTrue(pattern.match('Test # \x16TestTestTestTest # \x1b') is not None)
+
     def test_byte_string_named_chars(self):
         """Test byte string named char."""
 

@@ -473,17 +473,20 @@ if REGEX_SUPPORT:
                 current.append(t)
             return current
 
-        def flags(self, text):
+        def flags(self, text, scoped=False):
             """Analyze flags."""
 
             retry = False
             global_retry = False
-            if self.version == VERSION1 and self._verbose_off in text and self.verbose:
+            if (self.version == VERSION1 or scoped) and self._verbose_off in text and self.verbose:
                 self.verbose = False
                 retry = True
             elif self._verbose_flag in text and not self.verbose:
                 self.verbose = True
-                retry = True
+                if (self.version == VERSION1 or scoped):
+                    retry = True
+                else:
+                    global_retry = True
             if self._V0 in text and self.version == VERSION1:  # pragma: no cover
                 # Default is V0 if none is selected,
                 # so it is unlikely that this will be selected.
@@ -536,7 +539,7 @@ if REGEX_SUPPORT:
             if flags:
                 t = flags
                 try:
-                    self.flags(flags[2:-1])
+                    self.flags(flags[2:-1], scoped=True)
                 except RetryException:
                     index = i.index
                     pass
