@@ -474,7 +474,6 @@ if REGEX_SUPPORT:
         def flags(self, text, scoped=False):
             """Analyze flags."""
 
-            retry = False
             global_retry = False
             if (self.version == VERSION1 or scoped) and self._verbose_off in text and self.verbose:
                 self.verbose = False
@@ -536,7 +535,6 @@ if REGEX_SUPPORT:
                 t = flags
                 self.flags(flags[2:-1], scoped=True)
 
-            index = i.index
             current = []
             try:
                 while t != self._rr_bracket:
@@ -671,8 +669,6 @@ if REGEX_SUPPORT:
 
             i = RegexSearchTokens(string, is_binary=self.binary)
             iter(i)
-
-            global_flags = 0
 
             retry = True
             while retry:

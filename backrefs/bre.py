@@ -965,7 +965,6 @@ class SearchTemplate(object):
     def flags(self, text, scoped=False):
         """Analyze flags."""
 
-        retry = False
         global_retry = False
         if compat.PY3 and self._ascii_flag in text and self.unicode:
             self.unicode = False
@@ -1050,7 +1049,6 @@ class SearchTemplate(object):
             t = flags
             self.flags(flags[2:-1], scoped=True)
 
-        index = i.index
         current = []
         try:
             while t != self._rr_bracket:
