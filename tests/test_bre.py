@@ -52,7 +52,7 @@ class TestSearchTemplate(unittest.TestCase):
                 )Test # \x1b'''
             )
 
-            self.assertTrue(pattern.match('Test # \x16TestTestTestTest # \x1b') is not None)
+            self.assertTrue(pattern.match('Test # \x1bTestTestTestTest # \x1b') is not None)
 
     def test_byte_string_named_chars(self):
         """Test byte string named char."""
