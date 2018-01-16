@@ -966,7 +966,7 @@ class SearchTemplate(object):
         """Analyze flags."""
 
         global_retry = False
-        if compat.PY3 and self._ascii_flag in text and self.unicode:
+        if compat.PY3 and (self._ascii_flag in text  or 'L' in text) and self.unicode:
             self.unicode = False
             if not _SCOPED_FLAG_SUPPORT or not scoped:
                 self.temp_global_flag_swap["unicode"] = True
@@ -1419,7 +1419,7 @@ def _apply_search_backrefs(pattern, flags=0):
     if isinstance(pattern, (compat.string_type, compat.binary_type)):
         re_verbose = bool(VERBOSE & flags)
         re_unicode = None
-        if compat.PY3 and bool(ASCII & flags):
+        if compat.PY3 and bool((ASCII | LOCALE) & flags):
             re_unicode = False
         elif bool(UNICODE & flags):
             re_unicode = True
