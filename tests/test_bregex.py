@@ -19,6 +19,12 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_infinite_loop_catch(self):
+        """Test infinite loop catch."""
+
+        with pytest.raises(bregex.RecursionException):
+            bregex.compile_search(r'(?-x:(?x))', regex.V0 | regex.VERBOSE)
+
     def test_escape_char(self):
         """Test escape char."""
 

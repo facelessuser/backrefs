@@ -197,8 +197,8 @@ tokens = {
 }
 
 
-class RetryException(Exception):
-    """Retry exception."""
+class RecursionException(Exception):
+    """Recursion exception."""
 
 
 class GlobalRetryException(Exception):
@@ -296,7 +296,10 @@ class ReplaceTokens(compat.Tokens):
 class SearchTokens(compat.Tokens):
     """Preprocess replace tokens."""
 
-    _scoped_regex_flags = re.compile(r'\(\?(?:-?[imsx])+:', _SEARCH_ASCII)
+    if compat.PY37:
+        _scoped_regex_flags = re.compile(r'\(\?(?:[aLu]|-?[imsx])+:', _SEARCH_ASCII)
+    else:
+        _scoped_regex_flags = re.compile(r'\(\?(?:-?[imsx])+:', _SEARCH_ASCII)
 
     def __init__(self, string, is_binary=False):
         """Initialize."""
@@ -966,24 +969,23 @@ class SearchTemplate(object):
         global_retry = False
         if compat.PY3 and self._ascii_flag in text and self.unicode:
             self.unicode = False
-            global_retry = True
-        if self._unicode_flag in text and not self.unicode:
+            if not _SCOPED_FLAG_SUPPORT or not scoped:
+                self.temp_global_flag_swap["unicode"] = True
+                global_retry = True
+        elif self._unicode_flag in text and not self.unicode and not self.binary:
             self.unicode = True
-            global_retry = True
+            if not _SCOPED_FLAG_SUPPORT or not scoped:
+                self.temp_global_flag_swap["unicode"] = True
+                global_retry = True
         if _SCOPED_FLAG_SUPPORT and '-x' in text and self.verbose:
             self.verbose = False
-            self.retry
         elif self._verbose_flag in text and not self.verbose:
             self.verbose = True
-            if _SCOPED_FLAG_SUPPORT and scoped:
-                retry = True
-            else:
+            if not _SCOPED_FLAG_SUPPORT or not scoped:
+                self.temp_global_flag_swap["verbose"] = True
                 global_retry = True
-
         if global_retry:
             raise GlobalRetryException('Global Retry')
-        elif retry:
-            raise RetryException("Retry")
 
     def reference(self, t, i):
         """Handle references."""
@@ -1040,38 +1042,30 @@ class SearchTemplate(object):
             return [comments]
 
         verbose = self.verbose
+        unicode_flag = self.unicode
 
         # (?flags:pattern)
         flags = i.get_scoped_flags()
         if flags:
             t = flags
-            try:
-                self.flags(flags[2:-1], scoped=True)
-            except RetryException:
-                index = i.index
-                pass
+            self.flags(flags[2:-1], scoped=True)
 
         index = i.index
-        start = t
-        retry = True
-        while retry:
-            t = start
-            retry = False
-            current = []
-            try:
-                while t != self._rr_bracket:
-                    if not current:
-                        current.append(t)
-                    else:
-                        current.extend(self.normal(t, i))
+        current = []
+        try:
+            while t != self._rr_bracket:
+                if not current:
+                    current.append(t)
+                else:
+                    current.extend(self.normal(t, i))
 
-                    t = next(i)
-            except RetryException:
-                i.rewind(index)
-                retry = True
-            except StopIteration:
-                pass
+                t = next(i)
+        except StopIteration:
+            pass
+
+        # Restore flags after group
         self.verbose = verbose
+        self.unicode = unicode_flag
 
         if t == self._rr_bracket:
             current.append(t)
@@ -1300,6 +1294,14 @@ class SearchTemplate(object):
 
         self.verbose = bool(self.re_verbose)
         self.unicode = bool(self.re_unicode)
+        self.global_flag_swap = {
+            "unicode": ((self.re_unicode is not None) if not compat.PY37 else False),
+            "verbose": False
+        }
+        self.temp_global_flag_swap = {
+            "unicode": False,
+            "verbose": False
+        }
         if compat.PY3:
             self.ascii = self.re_unicode is not None and not self.re_unicode
         else:
@@ -1318,10 +1320,23 @@ class SearchTemplate(object):
             retry = False
             try:
                 new_pattern = self.main_group(i)
-            except RetryException:
-                i.rewind(0)
-                retry = True
             except GlobalRetryException:
+                # Prevent a loop of retry over and over for a pattern like ((?u)(?a))
+                # or (?-x:(?x))
+                if self.temp_global_flag_swap['unicode']:
+                    if self.global_flag_swap['unicode']:
+                        raise RecursionException('Global unicode flag recursion.')
+                    else:
+                        self.global_flag_swap["unicode"] = True
+                if self.temp_global_flag_swap['verbose']:
+                    if self.global_flag_swap['verbose']:
+                        raise RecursionException('Global verbose flag recursion.')
+                    else:
+                        self.global_flag_swap['verbose'] = True
+                self.temp_global_flag_swap = {
+                    "unicode": False,
+                    "verbose": False
+                }
                 i.rewind(0)
                 retry = True
 

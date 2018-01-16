@@ -21,6 +21,12 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_infinite_loop_catch(self):
+        """Test infinite loop catch."""
+
+        with pytest.raises(bre.RecursionException):
+            bre.compile_search(r'((?a)(?u))')
+
     def test_comments_with_scoped_verbose(self):
         """Test scoped verbose with comments (PY36+)."""
 
