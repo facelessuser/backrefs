@@ -19,6 +19,25 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_word_boundary(self):
+        """Test word boundary."""
+
+        pattern = bregex.compile_search(r'\<test')
+        self.assertEqual(
+            pattern.pattern,
+            r"\b(?=\w)test"
+        )
+        pattern = bregex.compile_search(r'test\>')
+        self.assertEqual(
+            pattern.pattern,
+            r"test\b(?<=\w)"
+        )
+        pattern = bregex.compile_search(r'[\<]test')
+        self.assertEqual(
+            pattern.pattern,
+            r"[\<]test"
+        )
+
     def test_escape_char(self):
         """Test escape char."""
 

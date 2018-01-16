@@ -771,8 +771,10 @@ class ReplaceTemplate(object):
 class SearchTemplate(object):
     """Search Template."""
 
-    _new_refs = ("e", "l", "L", "c", "C", "p", "P", "N", "Q", "E")
+    _new_refs = ("e", "l", "L", "c", "C", "p", "P", "N", "Q", "E", "<", ">")
     _re_escape = r"\x1b"
+    _re_start_wb = r"\b(?=\w)"
+    _re_end_wb = r"\b(?<=\w)"
     _re_property_strip = re.compile(r'[\-_ ]', _SEARCH_ASCII)
     _re_property_gc = re.compile(
         r'''(?x)
@@ -885,7 +887,11 @@ class SearchTemplate(object):
         except StopIteration:
             return [t]
 
-        if t == "e":
+        if t == "<":
+            current.append(self._re_start_wb)
+        elif t == ">":
+            current.append(self._re_end_wb)
+        elif t == "e":
             current.append(self._re_escape)
         elif t == "l":
             current.extend(self.letter_case_props(_LOWER, False))

@@ -21,6 +21,25 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_word_boundary(self):
+        """Test word boundary."""
+
+        pattern = bre.compile_search(r'\<test')
+        self.assertEqual(
+            pattern.pattern,
+            r"\b(?=\w)test"
+        )
+        pattern = bre.compile_search(r'test\>')
+        self.assertEqual(
+            pattern.pattern,
+            r"test\b(?<=\w)"
+        )
+        pattern = bre.compile_search(r'[\<]test')
+        self.assertEqual(
+            pattern.pattern,
+            r"[\<]test"
+        )
+
     def test_byte_string_named_chars(self):
         """Test byte string named char."""
 
