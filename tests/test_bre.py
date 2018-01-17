@@ -21,6 +21,14 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_unicode_narrow_value(self):
+        """Test Unicode narrow value."""
+
+        pattern = re.compile(r"(some)(.+?)(pattern)(!)")
+        expand = bre.compile_replace(pattern, r'\u005cg')
+        results = expand(pattern.match('some test pattern!'))
+        self.assertEqual('\g', results)
+
     def test_word_boundary(self):
         """Test word boundary."""
 

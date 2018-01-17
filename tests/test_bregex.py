@@ -511,8 +511,9 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test Unicode narrow value."""
 
         pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
-        template = bregex.ReplaceTemplate(pattern, r'\u0033')
-        self.assertEqual('\\063', template._template)
+        expand = bregex.compile_replace(pattern, r'\u005cg')
+        results = expand(pattern.match('some test pattern!'))
+        self.assertEqual('\g', results)
 
     def test_unexpected_end(self):
         """Test cases where there is an unexpected end to the replace string."""
