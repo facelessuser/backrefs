@@ -274,6 +274,8 @@ class ReplaceTemplate(object):
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
         'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
     )
+    _standard_escapes = ('a', 'b', 'f', 'n', 'r', 't', 'v')
+    _curly_brackets = ('{', '}')
 
     def __init__(self, pattern, template, use_format=False):
         """Initialize."""
@@ -333,7 +335,7 @@ class ReplaceTemplate(object):
                 text = self.convert_case(compat.uchr(value), self.span_stack[-1])
                 value = ord(self.convert_case(text, single)) if single is not None else ord(text)
             elif single:
-                value = ord(self.convert_case(compat.uchr(value), self.get_single_stack()))
+                value = ord(self.convert_case(compat.uchr(value), single))
             if value <= 0xFF:
                 self.result.append('\\%03o' % value)
             else:
@@ -388,17 +390,13 @@ class ReplaceTemplate(object):
         if t.isdigit() and (self.use_format or octal):
             if not octal:
                 octal = i.get_group()
-                if not octal:
-                    octal = t
             self.parse_octal(octal)
         elif (t.isdigit() or t == 'g') and not self.use_format:
             group = i.get_group()
             if not group:
                 group = i.get_named_group()
-                if not group:
-                    group = t
             self.handle_group('\\' + group)
-        elif t in ('a', 'b', 'f', 'n', 'r', 't', 'v'):
+        elif t in self._standard_escapes:
             self.get_single_stack()
             self.result.append('\\' + t)
         elif t == "l":
@@ -419,7 +417,7 @@ class ReplaceTemplate(object):
             self.parse_named_unicode(i)
         elif t == "x":
             self.parse_bytes(i)
-        elif self.use_format and t in ('{', '}'):
+        elif self.use_format and t in self._curly_brackets:
             self.result.append('\\\\')
             self.handle_format(t, i)
         elif self.use_format and t == 'g':
@@ -427,11 +425,9 @@ class ReplaceTemplate(object):
             self.result.append(t)
         else:
             value = '\\' + t
-            single = self.get_single_stack()
+            self.get_single_stack()
             if self.span_stack:
                 value = self.convert_case(value, self.span_stack[-1])
-                if single is not None:
-                    value = self.convert_case(value[0], single) + value[1:]
             self.result.append(value)
 
     def parse_template(self, pattern):
@@ -448,7 +444,7 @@ class ReplaceTemplate(object):
         while True:
             try:
                 t = next(i)
-                if self.use_format and t in ('{', '}'):
+                if self.use_format and t in self._curly_brackets:
                     self.handle_format(t, i)
                 elif t == '\\':
                     try:
@@ -483,7 +479,7 @@ class ReplaceTemplate(object):
         try:
             while not self.end_found:
                 t = next(i)
-                if self.use_format and t in ('{', '}'):
+                if self.use_format and t in self._curly_brackets:
                     self.handle_format(t, i)
                 elif t == '\\':
                     try:
@@ -527,7 +523,7 @@ class ReplaceTemplate(object):
         self.single_stack.append(case)
         try:
             t = next(i)
-            if self.use_format and t in ('{', '}'):
+            if self.use_format and t in self._curly_brackets:
                 self.handle_format(t, i)
             elif t == '\\':
                 try:

@@ -60,7 +60,7 @@ class TestSearchTemplate(unittest.TestCase):
             self.assertTrue(pattern.match('ÀÀÀAÀÀ') is None)
 
     def test_comments_with_scoped_verbose(self):
-        """Test scoped verbose with comments (PY36+)."""
+        """Test scoped verbose with comments (Python 3.6+)."""
 
         if PY36_PLUS:
             pattern = bre.compile_search(
@@ -828,6 +828,19 @@ class TestSearchTemplate(unittest.TestCase):
 
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
+
+    def test_unexpected_end(self):
+        """Test cases where there is an unexpected end to the repalce string."""
+
+        pattern = re.compile(r"(some)(.+?)(pattern)(!)")
+        with pytest.raises(sre_constants.error):
+            bre.ReplaceTemplate(pattern, '\\1\\l\\')
+
+        with pytest.raises(sre_constants.error):
+            bre.ReplaceTemplate(pattern, '\\1\\L\\')
+
+        with pytest.raises(sre_constants.error):
+            bre.ReplaceTemplate(pattern, '\\1\\')
 
     def test_replace_unicode_name_ascii_range(self):
         """Test replacing Unicode names in the ASCII range."""
