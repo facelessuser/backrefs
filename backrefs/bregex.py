@@ -99,8 +99,8 @@ if REGEX_SUPPORT:
 
     _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 
-    class RecursionException(Exception):
-        """Recursion exception."""
+    class LoopException(Exception):
+        """Loop exception."""
 
     class GlobalRetryException(Exception):
         """Global retry exception."""
@@ -320,7 +320,7 @@ if REGEX_SUPPORT:
                         self.handle_format_group(t[1:-1].strip())
                     else:
                         c = t[1:]
-                        if c[0:1].isdigit() and (self.use_format or len(c) == 3):
+                        if c[0].isdigit() and (self.use_format or len(c) == 3):
                             value = int(c, 8)
                             if value > 0xFF:
                                 if self.binary:
@@ -329,7 +329,7 @@ if REGEX_SUPPORT:
                                 self.result.append('\\u%04x' % value)
                             else:
                                 self.result.append('\\%03o' % value)
-                        elif not self.use_format and (c[0:1].isdigit() or c[0:1] == "g"):
+                        elif not self.use_format and (c[0].isdigit() or c[0] == "g"):
                             self.handle_group(t)
                         elif c == "l":
                             self.single_case(i, _LOWER)
@@ -381,11 +381,11 @@ if REGEX_SUPPORT:
                 t = next(i)
                 while t != "\\E":
                     if len(t) > 1:
-                        if self.use_format and t[0:1] == "{":
+                        if self.use_format and t[0] == "{":
                             self.handle_format_group(t[1:-1].strip())
                         else:
                             c = t[1:]
-                            first = c[0:1]
+                            first = c[0]
                             if first.isdigit() and (self.use_format or len(c) == 3):
                                 value = int(c, 8)
                                 if self.binary:
@@ -401,7 +401,7 @@ if REGEX_SUPPORT:
                                     single = self.get_single_stack()
                                     value = ord(self.convert_case(text, single)) if single is not None else ord(text)
                                     self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
-                            elif not self.use_format and (c[0:1].isdigit() or c[0:1] == "g"):
+                            elif not self.use_format and (c[0].isdigit() or c[0] == "g"):
                                 self.handle_group(t)
                             elif c == "c":
                                 self.single_case(i, _UPPER)
@@ -439,7 +439,7 @@ if REGEX_SUPPORT:
                         single = self.get_single_stack()
                         text = self.convert_case(t, case)
                         if single is not None:
-                            self.result.append(self.convert_case(text[0:1], single) + text[1:])
+                            self.result.append(self.convert_case(text[0], single) + text[1:])
                     else:
                         self.result.append(self.convert_case(t, case))
                     if self.end_found:
@@ -457,11 +457,11 @@ if REGEX_SUPPORT:
             try:
                 t = next(i)
                 if len(t) > 1:
-                    if self.use_format and t[0:1] == "{":
+                    if self.use_format and t[0] == "{":
                         self.handle_format_group(t[1:-1].strip())
                     else:
                         c = t[1:]
-                        first = c[0:1]
+                        first = c[0]
                         if first.isdigit() and (self.use_format or len(c) == 3):
                             value = int(c, 8)
                             if self.binary:
@@ -473,7 +473,7 @@ if REGEX_SUPPORT:
                             else:
                                 value = ord(self.convert_case(compat.uchr(value), self.get_single_stack()))
                                 self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
-                        elif not self.use_format and (c[0:1].isdigit() or c[0:1] == "g"):
+                        elif not self.use_format and (c[0].isdigit() or c[0] == "g"):
                             self.handle_group(t)
                         elif c == "c":
                             self.single_case(i, _UPPER)
@@ -1056,12 +1056,12 @@ if REGEX_SUPPORT:
                     # or on V0 (?-x:(?x))
                     if self.temp_global_flag_swap['version']:
                         if self.global_flag_swap['version']:
-                            raise RecursionException('Global version flag recursion.')
+                            raise LoopException('Global version flag recursion.')
                         else:
                             self.global_flag_swap["version"] = True
                     if self.temp_global_flag_swap['verbose']:
                         if self.global_flag_swap['verbose']:
-                            raise RecursionException('Global verbose flag recursion.')
+                            raise LoopException('Global verbose flag recursion.')
                         else:
                             self.global_flag_swap['verbose'] = True
                     self.temp_global_flag_swap = {

@@ -109,8 +109,8 @@ _LOWER = 1
 _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 
 
-class RecursionException(Exception):
-    """Recursion exception."""
+class LoopException(Exception):
+    """Loop exception."""
 
 
 class GlobalRetryException(Exception):
@@ -472,11 +472,11 @@ class ReplaceTemplate(object):
         try:
             t = next(i)
             if len(t) > 1:
-                if self.use_format and t[0:1] == "{":
+                if self.use_format and t[0] == "{":
                     self.handle_format_group(t[1:-1].strip())
                 else:
                     c = t[1:]
-                    first = c[0:1]
+                    first = c[0]
                     if first.isdigit() and (self.use_format or len(c) == 3):
                         value = int(c, 8)
                         if self.binary:
@@ -1247,12 +1247,12 @@ class SearchTemplate(object):
                 # or (?-x:(?x))
                 if self.temp_global_flag_swap['unicode']:
                     if self.global_flag_swap['unicode']:
-                        raise RecursionException('Global unicode flag recursion.')
+                        raise LoopException('Global unicode flag recursion.')
                     else:
                         self.global_flag_swap["unicode"] = True
                 if self.temp_global_flag_swap['verbose']:
                     if self.global_flag_swap['verbose']:
-                        raise RecursionException('Global verbose flag recursion.')
+                        raise LoopException('Global verbose flag recursion.')
                     else:
                         self.global_flag_swap['verbose'] = True
                 self.temp_global_flag_swap = {

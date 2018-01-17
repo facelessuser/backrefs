@@ -41,10 +41,10 @@ class TestSearchTemplate(unittest.TestCase):
     def test_infinite_loop_catch(self):
         """Test infinite loop catch."""
 
-        with pytest.raises(bregex.RecursionException):
+        with pytest.raises(bregex.LoopException):
             bregex.compile_search(r'(?-x:(?x))', regex.V0 | regex.VERBOSE)
 
-        with pytest.raises(bregex.RecursionException):
+        with pytest.raises(bregex.LoopException):
             bregex.compile_search(r'(?V1)(?V0)')
 
     def test_escape_char(self):

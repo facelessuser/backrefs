@@ -44,10 +44,10 @@ class TestSearchTemplate(unittest.TestCase):
         """Test infinite loop catch."""
 
         if PY3:
-            with pytest.raises(bre.RecursionException):
+            with pytest.raises(bre.LoopException):
                 bre.compile_search(r'((?a)(?u))')
         if PY36_PLUS:
-            with pytest.raises(bre.RecursionException):
+            with pytest.raises(bre.LoopException):
                 bre.compile_search(r'(?-x:(?x))', re.VERBOSE)
 
     def test_unicode_ascii_swap(self):
