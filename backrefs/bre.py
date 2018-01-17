@@ -187,7 +187,6 @@ class ReplaceTokens(compat.Tokens):
     )
     _long_replace_refs = ("u", "U", "g", "x", "N")
 
-
     def __init__(self, string, use_format=False, is_binary=False):
         """Initialize."""
 
