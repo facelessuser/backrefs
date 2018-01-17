@@ -99,8 +99,8 @@ if REGEX_SUPPORT:
 
     _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 
-    class RetryException(Exception):
-        """Retry exception."""
+    class RecursionException(Exception):
+        """Recursion exception."""
 
     class GlobalRetryException(Exception):
         """Global retry exception."""
@@ -112,8 +112,7 @@ if REGEX_SUPPORT:
         _re_comments = re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII)
         _regex_flags = re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)', _SEARCH_ASCII)
         _regex_flags_v0 = re.compile(r'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)', _SEARCH_ASCII)
-        _scoped_regex_flags = re.compile(r'\(\?(?:-?[ixmsfw])+:', _SEARCH_ASCII)
-        _scoped_regex_flags_v0 = re.compile(r'\(\?(?:[imsfwx])+:', _SEARCH_ASCII)
+        _scoped_regex_flags = re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[ixmsfw])+:', _SEARCH_ASCII)
 
         def __init__(self, string, is_binary=False):
             """Initialize."""
@@ -138,7 +137,7 @@ if REGEX_SUPPORT:
             """Get scoped flags."""
 
             text = None
-            pattern = self._scoped_regex_flags if not version0 else self._scoped_regex_flags_v0
+            pattern = self._scoped_regex_flags
             m = pattern.match(self.string, self.index - 1)
             if m:
                 text = m.group(0)
@@ -429,29 +428,29 @@ if REGEX_SUPPORT:
                 current.append(t)
             return current
 
-        def flags(self, text):
+        def flags(self, text, scoped=False):
             """Analyze flags."""
 
-            retry = False
             global_retry = False
-            if self.version == VERSION1 and '-x' in text and self.verbose:
+            if (self.version == VERSION1 or scoped) and '-x' in text and self.verbose:
                 self.verbose = False
-                retry = True
             elif 'x' in text and not self.verbose:
                 self.verbose = True
-                retry = True
-            if "V0" in text and self.version == VERSION1:  # pragma: no cover
+                if not scoped and self.version == VERSION0:
+                    self.temp_global_flag_swap['verbose'] = True
+                    global_retry = True
+            if 'V0' in text and self.version == VERSION1:  # pragma: no cover
                 # Default is V0 if none is selected,
                 # so it is unlikely that this will be selected.
+                self.temp_global_flag_swap['version'] = True
                 self.version = VERSION0
                 global_retry = True
             elif "V1" in text and self.version == VERSION0:
+                self.temp_global_flag_swap['version'] = True
                 self.version = VERSION1
                 global_retry = True
             if global_retry:
                 raise GlobalRetryException('Global Retry')
-            if retry:
-                raise RetryException("Retry")
 
         def reference(self, t, i):
             """Handle references."""
@@ -495,32 +494,19 @@ if REGEX_SUPPORT:
             flags = i.get_scoped_flags(version0=self.version == VERSION0)
             if flags:
                 t = flags
-                try:
-                    self.flags(flags[2:-1])
-                except RetryException:
-                    index = i.index
-                    pass
+                self.flags(flags[2:-1], scoped=True)
 
-            index = i.index
-            start = t
-            retry = True
-            while retry:
-                t = start
-                retry = False
-                current = []
-                try:
-                    while t != ")":
-                        if not current:
-                            current.append(t)
-                        else:
-                            current.extend(self.normal(t, i))
+            current = []
+            try:
+                while t != ')':
+                    if not current:
+                        current.append(t)
+                    else:
+                        current.extend(self.normal(t, i))
 
-                        t = next(i)
-                except RetryException:
-                    i.rewind(index)
-                    retry = True
-                except StopIteration:
-                    pass
+                    t = next(i)
+            except StopIteration:
+                pass
             self.verbose = verbose
 
             if t == ")":
@@ -630,6 +616,14 @@ if REGEX_SUPPORT:
 
             self.verbose = bool(self.re_verbose)
             self.version = self.re_version if self.re_version else regex.DEFAULT_VERSION
+            self.global_flag_swap = {
+                "version": self.re_version != 0,
+                "verbose": False
+            }
+            self.temp_global_flag_swap = {
+                "version": False,
+                "verbose": False
+            }
 
             new_pattern = []
             string = self.process_quotes(self.search.decode('latin-1') if self.binary else self.search)
@@ -642,10 +636,23 @@ if REGEX_SUPPORT:
                 retry = False
                 try:
                     new_pattern = self.main_group(i)
-                except RetryException:
-                    i.rewind(0)
-                    retry = True
                 except GlobalRetryException:
+                    # Prevent a loop of retry over and over for a pattern like ((?V0)(?V1))
+                    # or on V0 (?-x:(?x))
+                    if self.temp_global_flag_swap['version']:
+                        if self.global_flag_swap['version']:
+                            raise RecursionException('Global version flag recursion.')
+                        else:
+                            self.global_flag_swap["version"] = True
+                    if self.temp_global_flag_swap['verbose']:
+                        if self.global_flag_swap['verbose']:
+                            raise RecursionException('Global verbose flag recursion.')
+                        else:
+                            self.global_flag_swap['verbose'] = True
+                    self.temp_global_flag_swap = {
+                        "version": False,
+                        "verbose": False
+                    }
                     i.rewind(0)
                     retry = True
 
