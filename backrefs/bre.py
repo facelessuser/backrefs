@@ -120,6 +120,7 @@ class GlobalRetryException(Exception):
 class ReplaceTokens(compat.Tokens):
     """Preprocess replace tokens."""
 
+    _oct = '\\%03o' if compat.PY3 else '\\\\%03o'
     _re_octal = re.compile(r'[0-7]{3}|0{1,2}', _SEARCH_ASCII)
     _re_group = re.compile(r'[1-9][0-9]?', _SEARCH_ASCII)
     _re_named_group = re.compile(r'g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?', _SEARCH_ASCII)
@@ -326,7 +327,7 @@ class ReplaceTemplate(object):
             elif single:
                 value = ord(self.convert_case(compat.uchr(value), single))
             if value <= 0xFF:
-                self.result.append('\\%03o' % value)
+                self.result.append(self._oct % value)
             else:
                 self.result.append(compat.uchr(value))
 
@@ -341,7 +342,7 @@ class ReplaceTemplate(object):
         elif single:
             value = ord(self.convert_case(compat.uchr(value), single))
         if value <= 0xFF:
-            self.result.append('\\%03o' % value)
+            self.result.append(self._oct % value)
         else:
             self.result.append(compat.uchr(value))
 
@@ -357,7 +358,7 @@ class ReplaceTemplate(object):
         elif single:
             value = ord(self.convert_case(compat.uchr(value), single))
         if value <= 0xFF:
-            self.result.append('\\%03o' % value)
+            self.result.append(self._oct % value)
         else:
             self.result.append(compat.uchr(value))
 
@@ -371,7 +372,7 @@ class ReplaceTemplate(object):
             value = ord(self.convert_case(text, single)) if single is not None else ord(text)
         elif single:
             value = ord(self.convert_case(chr(value), single))
-        self.result.append('\\%03o' % value)
+        self.result.append(self._oct % value)
 
     def reference(self, t, i):
         """Handle references."""
@@ -1124,7 +1125,7 @@ class SearchTemplate(object):
         elif value == "":
             return value
         else:
-            return ['\\%03o' % value if value <= 0xFF else compat.uchr(value)]
+            return [self._oct % value if value <= 0xFF else compat.uchr(value)]
 
     def unicode_props(self, props, in_group, negate=False):
         """
