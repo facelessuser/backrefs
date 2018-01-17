@@ -73,6 +73,8 @@ from . import common_tokens as ctok
 from . import compat
 from . import uniprops
 
+_SCOPED_FLAG_SUPPORT = compat.PY36
+
 MAXUNICODE = sys.maxunicode
 NARROW = sys.maxunicode == 0xFFFF
 
@@ -110,7 +112,7 @@ _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 # Unicode string related references
 tokens = {
     "re_posix": re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII),
-    "re_comments": re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII),
+    "re_comments": re.compile(r'\(\?\#(?:\\.|[^)])*\)', _SEARCH_ASCII),
     "re_flags": re.compile((r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'), _SEARCH_ASCII),
     "re_uniprops": re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[A-Z])?', _SEARCH_ASCII),
     "re_named_props": re.compile(r'N(?:\{[\w ]+\})?', _SEARCH_ASCII),
@@ -195,8 +197,8 @@ tokens = {
 }
 
 
-class RetryException(Exception):
-    """Retry exception."""
+class RecursionException(Exception):
+    """Recursion exception."""
 
 
 class GlobalRetryException(Exception):
@@ -294,6 +296,11 @@ class ReplaceTokens(compat.Tokens):
 class SearchTokens(compat.Tokens):
     """Preprocess replace tokens."""
 
+    if compat.PY37:
+        _scoped_regex_flags = re.compile(r'\(\?(?:[aLu]|-?[imsx])+:', _SEARCH_ASCII)
+    else:
+        _scoped_regex_flags = re.compile(r'\(\?(?:-?[imsx])+:', _SEARCH_ASCII)
+
     def __init__(self, string, is_binary=False):
         """Initialize."""
 
@@ -324,6 +331,22 @@ class SearchTokens(compat.Tokens):
         """Rewind."""
 
         self.index = index
+
+    def get_scoped_flags(self):
+        """Get scoped flags."""
+
+        # Only PY36+ allow scoped flags
+        if not _SCOPED_FLAG_SUPPORT:  # pragma: no cover
+            return None
+
+        text = None
+        pattern = self._scoped_regex_flags
+        m = pattern.match(self.string, self.index - 1)
+        if m:
+            text = m.group(0)
+            self.index = m.end(0)
+            self.current = text
+        return text
 
     def get_flags(self):
         """Get flags."""
@@ -939,19 +962,28 @@ class SearchTemplate(object):
             current.append(t)
         return current
 
-    def flags(self, text):
+    def flags(self, text, scoped=False):
         """Analyze flags."""
 
-        retry = False
-        if compat.PY3 and self._ascii_flag in text and self.unicode:
+        global_retry = False
+        if compat.PY3 and (self._ascii_flag in text or 'L' in text) and self.unicode:
             self.unicode = False
-            retry = True
-        if self._unicode_flag in text and not self.unicode:
+            if not _SCOPED_FLAG_SUPPORT or not scoped:
+                self.temp_global_flag_swap["unicode"] = True
+                global_retry = True
+        elif self._unicode_flag in text and not self.unicode and not self.binary:
             self.unicode = True
-            retry = True
-        if self._verbose_flag in text and not self.verbose:
+            if not _SCOPED_FLAG_SUPPORT or not scoped:
+                self.temp_global_flag_swap["unicode"] = True
+                global_retry = True
+        if _SCOPED_FLAG_SUPPORT and '-x' in text and self.verbose:
+            self.verbose = False
+        elif self._verbose_flag in text and not self.verbose:
             self.verbose = True
-        if retry:
+            if not _SCOPED_FLAG_SUPPORT or not scoped:
+                self.temp_global_flag_swap["verbose"] = True
+                global_retry = True
+        if global_retry:
             raise GlobalRetryException('Global Retry')
 
     def reference(self, t, i):
@@ -1009,27 +1041,29 @@ class SearchTemplate(object):
             return [comments]
 
         verbose = self.verbose
-        # index = i.index
-        start = t
-        retry = True
-        while retry:
-            t = start
-            retry = False
-            current = []
-            try:
-                while t != self._rr_bracket:
-                    if not current:
-                        current.append(t)
-                    else:
-                        current.extend(self.normal(t, i))
+        unicode_flag = self.unicode
 
-                    t = next(i)
-            # except RetryException:
-            #     i.rewind(index)
-            #     retry = True
-            except StopIteration:
-                pass
+        # (?flags:pattern)
+        flags = i.get_scoped_flags()
+        if flags:
+            t = flags
+            self.flags(flags[2:-1], scoped=True)
+
+        current = []
+        try:
+            while t != self._rr_bracket:
+                if not current:
+                    current.append(t)
+                else:
+                    current.extend(self.normal(t, i))
+
+                t = next(i)
+        except StopIteration:
+            pass
+
+        # Restore flags after group
         self.verbose = verbose
+        self.unicode = unicode_flag
 
         if t == self._rr_bracket:
             current.append(t)
@@ -1258,6 +1292,14 @@ class SearchTemplate(object):
 
         self.verbose = bool(self.re_verbose)
         self.unicode = bool(self.re_unicode)
+        self.global_flag_swap = {
+            "unicode": ((self.re_unicode is not None) if not compat.PY37 else False),
+            "verbose": False
+        }
+        self.temp_global_flag_swap = {
+            "unicode": False,
+            "verbose": False
+        }
         if compat.PY3:
             self.ascii = self.re_unicode is not None and not self.re_unicode
         else:
@@ -1276,10 +1318,23 @@ class SearchTemplate(object):
             retry = False
             try:
                 new_pattern = self.main_group(i)
-            # except RetryException:
-            #     i.rewind(0)
-            #     retry = True
             except GlobalRetryException:
+                # Prevent a loop of retry over and over for a pattern like ((?u)(?a))
+                # or (?-x:(?x))
+                if self.temp_global_flag_swap['unicode']:
+                    if self.global_flag_swap['unicode']:
+                        raise RecursionException('Global unicode flag recursion.')
+                    else:
+                        self.global_flag_swap["unicode"] = True
+                if self.temp_global_flag_swap['verbose']:
+                    if self.global_flag_swap['verbose']:
+                        raise RecursionException('Global verbose flag recursion.')
+                    else:
+                        self.global_flag_swap['verbose'] = True
+                self.temp_global_flag_swap = {
+                    "unicode": False,
+                    "verbose": False
+                }
                 i.rewind(0)
                 retry = True
 
@@ -1364,7 +1419,7 @@ def _apply_search_backrefs(pattern, flags=0):
     if isinstance(pattern, (compat.string_type, compat.binary_type)):
         re_verbose = bool(VERBOSE & flags)
         re_unicode = None
-        if compat.PY3 and bool(ASCII & flags):
+        if compat.PY3 and bool((ASCII | LOCALE) & flags):
             re_unicode = False
         elif bool(UNICODE & flags):
             re_unicode = True

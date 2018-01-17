@@ -21,6 +21,48 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_infinite_loop_catch(self):
+        """Test infinite loop catch."""
+
+        if PY3:
+            with pytest.raises(bre.RecursionException):
+                bre.compile_search(r'((?a)(?u))')
+        if PY36_PLUS:
+            with pytest.raises(bre.RecursionException):
+                bre.compile_search(r'(?-x:(?x))', re.VERBOSE)
+
+    def test_unicode_ascii_swap(self):
+        """Test Unicode ASCII swapping."""
+
+        if PY37_PLUS:
+            pattern = bre.compile_search(r'(?u:\C\w)(?a:\C\w)(?u:\C\w)')
+            self.assertTrue(pattern.match('ÀÀAAÀÀ') is not None)
+            self.assertTrue(pattern.match('ÀÀAÀÀÀ') is None)
+            self.assertTrue(pattern.match('ÀÀÀAÀÀ') is None)
+
+    def test_comments_with_scoped_verbose(self):
+        """Test scoped verbose with comments (PY36+)."""
+
+        if PY36_PLUS:
+            pattern = bre.compile_search(
+                r'''(?u)Test # \e(?#\e)(?x:
+                Test #\e(?#\e)
+                (Test # \e
+                )Test #\e
+                )Test # \e'''
+            )
+
+            self.assertEqual(
+                pattern.pattern,
+                r'''(?u)Test # \x1b(?#\e)(?x:
+                Test #\\e(?#\\e)
+                (Test # \\e
+                )Test #\\e
+                )Test # \x1b'''
+            )
+
+            self.assertTrue(pattern.match('Test # \x1bTestTestTestTest # \x1b') is not None)
+
     def test_byte_string_named_chars(self):
         """Test byte string named char."""
 

@@ -13,6 +13,7 @@
 - **FIX**: Missing block properties on narrow systems when the property starts beyond the narrow limit.
 - **FIX**: Fix issue where an invalid general category could sometimes pass and return no characters.
 - **FIX**: Fix `\Q...\E` behavior so it is applied first as a separate step. No longer avoids `\Q...\E` in things like character groups or comments.
+- **FIX**: Flag related parsing issues in Regex and Re Python 3.6+.
 
 ## 2.2.0
 
