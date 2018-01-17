@@ -830,7 +830,7 @@ class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
     def test_unexpected_end(self):
-        """Test cases where there is an unexpected end to the repalce string."""
+        """Test cases where there is an unexpected end to the replace string."""
 
         pattern = re.compile(r"(some)(.+?)(pattern)(!)")
         with pytest.raises(sre_constants.error):

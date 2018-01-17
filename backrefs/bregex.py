@@ -94,8 +94,8 @@ if REGEX_SUPPORT:
     FORMAT = 1
 
     # Case upper or lower
-    _UPPER = 0
-    _LOWER = 1
+    _UPPER = 1
+    _LOWER = 2
 
     _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
 
@@ -105,73 +105,18 @@ if REGEX_SUPPORT:
     class GlobalRetryException(Exception):
         """Global retry exception."""
 
-    # Break apart template patterns into char tokens
     class ReplaceTokens(compat.Tokens):
         """Preprocess replace tokens."""
 
-        _long_replace_refs = ("u", "U", "g", "x", "N")
-        _replace_group_ref = re.compile(
-            r'''(?x)
-            (\\)|
-            (
-                [0-7]{3}|
-                [1-9][0-9]?|
-                [cClLEabfrtnv]|
-                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
-                U(?:[0-9a-fA-F]{8})?|
-                u(?:[0-9a-fA-F]{4})?|
-                x(?:[0-9a-fA-F]{2})?|
-                N(?:\{[\w ]+\})?
-            )
-            ''',
-            _SEARCH_ASCII
-        )
-        _binary_replace_group_ref = re.compile(
-            r'''(?x)
-            (\\)|
-            (
-                [0-7]{3}|
-                [1-9][0-9]?|
-                [cClLEabfrtnv]|
-                g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?|
-                x(?:[0-9a-fA-F]{2})?
-            )
-            ''',
-            _SEARCH_ASCII
-        )
-        _format_replace_ref = re.compile(
-            r'''(?x)
-            (\\)|
-            (
-                [cClLEabfrtnv]|
-                U(?:[0-9a-fA-F]{8})?|
-                u(?:[0-9a-fA-F]{4})?|
-                x(?:[0-9a-fA-F]{2})?|
-                [0-7]{1,3}|
-                (
-                    g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
-                )|
-                N(?:\{[\w ]+\})?
-            )|
-            (\{)''',
-            _SEARCH_ASCII
-        )
-        _binary_format_replace_ref = re.compile(
-            r'''(?x)
-            (\\)|
-            (
-                [cClLEabfrtnv]|
-                x(?:[0-9a-fA-F]{2})?|
-                [0-7]{1,3}|
-                (
-                    g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?
-                )
-            )|
-            (\{)''',
-            _SEARCH_ASCII
-        )
+        _re_octal = re.compile(r'[0-7]{3}|0{1,2}', _SEARCH_ASCII)
+        _re_group = re.compile(r'[1-9][0-9]?', _SEARCH_ASCII)
+        _re_named_group = re.compile(r'g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?', _SEARCH_ASCII)
+        _re_wide_unicode = re.compile(r'U(?:[0-9a-fA-F]{8})?', _SEARCH_ASCII)
+        _re_narrow_unicode = re.compile(r'u(?:[0-9a-fA-F]{4})?', _SEARCH_ASCII)
+        _re_named_unicode = re.compile(r'N(?:\{[\w ]+\})?', _SEARCH_ASCII)
+        _re_byte = re.compile(r'x(?:[0-9a-fA-F]{2})?', _SEARCH_ASCII)
         _format_replace_group = re.compile(
-            r'(\{{2}|\}{2})|(\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\})',
+            r'\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\}',
             _SEARCH_ASCII
         )
 
@@ -180,21 +125,101 @@ if REGEX_SUPPORT:
 
             self.string = string
             self.binary = is_binary
-
             self.use_format = use_format
-            if self.binary:
-                if use_format:
-                    self._replace_ref = self._binary_format_replace_ref
-                else:
-                    self._replace_ref = self._binary_replace_group_ref
-            else:
-                if use_format:
-                    self._replace_ref = self._format_replace_ref
-                else:
-                    self._replace_ref = self._replace_group_ref
             self.max_index = len(string) - 1
             self.index = 0
-            self.current = None
+
+        def get_format(self):
+            """Get octal escape."""
+
+            text = None
+            m = self._format_replace_group.match(self.string, self.index - 2)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)[1:-1]
+            return text
+
+        def get_octal(self):
+            """Get octal escape."""
+
+            text = None
+            m = self._re_octal.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)
+            return text
+
+        def get_group(self):
+            """Get group escape."""
+
+            text = None
+            m = self._re_group.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)
+            return text
+
+        def get_named_group(self):
+            """Get group escape."""
+
+            text = None
+            m = self._re_named_group.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)
+                if len(text) == 1:
+                    raise SyntaxError('Format for group is \\g<group_name_or_index>!')
+                text = text
+            return text
+
+        def get_byte(self):
+            """Get wide Unicode."""
+
+            text = None
+            m = self._re_byte.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)[1:]
+                if not text:  # pragma: no cover
+                    raise SyntaxError('Format for byte is \\xXX!')
+            return text
+
+        def get_wide_unicode(self):
+            """Get wide Unicode."""
+
+            text = None
+            m = self._re_wide_unicode.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)[1:]
+                if not text:  # pragma: no cover
+                    raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
+            return text
+
+        def get_narrow_unicode(self):
+            """Get wide Unicode."""
+
+            text = None
+            m = self._re_narrow_unicode.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)[1:]
+                if not text:  # pragma: no cover
+                    raise SyntaxError('Format for Unicode is \\uXXXX!')
+            return text
+
+        def get_named_unicode(self):
+            """Get named Unicode."""
+
+            text = None
+            m = self._re_named_unicode.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)
+                if len(text) == 1:
+                    raise SyntaxError('Format for Unicode name is \\N{name}!')
+                text = text[2:-1].strip()
+            return text
 
         def __iter__(self):
             """Iterate."""
@@ -212,39 +237,9 @@ if REGEX_SUPPORT:
                 raise StopIteration
 
             char = self.string[self.index]
-            if char == "\\":
-                m = self._replace_ref.match(self.string, self.index + 1)
-                if m:
-                    ref = m.group(0)
-                    if len(ref) == 1 and ref in self._long_replace_refs:
-                        if ref == "x":
-                            raise SyntaxError('Format for byte is \\xXX!')
-                        elif ref == "g":
-                            raise SyntaxError('Format for group is \\g<group_name_or_index>!')
-                        elif ref == "N":
-                            raise SyntaxError('Format for Unicode name is \\N{name}!')
-                        elif ref == "u":  # pragma: no cover
-                            raise SyntaxError('Format for Unicode is \\uXXXX!')
-                        elif ref == "U":  # pragma: no cover
-                            raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
-                    if self.use_format and (m.group(3) or m.group(4)):
-                        char += "\\"
-                        self.index -= 1
-                    if not self.use_format or not m.group(4):
-                        char += m.group(1) if m.group(1) else m.group(2)
-            elif self.use_format and char in ("{", "}"):
-                m = self._format_replace_group.match(self.string, self.index)
-                if m:
-                    if m.group(2):
-                        char = m.group(2)
-                    else:
-                        self.index += 1
-                else:
-                    raise ValueError("Single unmatched curly bracket!")
 
-            self.index += len(char)
-            self.current = char
-            return self.current
+            self.index += 1
+            return char
 
     class ReplaceTemplate(object):
         """Pre-replace template."""
@@ -255,6 +250,8 @@ if REGEX_SUPPORT:
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
             'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
         )
+        _standard_escapes = ('a', 'b', 'f', 'n', 'r', 't', 'v')
+        _curly_brackets = ('{', '}')
 
         def __init__(self, pattern, template, use_format=False):
             """Initialize."""
@@ -264,8 +261,8 @@ if REGEX_SUPPORT:
             else:
                 self.binary = False
 
-            self.use_format = use_format
             self._original = template
+            self.use_format = use_format
             self.end_found = False
             self.group_slots = []
             self.literal_slots = []
@@ -279,6 +276,135 @@ if REGEX_SUPPORT:
             self.pattern_hash = hash(pattern)
 
             self.parse_template(pattern)
+
+        def handle_format(self, t, i):
+            """Handle format."""
+
+            if t == '{':
+                t = next(i)
+                if t == '{':
+                    self.get_single_stack()
+                    self.result.append(t)
+                else:
+                    text = i.get_format()
+                    if text is None:
+                        raise ValueError("Single unmatched curly bracket!")
+                    self.handle_format_group(text.strip())
+            else:
+                t = next(i)
+                if t == '}':
+                    self.get_single_stack()
+                    self.result.append(t)
+                else:
+                    raise ValueError("Single unmatched curly bracket!")
+
+        def parse_octal(self, text):
+            """Parse octal value."""
+
+            value = int(text, 8)
+            if value > 0xFF and self.binary:
+                # Re fails on octal greater than 0o377 or 0xFF
+                raise ValueError("octal escape value outside of range 0-0o377!")
+            else:
+                single = self.get_single_stack()
+                if self.span_stack:
+                    text = self.convert_case(compat.uchr(value), self.span_stack[-1])
+                    value = ord(self.convert_case(text, single)) if single is not None else ord(text)
+                elif single:
+                    value = ord(self.convert_case(compat.uchr(value), single))
+                if value <= 0xFF:
+                    self.result.append('\\%03o' % value)
+                else:
+                    self.result.append(compat.uchr(value))
+
+        def parse_named_unicode(self, i):
+            """Parse named Unicode."""
+
+            value = ord(unicodedata.lookup(i.get_named_unicode()))
+            single = self.get_single_stack()
+            if self.span_stack:
+                text = self.convert_case(compat.uchr(value), self.span_stack[-1])
+                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
+            elif single:
+                value = ord(self.convert_case(compat.uchr(value), single))
+            if value <= 0xFF:
+                self.result.append('\\%03o' % value)
+            else:
+                self.result.append(compat.uchr(value))
+
+        def parse_unicode(self, i, wide=False):
+            """Parse Unicode."""
+
+            text = i.get_wide_unicode() if wide else i.get_narrow_unicode()
+            value = int(text, 16)
+            single = self.get_single_stack()
+            if self.span_stack:
+                text = self.convert_case(compat.uchr(value), self.span_stack[-1])
+                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
+            elif single:
+                value = ord(self.convert_case(compat.uchr(value), single))
+            if value <= 0xFF:
+                self.result.append('\\%03o' % value)
+            else:
+                self.result.append(compat.uchr(value))
+
+        def parse_bytes(self, i):
+            """Parse byte."""
+
+            value = int(i.get_byte(), 16)
+            single = self.get_single_stack()
+            if self.span_stack:
+                text = self.convert_case(chr(value), self.span_stack[-1])
+                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
+            elif single:
+                value = ord(self.convert_case(chr(value), single))
+            self.result.append('\\%03o' % value)
+
+        def reference(self, t, i):
+            """Handle references."""
+            octal = i.get_octal()
+            if t.isdigit() and (self.use_format or octal):
+                if not octal:
+                    octal = i.get_group()
+                self.parse_octal(octal)
+            elif (t.isdigit() or t == 'g') and not self.use_format:
+                group = i.get_group()
+                if not group:
+                    group = i.get_named_group()
+                self.handle_group('\\' + group)
+            elif t in self._standard_escapes:
+                self.get_single_stack()
+                self.result.append('\\' + t)
+            elif t == "l":
+                self.single_case(i, _LOWER)
+            elif t == "L":
+                self.span_case(i, _LOWER)
+            elif t == "c":
+                self.single_case(i, _UPPER)
+            elif t == "C":
+                self.span_case(i, _UPPER)
+            elif t == "E":
+                self.end_found = True
+            elif not self.binary and not NARROW and t == "U":
+                self.parse_unicode(i, True)
+            elif not self.binary and t == "u":
+                self.parse_unicode(i)
+            elif not self.binary and t == "N":
+                self.parse_named_unicode(i)
+            elif t == "x":
+                self.parse_bytes(i)
+            elif self.use_format and t in self._curly_brackets:
+                self.result.append('\\\\')
+                self.handle_format(t, i)
+            elif self.use_format and t == 'g':
+                self.result.append('\\\\')
+                self.result.append(t)
+            else:
+                value = '\\' + t
+                self.get_single_stack()
+                if self.span_stack:
+                    value = self.convert_case(value, self.span_stack[-1])
+                self.result.append(value)
 
         def regex_parse_template(self, template, pattern):
             """
@@ -314,38 +440,23 @@ if REGEX_SUPPORT:
             iter(i)
             self.result = [""]
 
-            for t in i:
-                if len(t) > 1:
-                    if self.use_format and t[0:1] == "{":
-                        self.handle_format_group(t[1:-1].strip())
-                    else:
-                        c = t[1:]
-                        if c[0].isdigit() and (self.use_format or len(c) == 3):
-                            value = int(c, 8)
-                            if value > 0xFF:
-                                if self.binary:
-                                    # Re fails on octal greater than 0o377 or 0xFF
-                                    raise ValueError("octal escape value outside of range 0-0o377!")
-                                self.result.append('\\u%04x' % value)
-                            else:
-                                self.result.append('\\%03o' % value)
-                        elif not self.use_format and (c[0].isdigit() or c[0] == "g"):
-                            self.handle_group(t)
-                        elif c == "l":
-                            self.single_case(i, _LOWER)
-                        elif c == "L":
-                            self.span_case(i, _LOWER)
-                        elif c == "c":
-                            self.single_case(i, _UPPER)
-                        elif c == "C":
-                            self.span_case(i, _UPPER)
-                        elif c == "E":
-                            # This is here just as a reminder that \E is ignored
-                            pass
-                        else:
+            while True:
+                try:
+                    t = next(i)
+                    if self.use_format and t in self._curly_brackets:
+                        self.handle_format(t, i)
+                    elif t == '\\':
+                        try:
+                            t = next(i)
+                            self.reference(t, i)
+                        except StopIteration:
                             self.result.append(t)
-                else:
-                    self.result.append(t)
+                            raise
+                    else:
+                        self.result.append(t)
+
+                except StopIteration:
+                    break
 
             if len(self.result) > 1:
                 self.literal_slots.append("".join(self.result))
@@ -358,6 +469,38 @@ if REGEX_SUPPORT:
             else:
                 self._template = "".join(self.literal_slots)
             self.groups, self.literals = self.regex_parse_template(self._template, pattern)
+
+        def span_case(self, i, case):
+            """Uppercase or lowercase the next range of characters until end marker is found."""
+
+            self.span_stack.append(case)
+            self.end_found = False
+            try:
+                while not self.end_found:
+                    t = next(i)
+                    if self.use_format and t in self._curly_brackets:
+                        self.handle_format(t, i)
+                    elif t == '\\':
+                        try:
+                            t = next(i)
+                            self.reference(t, i)
+                        except StopIteration:
+                            self.result.append(t)
+                            raise
+                    elif self.single_stack:
+                        single = self.get_single_stack()
+                        text = self.convert_case(t, case)
+                        if single:
+                            text = self.convert_case(text[0], single) + text[1:]
+                        self.result.append(text)
+                    else:
+                        self.result.append(self.convert_case(t, case))
+                    if self.end_found:
+                        self.end_found = False
+                        break
+            except StopIteration:
+                pass
+            self.span_stack.pop()
 
         def convert_case(self, value, case):
             """Convert case."""
@@ -373,140 +516,23 @@ if REGEX_SUPPORT:
             else:
                 return value.lower() if case == _LOWER else value.upper()
 
-        def span_case(self, i, case):
-            """Uppercase or lowercase the next range of characters until end marker is found."""
-
-            self.span_stack.append(case)
-            try:
-                t = next(i)
-                while t != "\\E":
-                    if len(t) > 1:
-                        if self.use_format and t[0] == "{":
-                            self.handle_format_group(t[1:-1].strip())
-                        else:
-                            c = t[1:]
-                            first = c[0]
-                            if first.isdigit() and (self.use_format or len(c) == 3):
-                                value = int(c, 8)
-                                if self.binary:
-                                    if value > 0xFF:
-                                        # Re fails on octal greater than 0o377 or 0xFF
-                                        raise ValueError("octal escape value outside of range 0-0o377!")
-                                    text = self.convert_case(compat.uchr(value), case)
-                                    single = self.get_single_stack()
-                                    value = ord(self.convert_case(text, single)()) if single is not None else ord(text)
-                                    self.result.append('\\%03o' % value)
-                                else:
-                                    text = self.convert_case(compat.uchr(value), case)
-                                    single = self.get_single_stack()
-                                    value = ord(self.convert_case(text, single)) if single is not None else ord(text)
-                                    self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
-                            elif not self.use_format and (c[0].isdigit() or c[0] == "g"):
-                                self.handle_group(t)
-                            elif c == "c":
-                                self.single_case(i, _UPPER)
-                            elif c == "l":
-                                self.single_case(i, _LOWER)
-                            elif c == "C":
-                                self.span_case(i, _UPPER)
-                            elif c == "L":
-                                self.span_case(i, _LOWER)
-                            elif not self.binary and first == "N":
-                                uc = unicodedata.lookup(t[3:-1])
-                                text = self.convert_case(uc, case)
-                                single = self.get_single_stack()
-                                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
-                                self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
-                            elif (
-                                not self.binary and
-                                (first == "u" or (not NARROW and first == "U"))
-                            ):
-                                uc = compat.uchr(int(t[2:], 16))
-                                text = self.convert_case(uc, case)
-                                single = self.get_single_stack()
-                                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
-                                self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
-                            elif first == "x":
-                                hc = chr(int(t[2:], 16))
-                                text = self.convert_case(hc, case)
-                                single = self.get_single_stack()
-                                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
-                                self.result.append("\\x%02x" % value)
-                            else:
-                                self.get_single_stack()
-                                self.result.append(t)
-                    elif self.single_stack:
-                        single = self.get_single_stack()
-                        text = self.convert_case(t, case)
-                        if single is not None:
-                            self.result.append(self.convert_case(text[0], single) + text[1:])
-                    else:
-                        self.result.append(self.convert_case(t, case))
-                    if self.end_found:
-                        self.end_found = False
-                        break
-                    t = next(i)
-            except StopIteration:
-                pass
-            self.span_stack.pop()
-
         def single_case(self, i, case):
             """Uppercase or lowercase the next character."""
 
             self.single_stack.append(case)
             try:
                 t = next(i)
-                if len(t) > 1:
-                    if self.use_format and t[0] == "{":
-                        self.handle_format_group(t[1:-1].strip())
-                    else:
-                        c = t[1:]
-                        first = c[0]
-                        if first.isdigit() and (self.use_format or len(c) == 3):
-                            value = int(c, 8)
-                            if self.binary:
-                                if value > 0xFF:
-                                    # Re fails on octal greater than 0o377 or 0xFF
-                                    raise ValueError("octal escape value outside of range 0-0o377!")
-                                value = ord(self.convert_case(compat.uchr(value), self.get_single_stack()))
-                                self.result.append('\\%03o' % value)
-                            else:
-                                value = ord(self.convert_case(compat.uchr(value), self.get_single_stack()))
-                                self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
-                        elif not self.use_format and (c[0].isdigit() or c[0] == "g"):
-                            self.handle_group(t)
-                        elif c == "c":
-                            self.single_case(i, _UPPER)
-                        elif c == "l":
-                            self.single_case(i, _LOWER)
-                        elif c == "C":
-                            self.span_case(i, _UPPER)
-                        elif c == "L":
-                            self.span_case(i, _LOWER)
-                        elif c == "E":
-                            self.end_found = True
-                        elif not self.binary and first == "N":
-                            uc = unicodedata.lookup(t[3:-1])
-                            value = ord(self.convert_case(uc, self.get_single_stack()))
-                            self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
-                        elif (
-                            not self.binary and
-                            (first == "u" or (not NARROW and first == "U"))
-                        ):
-                            uc = compat.uchr(int(t[2:], 16))
-                            value = ord(self.convert_case(uc, self.get_single_stack()))
-                            self.result.append(("\\u%04x" if value <= 0xFFFF else "\\U%08x") % value)
-                        elif first == "x":
-                            hc = chr(int(t[2:], 16))
-                            self.result.append(
-                                "\\x%02x" % ord(self.convert_case(hc, self.get_single_stack()))
-                            )
-                        else:
-                            self.get_single_stack()
-                            self.result.append(t)
+                if self.use_format and t in self._curly_brackets:
+                    self.handle_format(t, i)
+                elif t == '\\':
+                    try:
+                        t = next(i)
+                        self.reference(t, i)
+                    except StopIteration:
+                        self.result.append(t)
+                        raise
                 else:
                     self.result.append(self.convert_case(t, self.get_single_stack()))
-
             except StopIteration:
                 pass
 
@@ -570,7 +596,7 @@ if REGEX_SUPPORT:
             self.handle_group(text, capture, True)
 
         def handle_group(self, text, capture=-1, is_format=False):
-            """Insert into the group slot and insert other accumulated text into the the literal slot."""
+            """Handle groups."""
 
             if len(self.result) > 1:
                 self.literal_slots.append("".join(self.result))
@@ -681,7 +707,6 @@ if REGEX_SUPPORT:
             self.binary = is_binary
             self.max_index = len(string) - 1
             self.index = 0
-            self.current = None
 
         def __iter__(self):
             """Iterate."""
@@ -702,7 +727,6 @@ if REGEX_SUPPORT:
             if m:
                 text = m.group(0)
                 self.index = m.end(0)
-                self.current = text
             return text
 
         def get_flags(self, version0=False):
@@ -714,7 +738,6 @@ if REGEX_SUPPORT:
             if m:
                 text = m.group(0)
                 self.index = m.end(0)
-                self.current = text
             return text
 
         def get_comments(self):
@@ -725,7 +748,6 @@ if REGEX_SUPPORT:
             if m:
                 self.index = m.end(0)
                 text = m.group(0)
-                self.current = text
             return text
 
         def get_posix(self):
@@ -736,7 +758,6 @@ if REGEX_SUPPORT:
             if m:
                 self.index = m.end(0)
                 text = m.group(0) if m else None
-                self.current = text
             return text
 
         def iternext(self):
@@ -752,8 +773,7 @@ if REGEX_SUPPORT:
             char = self.string[self.index]
 
             self.index += 1
-            self.current = char
-            return self.current
+            return char
 
     class RegexSearchTemplate(object):
         """Search Template."""

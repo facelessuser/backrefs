@@ -131,7 +131,6 @@ class ReplaceTokens(compat.Tokens):
         r'\{(?:[a-zA-Z]+[a-zA-Z\d_]*|0*(?:[1-9][0-9]?)?)?(?:\[[^\]]+\])?\}',
         _SEARCH_ASCII
     )
-    _long_replace_refs = ("u", "U", "g", "x", "N")
 
     def __init__(self, string, use_format=False, is_binary=False):
         """Initialize."""
@@ -141,7 +140,6 @@ class ReplaceTokens(compat.Tokens):
         self.use_format = use_format
         self.max_index = len(string) - 1
         self.index = 0
-        self.current = None
 
     def get_format(self):
         """Get octal escape."""
@@ -151,7 +149,6 @@ class ReplaceTokens(compat.Tokens):
         if m:
             self.index = m.end(0)
             text = m.group(0)[1:-1]
-            self.current = text
         return text
 
     def get_octal(self):
@@ -162,7 +159,6 @@ class ReplaceTokens(compat.Tokens):
         if m:
             self.index = m.end(0)
             text = m.group(0)
-            self.current = text
         return text
 
     def get_group(self):
@@ -173,7 +169,6 @@ class ReplaceTokens(compat.Tokens):
         if m:
             self.index = m.end(0)
             text = m.group(0)
-            self.current = text
         return text
 
     def get_named_group(self):
@@ -187,7 +182,6 @@ class ReplaceTokens(compat.Tokens):
             if len(text) == 1:
                 raise SyntaxError('Format for group is \\g<group_name_or_index>!')
             text = text
-            self.current = text
         return text
 
     def get_byte(self):
@@ -200,7 +194,6 @@ class ReplaceTokens(compat.Tokens):
             text = m.group(0)[1:]
             if not text:  # pragma: no cover
                 raise SyntaxError('Format for byte is \\xXX!')
-            self.current = text
         return text
 
     def get_wide_unicode(self):
@@ -213,7 +206,6 @@ class ReplaceTokens(compat.Tokens):
             text = m.group(0)[1:]
             if not text:  # pragma: no cover
                 raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
-            self.current = text
         return text
 
     def get_narrow_unicode(self):
@@ -226,7 +218,6 @@ class ReplaceTokens(compat.Tokens):
             text = m.group(0)[1:]
             if not text:  # pragma: no cover
                 raise SyntaxError('Format for Unicode is \\uXXXX!')
-            self.current = text
         return text
 
     def get_named_unicode(self):
@@ -240,7 +231,6 @@ class ReplaceTokens(compat.Tokens):
             if len(text) == 1:
                 raise SyntaxError('Format for Unicode name is \\N{name}!')
             text = text[2:-1].strip()
-            self.current = text
         return text
 
     def __iter__(self):
@@ -261,8 +251,7 @@ class ReplaceTokens(compat.Tokens):
         char = self.string[self.index]
 
         self.index += 1
-        self.current = char
-        return self.current
+        return char
 
 
 class ReplaceTemplate(object):
@@ -713,7 +702,6 @@ class SearchTokens(compat.Tokens):
         self.binary = is_binary
         self.max_index = len(string) - 1
         self.index = 0
-        self.current = None
 
     def __iter__(self):
         """Iterate."""
@@ -738,7 +726,6 @@ class SearchTokens(compat.Tokens):
         if m:
             text = m.group(0)
             self.index = m.end(0)
-            self.current = text
         return text
 
     def get_flags(self):
@@ -749,7 +736,6 @@ class SearchTokens(compat.Tokens):
         if m:
             text = m.group(0)
             self.index = m.end(0)
-            self.current = text
         return text
 
     def get_comments(self):
@@ -760,7 +746,6 @@ class SearchTokens(compat.Tokens):
         if m:
             self.index = m.end(0)
             text = m.group(0)
-            self.current = text
         return text
 
     def get_posix(self):
@@ -770,8 +755,7 @@ class SearchTokens(compat.Tokens):
         m = self._re_posix.match(self.string, self.index - 1)
         if m:
             self.index = m.end(0)
-            text = m.group(0)[2:-2] if m else None
-            self.current = text
+            text = m.group(0)[2:-2]
         return text
 
     def get_named_property(self):
@@ -784,7 +768,6 @@ class SearchTokens(compat.Tokens):
             if text == "N":
                 raise SyntaxError('Format for Unicode name is \\N{name}!')
             self.index = m.end(0)
-            self.current = text
             text = text[1:]
         return text
 
@@ -800,7 +783,6 @@ class SearchTokens(compat.Tokens):
             elif text == 'P':
                 raise SyntaxError('Format for inverse Unicode property is \\P{property} or \\PP!')
             self.index = m.end(0)
-            self.current = text
             text = text[1:]
         return text
 
@@ -817,8 +799,7 @@ class SearchTokens(compat.Tokens):
         char = self.string[self.index]
 
         self.index += 1
-        self.current = char
-        return self.current
+        return char
 
 
 class SearchTemplate(object):
