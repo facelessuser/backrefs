@@ -108,7 +108,6 @@ if REGEX_SUPPORT:
     class ReplaceTokens(compat.Tokens):
         """Preprocess replace tokens."""
 
-        _oct = '\\%03o' if compat.PY3 else '\\\\%03o'
         _re_octal = re.compile(r'[0-7]{3}|0{1,2}', _SEARCH_ASCII)
         _re_group = re.compile(r'[1-9][0-9]?', _SEARCH_ASCII)
         _re_named_group = re.compile(r'g(?:<(?:[a-zA-Z]+[a-zA-Z\d_]*|0+|0*[1-9][0-9]?)>)?', _SEARCH_ASCII)
@@ -253,6 +252,7 @@ if REGEX_SUPPORT:
         )
         _standard_escapes = ('a', 'b', 'f', 'n', 'r', 't', 'v')
         _curly_brackets = ('{', '}')
+        _oct = '\\%03o' if compat.PY3 else '\\\\%03o'
 
         def __init__(self, pattern, template, use_format=False):
             """Initialize."""
