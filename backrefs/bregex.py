@@ -623,7 +623,6 @@ if REGEX_SUPPORT:
                     break
             return g_case
 
-    # Template expander
     class ReplaceTemplateExpander(object):
         """Replacement template expander."""
 

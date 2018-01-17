@@ -117,7 +117,6 @@ class GlobalRetryException(Exception):
     """Global retry exception."""
 
 
-# Break apart template patterns into char tokens
 class ReplaceTokens(compat.Tokens):
     """Preprocess replace tokens."""
 
@@ -257,7 +256,7 @@ class ReplaceTokens(compat.Tokens):
         self.current = char
         return self.current
 
-# Templates
+
 class ReplaceTemplate(object):
     """Pre-replace template."""
 
@@ -649,7 +648,6 @@ class ReplaceTemplate(object):
         return g_case
 
 
-# Template expander
 class ReplaceTemplateExpander(object):
     """Replacement template expander."""
 
