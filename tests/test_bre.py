@@ -31,6 +31,15 @@ class TestSearchTemplate(unittest.TestCase):
             with pytest.raises(bre.RecursionException):
                 bre.compile_search(r'(?-x:(?x))', re.VERBOSE)
 
+    def test_unicode_ascii_swap(self):
+        """Test Unicode ASCII swapping."""
+
+        if PY37_PLUS:
+            pattern = bre.compile_search(r'(?u:\C\w)(?a:\C\w)(?u:\C\w)')
+            self.assertTrue(pattern.match('ÀÀAAÀÀ') is not None)
+            self.assertTrue(pattern.match('ÀÀAÀÀÀ') is None)
+            self.assertTrue(pattern.match('ÀÀÀAÀÀ') is None)
+
     def test_comments_with_scoped_verbose(self):
         """Test scoped verbose with comments (PY36+)."""
 

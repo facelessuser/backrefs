@@ -336,7 +336,7 @@ class SearchTokens(compat.Tokens):
         """Get scoped flags."""
 
         # Only PY36+ allow scoped flags
-        if not _SCOPED_FLAG_SUPPORT:
+        if not _SCOPED_FLAG_SUPPORT:  # pragma: no cover
             return None
 
         text = None
