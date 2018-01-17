@@ -507,6 +507,26 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_unicode_narrow_value(self):
+        """Test Unicode narrow value."""
+
+        pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
+        template = bregex.ReplaceTemplate(pattern, r'\u0033')
+        self.assertEqual('\\063', template._template)
+
+    def test_unexpected_end(self):
+        """Test cases where there is an unexpected end to the replace string."""
+
+        pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
+        with pytest.raises(_regex_core.error):
+            bregex.ReplaceTemplate(pattern, '\\1\\l\\')
+
+        with pytest.raises(_regex_core.error):
+            bregex.ReplaceTemplate(pattern, '\\1\\L\\')
+
+        with pytest.raises(_regex_core.error):
+            bregex.ReplaceTemplate(pattern, '\\1\\')
+
     def test_line_break(self):
         r"""Test line break \R."""
 

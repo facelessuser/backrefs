@@ -690,7 +690,7 @@ class SearchTokens(compat.Tokens):
     _re_posix = re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII)
     _re_flags = re.compile((r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'), _SEARCH_ASCII)
     _re_comments = re.compile(r'\(\?\#(\\.|[^)])*\)', _SEARCH_ASCII)
-    if compat.PY37:
+    if compat.PY37:  # pragma: no cover
         _scoped_regex_flags = re.compile(r'\(\?(?:[aLu]|-?[imsx])+:', _SEARCH_ASCII)
     else:
         _scoped_regex_flags = re.compile(r'\(\?(?:-?[imsx])+:', _SEARCH_ASCII)
@@ -713,7 +713,7 @@ class SearchTokens(compat.Tokens):
 
         self.index = index
 
-    def get_scoped_flags(self):
+    def get_scoped_flags(self):  # pragma: no cover
         """Get scoped flags."""
 
         # Only PY36+ allow scoped flags
@@ -984,7 +984,7 @@ class SearchTemplate(object):
 
         # (?flags:pattern)
         flags = i.get_scoped_flags()
-        if flags:
+        if flags:  # pragma: no cover
             t = flags
             self.flags(flags[2:-1], scoped=True)
 
