@@ -21,6 +21,67 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_word_boundary(self):
+        """Test word boundary."""
+
+        pattern = bre.compile_search(r'\<test')
+        self.assertEqual(
+            pattern.pattern,
+            r"\b(?=\w)test"
+        )
+        pattern = bre.compile_search(r'test\>')
+        self.assertEqual(
+            pattern.pattern,
+            r"test\b(?<=\w)"
+        )
+        pattern = bre.compile_search(r'[\<]test')
+        self.assertEqual(
+            pattern.pattern,
+            r"[\<]test"
+        )
+
+    def test_infinite_loop_catch(self):
+        """Test infinite loop catch."""
+
+        if PY3:
+            with pytest.raises(bre.LoopException):
+                bre.compile_search(r'((?a)(?u))')
+        if PY36_PLUS:
+            with pytest.raises(bre.LoopException):
+                bre.compile_search(r'(?-x:(?x))', re.VERBOSE)
+
+    def test_unicode_ascii_swap(self):
+        """Test Unicode ASCII swapping."""
+
+        if PY37_PLUS:
+            pattern = bre.compile_search(r'(?u:\C\w)(?a:\C\w)(?u:\C\w)')
+            self.assertTrue(pattern.match('ÀÀAAÀÀ') is not None)
+            self.assertTrue(pattern.match('ÀÀAÀÀÀ') is None)
+            self.assertTrue(pattern.match('ÀÀÀAÀÀ') is None)
+
+    def test_comments_with_scoped_verbose(self):
+        """Test scoped verbose with comments (Python 3.6+)."""
+
+        if PY36_PLUS:
+            pattern = bre.compile_search(
+                r'''(?u)Test # \e(?#\e)(?x:
+                Test #\e(?#\e)
+                (Test # \e
+                )Test #\e
+                )Test # \e'''
+            )
+
+            self.assertEqual(
+                pattern.pattern,
+                r'''(?u)Test # \x1b(?#\e)(?x:
+                Test #\\e(?#\\e)
+                (Test # \\e
+                )Test #\\e
+                )Test # \x1b'''
+            )
+
+            self.assertTrue(pattern.match('Test # \x1bTestTestTestTest # \x1b') is not None)
+
     def test_byte_string_named_chars(self):
         """Test byte string named char."""
 
@@ -767,6 +828,19 @@ class TestSearchTemplate(unittest.TestCase):
 
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
+
+    def test_unexpected_end(self):
+        """Test cases where there is an unexpected end to the replace string."""
+
+        pattern = re.compile(r"(some)(.+?)(pattern)(!)")
+        with pytest.raises(sre_constants.error):
+            bre.ReplaceTemplate(pattern, '\\1\\l\\')
+
+        with pytest.raises(sre_constants.error):
+            bre.ReplaceTemplate(pattern, '\\1\\L\\')
+
+        with pytest.raises(sre_constants.error):
+            bre.ReplaceTemplate(pattern, '\\1\\')
 
     def test_replace_unicode_name_ascii_range(self):
         """Test replacing Unicode names in the ASCII range."""

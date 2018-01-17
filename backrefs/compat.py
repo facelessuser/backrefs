@@ -8,6 +8,8 @@ import sys
 import struct
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
+PY36 = (3, 6) <= sys.version_info
+PY37 = (3, 7) <= sys.version_info
 
 if PY3:
     string_type = str

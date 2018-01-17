@@ -19,6 +19,34 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_word_boundary(self):
+        """Test word boundary."""
+
+        pattern = bregex.compile_search(r'\<test')
+        self.assertEqual(
+            pattern.pattern,
+            r"\b(?=\w)test"
+        )
+        pattern = bregex.compile_search(r'test\>')
+        self.assertEqual(
+            pattern.pattern,
+            r"test\b(?<=\w)"
+        )
+        pattern = bregex.compile_search(r'[\<]test')
+        self.assertEqual(
+            pattern.pattern,
+            r"[\<]test"
+        )
+
+    def test_infinite_loop_catch(self):
+        """Test infinite loop catch."""
+
+        with pytest.raises(bregex.LoopException):
+            bregex.compile_search(r'(?-x:(?x))', regex.V0 | regex.VERBOSE)
+
+        with pytest.raises(bregex.LoopException):
+            bregex.compile_search(r'(?V1)(?V0)')
+
     def test_escape_char(self):
         """Test escape char."""
 
@@ -54,6 +82,17 @@ class TestSearchTemplate(unittest.TestCase):
         )
 
         self.assertTrue(pattern.match('Test # \nTestTestTestTest # \n') is not None)
+
+    def test_mid_verbose(self):
+        """Test mid verbose."""
+
+        pattern = bregex.compile_search(r'(?V1)# \R (?x) # \R')
+        self.assertEqual(
+            pattern.pattern,
+            r'(?V1)# (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029) (?x) # \\R'
+        )
+
+        self.assertTrue(pattern.match('# \n '))
 
     def test_comments_v1(self):
         """Test comments v1."""
