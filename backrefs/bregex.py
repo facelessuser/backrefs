@@ -105,96 +105,6 @@ if REGEX_SUPPORT:
     class GlobalRetryException(Exception):
         """Global retry exception."""
 
-    class RegexSearchTokens(compat.Tokens):
-        """Preprocess replace tokens."""
-
-        _re_posix = re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII)
-        _re_comments = re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII)
-        _regex_flags = re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)', _SEARCH_ASCII)
-        _regex_flags_v0 = re.compile(r'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)', _SEARCH_ASCII)
-        _scoped_regex_flags = re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[ixmsfw])+:', _SEARCH_ASCII)
-
-        def __init__(self, string, is_binary=False):
-            """Initialize."""
-
-            self.string = string
-            self.binary = is_binary
-            self.max_index = len(string) - 1
-            self.index = 0
-            self.current = None
-
-        def __iter__(self):
-            """Iterate."""
-
-            return self
-
-        def rewind(self, index):
-            """Rewind."""
-
-            self.index = index
-
-        def get_scoped_flags(self, version0=False):
-            """Get scoped flags."""
-
-            text = None
-            pattern = self._scoped_regex_flags
-            m = pattern.match(self.string, self.index - 1)
-            if m:
-                text = m.group(0)
-                self.index = m.end(0)
-                self.current = text
-            return text
-
-        def get_flags(self, version0=False):
-            """Get flags."""
-
-            text = None
-            pattern = self._regex_flags if not version0 else self._regex_flags_v0
-            m = pattern.match(self.string, self.index - 1)
-            if m:
-                text = m.group(0)
-                self.index = m.end(0)
-                self.current = text
-            return text
-
-        def get_comments(self):
-            """Get comments."""
-
-            text = None
-            m = self._re_comments.match(self.string, self.index - 1)
-            if m:
-                self.index = m.end(0)
-                text = m.group(0)
-                self.current = text
-            return text
-
-        def get_posix(self):
-            """Get POSIX."""
-
-            text = None
-            m = self._re_posix.match(self.string, self.index - 1)
-            if m:
-                self.index = m.end(0)
-                text = m.group(0) if m else None
-                self.current = text
-            return text
-
-        def iternext(self):
-            """
-            Iterate through characters of the string.
-
-            Count escaped l, L, c, C, E and backslash as a single char.
-            """
-
-            if self.index > self.max_index:
-                raise StopIteration
-
-            char = self.string[self.index]
-
-            self.index += 1
-            self.current = char
-            return self.current
-
     # Break apart template patterns into char tokens
     class ReplaceTokens(compat.Tokens):
         """Preprocess replace tokens."""
@@ -335,328 +245,6 @@ if REGEX_SUPPORT:
             self.index += len(char)
             self.current = char
             return self.current
-
-    class RegexSearchTemplate(object):
-        """Search Template."""
-
-        _new_refs = ("e", "R", "Q", "E", "<", ">")
-        _re_escape = r"\x1b"
-        _re_start_wb = r"\b(?=\w)"
-        _re_end_wb = r"\b(?<=\w)"
-        _line_break = r'(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)'
-        _binary_line_break = r'(?>\r\n|\n|\x0b|\f|\r|\x85)'
-
-        def __init__(self, search, re_verbose=False, re_version=0):
-            """Initialize."""
-
-            if isinstance(search, compat.binary_type):
-                self.binary = True
-            else:
-                self.binary = False
-
-            if self.binary:
-                self._re_line_break = self._binary_line_break
-            else:
-                self._re_line_break = self._line_break
-            self.re_verbose = re_verbose
-            self.re_version = re_version
-            self.search = search
-
-        def process_quotes(self, string):
-            """Process quotes."""
-
-            escaped = False
-            in_quotes = False
-            current = []
-            quoted = []
-            i = RegexSearchTokens(string, is_binary=self.binary)
-            iter(i)
-            for t in i:
-                if not escaped and t == "\\":
-                    escaped = True
-                elif escaped:
-                    escaped = False
-                    if t == "E":
-                        if in_quotes:
-                            current.append(escape("".join(quoted)))
-                            quoted = []
-                            in_quotes = False
-                    elif t == "Q" and not in_quotes:
-                        in_quotes = True
-                    elif in_quotes:
-                        quoted.extend(["\\", t])
-                    else:
-                        current.extend(["\\", t])
-                elif in_quotes:
-                    quoted.extend(t)
-                else:
-                    current.append(t)
-
-            if in_quotes and escaped:
-                quoted.append("\\")
-            elif escaped:
-                current.append("\\")
-
-            if quoted:
-                current.append(escape("".join(quoted)))
-
-            return "".join(current)
-
-        def verbose_comment(self, t, i):
-            """Handle verbose comments."""
-
-            current = []
-            escaped = False
-
-            try:
-                while t != "\n":
-                    if not escaped and t == "\\":
-                        escaped = True
-                        current.append(t)
-                    elif escaped:
-                        escaped = False
-                        if t in self._new_refs:
-                            current.append("\\")
-                        current.append(t)
-                    else:
-                        current.append(t)
-                    t = next(i)
-            except StopIteration:
-                pass
-
-            if t == "\n":
-                current.append(t)
-            return current
-
-        def flags(self, text, scoped=False):
-            """Analyze flags."""
-
-            global_retry = False
-            if (self.version == VERSION1 or scoped) and '-x' in text and self.verbose:
-                self.verbose = False
-            elif 'x' in text and not self.verbose:
-                self.verbose = True
-                if not scoped and self.version == VERSION0:
-                    self.temp_global_flag_swap['verbose'] = True
-                    global_retry = True
-            if 'V0' in text and self.version == VERSION1:  # pragma: no cover
-                # Default is V0 if none is selected,
-                # so it is unlikely that this will be selected.
-                self.temp_global_flag_swap['version'] = True
-                self.version = VERSION0
-                global_retry = True
-            elif "V1" in text and self.version == VERSION0:
-                self.temp_global_flag_swap['version'] = True
-                self.version = VERSION1
-                global_retry = True
-            if global_retry:
-                raise GlobalRetryException('Global Retry')
-
-        def reference(self, t, i):
-            """Handle references."""
-
-            current = []
-
-            try:
-                t = next(i)
-            except StopIteration:
-                return [t]
-
-            if t == "<":
-                current.append(self._re_start_wb)
-            elif t == ">":
-                current.append(self._re_end_wb)
-            elif t == "R":
-                current.append(self._re_line_break)
-            elif t == 'e':
-                current.extend(self._re_escape)
-            else:
-                current.extend(["\\", t])
-            return current
-
-        def subgroup(self, t, i):
-            """Handle parenthesis."""
-
-            # (?flags)
-            flags = i.get_flags(version0=self.version == VERSION0)
-            if flags:
-                self.flags(flags[2:-1])
-                return [flags]
-
-            # (?#comment)
-            comments = i.get_comments()
-            if comments:
-                return [comments]
-
-            verbose = self.verbose
-
-            # (?flags:pattern)
-            flags = i.get_scoped_flags(version0=self.version == VERSION0)
-            if flags:
-                t = flags
-                self.flags(flags[2:-1], scoped=True)
-
-            current = []
-            try:
-                while t != ')':
-                    if not current:
-                        current.append(t)
-                    else:
-                        current.extend(self.normal(t, i))
-
-                    t = next(i)
-            except StopIteration:
-                pass
-            self.verbose = verbose
-
-            if t == ")":
-                current.append(t)
-            return current
-
-        def char_groups(self, t, i):
-            """Handle character groups."""
-
-            current = []
-            pos = i.index - 1
-            found = 0
-            sub_first = None
-            escaped = False
-            first = None
-
-            try:
-                while True:
-                    if not escaped and t == "\\":
-                        escaped = True
-                    elif escaped:
-                        escaped = False
-                        if t == 'e':
-                            current.append(self._re_escape)
-                        else:
-                            current.extend(["\\", t])
-                    elif t == "[" and not found:
-                        found += 1
-                        first = pos
-                        current.append(t)
-                    elif t == "[" and found and self.version == V1:
-                        # Start of sub char set found
-                        posix = None if self.binary else i.get_posix()
-                        if posix:
-                            current.append(posix)
-                            pos = i.index - 2
-                        else:
-                            found += 1
-                            sub_first = pos
-                            current.append(t)
-                    elif t == "[":
-                        posix = None if self.binary else i.get_posix()
-                        if posix:
-                            current.append(posix)
-                            pos = i.index - 2
-                        else:
-                            current.append(t)
-                    elif t == "^" and found == 1 and (pos == first + 1):
-                        # Found ^ at start of first char set; adjust 1st char pos
-                        current.append(t)
-                        first = pos
-                    elif self.version == V1 and t == "^" and found > 1 and (pos == sub_first + 1):
-                        # Found ^ at start of sub char set; adjust 1st char sub pos
-                        current.append(t)
-                        sub_first = pos
-                    elif t == "]" and found == 1 and (pos != first + 1):
-                        # First char set closed; log range
-                        current.append(t)
-                        found = 0
-                        break
-                    elif self.version == V1 and t == "]" and found > 1 and (pos != sub_first + 1):
-                        # Sub char set closed; decrement depth counter
-                        found -= 1
-                        current.append(t)
-                    else:
-                        current.append(t)
-                    pos += 1
-                    t = next(i)
-            except StopIteration:
-                pass
-
-            if escaped:
-                current.append(t)
-            return current
-
-        def normal(self, t, i):
-            """Handle normal chars."""
-
-            current = []
-
-            if t == "\\":
-                current.extend(self.reference(t, i))
-            elif t == "(":
-                current.extend(self.subgroup(t, i))
-            elif self.verbose and t == "#":
-                current.extend(self.verbose_comment(t, i))
-            elif t == "[":
-                current.extend(self.char_groups(t, i))
-            else:
-                current.append(t)
-            return current
-
-        def main_group(self, i):
-            """The main group: group 0."""
-
-            current = []
-            while True:
-                try:
-                    t = next(i)
-                    current.extend(self.normal(t, i))
-                except StopIteration:
-                    break
-            return current
-
-        def apply(self):
-            """Apply search template."""
-
-            self.verbose = bool(self.re_verbose)
-            self.version = self.re_version if self.re_version else regex.DEFAULT_VERSION
-            self.global_flag_swap = {
-                "version": self.re_version != 0,
-                "verbose": False
-            }
-            self.temp_global_flag_swap = {
-                "version": False,
-                "verbose": False
-            }
-
-            new_pattern = []
-            string = self.process_quotes(self.search.decode('latin-1') if self.binary else self.search)
-
-            i = RegexSearchTokens(string, is_binary=self.binary)
-            iter(i)
-
-            retry = True
-            while retry:
-                retry = False
-                try:
-                    new_pattern = self.main_group(i)
-                except GlobalRetryException:
-                    # Prevent a loop of retry over and over for a pattern like ((?V0)(?V1))
-                    # or on V0 (?-x:(?x))
-                    if self.temp_global_flag_swap['version']:
-                        if self.global_flag_swap['version']:
-                            raise RecursionException('Global version flag recursion.')
-                        else:
-                            self.global_flag_swap["version"] = True
-                    if self.temp_global_flag_swap['verbose']:
-                        if self.global_flag_swap['verbose']:
-                            raise RecursionException('Global verbose flag recursion.')
-                        else:
-                            self.global_flag_swap['verbose'] = True
-                    self.temp_global_flag_swap = {
-                        "version": False,
-                        "verbose": False
-                    }
-                    i.rewind(0)
-                    retry = True
-
-            return "".join(new_pattern).encode('latin-1') if self.binary else "".join(new_pattern)
 
     class ReplaceTemplate(object):
         """Pre-replace template."""
@@ -886,7 +474,7 @@ if REGEX_SUPPORT:
                                 value = ord(self.convert_case(compat.uchr(value), self.get_single_stack()))
                                 self.result.append(('\\%03o' if value <= 0xFF else '\\u%04x') % value)
                         elif not self.use_format and (c[0:1].isdigit() or c[0:1] == "g"):
-                                self.handle_group(t)
+                            self.handle_group(t)
                         elif c == "c":
                             self.single_case(i, _UPPER)
                         elif c == "l":
@@ -930,8 +518,8 @@ if REGEX_SUPPORT:
                 single = self.single_stack.pop()
             return single
 
-        def handle_format_group(self, text):
-            """Handle groups."""
+        def get_capture(self, text):
+            """Get the capture."""
 
             capture = -1
             base = 10
@@ -939,9 +527,9 @@ if REGEX_SUPPORT:
                 index = text.index("[")
                 capture = text[index + 1:-1]
                 text = text[:index]
-                prefix = capture[1:3] if capture[0:1] == "-" else capture[:2]
+                prefix = capture[1:3] if capture[0] == "-" else capture[:2]
                 if prefix[0:1] == "0":
-                    char = prefix[-1:]
+                    char = prefix[-1]
                     if char == "b":
                         base = 2
                     elif char == "o":
@@ -956,6 +544,12 @@ if REGEX_SUPPORT:
                     capture = int(capture, base)
                 except ValueError:
                     raise ValueError("Capture index must be an integer!")
+            return text, capture
+
+        def handle_format_group(self, text):
+            """Handle groups."""
+
+            text, capture = self.get_capture(text)
 
             # Handle auto or manual format
             if text == "":
@@ -973,50 +567,32 @@ if REGEX_SUPPORT:
             elif not self.manual:
                 raise ValueError("Cannot switch to manual format during auto format!")
 
+            self.handle_group(text, capture, True)
+
+        def handle_group(self, text, capture=-1, is_format=False):
+            """Insert into the group slot and insert other accumulated text into the the literal slot."""
+
             if len(self.result) > 1:
                 self.literal_slots.append("".join(self.result))
-                self.literal_slots.extend(["\\g<", text, ">"])
+                if is_format:
+                    self.literal_slots.extend(["\\g<", text, ">"])
+                else:
+                    self.literal_slots.append(text)
                 del self.result[:]
                 self.result.append("")
                 self.slot += 1
-            else:
+            elif is_format:
                 self.literal_slots.extend(["\\g<", text, ">"])
-
-            single = self.get_single_stack()
+            else:
+                self.literal_slots.append(text)
 
             self.group_slots.append(
                 (
                     self.slot,
                     (
                         self.span_stack[-1] if self.span_stack else None,
-                        single,
+                        self.get_single_stack(),
                         capture
-                    )
-                )
-            )
-            self.slot += 1
-
-        def handle_group(self, text):
-            """Handle groups."""
-
-            if len(self.result) > 1:
-                self.literal_slots.append("".join(self.result))
-                self.literal_slots.append(text)
-                del self.result[:]
-                self.result.append("")
-                self.slot += 1
-            else:
-                self.literal_slots.append(text)
-
-            single = self.get_single_stack()
-
-            self.group_slots.append(
-                (
-                    self.slot,
-                    (
-                        self.span_stack[-1] if self.span_stack else None,
-                        single,
-                        -1
                     )
                 )
             )
@@ -1089,6 +665,414 @@ if REGEX_SUPPORT:
                 text.append(l)
 
             return sep.join(text)
+
+    class SearchTokens(compat.Tokens):
+        """Preprocess replace tokens."""
+
+        _re_posix = re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII)
+        _re_comments = re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII)
+        _regex_flags = re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)', _SEARCH_ASCII)
+        _regex_flags_v0 = re.compile(r'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)', _SEARCH_ASCII)
+        _scoped_regex_flags = re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[ixmsfw])+:', _SEARCH_ASCII)
+
+        def __init__(self, string, is_binary=False):
+            """Initialize."""
+
+            self.string = string
+            self.binary = is_binary
+            self.max_index = len(string) - 1
+            self.index = 0
+            self.current = None
+
+        def __iter__(self):
+            """Iterate."""
+
+            return self
+
+        def rewind(self, index):
+            """Rewind."""
+
+            self.index = index
+
+        def get_scoped_flags(self, version0=False):
+            """Get scoped flags."""
+
+            text = None
+            pattern = self._scoped_regex_flags
+            m = pattern.match(self.string, self.index - 1)
+            if m:
+                text = m.group(0)
+                self.index = m.end(0)
+                self.current = text
+            return text
+
+        def get_flags(self, version0=False):
+            """Get flags."""
+
+            text = None
+            pattern = self._regex_flags if not version0 else self._regex_flags_v0
+            m = pattern.match(self.string, self.index - 1)
+            if m:
+                text = m.group(0)
+                self.index = m.end(0)
+                self.current = text
+            return text
+
+        def get_comments(self):
+            """Get comments."""
+
+            text = None
+            m = self._re_comments.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0)
+                self.current = text
+            return text
+
+        def get_posix(self):
+            """Get POSIX."""
+
+            text = None
+            m = self._re_posix.match(self.string, self.index - 1)
+            if m:
+                self.index = m.end(0)
+                text = m.group(0) if m else None
+                self.current = text
+            return text
+
+        def iternext(self):
+            """
+            Iterate through characters of the string.
+
+            Count escaped l, L, c, C, E and backslash as a single char.
+            """
+
+            if self.index > self.max_index:
+                raise StopIteration
+
+            char = self.string[self.index]
+
+            self.index += 1
+            self.current = char
+            return self.current
+
+    class RegexSearchTemplate(object):
+        """Search Template."""
+
+        _new_refs = ("e", "R", "Q", "E", "<", ">")
+        _re_escape = r"\x1b"
+        _re_start_wb = r"\b(?=\w)"
+        _re_end_wb = r"\b(?<=\w)"
+        _line_break = r'(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)'
+        _binary_line_break = r'(?>\r\n|\n|\x0b|\f|\r|\x85)'
+
+        def __init__(self, search, re_verbose=False, re_version=0):
+            """Initialize."""
+
+            if isinstance(search, compat.binary_type):
+                self.binary = True
+            else:
+                self.binary = False
+
+            if self.binary:
+                self._re_line_break = self._binary_line_break
+            else:
+                self._re_line_break = self._line_break
+            self.re_verbose = re_verbose
+            self.re_version = re_version
+            self.search = search
+
+        def process_quotes(self, string):
+            """Process quotes."""
+
+            escaped = False
+            in_quotes = False
+            current = []
+            quoted = []
+            i = SearchTokens(string, is_binary=self.binary)
+            iter(i)
+            for t in i:
+                if not escaped and t == "\\":
+                    escaped = True
+                elif escaped:
+                    escaped = False
+                    if t == "E":
+                        if in_quotes:
+                            current.append(escape("".join(quoted)))
+                            quoted = []
+                            in_quotes = False
+                    elif t == "Q" and not in_quotes:
+                        in_quotes = True
+                    elif in_quotes:
+                        quoted.extend(["\\", t])
+                    else:
+                        current.extend(["\\", t])
+                elif in_quotes:
+                    quoted.extend(t)
+                else:
+                    current.append(t)
+
+            if in_quotes and escaped:
+                quoted.append("\\")
+            elif escaped:
+                current.append("\\")
+
+            if quoted:
+                current.append(escape("".join(quoted)))
+
+            return "".join(current)
+
+        def verbose_comment(self, t, i):
+            """Handle verbose comments."""
+
+            current = []
+            escaped = False
+
+            try:
+                while t != "\n":
+                    if not escaped and t == "\\":
+                        escaped = True
+                        current.append(t)
+                    elif escaped:
+                        escaped = False
+                        if t in self._new_refs:
+                            current.append("\\")
+                        current.append(t)
+                    else:
+                        current.append(t)
+                    t = next(i)
+            except StopIteration:
+                pass
+
+            if t == "\n":
+                current.append(t)
+            return current
+
+        def flags(self, text, scoped=False):
+            """Analyze flags."""
+
+            global_retry = False
+            if (self.version == VERSION1 or scoped) and '-x' in text and self.verbose:
+                self.verbose = False
+            elif 'x' in text and not self.verbose:
+                self.verbose = True
+                if not scoped and self.version == VERSION0:
+                    self.temp_global_flag_swap['verbose'] = True
+                    global_retry = True
+            if 'V0' in text and self.version == VERSION1:  # pragma: no cover
+                # Default is V0 if none is selected,
+                # so it is unlikely that this will be selected.
+                self.temp_global_flag_swap['version'] = True
+                self.version = VERSION0
+                global_retry = True
+            elif "V1" in text and self.version == VERSION0:
+                self.temp_global_flag_swap['version'] = True
+                self.version = VERSION1
+                global_retry = True
+            if global_retry:
+                raise GlobalRetryException('Global Retry')
+
+        def reference(self, t, i, in_group=False):
+            """Handle references."""
+
+            current = []
+
+            if not in_group and t == "<":
+                current.append(self._re_start_wb)
+            elif not in_group and t == ">":
+                current.append(self._re_end_wb)
+            elif not in_group and t == "R":
+                current.append(self._re_line_break)
+            elif t == 'e':
+                current.extend(self._re_escape)
+            else:
+                current.extend(["\\", t])
+            return current
+
+        def subgroup(self, t, i):
+            """Handle parenthesis."""
+
+            # (?flags)
+            flags = i.get_flags(version0=self.version == VERSION0)
+            if flags:
+                self.flags(flags[2:-1])
+                return [flags]
+
+            # (?#comment)
+            comments = i.get_comments()
+            if comments:
+                return [comments]
+
+            verbose = self.verbose
+
+            # (?flags:pattern)
+            flags = i.get_scoped_flags(version0=self.version == VERSION0)
+            if flags:
+                t = flags
+                self.flags(flags[2:-1], scoped=True)
+
+            current = []
+            try:
+                while t != ')':
+                    if not current:
+                        current.append(t)
+                    else:
+                        current.extend(self.normal(t, i))
+
+                    t = next(i)
+            except StopIteration:
+                pass
+            self.verbose = verbose
+
+            if t == ")":
+                current.append(t)
+            return current
+
+        def char_groups(self, t, i):
+            """Handle character groups."""
+
+            current = []
+            pos = i.index - 1
+            found = 0
+            sub_first = None
+            escaped = False
+            first = None
+
+            try:
+                while True:
+                    if not escaped and t == "\\":
+                        escaped = True
+                    elif escaped:
+                        escaped = False
+                        current.extend(self.reference(t, i, True))
+                    elif t == "[" and not found:
+                        found += 1
+                        first = pos
+                        current.append(t)
+                    elif t == "[" and found and self.version == V1:
+                        # Start of sub char set found
+                        posix = None if self.binary else i.get_posix()
+                        if posix:
+                            current.append(posix)
+                            pos = i.index - 2
+                        else:
+                            found += 1
+                            sub_first = pos
+                            current.append(t)
+                    elif t == "[":
+                        posix = None if self.binary else i.get_posix()
+                        if posix:
+                            current.append(posix)
+                            pos = i.index - 2
+                        else:
+                            current.append(t)
+                    elif t == "^" and found == 1 and (pos == first + 1):
+                        # Found ^ at start of first char set; adjust 1st char pos
+                        current.append(t)
+                        first = pos
+                    elif self.version == V1 and t == "^" and found > 1 and (pos == sub_first + 1):
+                        # Found ^ at start of sub char set; adjust 1st char sub pos
+                        current.append(t)
+                        sub_first = pos
+                    elif t == "]" and found == 1 and (pos != first + 1):
+                        # First char set closed; log range
+                        current.append(t)
+                        found = 0
+                        break
+                    elif self.version == V1 and t == "]" and found > 1 and (pos != sub_first + 1):
+                        # Sub char set closed; decrement depth counter
+                        found -= 1
+                        current.append(t)
+                    else:
+                        current.append(t)
+                    pos += 1
+                    t = next(i)
+            except StopIteration:
+                pass
+
+            if escaped:
+                current.append(t)
+            return current
+
+        def normal(self, t, i):
+            """Handle normal chars."""
+
+            current = []
+
+            if t == "\\":
+                try:
+                    t = next(i)
+                    current.extend(self.reference(t, i))
+                except StopIteration:
+                    current.append(t)
+            elif t == "(":
+                current.extend(self.subgroup(t, i))
+            elif self.verbose and t == "#":
+                current.extend(self.verbose_comment(t, i))
+            elif t == "[":
+                current.extend(self.char_groups(t, i))
+            else:
+                current.append(t)
+            return current
+
+        def main_group(self, i):
+            """The main group: group 0."""
+
+            current = []
+            while True:
+                try:
+                    t = next(i)
+                    current.extend(self.normal(t, i))
+                except StopIteration:
+                    break
+            return current
+
+        def apply(self):
+            """Apply search template."""
+
+            self.verbose = bool(self.re_verbose)
+            self.version = self.re_version if self.re_version else regex.DEFAULT_VERSION
+            self.global_flag_swap = {
+                "version": self.re_version != 0,
+                "verbose": False
+            }
+            self.temp_global_flag_swap = {
+                "version": False,
+                "verbose": False
+            }
+
+            new_pattern = []
+            string = self.process_quotes(self.search.decode('latin-1') if self.binary else self.search)
+
+            i = SearchTokens(string, is_binary=self.binary)
+            iter(i)
+
+            retry = True
+            while retry:
+                retry = False
+                try:
+                    new_pattern = self.main_group(i)
+                except GlobalRetryException:
+                    # Prevent a loop of retry over and over for a pattern like ((?V0)(?V1))
+                    # or on V0 (?-x:(?x))
+                    if self.temp_global_flag_swap['version']:
+                        if self.global_flag_swap['version']:
+                            raise RecursionException('Global version flag recursion.')
+                        else:
+                            self.global_flag_swap["version"] = True
+                    if self.temp_global_flag_swap['verbose']:
+                        if self.global_flag_swap['verbose']:
+                            raise RecursionException('Global verbose flag recursion.')
+                        else:
+                            self.global_flag_swap['verbose'] = True
+                    self.temp_global_flag_swap = {
+                        "version": False,
+                        "verbose": False
+                    }
+                    i.rewind(0)
+                    retry = True
+
+            return "".join(new_pattern).encode('latin-1') if self.binary else "".join(new_pattern)
 
     class Replace(namedtuple('Replace', ['func', 'use_format', 'pattern_hash'])):
         """Bregex compiled replace object."""
