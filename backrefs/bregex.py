@@ -252,7 +252,6 @@ if REGEX_SUPPORT:
         )
         _standard_escapes = ('a', 'b', 'f', 'n', 'r', 't', 'v')
         _curly_brackets = ('{', '}')
-        _oct = '\\%03o' if compat.PY3 else '\\\\%03o'
 
         def __init__(self, pattern, template, use_format=False):
             """Initialize."""
@@ -314,7 +313,7 @@ if REGEX_SUPPORT:
                 elif single:
                     value = ord(self.convert_case(compat.uchr(value), single))
                 if value <= 0xFF:
-                    self.result.append(self._oct % value)
+                    self.result.append('\\%03o' % value)
                 else:
                     self.result.append(compat.uchr(value))
 
@@ -329,7 +328,7 @@ if REGEX_SUPPORT:
             elif single:
                 value = ord(self.convert_case(compat.uchr(value), single))
             if value <= 0xFF:
-                self.result.append(self._oct % value)
+                self.result.append('\\%03o' % value)
             else:
                 self.result.append(compat.uchr(value))
 
@@ -345,7 +344,7 @@ if REGEX_SUPPORT:
             elif single:
                 value = ord(self.convert_case(compat.uchr(value), single))
             if value <= 0xFF:
-                self.result.append(self._oct % value)
+                self.result.append('\\%03o' % value)
             else:
                 self.result.append(compat.uchr(value))
 
@@ -359,7 +358,7 @@ if REGEX_SUPPORT:
                 value = ord(self.convert_case(text, single)) if single is not None else ord(text)
             elif single:
                 value = ord(self.convert_case(chr(value), single))
-            self.result.append(self._oct % value)
+            self.result.append('\\%03o' % value)
 
         def reference(self, t, i):
             """Handle references."""

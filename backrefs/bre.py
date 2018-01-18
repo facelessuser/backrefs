@@ -265,7 +265,6 @@ class ReplaceTemplate(object):
     )
     _standard_escapes = ('a', 'b', 'f', 'n', 'r', 't', 'v')
     _curly_brackets = ('{', '}')
-    _oct = '\\%03o' if compat.PY3 else '\\\\%03o'
 
     def __init__(self, pattern, template, use_format=False):
         """Initialize."""
@@ -327,7 +326,7 @@ class ReplaceTemplate(object):
             elif single:
                 value = ord(self.convert_case(compat.uchr(value), single))
             if value <= 0xFF:
-                self.result.append(self._oct % value)
+                self.result.append('\\%03o' % value)
             else:
                 self.result.append(compat.uchr(value))
 
@@ -342,7 +341,7 @@ class ReplaceTemplate(object):
         elif single:
             value = ord(self.convert_case(compat.uchr(value), single))
         if value <= 0xFF:
-            self.result.append(self._oct % value)
+            self.result.append('\\%03o' % value)
         else:
             self.result.append(compat.uchr(value))
 
@@ -358,7 +357,7 @@ class ReplaceTemplate(object):
         elif single:
             value = ord(self.convert_case(compat.uchr(value), single))
         if value <= 0xFF:
-            self.result.append(self._oct % value)
+            self.result.append('\\%03o' % value)
         else:
             self.result.append(compat.uchr(value))
 
@@ -372,7 +371,7 @@ class ReplaceTemplate(object):
             value = ord(self.convert_case(text, single)) if single is not None else ord(text)
         elif single:
             value = ord(self.convert_case(chr(value), single))
-        self.result.append(self._oct % value)
+        self.result.append('\\%03o' % value)
 
     def reference(self, t, i):
         """Handle references."""
@@ -818,7 +817,6 @@ class SearchTemplate(object):
         ''',
         _SEARCH_ASCII
     )
-    _oct = '\\%03o' if compat.PY3 else '\\\\%03o'
 
     def __init__(self, search, re_verbose=False, re_unicode=None):
         """Initialize."""
@@ -1126,7 +1124,7 @@ class SearchTemplate(object):
         elif value == "":
             return value
         else:
-            return [self._oct % value if value <= 0xFF else compat.uchr(value)]
+            return ['\\%03o' % value if value <= 0xFF else compat.uchr(value)]
 
     def unicode_props(self, props, in_group, negate=False):
         """
