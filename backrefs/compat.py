@@ -51,9 +51,3 @@ def uchr(i):
         return unichar(i)
     except ValueError:  # pragma: no cover
         return struct.pack('i', i).decode('utf-32')
-
-
-def int2str(number):
-    """Convert number to string."""
-
-    return string_type(number)

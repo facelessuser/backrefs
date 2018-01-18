@@ -829,6 +829,18 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_unicode_narrow_value(self):
+        """Test Unicode narrow value."""
+
+        # Python 3 does not apply Unicode syntax in raw string,
+        # but Python 2 does.  So Python 2 will turn the following
+        # into a group and fail. There isn't really a workaround for this.
+        if PY3:
+            pattern = re.compile(r"(some)(.+?)(pattern)(!)")
+            expand = bre.compile_replace(pattern, r'\u005cg')
+            results = expand(pattern.match('some test pattern!'))
+            self.assertEqual('\g', results)
+
     def test_unexpected_end(self):
         """Test cases where there is an unexpected end to the replace string."""
 

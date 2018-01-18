@@ -507,6 +507,31 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_unicode_narrow_value(self):
+        """Test Unicode narrow value."""
+
+        # Python 3 does not apply Unicode syntax in raw string,
+        # but Python 2 does.  So Python 2 will turn the following
+        # into a group and fail. There isn't really a workaround for this.
+        if PY3:
+            pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
+            expand = bregex.compile_replace(pattern, r'\u005cg')
+            results = expand(pattern.match('some test pattern!'))
+            self.assertEqual('\g', results)
+
+    def test_unexpected_end(self):
+        """Test cases where there is an unexpected end to the replace string."""
+
+        pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
+        with pytest.raises(_regex_core.error):
+            bregex.ReplaceTemplate(pattern, '\\1\\l\\')
+
+        with pytest.raises(_regex_core.error):
+            bregex.ReplaceTemplate(pattern, '\\1\\L\\')
+
+        with pytest.raises(_regex_core.error):
+            bregex.ReplaceTemplate(pattern, '\\1\\')
+
     def test_line_break(self):
         r"""Test line break \R."""
 
