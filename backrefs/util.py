@@ -1,8 +1,8 @@
 """
-Compatibility abstraction.
+Utilities and compatibility abstraction.
 
 Licensed under MIT
-Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2015 - 2018 Isaac Muse <isaacmuse@gmail.com>
 """
 import sys
 import struct

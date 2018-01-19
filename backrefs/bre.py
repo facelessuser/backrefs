@@ -60,7 +60,7 @@ Recommended to use compiling.  Assuming the above compiling:
 ~~~
 
 Licensed under MIT
-Copyright (c) 2011 - 2015 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2011 - 2018 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import unicode_literals
 import sys
@@ -68,10 +68,10 @@ import sre_parse
 import re
 import unicodedata
 from collections import OrderedDict
-from . import compat
+from . import util
 from . import uniprops
 
-_SCOPED_FLAG_SUPPORT = compat.PY36
+_SCOPED_FLAG_SUPPORT = util.PY36
 
 MAXUNICODE = sys.maxunicode
 NARROW = sys.maxunicode == 0xFFFF
@@ -91,7 +91,7 @@ U = re.U
 UNICODE = re.UNICODE
 X = re.X
 VERBOSE = re.VERBOSE
-if compat.PY3:
+if util.PY3:
     A = re.A
     ASCII = re.ASCII
 escape = re.escape
@@ -104,7 +104,7 @@ FORMAT = 1
 _UPPER = 1
 _LOWER = 2
 
-_SEARCH_ASCII = re.ASCII if compat.PY3 else 0
+_SEARCH_ASCII = re.ASCII if util.PY3 else 0
 
 # Maximum size of the cache.
 _MAXCACHE = 500
@@ -121,7 +121,7 @@ class GlobalRetryException(Exception):
     """Global retry exception."""
 
 
-class ReplaceTokens(compat.Tokens):
+class ReplaceTokens(util.Tokens):
     """Preprocess replace tokens."""
 
     _re_octal = re.compile(r'[0-7]{3}|0{1,2}', _SEARCH_ASCII)
@@ -315,14 +315,14 @@ class _ReplaceParser(object):
         else:
             single = self.get_single_stack()
             if self.span_stack:
-                text = self.convert_case(compat.uchr(value), self.span_stack[-1])
+                text = self.convert_case(util.uchr(value), self.span_stack[-1])
                 value = ord(self.convert_case(text, single)) if single is not None else ord(text)
             elif single:
-                value = ord(self.convert_case(compat.uchr(value), single))
+                value = ord(self.convert_case(util.uchr(value), single))
             if value <= 0xFF:
                 self.result.append('\\%03o' % value)
             else:
-                self.result.append(compat.uchr(value))
+                self.result.append(util.uchr(value))
 
     def parse_named_unicode(self, i):
         """Parse named Unicode."""
@@ -330,14 +330,14 @@ class _ReplaceParser(object):
         value = ord(unicodedata.lookup(i.get_named_unicode()))
         single = self.get_single_stack()
         if self.span_stack:
-            text = self.convert_case(compat.uchr(value), self.span_stack[-1])
+            text = self.convert_case(util.uchr(value), self.span_stack[-1])
             value = ord(self.convert_case(text, single)) if single is not None else ord(text)
         elif single:
-            value = ord(self.convert_case(compat.uchr(value), single))
+            value = ord(self.convert_case(util.uchr(value), single))
         if value <= 0xFF:
             self.result.append('\\%03o' % value)
         else:
-            self.result.append(compat.uchr(value))
+            self.result.append(util.uchr(value))
 
     def parse_unicode(self, i, wide=False):
         """Parse Unicode."""
@@ -346,14 +346,14 @@ class _ReplaceParser(object):
         value = int(text, 16)
         single = self.get_single_stack()
         if self.span_stack:
-            text = self.convert_case(compat.uchr(value), self.span_stack[-1])
+            text = self.convert_case(util.uchr(value), self.span_stack[-1])
             value = ord(self.convert_case(text, single)) if single is not None else ord(text)
         elif single:
-            value = ord(self.convert_case(compat.uchr(value), single))
+            value = ord(self.convert_case(util.uchr(value), single))
         if value <= 0xFF:
             self.result.append('\\%03o' % value)
         else:
-            self.result.append(compat.uchr(value))
+            self.result.append(util.uchr(value))
 
     def parse_bytes(self, i):
         """Parse byte."""
@@ -564,11 +564,11 @@ class _ReplaceParser(object):
         # Handle auto or manual format
         if text == "":
             if self.auto:
-                text = compat.string_type(self.auto_index)
+                text = util.string_type(self.auto_index)
                 self.auto_index += 1
             elif not self.manual and not self.auto:
                 self.auto = True
-                text = compat.string_type(self.auto_index)
+                text = util.string_type(self.auto_index)
                 self.auto_index += 1
             else:
                 raise ValueError("Cannot switch to auto format during manual format!")
@@ -616,7 +616,7 @@ class _ReplaceParser(object):
     def parse(self, pattern, template, use_format=False):
         """Parse template."""
 
-        if isinstance(template, compat.binary_type):
+        if isinstance(template, util.binary_type):
             self.binary = True
         else:
             self.binary = False
@@ -633,7 +633,7 @@ class _ReplaceParser(object):
         )
 
 
-class ReplaceTemplate(compat.Immutable):
+class ReplaceTemplate(util.Immutable):
     """Replacement template expander."""
 
     __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format")
@@ -707,15 +707,15 @@ class ReplaceTemplate(compat.Immutable):
         return sep.join(text)
 
 
-class SearchTokens(compat.Tokens):
+class SearchTokens(util.Tokens):
     """Preprocess replace tokens."""
 
     _re_uniprops = re.compile(r'(?:p|P)(?:\{(?:\\.|[^\\}]+)+\}|[A-Z])?', _SEARCH_ASCII)
     _re_named_props = re.compile(r'N(?:\{[\w ]+\})?', _SEARCH_ASCII)
     _re_posix = re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII)
-    _re_flags = re.compile((r'\(\?([aiLmsux]+)\)' if compat.PY3 else r'\(\?([iLmsux]+)\)'), _SEARCH_ASCII)
+    _re_flags = re.compile((r'\(\?([aiLmsux]+)\)' if util.PY3 else r'\(\?([iLmsux]+)\)'), _SEARCH_ASCII)
     _re_comments = re.compile(r'\(\?\#(\\.|[^)])*\)', _SEARCH_ASCII)
-    if compat.PY37:  # pragma: no cover
+    if util.PY37:  # pragma: no cover
         _scoped_regex_flags = re.compile(r'\(\?(?:[aLu]|-?[imsx])+:', _SEARCH_ASCII)
     else:
         _scoped_regex_flags = re.compile(r'\(\?(?:-?[imsx])+:', _SEARCH_ASCII)
@@ -846,7 +846,7 @@ class SearchTemplate(object):
     def __init__(self, search, re_verbose=False, re_unicode=None):
         """Initialize."""
 
-        if isinstance(search, compat.binary_type):
+        if isinstance(search, util.binary_type):
             self.binary = True
         else:
             self.binary = False
@@ -925,7 +925,7 @@ class SearchTemplate(object):
         """Analyze flags."""
 
         global_retry = False
-        if compat.PY3 and ('a' in text or 'L' in text) and self.unicode:
+        if util.PY3 and ('a' in text or 'L' in text) and self.unicode:
             self.unicode = False
             if not _SCOPED_FLAG_SUPPORT or not scoped:
                 self.temp_global_flag_swap["unicode"] = True
@@ -1149,7 +1149,7 @@ class SearchTemplate(object):
         elif value == "":
             return value
         else:
-            return ['\\%03o' % value if value <= 0xFF else compat.uchr(value)]
+            return ['\\%03o' % value if value <= 0xFF else util.uchr(value)]
 
     def unicode_props(self, props, in_group, negate=False):
         """
@@ -1226,18 +1226,18 @@ class SearchTemplate(object):
         self.verbose = bool(self.re_verbose)
         self.unicode = bool(self.re_unicode)
         self.global_flag_swap = {
-            "unicode": ((self.re_unicode is not None) if not compat.PY37 else False),
+            "unicode": ((self.re_unicode is not None) if not util.PY37 else False),
             "verbose": False
         }
         self.temp_global_flag_swap = {
             "unicode": False,
             "verbose": False
         }
-        if compat.PY3:
+        if util.PY3:
             self.ascii = self.re_unicode is not None and not self.re_unicode
         else:
             self.ascii = False
-        if compat.PY3 and not self.unicode and not self.ascii:
+        if util.PY3 and not self.unicode and not self.ascii:
             self.unicode = True
 
         new_pattern = []
@@ -1274,7 +1274,7 @@ class SearchTemplate(object):
         return "".join(new_pattern).encode('latin-1') if self.binary else "".join(new_pattern)
 
 
-class Bre(compat.Immutable):
+class Bre(util.Immutable):
     """Bre object."""
 
     __slots__ = ("pattern", "auto_compile")
@@ -1288,7 +1288,7 @@ class Bre(compat.Immutable):
         """Compile repalcement."""
 
         is_replace = _is_replace(template)
-        is_string = isinstance(template, (compat.string_type, compat.binary_type))
+        is_string = isinstance(template, (util.string_type, util.binary_type))
         if is_replace and use_format != template.use_format:
             raise ValueError("Compiled replace cannot be a format object!")
         if is_replace or (is_string and self.auto_compile):
@@ -1316,7 +1316,7 @@ class Bre(compat.Immutable):
 
         return self.pattern.match(string, pos, endpos)
 
-    if compat.PY34:
+    if util.PY34:
         def fullmatch(self, string, pos=0, endpos=sys.maxsize):
             """Apply `fullmatch`."""
 
@@ -1372,17 +1372,17 @@ def _apply_replace_backrefs(m, repl=None, flags=0):
     else:
         if isinstance(repl, ReplaceTemplate):
             return repl.expand(m)
-        elif isinstance(repl, (compat.string_type, compat.binary_type)):
+        elif isinstance(repl, (util.string_type, util.binary_type)):
             return _ReplaceParser().parse(m.re, repl, bool(flags & FORMAT)).expand(m)
 
 
 def _apply_search_backrefs(pattern, flags=0):
     """Apply the search backrefs to the search pattern."""
 
-    if isinstance(pattern, (compat.string_type, compat.binary_type)):
+    if isinstance(pattern, (util.string_type, util.binary_type)):
         re_verbose = bool(VERBOSE & flags)
         re_unicode = None
-        if compat.PY3 and bool((ASCII | LOCALE) & flags):
+        if util.PY3 and bool((ASCII | LOCALE) & flags):
             re_unicode = False
         elif bool(UNICODE & flags):
             re_unicode = True
@@ -1421,7 +1421,7 @@ def compile_replace(pattern, repl, flags=0):
 
     call = None
     if pattern is not None and isinstance(pattern, RE_TYPE):
-        if isinstance(repl, (compat.string_type, compat.binary_type)):
+        if isinstance(repl, (util.string_type, util.binary_type)):
             format_flag = bool(flags & FORMAT)
             key = (hash(pattern), repl, format_flag)
             try:
@@ -1455,7 +1455,7 @@ def _assert_expandable(repl, use_format=False):
                 raise ValueError("Replace not compiled as a format replace")
             else:
                 raise ValueError("Replace should not be compiled as a format replace!")
-    elif not isinstance(repl, (compat.string_type, compat.binary_type)):
+    elif not isinstance(repl, (util.string_type, util.binary_type)):
         raise TypeError("Expected string, buffer, or compiled replace!")
 
 
@@ -1487,7 +1487,7 @@ def match(pattern, string, flags=0):
     return re.match(_apply_search_backrefs(pattern, flags), string, flags)
 
 
-if compat.PY34:
+if util.PY34:
     def fullmatch(pattern, string, flags=0):
         """Apply `fullmatch` after applying backrefs."""
 
@@ -1516,7 +1516,7 @@ def sub(pattern, repl, string, count=0, flags=0):
     """Apply `sub` after applying backrefs."""
 
     is_replace = _is_replace(repl)
-    is_string = isinstance(repl, (compat.string_type, compat.binary_type))
+    is_string = isinstance(repl, (util.string_type, util.binary_type))
     if is_replace and repl.use_format:
         raise ValueError("Compiled replace cannot be a format object!")
 
@@ -1530,7 +1530,7 @@ def subf(pattern, format, string, count=0, flags=0):  # noqa B002
     """Apply `sub` with format style replace."""
 
     is_replace = _is_replace(format)
-    is_string = isinstance(format, (compat.string_type, compat.binary_type))
+    is_string = isinstance(format, (util.string_type, util.binary_type))
     if is_replace and not format.use_format:
         raise ValueError("Compiled replace is not a format object!")
 
@@ -1546,7 +1546,7 @@ def subn(pattern, repl, string, count=0, flags=0):
     """Apply `subn` with format style replace."""
 
     is_replace = _is_replace(repl)
-    is_string = isinstance(repl, (compat.string_type, compat.binary_type))
+    is_string = isinstance(repl, (util.string_type, util.binary_type))
     if is_replace and repl.use_format:
         raise ValueError("Compiled replace cannot be a format object!")
 
@@ -1559,7 +1559,7 @@ def subfn(pattern, format, string, count=0, flags=0):  # noqa B002
     """Apply `subn` after applying backrefs."""
 
     is_replace = _is_replace(format)
-    is_string = isinstance(format, (compat.string_type, compat.binary_type))
+    is_string = isinstance(format, (util.string_type, util.binary_type))
     if is_replace and not format.use_format:
         raise ValueError("Compiled replace is not a format object!")
 
