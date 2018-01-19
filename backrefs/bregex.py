@@ -112,6 +112,8 @@ if REGEX_SUPPORT:
     _replace_cache = _OrderedDict()
     _search_cache = _OrderedDict()
 
+    REGEX_COMMENT_FIX = tuple([int(x) for x in _regex.__version__.split('.')]) > (2, 4, 136)
+
     class LoopException(Exception):
         """Loop exception."""
 
@@ -729,7 +731,10 @@ if REGEX_SUPPORT:
         """Preprocess replace tokens."""
 
         _re_posix = _re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII)
-        _re_comments = _re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII)
+        if REGEX_COMMENT_FIX:  # pragma: no cover
+            _re_comments = _re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII)
+        else:
+            _re_comments = _re.compile(r'\(\?\#(\\.|[^)])*\)', _SEARCH_ASCII)
         _regex_flags = _re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)', _SEARCH_ASCII)
         _regex_flags_v0 = _re.compile(r'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)', _SEARCH_ASCII)
         _scoped_regex_flags = _re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[ixmsfw])+:', _SEARCH_ASCII)
