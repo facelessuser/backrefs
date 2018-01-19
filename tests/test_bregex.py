@@ -182,13 +182,13 @@ class TestSearchTemplate(unittest.TestCase):
     def test_unrecognized_backrefs(self):
         """Test unrecognized backrefs."""
 
-        result = bregex.RegexSearchTemplate(r'Testing unrecognized backrefs \k!').apply()
+        result = bregex._SearchParser(r'Testing unrecognized backrefs \k!').parse()
         self.assertEqual(r'Testing unrecognized backrefs \k!', result)
 
     def test_quote(self):
         """Test quoting/escaping."""
 
-        result = bregex.RegexSearchTemplate(r'Testing \Q(\s+[quote]*\s+)?\E!').apply()
+        result = bregex._SearchParser(r'Testing \Q(\s+[quote]*\s+)?\E!').parse()
         self.assertEqual(r'Testing %s!' % regex.escape(r'(\s+[quote]*\s+)?'), result)
 
     def test_normal_backrefs(self):
@@ -198,49 +198,49 @@ class TestSearchTemplate(unittest.TestCase):
         They should all pass through unaltered.
         """
 
-        result = bregex.RegexSearchTemplate(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]\M\m\G').apply()
+        result = bregex._SearchParser(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]\M\m\G').parse()
         self.assertEqual(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]\M\m\G', result)
 
     def test_quote_no_end(self):
         r"""Test quote where no \E is defined."""
 
-        result = bregex.RegexSearchTemplate(r'Testing \Q(quote) with no [end]!').apply()
+        result = bregex._SearchParser(r'Testing \Q(quote) with no [end]!').parse()
         self.assertEqual(r'Testing %s' % regex.escape(r'(quote) with no [end]!'), result)
 
     def test_quote_in_char_groups(self):
         """Test that quote backrefs are handled in character groups."""
 
-        result = bregex.RegexSearchTemplate(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').apply()
+        result = bregex._SearchParser(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').parse()
         self.assertEqual(r'Testing [char block] [\(AVOIDANCE\)]!', result)
 
     def test_quote_in_char_groups_with_right_square_bracket_first(self):
         """Test that quote backrefs are handled in character groups that have a right square bracket as first char."""
 
-        result = bregex.RegexSearchTemplate(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').apply()
+        result = bregex._SearchParser(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').parse()
         self.assertEqual(r'Testing [^]char block] []\(AVOIDANCE\)]!', result)
 
     def test_extraneous_end_char(self):
         r"""Test that stray '\E's get removed."""
 
-        result = bregex.RegexSearchTemplate(r'Testing \Eextraneous end char\E!').apply()
+        result = bregex._SearchParser(r'Testing \Eextraneous end char\E!').parse()
         self.assertEqual(r'Testing extraneous end char!', result)
 
     def test_escaped_backrefs(self):
         """Ensure escaped backrefs don't get processed."""
 
-        result = bregex.RegexSearchTemplate(r'Testing escaped \\Qbackrefs\\E!').apply()
+        result = bregex._SearchParser(r'Testing escaped \\Qbackrefs\\E!').parse()
         self.assertEqual(r'Testing escaped \\Qbackrefs\\E!', result)
 
     def test_escaped_escaped_backrefs(self):
         """Ensure escaping escaped backrefs do get processed."""
 
-        result = bregex.RegexSearchTemplate(r'Testing escaped escaped \\\Qbackrefs\\\E!').apply()
+        result = bregex._SearchParser(r'Testing escaped escaped \\\Qbackrefs\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\backrefs\\\\!', result)
 
     def test_escaped_escaped_escaped_backrefs(self):
         """Ensure escaping escaped escaped backrefs don't get processed."""
 
-        result = bregex.RegexSearchTemplate(r'Testing escaped escaped \\\\Qbackrefs\\\\E!').apply()
+        result = bregex._SearchParser(r'Testing escaped escaped \\\\Qbackrefs\\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\\\Qbackrefs\\\\E!', result)
 
     def test_escaped_escaped_escaped_escaped_backrefs(self):
@@ -250,19 +250,19 @@ class TestSearchTemplate(unittest.TestCase):
         This is far enough to prove out that we are handling them well enough.
         """
 
-        result = bregex.RegexSearchTemplate(r'Testing escaped escaped \\\\\Qbackrefs\\\\\E!').apply()
+        result = bregex._SearchParser(r'Testing escaped escaped \\\\\Qbackrefs\\\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\\\backrefs\\\\\\\\!', result)
 
     def test_normal_escaping(self):
         """Normal escaping should be unaltered."""
 
-        result = bregex.RegexSearchTemplate(r'\n \\n \\\n \\\\n \\\\\n').apply()
+        result = bregex._SearchParser(r'\n \\n \\\n \\\\n \\\\\n').parse()
         self.assertEqual(r'\n \\n \\\n \\\\n \\\\\n', result)
 
     def test_normal_escaping2(self):
         """Normal escaping should be unaltered part2."""
 
-        result = bregex.RegexSearchTemplate(r'\y \\y \\\y \\\\y \\\\\y').apply()
+        result = bregex._SearchParser(r'\y \\y \\\y \\\\y \\\\\y').parse()
         self.assertEqual(r'\y \\y \\\y \\\\y \\\\\y', result)
 
     def test_unicode_and_verbose_flag(self):
@@ -274,7 +274,7 @@ class TestSearchTemplate(unittest.TestCase):
     def test_detect_verbose_string_flag_at_end(self):
         """Test verbose string flag `(?x)` at end."""
 
-        template = bregex.RegexSearchTemplate(
+        template = bregex._SearchParser(
             r'''
             This is a # \Qcomment\E
             This is not a \# \Qcomment\E
@@ -283,7 +283,7 @@ class TestSearchTemplate(unittest.TestCase):
             This\ is\ a # \Qcomment\E (?x)
             '''
         )
-        template.apply()
+        template.parse()
 
         self.assertTrue(template.verbose)
 
@@ -338,71 +338,71 @@ class TestSearchTemplate(unittest.TestCase):
     def test_version0_string_flag(self):
         """Test finding V0 string flag."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for (?V0) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for (?V0) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.V0)
 
     def test_version0_string_flag_in_group(self):
         """Test ignoring V0 string flag in group will still use the default."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for [(?V0)] version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for [(?V0)] version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version0_string_flag_escaped(self):
         """Test ignoring V0 string flag in group will still use the default."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \(?V0) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \(?V0) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version0_string_flag_unescaped(self):
         """Test unescaped V0 string flag."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \\(?V0) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \\(?V0) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.V0)
 
     def test_version0_string_flag_escaped_deep(self):
         """Test deep escaped V0 flag will still use the default."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \\\(?V0) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \\\(?V0) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version1_string_flag(self):
         """Test finding V1 string flag."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for (?V1) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for (?V1) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.V1)
 
     def test_version1_string_flag_in_group(self):
         """Test ignoring V1 string flag in group."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for [(?V1)] version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for [(?V1)] version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version1_string_flag_escaped(self):
         """Test ignoring V1 string flag in group."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \(?V1) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \(?V1) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version1_string_flag_unescaped(self):
         """Test unescaped V1 string flag."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \\(?V1) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \\(?V1) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.V1)
 
     def test_version1_string_flag_escaped_deep(self):
         """Test deep escaped V1 flag."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \\\(?V1) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \\\(?V1) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_verbose_comment_no_nl(self):
@@ -1351,6 +1351,14 @@ class TestExceptions(unittest.TestCase):
     #     with self.assertRaises(SyntaxError) as e:
     #         bregex.compile_replace(p, r'Replace \U fail!')
     #     self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
+
+    def test_immutable(self):
+        """Test immutable object."""
+
+        pattern = regex.compile('test')
+        replace = bregex.compile_replace(pattern, "whatever")
+        with pytest.raises(AttributeError):
+            replace.use_format = True
 
     def test_incomplete_replace_unicode_name(self):
         """Test incomplete replace with Unicode name."""
