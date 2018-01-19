@@ -1621,10 +1621,18 @@ class TestConvenienceFunctions(unittest.TestCase):
         m = bregex.match(r'This is a test for match!', "This is a test for match!")
         self.assertTrue(m is not None)
 
+        p = bregex.compile(r'This is a test for match!')
+        m = p.match("This is a test for match!")
+        self.assertTrue(m is not None)
+
     def test_fullmatch(self):
         """Test that `fullmatch` works."""
 
         m = bregex.fullmatch(r'This is a test for match!', "This is a test for match!")
+        self.assertTrue(m is not None)
+
+        p = bregex.compile(r'This is a test for match!')
+        m = p.fullmatch("This is a test for match!")
         self.assertTrue(m is not None)
 
     def test_search(self):
@@ -1633,11 +1641,21 @@ class TestConvenienceFunctions(unittest.TestCase):
         m = bregex.search(r'test', "This is a test for search!")
         self.assertTrue(m is not None)
 
+        p = bregex.compile(r'test')
+        m = p.search("This is a test for search!")
+        self.assertTrue(m is not None)
+
     def test_split(self):
         """Test that `split` works."""
 
         self.assertEqual(
             bregex.split(r'\W+', "This is a test for split!"),
+            ["This", "is", "a", "test", "for", "split", ""]
+        )
+
+        p = bregex.compile(r'\W+')
+        self.assertEqual(
+            p.split("This is a test for split!"),
             ["This", "is", "a", "test", "for", "split", ""]
         )
 
@@ -1650,11 +1668,24 @@ class TestConvenienceFunctions(unittest.TestCase):
 
         self.assertEqual(array, ["This", "is", "a", "test", "for", "split", ""])
 
+        array = []
+        p = bregex.compile(r'\W+')
+        for x in p.splititer("This is a test for split!"):
+            array.append(x)
+
+        self.assertEqual(array, ["This", "is", "a", "test", "for", "split", ""])
+
     def test_sub(self):
         """Test that `sub` works."""
 
         self.assertEqual(
             bregex.sub(r'tset', 'test', r'This is a tset for sub!'),
+            "This is a test for sub!"
+        )
+
+        p = bregex.compile(r'tset')
+        self.assertEqual(
+            p.sub(r'test', r'This is a tset for sub!'),
             "This is a test for sub!"
         )
 
@@ -1669,11 +1700,24 @@ class TestConvenienceFunctions(unittest.TestCase):
             "This is a test for sub!"
         )
 
+        p = bregex.compile(r'tset')
+        replace = p.compile('test')
+        self.assertEqual(
+            p.sub(replace, 'This is a tset for sub!'),
+            "This is a test for sub!"
+        )
+
     def test_subn(self):
         """Test that `subn` works."""
 
         self.assertEqual(
             bregex.subn(r'tset', 'test', r'This is a tset for subn! This is a tset for subn!'),
+            ('This is a test for subn! This is a test for subn!', 2)
+        )
+
+        p = bregex.compile(r'tset')
+        self.assertEqual(
+            p.subn('test', r'This is a tset for subn! This is a tset for subn!'),
             ('This is a test for subn! This is a test for subn!', 2)
         )
 
@@ -1685,11 +1729,23 @@ class TestConvenienceFunctions(unittest.TestCase):
             "This is a test for subf!"
         )
 
+        p = bregex.compile(r'(t)(s)(e)(t)')
+        self.assertEqual(
+            p.subf('{1}{3}{2}{4}', r'This is a tset for subf!'),
+            "This is a test for subf!"
+        )
+
     def test_subfn(self):
         """Test that `subfn` works."""
 
         self.assertEqual(
             bregex.subfn(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
+            ('This is a test for subfn! This is a test for subfn!', 2)
+        )
+
+        p = bregex.compile(r'(t)(s)(e)(t)')
+        self.assertEqual(
+            p.subfn('{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
             ('This is a test for subfn! This is a test for subfn!', 2)
         )
 
@@ -1701,11 +1757,25 @@ class TestConvenienceFunctions(unittest.TestCase):
             ["This", "is", "a", "test", "for", "findall"]
         )
 
+        p = bregex.compile(r'\w+')
+        self.assertEqual(
+            p.findall('This is a test for findall!'),
+            ["This", "is", "a", "test", "for", "findall"]
+        )
+
     def test_finditer(self):
         """Test that `finditer` works."""
 
         count = 0
         for m in bregex.finditer(r'\w+', 'This is a test for finditer!'):
+            count += 1
+
+        self.assertEqual(count, 6)
+
+        count = 0
+        p = bregex.compile(r'\w+')
+        for m in p.finditer('This is a test for finditer!'):
+            print(m)
             count += 1
 
         self.assertEqual(count, 6)
@@ -1741,3 +1811,21 @@ class TestConvenienceFunctions(unittest.TestCase):
             bregex.expandf(m, replace),
             'This is a test for MATCH!'
         )
+
+    def test_auto_compile_off(self):
+        """Test auto compile off."""
+
+        p = bregex.compile('(test)s', auto_compile=False)
+        self.assertTrue(p.match('tests') is not None)
+
+        with pytest.raises(AttributeError):
+            p.subf(r'{1}', 'tests')
+
+        replace = p.compile(r'{1}')
+        with pytest.raises(ValueError):
+            p.subf(replace, 'tests')
+
+        replace = p.compile(r'{1}', bregex.FORMAT)
+        self.assertEqual(p.subf(replace, 'tests'), 'test')
+
+        self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')

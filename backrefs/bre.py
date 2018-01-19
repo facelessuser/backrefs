@@ -1264,6 +1264,90 @@ class Replace(compat.Immutable):
         return self.func(*args, **kwargs)
 
 
+class Bre(compat.Immutable):
+    """Bre object."""
+
+    __slots__ = ("pattern", "auto_compile")
+
+    def __init__(self, pattern, auto_compile=True):
+        """Initialization."""
+
+        super(Bre, self).__init__(pattern=pattern, auto_compile=auto_compile)
+
+    def _auto_compile(self, template, use_format=False):
+        """Compile repalcement."""
+
+        is_replace = _is_replace(template)
+        is_string = isinstance(template, (compat.string_type, compat.binary_type))
+        if is_replace and use_format != template.use_format:
+            raise ValueError("Compiled replace cannot be a format object!")
+        if is_replace or (is_string and self.auto_compile):
+            return self.compile(template, (FORMAT if use_format and not is_replace else 0))
+        elif is_string and use_format:
+            # Reject an attempt to run format replace when auto-compiling
+            # of template strings has been disabled and we are using a
+            # template string.
+            raise AttributeError('Format replaces cannot be called without compiling replace template!')
+        else:
+            return template
+
+    def compile(self, repl, flags=0):
+        """Compile replace."""
+
+        return compile_replace(self.pattern, repl, flags)
+
+    def search(self, string, pos=0, endpos=sys.maxsize):
+        """Apply `search`."""
+
+        return self.pattern.search(string, pos, endpos)
+
+    def match(self, string, pos=0, endpos=sys.maxsize):
+        """Apply `match`."""
+
+        return self.pattern.match(string, pos, endpos)
+
+    if compat.PY34:
+        def fullmatch(self, string, pos=0, endpos=sys.maxsize):
+            """Apply `fullmatch`."""
+
+            return self.pattern.fullmatch(string, pos, endpos)
+
+    def split(self, string, maxsplit=0):
+        """Apply `split`."""
+
+        return self.pattern.split(string, maxsplit)
+
+    def findall(self, string, pos=0, endpos=sys.maxsize):
+        """Apply `findall`."""
+
+        return self.pattern.findall(string, pos, endpos)
+
+    def finditer(self, string, pos=0, endpos=sys.maxsize):
+        """Apply `finditer`."""
+
+        return self.pattern.finditer(string, pos, endpos)
+
+    def sub(self, repl, string, count=0):
+        """Apply `sub`."""
+
+        return self.pattern.sub(self._auto_compile(repl), string, count)
+
+    def subf(self, repl, string, count=0):  # noqa B002
+        """Apply `sub` with format style replace."""
+
+        return self.pattern.sub(self._auto_compile(repl, True), string, count)
+
+    def subn(self, repl, string, count=0):
+        """Apply `subn` with format style replace."""
+
+        return self.pattern.subn(self._auto_compile(repl), string, count)
+
+    def subfn(self, repl, string, count=0):  # noqa B002
+        """Apply `subn` after applying backrefs."""
+
+        return self.pattern.subn(self._auto_compile(repl, True), string, count)
+
+
 def _is_replace(obj):
     """Check if object is a replace object."""
 
@@ -1301,6 +1385,12 @@ def _apply_search_backrefs(pattern, flags=0):
     else:
         raise TypeError("Not a string or compiled pattern!")
     return pattern
+
+
+def compile(pattern, flags=0, auto_compile=True):
+    """Compile both the search or search and replace into one object."""
+
+    return Bre(compile_search(pattern, flags), auto_compile)
 
 
 def compile_search(pattern, flags=0):

@@ -1107,6 +1107,93 @@ if REGEX_SUPPORT:
 
             return self.func(*args, **kwargs)
 
+    class Bregex(compat.Immutable):
+        """Bregex object."""
+
+        __slots__ = ("pattern", "auto_compile")
+
+        def __init__(self, pattern, auto_compile=True):
+            """Initialization."""
+
+            super(Bregex, self).__init__(pattern=pattern, auto_compile=auto_compile)
+
+        def _auto_compile(self, template, use_format=False):
+            """Compile repalcement."""
+
+            is_replace = _is_replace(template)
+            is_string = isinstance(template, (compat.string_type, compat.binary_type))
+            if is_replace and use_format != template.use_format:
+                raise ValueError("Compiled replace cannot be a format object!")
+            if is_replace or (is_string and self.auto_compile):
+                return self.compile(template, (FORMAT if use_format and not is_replace else 0))
+            elif is_string and use_format:
+                # Reject an attempt to run format replace when auto-compiling
+                # of template strings has been disabled and we are using a
+                # template string.
+                raise AttributeError('Format replaces cannot be called without compiling replace template!')
+            else:
+                return template
+
+        def compile(self, repl, flags=0):
+            """Compile replace."""
+
+            return compile_replace(self.pattern, repl, flags)
+
+        def search(self, string, pos=None, endpos=None, concurrent=None, partial=False,):
+            """Apply `search`."""
+
+            return self.pattern.search(string, pos, endpos, concurrent, partial)
+
+        def match(self, string, pos=None, endpos=None, concurrent=None, partial=False,):
+            """Apply `match`."""
+
+            return self.pattern.match(string, pos, endpos, concurrent, partial)
+
+        def fullmatch(self, string, pos=None, endpos=None, concurrent=None, partial=False):
+            """Apply `fullmatch`."""
+
+            return self.pattern.fullmatch(string, pos, endpos, concurrent, partial)
+
+        def split(self, string, maxsplit=0, concurrent=None):
+            """Apply `split`."""
+
+            return self.pattern.split(string, maxsplit, concurrent)
+
+        def splititer(self, string, maxsplit=0, concurrent=None):
+            """Apply `splititer`."""
+
+            return self.pattern.splititer(string, maxsplit, concurrent)
+
+        def findall(self, string, pos=None, endpos=None, overlapped=False, concurrent=None):
+            """Apply `findall`."""
+
+            return self.pattern.findall(string, pos, endpos, overlapped, concurrent)
+
+        def finditer(self, string, pos=None, endpos=None, overlapped=False, concurrent=None, partial=False):
+            """Apply `finditer`."""
+
+            return self.pattern.finditer(string, pos, endpos, overlapped, concurrent, partial)
+
+        def sub(self, repl, string, count=0,  pos=None, endpos=None, concurrent=None):
+            """Apply `sub`."""
+
+            return self.pattern.sub(self._auto_compile(repl), string, count, pos, endpos, concurrent)
+
+        def subf(self, repl, string, count=0,  pos=None, endpos=None, concurrent=None):  # noqa B002
+            """Apply `sub` with format style replace."""
+
+            return self.pattern.subf(self._auto_compile(repl, True), string, count, pos, endpos, concurrent)
+
+        def subn(self, repl, string, count=0, pos=None, endpos=None, concurrent=None):
+            """Apply `subn` with format style replace."""
+
+            return self.pattern.subn(self._auto_compile(repl), string, count, pos, endpos, concurrent)
+
+        def subfn(self, repl, string, count=0,  pos=None, endpos=None, concurrent=None):  # noqa B002
+            """Apply `subn` after applying backrefs."""
+
+            return self.pattern.subfn(self._auto_compile(repl, True), string, count, pos, endpos, concurrent)
+
     def _apply_replace_backrefs(m, repl=None, flags=0):
         """Expand with either the `ReplaceTemplate` or compile on the fly, or return None."""
 
@@ -1143,6 +1230,11 @@ if REGEX_SUPPORT:
         else:
             raise TypeError("Not a string or compiled pattern!")
         return pattern
+
+    def compile(pattern, flags=0, auto_compile=True):
+        """Compile both the search or search and replace into one object."""
+
+        return Bregex(compile_search(pattern, flags), auto_compile)
 
     def compile_search(pattern, flags=0, **kwargs):
         """Compile with extended search references."""
