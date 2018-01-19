@@ -17,34 +17,35 @@ Backrefs can be applied to search patterns and/or replace patterns. You can cont
 
 ### Search Patterns
 
-To augment the search pattern to utilize search back references, you can use Backrefs to compile the search. This will apply a preprocessor to the pattern and replace the back references (and related pattern portions) with the appropriate content to construct a valid regular expression for Re or Regex and will return a valid compiled pattern for the respective regular expression engine. Since the return is a valid compiled pattern, you can use it as expected.
+To augment the search pattern of Re or Regex to utilize search back references, you can use Backrefs to compile the search. This will apply a preprocessor to the pattern and replace the back references (or other special syntax) with the appropriate content to construct a valid regular expression for Re or Regex. It will then return a valid compiled pattern for the respective regular expression engine. Since the return is a valid compiled pattern, you can use it as expected.
 
 ```py3
-pattern = bre.compile_search(r'\p{Letter}', bre.UNICODE)
-m = pattern.match('whatever')
+>>> pattern = bre.compile_search(r'\p{Letter}+', bre.UNICODE)
+>>> pattern.match('whatever') is not None
+True
 ```
 
 ### Replace Templates
 
-Backrefs also provides special back references for replace templates as well. In order to utilize these back references, the template string must be run through a compiler as well. The replace compiler will run a preprocessor on the replace template that will strip out the back references and augment the template accordingly creating a valid replace template. Then it will return a replace function that will properly augment and insert matched groups (according to rules of the originally included back references) into the template.  These replace functions can be passed into `sub` and `subn` if desired.
+Backrefs also provides special back references for replace templates as well. In order to utilize these back references, the template string must be run through a compiler as well. The replace compiler will run a preprocessor on the replace template that will strip out the back references and augment the template accordingly creating a valid replace template. Then it will return a replace object that can be used in place of your replace string. When used as your replace, the object will properly apply all the replace back references to your returned string and insert matched groups into the template.  These replace objects can be passed into `sub`, `subn` etc.
 
-Search templates must be run through the compiler with an associated compiled search pattern that can be compiled with the regular expression engine directly or with Backrefs.  The search pattern is needed to resolve groups in the search template.
+Search templates must be run through the compiler with an associated compiled search pattern so that it can properly map to the groups in your search pattern.
 
 ```pycon3
 >>> pattern = bre.compile_search(r'(\p{Letter}+)')
->>> replace = bre.compile_replace(r'\C\1\E')
+>>> replace = bre.compile_replace(pattern, r'\C\1\E')
 >>> text = pattern.sub(replace, 'sometext')
-SOMETEXT
+'SOMETEXT'
 ```
 
 Since compiled replaces are not template strings, but functions, you wont be able to apply compiled replaces via `#!py m.expand(replace)`. Instead, you can use the compiled replace directly.
 
 ```pycon3
 >>> pattern = bre.compile_search(r'(\p{Letter}+)')
->>> replace = bre.compile_replace(r'\C\1\E')
+>>> replace = bre.compile_replace(pattern, r'\C\1\E')
 >>> m = pattern.match('sometext')
 >>> replace(m)
-SOMETEXT
+'SOMETEXT'
 ```
 
 If you have a one time expand, and don't feel like pre-compiling, you can use Backrefs `expand` method (it can also take pre-compiled patterns as well).
@@ -53,12 +54,41 @@ If you have a one time expand, and don't feel like pre-compiling, you can use Ba
 >>> pattern = bre.compile_search(r'(\p{Letter}+)')
 >>> m = pattern.match('sometext')
 >>> bre.expand(m, r'\C\1\E')
-SOMETEXT
+'SOMETEXT'
 ```
 
-### Search & Replace wrappers
+### Search & Replace Together
 
-If you have a one time `finditer`, `match`, `sub`, `search`, or other match, search, or replace operation, Backrefs provides wrappers for these methods just as it does with expand.  The wrappers will compile the search and replace patterns for you on the fly, but they will also accept and pass pre-compiled patterns through as well.  They should take all the flags and options your chosen regular expression engine accepts with the same names and positions.
+If you plan on using both the search and replace features, using `compile_search` and `compile_replace` can be a little awkward. If you wish to use something a bit more familiar, you can use the `compile` function to create a pattern object that mimics Re and Regex's pattern object. Once created, it will work very similar to how Re and Regex works.  It will also auto compile replace patterns for you:
+
+```pycon3
+>>> pattern = bre.compile(r'(\p{Letter}+)')
+>>> pattern.sub(r'\C\1\E', 'sometext')
+'SOMETEXT'
+```
+
+If needed, you can use the objects `compile` function to pre-compile the replace patterns:
+
+```pycon3
+>>> pattern = bre.compile(r'(\p{Letter}+)')
+>>> replace = pattern.compile(r'\C\1\E')
+>>> pattern.sub(replace, 'sometext')
+'SOMETEXT'
+```
+
+If you want to disable the patterns use of replace back references, you can disable the pre-compile of replace templates:
+
+```pycon3
+>>> pattern = bre.compile(r'(\p{Letter}+)', auto_compile=False)
+>>> pattern.sub(r'\C\1\E', 'sometext')
+'\\Csometext\\E'
+```
+
+### Other Functions
+
+Backrefs exposes most of the usual functions which Backrefs wraps around.  For instance, Backrefs wraps around `purge` so that it can purge its cache along with the regular expression engine's cache.
+
+Backrefs also wraps around the global matching functions. So if you have a one time `finditer`, `match`, `sub`, `search`, or other match, search, or replace operation, Backrefs provides wrappers for these methods too.  The wrappers will compile the search and replace patterns for you on the fly, but they will also accept and pass pre-compiled patterns through as well.  They should take all the flags and options your chosen regular expression engine normally accepts with the same names and positions.
 
 ```pycon3
 >>> bre.sub(r'(\p{Letter}+)', r'\C\1\E', 'sometext')
@@ -80,9 +110,8 @@ In order to escape patterns formulated for Backrefs, you can simply use your reg
 !!! note "Backrefs' Format Differences"
     Even though this is a Regex specific feature, this replace format is supported by Backrefs for both Regex *and* Re with some slight differences.  These differences apply to both Regex as well as Re as Backrefs must augment the format to allow casing back references.
 
-    1. Backrefs does not implement true format replace strings, but the functionality feels the same in regards to specifying groups and captures within a group.
+    1. Backrefs does not use Python's string format directly but mimics the feel for inserting groups into the final output.
     2. Indexing into different captures in Re is limited to `0` or `-1` since Re *only* maintains the last capture.
-    3. While you can access the `subf` and `subfn` methods directly from a match object or via Backrefs' provided wrappers in Regex, you *must* use Backrefs' provided wrappers for Re as Re does not natively support such a feature.
     3. Raw string (`#!py3 r"..."`) handling for format replace is a bit different for Backrefs compared to Regex. Regex treats format strings as simply strings instead of as a regular replace template. So while in a regular replace template you can use `\n` to represent a new line, in format strings, you'd have use a literal new line or use a normal string (`#!py3 "..."`) with `\n`. Backrefs will actually process back references and format references.
 
 The Regex module offers a feature where you can apply replacements via a format string style.
@@ -111,7 +140,7 @@ Backrefs supports this functionality in a similar way, and you can do it with Re
 'Bar Foo'
 ```
 
-And `{} {}` is the same as `{0} {1}`.
+You can also use `{} {}` which is the same as `{0} {1}`.
 
 ```pycon3
 >>> bre.subf(r"(\w+) (\w+)", r"{} => \C{} {}\E", "foo bar")
@@ -126,6 +155,17 @@ To pre-compile a format replace template, you can use the Backrefs' `compile_rep
 >>> m = pattern.match("foo bar")
 >>> replace(m)
 'foo bar => bar foo'
+```
+
+Or using Backrefs' pattern object:
+
+```pycon3
+>>> pattern = bre.compile(r"(\w+) (\w+)")
+>>> pattern.subf(r"{0} => \C{2} {1}\E", "foo bar")
+'foo bar => BAR FOO'
+>>> pattern = bre.compile(r"(?P<word1>\w+) (?P<word2>\w+)")
+>>> pattern.subf(r"\c{word2} \c{word1}", "foo bar")
+'Bar Foo'
 ```
 
 Backrefs also provides an `expand` variant for format templates called `expandf`.

@@ -1129,7 +1129,7 @@ if REGEX_SUPPORT:
             super(Bregex, self).__init__(pattern=pattern, auto_compile=auto_compile)
 
         def _auto_compile(self, template, use_format=False):
-            """Compile repalcement."""
+            """Compile replacements."""
 
             is_replace = _is_replace(template)
             is_string = isinstance(template, (util.string_type, util.binary_type))
