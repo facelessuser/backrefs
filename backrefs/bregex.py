@@ -38,7 +38,6 @@ from __future__ import unicode_literals
 import sys as _sys
 import re as _re
 import unicodedata as _unicodedata
-from collections import OrderedDict as _OrderedDict
 from . import util as _util
 try:
     import regex as _regex
@@ -110,9 +109,6 @@ if REGEX_SUPPORT:
 
     # Maximum size of the cache.
     _MAXCACHE = 500
-
-    _replace_cache = _OrderedDict()
-    _search_cache = _OrderedDict()
 
     REGEX_COMMENT_FIX = tuple([int(x) for x in _regex.__version__.split('.')]) > (2, 4, 136)
 
@@ -1150,6 +1146,33 @@ if REGEX_SUPPORT:
 
         return isinstance(obj, ReplaceTemplate)
 
+    @_util.lru_cache(maxsize=_MAXCACHE)
+    def _cached_search_compile(pattern, re_verbose, re_version):
+        """Cached search compile."""
+
+        return _SearchParser(pattern, re_verbose, re_version).parse()
+
+    @_util.lru_cache(maxsize=_MAXCACHE)
+    def _cached_replace_compile(pattern, repl, flags):
+        """Cached replace compile."""
+
+        return _ReplaceParser().parse(pattern, repl, bool(flags & FORMAT))
+
+    def _get_cache_size(replace=False):
+        """Get size of cache."""
+
+        if not replace:
+            size = _cached_search_compile.cache_info().currsize
+        else:
+            size = _cached_replace_compile.cache_info().currsize
+        return size
+
+    def _purge_cache():
+        """Purge the cache."""
+
+        _cached_replace_compile.cache_clear()
+        _cached_search_compile.cache_clear()
+
     def _apply_search_backrefs(pattern, flags=0):
         """Apply the search backrefs to the search pattern."""
 
@@ -1161,16 +1184,10 @@ if REGEX_SUPPORT:
                 re_version = V1
             else:
                 re_version = 0
-            key = (type(pattern), pattern, flags, re_verbose, re_version)
-            try:
-                return _search_cache[key]
-            except Exception:
-                pass
-            pattern = _SearchParser(pattern, re_verbose, re_version).parse()
             if not (flags & DEBUG):
-                if len(_search_cache) >= _MAXCACHE:
-                    _search_cache.popitem(last=False)
-                _search_cache[key] = pattern
+                pattern = _cached_search_compile(pattern, re_verbose, re_version)
+            else:
+                pattern = _SearchParser(pattern, re_verbose, re_version).parse()
         elif isinstance(pattern, _REGEX_TYPE):
             if flags:
                 raise ValueError("Cannot process flags argument with a compiled pattern!")
@@ -1206,17 +1223,10 @@ if REGEX_SUPPORT:
         call = None
         if pattern is not None and isinstance(pattern, _REGEX_TYPE):
             if isinstance(repl, (_util.string_type, _util.binary_type)):
-                format_flag = bool(flags & FORMAT)
-                key = (pattern, type(repl), repl, format_flag)
-                try:
-                    return _replace_cache[key]
-                except Exception:
-                    pass
-                call = _ReplaceParser().parse(pattern, repl, bool(flags & FORMAT))
                 if not (pattern.flags & DEBUG):
-                    if len(_replace_cache) >= _MAXCACHE:
-                        _replace_cache.popitem(last=False)
-                    _replace_cache[key] = call
+                    call = _cached_replace_compile(pattern, repl, flags)
+                else:
+                    call = _ReplaceParser().parse(pattern, repl, bool(flags & FORMAT))
             elif isinstance(repl, ReplaceTemplate):
                 if flags:
                     raise ValueError("Cannot process flags argument with a ReplaceTemplate!")
@@ -1451,6 +1461,5 @@ if REGEX_SUPPORT:
     def purge():
         """Purge caches."""
 
-        _replace_cache.clear()
-        _search_cache.clear()
+        _purge_cache()
         _re.purge()

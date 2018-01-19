@@ -46,16 +46,16 @@ class TestSearchTemplate(unittest.TestCase):
         """Test cache."""
 
         bre.purge()
-        self.assertEqual(len(bre._search_cache), 0)
-        self.assertEqual(len(bre._replace_cache), 0)
+        self.assertEqual(bre._get_cache_size(), 0)
+        self.assertEqual(bre._get_cache_size(True), 0)
         for x in range(1000):
             value = str(random.randint(1, 10000))
             p = bre.compile(value)
             p.sub('', value)
-            self.assertTrue(len(bre._search_cache) <= 500)
-            self.assertTrue(len(bre._replace_cache) <= 500)
-        self.assertTrue(len(bre._search_cache) == 500)
-        self.assertTrue(len(bre._replace_cache) == 500)
+            self.assertTrue(bre._get_cache_size() > 0)
+            self.assertTrue(bre._get_cache_size() > 0)
+        self.assertTrue(bre._get_cache_size() == 500)
+        self.assertTrue(bre._get_cache_size(True) == 500)
 
     def test_infinite_loop_catch(self):
         """Test infinite loop catch."""

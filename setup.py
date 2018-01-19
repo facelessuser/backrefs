@@ -104,7 +104,9 @@ setup(
     author_email='Isaac.Muse@gmail.com',
     url='https://github.com/facelessuser/backrefs',
     packages=find_packages(exclude=['tools', 'tests']),
-    install_requires=[],
+    install_requires=[
+        "backports.functools_lru_cache ; python_version < '3'"
+    ],
     zip_safe=False,
     package_data={},
     license='MIT License',
