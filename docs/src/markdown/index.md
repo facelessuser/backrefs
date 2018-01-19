@@ -2,7 +2,7 @@
 
 ## Overview
 
-Backrefs is a wrapper around Python's built-in [Re][re] and the 3rd party [Regex][regex] library.  Backrefs adds various additional back references (and a couple other features) that are known to some regular expression engines, but not to Python's Re and/or Regex.  The supported back references actually vary depending on the regular expression engine being used as the engine may already have support for some.
+Backrefs is a wrapper around Python's built-in [Re][re] and the 3rd party [Regex][regex] library.  Backrefs adds various additional back references (and a couple other features) that are known to some regular expression engines, but not to Python's Re and/or Regex.  The supported back references actually vary depending on the regular expression engine being used as the engine may already have support for some, or things that prevent implementation of a feature.
 
 ## Using Backrefs
 
@@ -17,34 +17,35 @@ Backrefs can be applied to search patterns and/or replace patterns. You can cont
 
 ### Search Patterns
 
-To augment the search pattern to utilize search back references, you can use Backrefs to compile the search. This will apply a preprocessor to the pattern and replace the back references (and related pattern portions) with the appropriate content to construct a valid regular expression for Re or Regex and will return a valid compiled pattern for the respective regular expression engine. Since the return is a valid compiled pattern, you can use it as expected.
+To augment the search pattern of Re or Regex to utilize search back references, you can use Backrefs to compile the search. This will apply a preprocessor to the pattern and replace the back references (or other special syntax) with the appropriate content to construct a valid regular expression for Re or Regex. It will then return a valid compiled pattern for the respective regular expression engine. Since the return is a valid compiled pattern, you can use it as expected.
 
 ```py3
-pattern = bre.compile_search(r'\p{Letter}', bre.UNICODE)
-m = pattern.match('whatever')
+>>> pattern = bre.compile_search(r'\p{Letter}+', bre.UNICODE)
+>>> pattern.match('whatever') is not None
+True
 ```
 
 ### Replace Templates
 
-Backrefs also provides special back references for replace templates as well. In order to utilize these back references, the template string must be run through a compiler as well. The replace compiler will run a preprocessor on the replace template that will strip out the back references and augment the template accordingly creating a valid replace template. Then it will return a replace function that will properly augment and insert matched groups (according to rules of the originally included back references) into the template.  These replace functions can be passed into `sub` and `subn` if desired.
+Backrefs also provides special back references for replace templates as well. In order to utilize these back references, the template string must be run through a compiler as well. The replace compiler will run a preprocessor on the replace template that will strip out the back references and augment the template accordingly creating a valid replace template. Then it will return a replace object that can be used in place of your replace string. When used as your replace, the object will properly apply all the replace back references to your returned string and insert matched groups into the template.  These replace objects can be passed into `sub`, `subn` etc.
 
-Search templates must be run through the compiler with an associated compiled search pattern that can be compiled with the regular expression engine directly or with Backrefs.  The search pattern is needed to resolve groups in the search template.
+Search templates must be run through the compiler with an associated compiled search pattern so that it can properly map to the groups in your search pattern.
 
 ```pycon3
 >>> pattern = bre.compile_search(r'(\p{Letter}+)')
->>> replace = bre.compile_replace(r'\C\1\E')
+>>> replace = bre.compile_replace(pattern, r'\C\1\E')
 >>> text = pattern.sub(replace, 'sometext')
-SOMETEXT
+'SOMETEXT'
 ```
 
 Since compiled replaces are not template strings, but functions, you wont be able to apply compiled replaces via `#!py m.expand(replace)`. Instead, you can use the compiled replace directly.
 
 ```pycon3
 >>> pattern = bre.compile_search(r'(\p{Letter}+)')
->>> replace = bre.compile_replace(r'\C\1\E')
+>>> replace = bre.compile_replace(pattern, r'\C\1\E')
 >>> m = pattern.match('sometext')
 >>> replace(m)
-SOMETEXT
+'SOMETEXT'
 ```
 
 If you have a one time expand, and don't feel like pre-compiling, you can use Backrefs `expand` method (it can also take pre-compiled patterns as well).
@@ -53,12 +54,41 @@ If you have a one time expand, and don't feel like pre-compiling, you can use Ba
 >>> pattern = bre.compile_search(r'(\p{Letter}+)')
 >>> m = pattern.match('sometext')
 >>> bre.expand(m, r'\C\1\E')
-SOMETEXT
+'SOMETEXT'
 ```
 
-### Search & Replace wrappers
+### Search & Replace Together
 
-If you have a one time `finditer`, `match`, `sub`, `search`, or other match, search, or replace operation, Backrefs provides wrappers for these methods just as it does with expand.  The wrappers will compile the search and replace patterns for you on the fly, but they will also accept and pass pre-compiled patterns through as well.  They should take all the flags and options your chosen regular expression engine accepts with the same names and positions.
+If you plan on using both the search and replace features, using `compile_search` and `compile_replace` can be a little awkward. If you wish to use something a bit more familiar, you can use the `compile` function to create a pattern object that mimics Re and Regex's pattern object. Once created, it will work very similar to how Re and Regex works.  It will also auto compile replace patterns for you:
+
+```pycon3
+>>> pattern = bre.compile(r'(\p{Letter}+)')
+>>> pattern.sub(r'\C\1\E', 'sometext')
+'SOMETEXT'
+```
+
+If needed, you can use the objects `compile` function to pre-compile the replace patterns:
+
+```pycon3
+>>> pattern = bre.compile(r'(\p{Letter}+)')
+>>> replace = pattern.compile(r'\C\1\E')
+>>> pattern.sub(replace, 'sometext')
+'SOMETEXT'
+```
+
+If you want to disable the patterns use of replace back references, you can disable the pre-compile of replace templates:
+
+```pycon3
+>>> pattern = bre.compile(r'(\p{Letter}+)', auto_compile=False)
+>>> pattern.sub(r'\C\1\E', 'sometext')
+'\\Csometext\\E'
+```
+
+### Other Functions
+
+Backrefs exposes most of the usual functions which Backrefs wraps around.  For instance, Backrefs wraps around `purge` so that it can purge its cache along with the regular expression engine's cache.
+
+Backrefs also wraps around the global matching functions. So if you have a one time `finditer`, `match`, `sub`, `search`, or other match, search, or replace operation, Backrefs provides wrappers for these methods too.  The wrappers will compile the search and replace patterns for you on the fly, but they will also accept and pass pre-compiled patterns through as well.  They should take all the flags and options your chosen regular expression engine normally accepts with the same names and positions.
 
 ```pycon3
 >>> bre.sub(r'(\p{Letter}+)', r'\C\1\E', 'sometext')
@@ -80,10 +110,9 @@ In order to escape patterns formulated for Backrefs, you can simply use your reg
 !!! note "Backrefs' Format Differences"
     Even though this is a Regex specific feature, this replace format is supported by Backrefs for both Regex *and* Re with some slight differences.  These differences apply to both Regex as well as Re as Backrefs must augment the format to allow casing back references.
 
-    1. Backrefs does not implement true format replace strings, but the functionality feels the same in regards to specifying groups and captures within a group.
+    1. Backrefs does not use Python's string format directly but mimics the feel for inserting groups into the final output.
     2. Indexing into different captures in Re is limited to `0` or `-1` since Re *only* maintains the last capture.
-    3. While you can access the `subf` and `subfn` methods directly from a match object or via Backrefs' provided wrappers in Regex, you *must* use Backrefs' provided wrappers for Re as Re does not natively support such a feature.
-    3. Raw string (`#!py3 r"..."`) handling for format replace is a bit different for Backrefs compared to Regex. Regex treats format strings as simply strings instead of as a regular replace template. So while in a regular replace template you can use `\n` to represent a new line, in format strings, you'd have use a literal new line or use a normal string (`!#py3 "..."`) with `\n`. Backrefs will actually process back references and format references.
+    3. Raw string (`#!py3 r"..."`) handling for format replace is a bit different for Backrefs compared to Regex. Regex treats format strings as simply strings instead of as a regular replace template. So while in a regular replace template you can use `\n` to represent a new line, in format strings, you'd have use a literal new line or use a normal string (`#!py3 "..."`) with `\n`. Backrefs will actually process back references and format references.
 
 The Regex module offers a feature where you can apply replacements via a format string style.
 
@@ -111,7 +140,7 @@ Backrefs supports this functionality in a similar way, and you can do it with Re
 'Bar Foo'
 ```
 
-And `{} {}` is the same as `{0} {1}`.
+You can also use `{} {}` which is the same as `{0} {1}`.
 
 ```pycon3
 >>> bre.subf(r"(\w+) (\w+)", r"{} => \C{} {}\E", "foo bar")
@@ -126,6 +155,17 @@ To pre-compile a format replace template, you can use the Backrefs' `compile_rep
 >>> m = pattern.match("foo bar")
 >>> replace(m)
 'foo bar => bar foo'
+```
+
+Or using Backrefs' pattern object:
+
+```pycon3
+>>> pattern = bre.compile(r"(\w+) (\w+)")
+>>> pattern.subf(r"{0} => \C{2} {1}\E", "foo bar")
+'foo bar => BAR FOO'
+>>> pattern = bre.compile(r"(?P<word1>\w+) (?P<word2>\w+)")
+>>> pattern.subf(r"\c{word2} \c{word1}", "foo bar")
+'Bar Foo'
 ```
 
 Backrefs also provides an `expand` variant for format templates called `expandf`.
@@ -143,32 +183,47 @@ Added features available for search patterns. Features are broken up to show wha
 
 ### Re
 
+!!! info "`LOCALE` and Character Properties"
+    Backrefs does not consider `LOCALE` when inserting POSIX or Unicode properties. In byte strings, Unicode properties will be truncated to the ASCII range of `\xff`. POSIX properties will use either Unicode categories or POSIX categories depending on whether the `UNICODE` flag is set. If the `LOCALE` flag is set, it is considered **not** Unicode. Keep in mind that Backrefs doesn't stop `LOCALE` from being applied, only that Backrefs inserts its categories as either Unicode or ASCII only.
+
 Back\ References      | Description
 --------------------- |------------
 '\e'                  | Escape character `\x1b`.
-`\c`                  | Uppercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
-`\l`                  | Lowercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
-`\C`                  | Inverse uppercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
-`\L`                  | Inverse lowercase character class.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
+`\c`                  | Shortcut for the uppercase [POSIX character class](#posix-style-properties) `[[:upper:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
+`\l`                  | Shortcut for the lowercase [POSIX character class](#posix-style-properties) `[[:lower:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
+`\C`                  | Shortcut for the inverse uppercase [POSIX character class](#posix-style-properties) `[[:^upper:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
+`\L`                  | Shortcut for the inverse lowercase [POSIX character class](#posix-style-properties) `[[:^lower:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\Q...\E`             | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
 `\p{UnicodeProperty}` | Unicode property character class. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
 `\pX`                 | Unicode property character class where `X` is the uppercase letter that represents the General Category property.  For instance, `\pL` would be equivalent to `\p{L}` or `\p{Letter}`.
 `\P{UnicodeProperty}` | Inverse Unicode property character class. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
 `\PX`                 | Inverse Unicode property character class where `X` is the uppercase letter that represents the General Category property. For instance, `\PL` would be equivalent to `\P{L}` or `\P{Letter}`.
-`[[:alnum:]]`         | Though not really a back reference, support for Posix style character classes is available. See [Posix Style Properties](#posix-style-properties) for more info.
+`[[:alnum:]]`         | Though not really a back reference, support for POSIX style character classes is available. See [POSIX Style Properties](#posix-style-properties) for more info.
 `\N{UnicodeName}`     | Named characters are are normally ignored in Re, but Backrefs adds support for them.
+`\<`                  | Start word boundary. Translates to `\b(?=\w)`.
+`\>`                  | End word boundary. Translates to `\b(?<=\w)`.
 
 ### Regex
 
+!!! note
+    Regex already natively supports `\p{...}`, `\P{...}`, `\pX`, `\PX`, and `\N{...}`, so Backrefs does not attempt to add this to search patterns.
+
+    `\c`, `\l`, `L` and `L` are not used as some of these flags are already taken by Regex itself  These references are just shortcuts for the related POSIX properties in Backrefs.
+
 Back\ References | Description
 ---------------- | -----------
-'\e'             | Escape character `\x1b`.
+`\e`             | Escape character `\x1b`.
 `\Q...\E`        | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
 `\R`             | Generic line breaks. When searching a Unicode string, this will use an atomic group and match `(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)`, and when applied to byte strings, this will match `(?>\r\n|\n|\x0b|\f|\r|\x85)`. Because it uses atomic groups, which Re does not support, this feature is only for Regex.
+`\<`             | Start word boundary. Translates to `\b(?=\w)`.
+`\>`             | End word boundary. Translates to `\b(?<=\w)`.
 
 ## Replace Back References
 
-Added features available for replace patterns. None of the replace back references can be used in character classes `[]`.  The references below apply to both Re **and** Regex.
+Added features available for replace patterns. The references below apply to both Re **and** Regex and are essentially non-specific to the regular expression engine being used.  Casing is applied to the both the literal text and the replacement groups within the replace template.  In most cases you'd only need to wrap the groups, but it may be useful to apply casing to the literal portions if you are dynamically assembling replacement patterns.
+
+!!! info "`LOCALE` and Casing"
+    `LOCALE` is not considered when applying character casing. Unicode casing is applied in Unicode strings and ASCII casing is applied to byte strings.
 
 Back&nbsp;References | Description
 ---------------------|-------------
@@ -176,9 +231,9 @@ Back&nbsp;References | Description
 `\l`                 | Lowercase the next character.
 `\C...\E`            | Apply uppercase to all characters until either the end of the string or the end marker `\E` is found.
 `\L...\E`            | Apply lowercase to all characters until either the end of the string or the end marker `\E` is found.
-`\U`                 | Wide Unicode character `\U00000057`. Re doesn't translate this notation in raw strings (`r"..."`), and Regex doesn't in format templates in raw strings (`r"{} {}"`).  This adds support for them.
-`\u`                 | Narrow Unicode character `\u0057`. Re doesn't translate this notation in raw strings (`r"..."`), and Regex doesn't in format templates in raw strings (`r"{} {}"`).  This adds support for them.
-`\x`                 | Byte character `\x57`. Re doesn't translate this notation in raw strings (`r"..."`), and Regex doesn't in format templates in raw strings (`r"{} {}"`).  This adds support for them.
+`\U`                 | Wide Unicode character `\U00000057`. Re doesn't translate this notation in raw strings (`#!py3 r"..."`), and Regex doesn't in format templates in raw strings (`#!py3 r"{} {}"`).  This adds support for them.
+`\u`                 | Narrow Unicode character `\u0057`. Re doesn't translate this notation in raw strings (`#!py3 r"..."`), and Regex doesn't in format templates in raw strings (`#!py3 r"{} {}"`).  This adds support for them.
+`\x`                 | Byte character `\x57`. Re doesn't translate this notation in raw strings (`#!py3 r"..."`), and Regex doesn't in format templates in raw strings (`#!py3 r"{} {}"`).  This adds support for them.
 `\N{UnicodeName}`    | Named characters are are normally ignored in Re, but Backrefs adds support for them.
 
 !!! tip "Tip"
@@ -191,15 +246,17 @@ Back&nbsp;References | Description
 ## Unicode Properties
 
 !!! note "Note"
-    Unicode Properties are only added to Re as Regex already has **full** Unicode properties built in (on both wide and narrow builds).
+    Unicode Properties are only added to Re as Regex already has **full** Unicode properties built in.
 
-There are quite a few properties that are also supported and an exhaustive list is not currently provided. This documentation will only briefly touch on `General_Category`, `Block`, `Script`, and binary properties.
+There are quite a few properties that are also supported and an exhaustive list is not currently provided. This documentation will only briefly touch on [General Category](#general-category), [Block](#blocks), [Script](#script), and [Binary](#binary) properties.
 
-Unicode properties can be used with the format: `\p{property=value}`, `\p{property:value}`, `\p{value}`, `\p{^property=value}`, `\p{^value}`. Unicode properties can be used in byte strings, but the patterns will be restricted to the range `\x00-\xff`.
+Unicode properties are specific to search patterns and can be used to specify a request to match all the characters in a specific Unicode property. They can be specified with the format: `\p{property=value}`, `\p{property:value}`, `\p{value}`, `\p{^property=value}`, `\p{^value}`. Unicode properties can be used in byte strings, but the patterns will be restricted to the range `\x00-\xff`.
 
-The inverse of properties can also be used to specify everything not in a Unicode property: `\P{value}` or `\p{^value}` etc.  They are only used in the search patterns. Only one property may specified between the curly braces.  If you want to use multiple properties, you can place them in a character class: `[\p{UnicodeProperty}\p{OtherUnicodeProperty}]`.
+The inverse of properties can also be used to specify everything not in a Unicode property: `\P{value}` or `\p{^value}`.
 
-When specifying a property, the value matching is case insensitive and characters like `[ -_]` will be ignored.  So the following are all equivalent: `\p{Uppercase_Letter}`, `\p{Uppercase-letter}`, `\p{UPPERCASELETTER}`, `\p{upper case letter}`.
+Unicode properties may only have one property specified between the curly braces.  If you want to use multiple properties, you can place them in a character class: `[\p{UnicodeProperty}\p{OtherUnicodeProperty}]`.
+
+When specifying a property, the value matching is case insensitive and characters like `[ -_]` will be stripped out.  So the following are all equivalent: `\p{Uppercase_Letter}`, `\p{Uppercase-letter}`, `\p{UPPERCASELETTER}`, `\p{upper case letter}`.
 
 When evaluating a property in the form `\p{value}`, they are evaluated in this order:
 
@@ -207,10 +264,13 @@ When evaluating a property in the form `\p{value}`, they are evaluated in this o
 2. Script
 3. Blocks
 4. Binary
+5. Others...
 
 All other properties are namespaced.  Example: `\p{Bidi_Class: White_Space}`.
 
 When installed, the Unicode version that comes with the Python it is installed under will be used to generate all the Unicode tables.  For instance, Python 2.7 is currently using Unicode 5.2.0.  And Python 3.5 is using 8.0.0.
+
+To learn more about Unicode properties you can read [Perl's documentation](https://perldoc.perl.org/perluniprops.html), but keep in mind that not every category, block, etc. may be implemented.
 
 !!! caution "Narrow Python Builds"
     If you are using a narrow python build, your max Unicode value will be `\uffff`.  Unicode blocks above that limit will not be available.  Also Unicode values above the limit will not be available in character classes either.
@@ -274,18 +334,12 @@ There are a number of Unicode scripts and also aliases for scripts (they won't b
 
 There are a number of binary properties and even aliases for some of the binary properties.  Comprehensive lists are available on the web, but they are specified in the following way: `\p{Alphabetic}`.  Normal just specifying inverse via `\P{value}` or `\p{^value}` should be enough, but for completeness the form `\p{Alphabetic: Y}` and `\p{Alphabetic: N}` along with all the variants (Yes|No|T|F|True|False).
 
-### Posix
+### POSIX Style Properties
 
-A number of Posix property names are also available.  In general, when used in the `\p{}` form, they are aliases for existing Unicode properties with the same name. There are some Posix names that aren't used in the current Unicode properties such as `alnum`, `xdigit`, etc.  If you want to force the Posix form inside `\p{}` you can use their name prefixed with `posix`: `\p{Punct}` --> `\p{PosixPunct}` (these `posix` prefixed properties are treated as binary properties)  Currently when using Posix values in `\p{}` they will be forced into their Unicode form (see [Posix Style Properties](#posix-style-properties) for more info).
+A number of POSIX property names are also available in the form `[:posix:]`. Inverse properties are also available in the form `[:^posix:]`. These properties must only be included in a character class: `[[:upper:]a-z]`. There are two definitions for a given POSIX property: ASCII and Unicode. The Unicode definitions leverage Unicode properties and are only used if the pattern is a Unicode string **and** the regular expression's `UNICODE` flag is set.  In Python 3, the default is Unicode unless the `ASCII` flag is set (the `LOCALE` flag is the equivalent of not having `UNICODE` set).
 
-## Posix Style Properties
+The Unicode variants of the POSIX properties are also available via the `\p{...}` form.  There are some name collisions with existing Unicode properties like `punct` which exists as both a name for a Unicode property and a slightly different POSIX property. To access the POSIX property, you should prefix the name with `posix`: `\p{PosixPunct}`. It should be noted that you can use the `posix` prefix to access any of the POSIX properties, even if there is no name collision. The POSIX properties are treated as [binary Unicode properties](#binary).
 
-Posix properties in the form of `[:posix:]` and the inverse `[:^posix:]` are available. Posix style properties are supported in byte string and Unicode string searches. These character classes are only available inside a character group `[]`.  If needed, you can use the alternate form of `\p{Posix}` to use inside and outside a character group.
-
-If the search pattern is a byte string or the `UNICODE` flag is not included (or `ASCII` flag is include), the ASCII variant will be used.  Unicode variants are used for Unicode strings with the Unicode flag (which is the default in Python 3).
-
-!!! caution "Posix Values in `p{}`"
-    If using the `\p{Posix}` form, the return will always be Unicode and properties like `punct` will revert to the Unicode property form opposed the Posix unless `posix` is prefixed to the name.  Example: the Unicode property `punct` = `[\p{P}]`, but the Posix `posixpunct` = `[\p{P}\p{S}]`.
 
 \[:posix:] | \\p\{Posix} | ASCII                                             | Unicode
 ---------- | ----------- | ------------------------------------------------- | -------

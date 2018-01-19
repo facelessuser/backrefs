@@ -2,7 +2,9 @@
 
 ## 2.3.0
 
-- **NEW**: Completely refactored algorithm for search pattern augmentation.
+- **NEW**: Added new `compile` function that returns a pattern object that feels like Re's and Regex's pattern object.
+- **NEW**: Add some caching of search and replace patterns.
+- **NEW**: Completely refactored algorithm for search and replace pattern augmentation.
 - **NEW**: Add support for `\e` for escape character `\x1b` in both Re and Regex.
 - **NEW**: Add support for `\R` for generic newlines in the Regex module (Regex only).
 - **NEW**: Support Unicode property form `\pP` and `\PP`.
@@ -10,6 +12,7 @@
 - **NEW**: Handle `(?#comments)` properly in the preprocess step.
 - **NEW**: Add support for `\N` in byte strings (characters out of range won't be included).
 - **NEW**: Add support for `\p` and `\P` in byte strings (characters out of range won't be included).
+- **NEW**: Add support for `\<` and `\>` word boundary escapes.
 - **FIX**: Missing block properties on narrow systems when the property starts beyond the narrow limit.
 - **FIX**: Fix issue where an invalid general category could sometimes pass and return no characters.
 - **FIX**: Fix `\Q...\E` behavior so it is applied first as a separate step. No longer avoids `\Q...\E` in things like character groups or comments.
