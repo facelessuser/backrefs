@@ -1232,7 +1232,7 @@ if REGEX_SUPPORT:
                 re_version = V1
             else:
                 re_version = 0
-            key = (pattern, re_version, re_verbose)
+            key = (type(pattern), pattern, flags, re_verbose, re_version)
             try:
                 return _search_cache[key]
             except Exception:
@@ -1266,7 +1266,7 @@ if REGEX_SUPPORT:
         if pattern is not None and isinstance(pattern, REGEX_TYPE):
             if isinstance(repl, (util.string_type, util.binary_type)):
                 format_flag = bool(flags & FORMAT)
-                key = (hash(pattern), repl, format_flag)
+                key = (pattern, type(repl), repl, format_flag)
                 try:
                     return _replace_cache[key]
                 except Exception:
