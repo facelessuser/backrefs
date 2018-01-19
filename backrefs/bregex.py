@@ -37,8 +37,8 @@ Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
 from __future__ import unicode_literals
 import sys
 import re
-import functools
 import unicodedata
+from collections import OrderedDict
 from . import compat
 try:
     import regex
@@ -87,7 +87,6 @@ if REGEX_SUPPORT:
     DEFAULT_VERSION = regex.DEFAULT_VERSION
     REGEX_TYPE = type(regex.compile('', 0))
     escape = regex.escape
-    purge = regex.purge
 
     # Replace flags
     FORMAT = 1
@@ -97,6 +96,12 @@ if REGEX_SUPPORT:
     _LOWER = 2
 
     _SEARCH_ASCII = re.ASCII if compat.PY3 else 0
+
+    # Maximum size of the cache.
+    _MAXCACHE = 500
+
+    _replace_cache = OrderedDict()
+    _search_cache = OrderedDict()
 
     class LoopException(Exception):
         """Loop exception."""
@@ -240,7 +245,7 @@ if REGEX_SUPPORT:
             self.index += 1
             return char
 
-    class ReplaceTemplate(object):
+    class _ReplaceParser(object):
         """Pre-replace template."""
 
         _ascii_letters = (
@@ -252,16 +257,9 @@ if REGEX_SUPPORT:
         _standard_escapes = ('a', 'b', 'f', 'n', 'r', 't', 'v')
         _curly_brackets = ('{', '}')
 
-        def __init__(self, pattern, template, use_format=False):
+        def __init__(self):
             """Initialize."""
 
-            if isinstance(template, compat.binary_type):
-                self.binary = True
-            else:
-                self.binary = False
-
-            self._original = template
-            self.use_format = use_format
             self.end_found = False
             self.group_slots = []
             self.literal_slots = []
@@ -272,9 +270,6 @@ if REGEX_SUPPORT:
             self.manual = False
             self.auto = False
             self.auto_index = 0
-            self.pattern_hash = hash(pattern)
-
-            self.parse_template(pattern)
 
         def handle_format(self, t, i):
             """Handle format."""
@@ -628,6 +623,46 @@ if REGEX_SUPPORT:
 
             return self._original
 
+        def parse(self, pattern, template, use_format=False):
+            """Parse template."""
+
+            if isinstance(template, compat.binary_type):
+                self.binary = True
+            else:
+                self.binary = False
+            self._original = template
+            self.use_format = use_format
+            self.parse_template(pattern)
+
+            return ReplaceTemplate(
+                tuple(self.groups),
+                tuple(self.group_slots),
+                tuple(self.literals),
+                hash(pattern),
+                self.use_format
+            )
+
+    class ReplaceTemplate(compat.Immutable):
+        """Replacement template expander."""
+
+        __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format")
+
+        def __init__(self, groups, group_slots, literals, pattern_hash, use_format):
+            """Initialize."""
+
+            super(ReplaceTemplate, self).__init__(
+                use_format=use_format,
+                groups=groups,
+                group_slots=group_slots,
+                literals=literals,
+                pattern_hash=pattern_hash
+            )
+
+        def __call__(self, m):
+            """Call."""
+
+            return self.expand(m)
+
         def get_group_index(self, index):
             """Find and return the appropriate group index."""
 
@@ -648,32 +683,23 @@ if REGEX_SUPPORT:
                     break
             return g_case
 
-    class ReplaceTemplateExpander(object):
-        """Replacement template expander."""
-
-        def __init__(self, match, template):
-            """Initialize."""
-
-            self.template = template
-            self.index = -1
-            self.end_found = False
-            self.parent_span = []
-            self.match = match
-
-        def expand(self):
+        def expand(self, m):
             """Using the template, expand the string."""
 
-            sep = self.match.string[:0]
+            if m is None:
+                raise ValueError("Match is None!")
+
+            sep = m.string[:0]
             text = []
             # Expand string
-            for x in range(0, len(self.template.literals)):
+            for x in range(0, len(self.literals)):
                 index = x
-                l = self.template.literals[x]
+                l = self.literals[x]
                 if l is None:
-                    g_index = self.template.get_group_index(index)
-                    span_case, single_case, capture = self.template.get_group_attributes(index)
+                    g_index = self.get_group_index(index)
+                    span_case, single_case, capture = self.get_group_attributes(index)
                     try:
-                        l = self.match.captures(g_index)[capture]
+                        l = m.captures(g_index)[capture]
                     except IndexError:
                         raise IndexError("'%d' is out of range!" % capture)
                     if span_case is not None:
@@ -1092,21 +1118,6 @@ if REGEX_SUPPORT:
 
             return "".join(new_pattern).encode('latin-1') if self.binary else "".join(new_pattern)
 
-    class Replace(compat.Immutable):
-        """Bregex compiled replace object."""
-
-        __slots__ = ("func", "use_format", "pattern_hash")
-
-        def __init__(self, func, use_format, pattern_hash):
-            """Initialize."""
-
-            super(Replace, self).__init__(func=func, use_format=use_format, pattern_hash=pattern_hash)
-
-        def __call__(self, *args, **kwargs):
-            """Call."""
-
-            return self.func(*args, **kwargs)
-
     class Bregex(compat.Immutable):
         """Bregex object."""
 
@@ -1174,7 +1185,7 @@ if REGEX_SUPPORT:
 
             return self.pattern.finditer(string, pos, endpos, overlapped, concurrent, partial)
 
-        def sub(self, repl, string, count=0,  pos=None, endpos=None, concurrent=None):
+        def sub(self, repl, string, count=0, pos=None, endpos=None, concurrent=None):
             """Apply `sub`."""
 
             return self.pattern.sub(self._auto_compile(repl), string, count, pos, endpos, concurrent)
@@ -1200,17 +1211,15 @@ if REGEX_SUPPORT:
         if m is None:
             raise ValueError("Match is None!")
         else:
-            if isinstance(repl, Replace):
-                return repl(m)
-            elif isinstance(repl, ReplaceTemplate):
-                return ReplaceTemplateExpander(m, repl).expand()
+            if isinstance(repl, ReplaceTemplate):
+                return repl.expand(m)
             elif isinstance(repl, (compat.string_type, compat.binary_type)):
-                return ReplaceTemplateExpander(m, ReplaceTemplate(m.re, repl, bool(flags & FORMAT))).expand()
+                return _ReplaceParser().parse(m.re, repl, bool(flags & FORMAT)).expand(m)
 
     def _is_replace(obj):
         """Check if object is a replace object."""
 
-        return isinstance(obj, (ReplaceTemplate, Replace))
+        return isinstance(obj, ReplaceTemplate)
 
     def _apply_search_backrefs(pattern, flags=0):
         """Apply the search backrefs to the search pattern."""
@@ -1223,7 +1232,16 @@ if REGEX_SUPPORT:
                 re_version = V1
             else:
                 re_version = 0
+            key = (pattern, re_version, re_verbose)
+            try:
+                return _search_cache[key]
+            except Exception:
+                pass
             pattern = RegexSearchTemplate(pattern, re_verbose, re_version).apply()
+            if not (flags & DEBUG):
+                if len(_search_cache) >= _MAXCACHE:
+                    _search_cache.popitem(last=False)
+                _search_cache[key] = pattern
         elif isinstance(pattern, REGEX_TYPE):
             if flags:
                 raise ValueError("Cannot process flags argument with a compiled pattern!")
@@ -1247,22 +1265,23 @@ if REGEX_SUPPORT:
         call = None
         if pattern is not None and isinstance(pattern, REGEX_TYPE):
             if isinstance(repl, (compat.string_type, compat.binary_type)):
-                repl = ReplaceTemplate(pattern, repl, bool(flags & FORMAT))
-                call = Replace(
-                    functools.partial(_apply_replace_backrefs, repl=repl), repl.use_format, repl.pattern_hash
-                )
-            elif isinstance(repl, Replace):
-                if flags:
-                    raise ValueError("Cannot process flags argument with a compiled pattern!")
-                if repl.pattern_hash != hash(pattern):
-                    raise ValueError("Pattern hash doesn't match hash in compiled replace!")
-                call = repl
+                format_flag = bool(flags & FORMAT)
+                key = (hash(pattern), repl, format_flag)
+                try:
+                    return _replace_cache[key]
+                except Exception:
+                    pass
+                call = _ReplaceParser().parse(pattern, repl, bool(flags & FORMAT))
+                if not (pattern.flags & DEBUG):
+                    if len(_replace_cache) >= _MAXCACHE:
+                        _replace_cache.popitem(last=False)
+                    _replace_cache[key] = call
             elif isinstance(repl, ReplaceTemplate):
                 if flags:
                     raise ValueError("Cannot process flags argument with a ReplaceTemplate!")
-                call = Replace(
-                    functools.partial(_apply_replace_backrefs, repl=repl), repl.use_format, repl.pattern_hash
-                )
+                if repl.pattern_hash != hash(pattern):
+                    raise ValueError("Pattern hash doesn't match hash in compiled replace!")
+                call = repl
             else:
                 raise TypeError("Not a valid type!")
         else:
@@ -1272,7 +1291,7 @@ if REGEX_SUPPORT:
     def _assert_expandable(repl, use_format=False):
         """Check if replace template is expandable."""
 
-        if isinstance(repl, (Replace, ReplaceTemplate)):
+        if isinstance(repl, ReplaceTemplate):
             if repl.use_format != use_format:
                 if use_format:
                     raise ValueError("Replace not compiled as a format replace")
@@ -1414,3 +1433,10 @@ if REGEX_SUPPORT:
             _apply_search_backrefs(pattern, flags), string,
             flags, pos, endpos, overlapped, partial, concurrent, **kwargs
         )
+
+    def purge():
+        """Purge caches."""
+
+        _replace_cache.clear()
+        _search_cache.clear()
+        re.purge()

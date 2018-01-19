@@ -7,6 +7,7 @@ import regex
 import sys
 import pytest
 import _regex_core
+import random
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 
@@ -37,6 +38,21 @@ class TestSearchTemplate(unittest.TestCase):
             pattern.pattern,
             r"[\<]test"
         )
+
+    def test_cache(self):
+        """Test cache."""
+
+        bregex.purge()
+        self.assertEqual(len(bregex._search_cache), 0)
+        self.assertEqual(len(bregex._replace_cache), 0)
+        for x in range(1000):
+            value = str(random.randint(1, 10000))
+            p = bregex.compile(value)
+            p.sub('', value)
+            self.assertTrue(len(bregex._search_cache) <= 500)
+            self.assertTrue(len(bregex._replace_cache) <= 500)
+        self.assertTrue(len(bregex._search_cache) == 500)
+        self.assertTrue(len(bregex._replace_cache) == 500)
 
     def test_infinite_loop_catch(self):
         """Test infinite loop catch."""
@@ -507,6 +523,12 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_expand_with_none(self):
+        """Test none in expand."""
+
+        with pytest.raises(ValueError):
+            bregex.expand(None, "")
+
     def test_unicode_narrow_value(self):
         """Test Unicode narrow value."""
 
@@ -524,13 +546,13 @@ class TestReplaceTemplate(unittest.TestCase):
 
         pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
         with pytest.raises(_regex_core.error):
-            bregex.ReplaceTemplate(pattern, '\\1\\l\\')
+            bregex._ReplaceParser().parse(pattern, '\\1\\l\\')
 
         with pytest.raises(_regex_core.error):
-            bregex.ReplaceTemplate(pattern, '\\1\\L\\')
+            bregex._ReplaceParser().parse(pattern, '\\1\\L\\')
 
         with pytest.raises(_regex_core.error):
-            bregex.ReplaceTemplate(pattern, '\\1\\')
+            bregex._ReplaceParser().parse(pattern, '\\1\\')
 
     def test_line_break(self):
         r"""Test line break \R."""
@@ -609,7 +631,8 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test retrieval of the replace template original string."""
 
         pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
-        template = bregex.ReplaceTemplate(pattern, r'\c\1\2\C\3\E\4')
+        template = bregex._ReplaceParser()
+        template.parse(pattern, r'\c\1\2\C\3\E\4')
 
         self.assertEqual(r'\c\1\2\C\3\E\4', template.get_base_template())
 
@@ -1060,7 +1083,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         text = "Replace with template test!"
         pattern = bregex.compile_search('(.+)')
-        repl = bregex.ReplaceTemplate(pattern, 'Success!')
+        repl = bregex._ReplaceParser().parse(pattern, 'Success!')
         expand = bregex.compile_replace(pattern, repl)
 
         m = pattern.match(text)
@@ -1477,13 +1500,13 @@ class TestExceptions(unittest.TestCase):
         with pytest.raises(ValueError) as excinfo:
             replace = bregex.compile_replace(pattern, replace, bregex.FORMAT)
 
-        assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
+        assert "Cannot process flags argument with a ReplaceTemplate!" in str(excinfo.value)
 
     def test_relace_flag_on_template(self):
         """Test when a compile occurs on a template with flags passed."""
 
         pattern = regex.compile('test')
-        template = bregex.ReplaceTemplate(pattern, 'whatever')
+        template = bregex._ReplaceParser().parse(pattern, 'whatever')
 
         with pytest.raises(ValueError) as excinfo:
             bregex.compile_replace(pattern, template, bregex.FORMAT)
@@ -1775,7 +1798,6 @@ class TestConvenienceFunctions(unittest.TestCase):
         count = 0
         p = bregex.compile(r'\w+')
         for m in p.finditer('This is a test for finditer!'):
-            print(m)
             count += 1
 
         self.assertEqual(count, 6)

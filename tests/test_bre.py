@@ -7,6 +7,7 @@ import re
 import sys
 import pytest
 import sre_constants
+import random
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY34_PLUS = (3, 4) <= sys.version_info
@@ -40,6 +41,21 @@ class TestSearchTemplate(unittest.TestCase):
             pattern.pattern,
             r"[\<]test"
         )
+
+    def test_cache(self):
+        """Test cache."""
+
+        bre.purge()
+        self.assertEqual(len(bre._search_cache), 0)
+        self.assertEqual(len(bre._replace_cache), 0)
+        for x in range(1000):
+            value = str(random.randint(1, 10000))
+            p = bre.compile(value)
+            p.sub('', value)
+            self.assertTrue(len(bre._search_cache) <= 500)
+            self.assertTrue(len(bre._replace_cache) <= 500)
+        self.assertTrue(len(bre._search_cache) == 500)
+        self.assertTrue(len(bre._replace_cache) == 500)
 
     def test_infinite_loop_catch(self):
         """Test infinite loop catch."""
@@ -830,6 +846,12 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_expand_with_none(self):
+        """Test none in expand."""
+
+        with pytest.raises(ValueError):
+            bre.expand(None, "")
+
     def test_unicode_narrow_value(self):
         """Test Unicode narrow value."""
 
@@ -847,13 +869,13 @@ class TestReplaceTemplate(unittest.TestCase):
 
         pattern = re.compile(r"(some)(.+?)(pattern)(!)")
         with pytest.raises(sre_constants.error):
-            bre.ReplaceTemplate(pattern, '\\1\\l\\')
+            bre._ReplaceParser().parse(pattern, '\\1\\l\\')
 
         with pytest.raises(sre_constants.error):
-            bre.ReplaceTemplate(pattern, '\\1\\L\\')
+            bre._ReplaceParser().parse(pattern, '\\1\\L\\')
 
         with pytest.raises(sre_constants.error):
-            bre.ReplaceTemplate(pattern, '\\1\\')
+            bre._ReplaceParser().parse(pattern, '\\1\\')
 
     def test_replace_unicode_name_ascii_range(self):
         """Test replacing Unicode names in the ASCII range."""
@@ -908,7 +930,8 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test retrieval of the replace template original string."""
 
         pattern = re.compile(r"(some)(.+?)(pattern)(!)")
-        template = bre.ReplaceTemplate(pattern, r'\c\1\2\C\3\E\4')
+        template = bre._ReplaceParser()
+        template.parse(pattern, r'\c\1\2\C\3\E\4')
 
         self.assertEqual(r'\c\1\2\C\3\E\4', template.get_base_template())
 
@@ -1351,7 +1374,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         text = "Replace with function test!"
         pattern = bre.compile_search('(.+)')
-        repl = bre.ReplaceTemplate(pattern, 'Success!')
+        repl = bre._ReplaceParser().parse(pattern, 'Success!')
         expand = bre.compile_replace(pattern, repl)
 
         m = pattern.match(text)
@@ -1840,13 +1863,13 @@ class TestExceptions(unittest.TestCase):
         with pytest.raises(ValueError) as excinfo:
             replace = bre.compile_replace(pattern, replace, bre.FORMAT)
 
-        assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
+        assert "Cannot process flags argument with a ReplaceTemplate!" in str(excinfo.value)
 
     def test_relace_flag_on_template(self):
         """Test when a compile occurs on a template with flags passed."""
 
         pattern = re.compile('test')
-        template = bre.ReplaceTemplate(pattern, 'whatever')
+        template = bre._ReplaceParser().parse(pattern, 'whatever')
 
         with pytest.raises(ValueError) as excinfo:
             bre.compile_replace(pattern, template, bre.FORMAT)
