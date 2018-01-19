@@ -1424,7 +1424,7 @@ def _apply_search_backrefs(pattern, flags=0):
             re_unicode = True
         if not (flags & DEBUG):
             pattern = _cached_search_compile(pattern, re_verbose, re_unicode)
-        else:
+        else:  # pragma: no cover
             pattern = _SearchParser(pattern, re_verbose, re_unicode).parse()
     elif isinstance(pattern, _RE_TYPE):
         if flags:
@@ -1467,7 +1467,7 @@ def compile_replace(pattern, repl, flags=0):
         if isinstance(repl, (_util.string_type, _util.binary_type)):
             if not (pattern.flags & DEBUG):
                 call = _cached_replace_compile(pattern, repl, flags)
-            else:
+            else:  # pragma: no cover
                 call = _ReplaceParser().parse(pattern, repl, bool(flags & FORMAT))
         elif isinstance(repl, ReplaceTemplate):
             if flags:

@@ -1186,7 +1186,7 @@ if REGEX_SUPPORT:
                 re_version = 0
             if not (flags & DEBUG):
                 pattern = _cached_search_compile(pattern, re_verbose, re_version)
-            else:
+            else: # pragma: no cover
                 pattern = _SearchParser(pattern, re_verbose, re_version).parse()
         elif isinstance(pattern, _REGEX_TYPE):
             if flags:
@@ -1225,7 +1225,7 @@ if REGEX_SUPPORT:
             if isinstance(repl, (_util.string_type, _util.binary_type)):
                 if not (pattern.flags & DEBUG):
                     call = _cached_replace_compile(pattern, repl, flags)
-                else:
+                else: # pragma: no cover
                     call = _ReplaceParser().parse(pattern, repl, bool(flags & FORMAT))
             elif isinstance(repl, ReplaceTemplate):
                 if flags:
