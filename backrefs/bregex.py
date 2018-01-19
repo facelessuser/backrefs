@@ -45,13 +45,15 @@ try:
 except Exception:  # pragma: no coverage
     _regex = None
 
-__all__ = (
-    "expand", "expandf", "match", "fullmatch", "search", "sub", "subf", "subn", "subfn", "split", "splititer",
-    "findall", "finditer", "purge", "escape", "REGEX_SUPPORT", "D", "DEBUG", "A", "ASCII", "B", "BESTMATCH",
-    "E", "ENHANCEMATCH", "F", "FULLCASE", "I", "IGNORECASE", "L", "LOCALE", "M", "MULTILINE", "R", "REVERSE",
-    "S", "DOTALL", "U", "UNICODE", "X", "VERBOSE", "V0", "VERSION0", "V1", "VERSION1", "W", "WORD",
-    "P", "POSIX", "DEFAULT_VERSION", "FORMAT", "compile", "compile_search", "compile_replace", "Bregex",
-    "ReplaceTemplate"
+__all__ = ("REGEX_SUPPORT",) + (
+    tuple() if _regex is None else (
+        "expand", "expandf", "match", "fullmatch", "search", "sub", "subf", "subn", "subfn", "split", "splititer",
+        "findall", "finditer", "purge", "escape", "D", "DEBUG", "A", "ASCII", "B", "BESTMATCH",
+        "E", "ENHANCEMATCH", "F", "FULLCASE", "I", "IGNORECASE", "L", "LOCALE", "M", "MULTILINE", "R", "REVERSE",
+        "S", "DOTALL", "U", "UNICODE", "X", "VERBOSE", "V0", "VERSION0", "V1", "VERSION1", "W", "WORD",
+        "P", "POSIX", "DEFAULT_VERSION", "FORMAT", "compile", "compile_search", "compile_replace", "Bregex",
+        "ReplaceTemplate"
+    )
 )
 
 _MAXUNICODE = _sys.maxunicode
@@ -732,9 +734,9 @@ if REGEX_SUPPORT:
 
         _re_posix = _re.compile(r'(?i)\[:(?:\\.|[^\\:}]+)+:\]', _SEARCH_ASCII)
         if REGEX_COMMENT_FIX:  # pragma: no cover
-            _re_comments = _re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII)
-        else:
             _re_comments = _re.compile(r'\(\?\#(\\.|[^)])*\)', _SEARCH_ASCII)
+        else:
+            _re_comments = _re.compile(r'\(\?\#[^)]*\)', _SEARCH_ASCII)
         _regex_flags = _re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[imsfwx])+\)', _SEARCH_ASCII)
         _regex_flags_v0 = _re.compile(r'\(\?(?:[Laberup]|V0|V1|[imsfwx])+\)', _SEARCH_ASCII)
         _scoped_regex_flags = _re.compile(r'\(\?(?:[Laberup]|V0|V1|-?[ixmsfw])+:', _SEARCH_ASCII)
