@@ -43,16 +43,16 @@ class TestSearchTemplate(unittest.TestCase):
         """Test cache."""
 
         bregex.purge()
-        self.assertEqual(len(bregex._search_cache), 0)
-        self.assertEqual(len(bregex._replace_cache), 0)
+        self.assertEqual(bregex._get_cache_size(), 0)
+        self.assertEqual(bregex._get_cache_size(True), 0)
         for x in range(1000):
             value = str(random.randint(1, 10000))
             p = bregex.compile(value)
             p.sub('', value)
-            self.assertTrue(len(bregex._search_cache) <= 500)
-            self.assertTrue(len(bregex._replace_cache) <= 500)
-        self.assertTrue(len(bregex._search_cache) == 500)
-        self.assertTrue(len(bregex._replace_cache) == 500)
+            self.assertTrue(bregex._get_cache_size() > 0)
+            self.assertTrue(bregex._get_cache_size() > 0)
+        self.assertTrue(bregex._get_cache_size() == 500)
+        self.assertTrue(bregex._get_cache_size(True) == 500)
 
     def test_infinite_loop_catch(self):
         """Test infinite loop catch."""
