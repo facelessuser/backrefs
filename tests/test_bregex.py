@@ -1622,7 +1622,7 @@ class TestConvenienceFunctions(unittest.TestCase):
         self.assertTrue(m is not None)
 
     def test_fullmatch(self):
-        """Test that `match` works."""
+        """Test that `fullmatch` works."""
 
         m = bregex.fullmatch(r'This is a test for match!', "This is a test for match!")
         self.assertTrue(m is not None)

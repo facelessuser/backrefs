@@ -9,6 +9,7 @@ import pytest
 import sre_constants
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
+PY34_PLUS = (3, 4) <= sys.version_info
 PY36_PLUS = (3, 6) <= sys.version_info
 PY37_PLUS = (3, 7) <= sys.version_info
 
@@ -1982,6 +1983,13 @@ class TestConvenienceFunctions(unittest.TestCase):
 
         m = bre.match(r'This is a test for m[\l]+!', "This is a test for match!")
         self.assertTrue(m is not None)
+
+    def test_fullmatch(self):
+        """Test that `fullmatch` works."""
+
+        if PY34_PLUS:
+            m = bre.fullmatch(r'This is a test for match!', "This is a test for match!")
+            self.assertTrue(m is not None)
 
     def test_search(self):
         """Test that `search` works."""

@@ -39,7 +39,6 @@ import sys
 import re
 import functools
 import unicodedata
-from collections import namedtuple
 from . import compat
 try:
     import regex
@@ -1093,8 +1092,15 @@ if REGEX_SUPPORT:
 
             return "".join(new_pattern).encode('latin-1') if self.binary else "".join(new_pattern)
 
-    class Replace(namedtuple('Replace', ['func', 'use_format', 'pattern_hash'])):
+    class Replace(compat.Immutable):
         """Bregex compiled replace object."""
+
+        __slots__ = ("func", "use_format", "pattern_hash")
+
+        def __init__(self, func, use_format, pattern_hash):
+            """Initialize."""
+
+            super(Replace, self).__init__(func=func, use_format=use_format, pattern_hash=pattern_hash)
 
         def __call__(self, *args, **kwargs):
             """Call."""
@@ -1171,26 +1177,30 @@ if REGEX_SUPPORT:
             raise TypeError("Pattern must be a compiled regular expression!")
         return call
 
+    def _assert_expandable(repl, use_format=False):
+        """Check if replace template is expandable."""
+
+        if isinstance(repl, (Replace, ReplaceTemplate)):
+            if repl.use_format != use_format:
+                if use_format:
+                    raise ValueError("Replace not compiled as a format replace")
+                else:
+                    raise ValueError("Replace should not be compiled as a format replace!")
+        elif not isinstance(repl, (compat.string_type, compat.binary_type)):
+            raise TypeError("Expected string, buffer, or compiled replace!")
+
     # Convenience methods like re has, but slower due to overhead on each call.
     # It is recommended to use compile_search and compile_replace
     def expand(m, repl):
         """Expand the string using the replace pattern or function."""
 
-        if isinstance(repl, (Replace, ReplaceTemplate)):
-            if repl.use_format:
-                raise ValueError("Replace should not be compiled as a format replace!")
-        elif not isinstance(repl, (compat.string_type, compat.binary_type)):
-            raise TypeError("Expected string, buffer, or compiled replace!")
+        _assert_expandable(repl)
         return _apply_replace_backrefs(m, repl)
 
     def expandf(m, format):  # noqa B002
         """Expand the string using the format replace pattern or function."""
 
-        if isinstance(format, (Replace, ReplaceTemplate)):
-            if not format.use_format:
-                raise ValueError("Replace not compiled as a format replace")
-        elif not isinstance(format, (compat.string_type, compat.binary_type)):
-            raise TypeError("Expected string, buffer, or compiled replace!")
+        _assert_expandable(format, True)
         return _apply_replace_backrefs(m, format, flags=FORMAT)
 
     def match(pattern, string, flags=0, pos=None, endpos=None, partial=False, concurrent=None, **kwargs):
