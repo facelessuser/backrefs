@@ -7,8 +7,10 @@ import re
 import sys
 import pytest
 import sre_constants
+import random
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
+PY34_PLUS = (3, 4) <= sys.version_info
 PY36_PLUS = (3, 6) <= sys.version_info
 PY37_PLUS = (3, 7) <= sys.version_info
 
@@ -39,6 +41,21 @@ class TestSearchTemplate(unittest.TestCase):
             pattern.pattern,
             r"[\<]test"
         )
+
+    def test_cache(self):
+        """Test cache."""
+
+        bre.purge()
+        self.assertEqual(len(bre._search_cache), 0)
+        self.assertEqual(len(bre._replace_cache), 0)
+        for x in range(1000):
+            value = str(random.randint(1, 10000))
+            p = bre.compile(value)
+            p.sub('', value)
+            self.assertTrue(len(bre._search_cache) <= 500)
+            self.assertTrue(len(bre._replace_cache) <= 500)
+        self.assertTrue(len(bre._search_cache) == 500)
+        self.assertTrue(len(bre._replace_cache) == 500)
 
     def test_infinite_loop_catch(self):
         """Test infinite loop catch."""
@@ -388,13 +405,13 @@ class TestSearchTemplate(unittest.TestCase):
     def test_unrecognized_backrefs(self):
         """Test unrecognized backrefs."""
 
-        result = bre.SearchTemplate(r'Testing unrecognized backrefs \k!').apply()
+        result = bre._SearchParser(r'Testing unrecognized backrefs \k!').parse()
         self.assertEqual(r'Testing unrecognized backrefs \k!', result)
 
     def test_quote(self):
         """Test quoting/escaping."""
 
-        result = bre.SearchTemplate(r'Testing \Q(\s+[quote]*\s+)?\E!').apply()
+        result = bre._SearchParser(r'Testing \Q(\s+[quote]*\s+)?\E!').parse()
         self.assertEqual(r'Testing %s!' % re.escape(r'(\s+[quote]*\s+)?'), result)
 
     def test_normal_backrefs(self):
@@ -404,49 +421,49 @@ class TestSearchTemplate(unittest.TestCase):
         They should all pass through unaltered.
         """
 
-        result = bre.SearchTemplate(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]').apply()
+        result = bre._SearchParser(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]').parse()
         self.assertEqual(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]', result)
 
     def test_quote_no_end(self):
         r"""Test quote where no `\E` is defined."""
 
-        result = bre.SearchTemplate(r'Testing \Q(quote) with no [end]!').apply()
+        result = bre._SearchParser(r'Testing \Q(quote) with no [end]!').parse()
         self.assertEqual(r'Testing %s' % re.escape(r'(quote) with no [end]!'), result)
 
     def test_quote_in_char_groups(self):
         """Test that quote backrefs are handled in character groups."""
 
-        result = bre.SearchTemplate(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').apply()
+        result = bre._SearchParser(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').parse()
         self.assertEqual(r'Testing [char block] [\(AVOIDANCE\)]!', result)
 
     def test_quote_in_char_groups_with_right_square_bracket_first(self):
         """Test that quote backrefs are handled in character groups that have a right square bracket as first char."""
 
-        result = bre.SearchTemplate(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').apply()
+        result = bre._SearchParser(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').parse()
         self.assertEqual(r'Testing [^]char block] []\(AVOIDANCE\)]!', result)
 
     def test_extraneous_end_char(self):
         r"""Test that stray '\E's get removed."""
 
-        result = bre.SearchTemplate(r'Testing \Eextraneous end char\E!').apply()
+        result = bre._SearchParser(r'Testing \Eextraneous end char\E!').parse()
         self.assertEqual(r'Testing extraneous end char!', result)
 
     def test_escaped_backrefs(self):
         """Ensure escaped backrefs don't get processed."""
 
-        result = bre.SearchTemplate(r'\\cTesting\\C \\lescaped\\L \\Qbackrefs\\E!').apply()
+        result = bre._SearchParser(r'\\cTesting\\C \\lescaped\\L \\Qbackrefs\\E!').parse()
         self.assertEqual(r'\\cTesting\\C \\lescaped\\L \\Qbackrefs\\E!', result)
 
     def test_escaped_escaped_backrefs(self):
         """Ensure escaping escaped backrefs do get processed."""
 
-        result = bre.SearchTemplate(r'Testing escaped escaped \\\Qbackrefs\\\E!').apply()
+        result = bre._SearchParser(r'Testing escaped escaped \\\Qbackrefs\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\backrefs\\\\!', result)
 
     def test_escaped_escaped_escaped_backrefs(self):
         """Ensure escaping escaped escaped backrefs don't get processed."""
 
-        result = bre.SearchTemplate(r'Testing escaped escaped \\\\Qbackrefs\\\\E!').apply()
+        result = bre._SearchParser(r'Testing escaped escaped \\\\Qbackrefs\\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\\\Qbackrefs\\\\E!', result)
 
     def test_escaped_escaped_escaped_escaped_backrefs(self):
@@ -456,19 +473,19 @@ class TestSearchTemplate(unittest.TestCase):
         This is far enough to prove out that we are handling them well enough.
         """
 
-        result = bre.SearchTemplate(r'Testing escaped escaped \\\\\Qbackrefs\\\\\E!').apply()
+        result = bre._SearchParser(r'Testing escaped escaped \\\\\Qbackrefs\\\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\\\backrefs\\\\\\\\!', result)
 
     def test_normal_escaping(self):
         """Normal escaping should be unaltered."""
 
-        result = bre.SearchTemplate(r'\n \\n \\\n \\\\n \\\\\n').apply()
+        result = bre._SearchParser(r'\n \\n \\\n \\\\n \\\\\n').parse()
         self.assertEqual(r'\n \\n \\\n \\\\n \\\\\n', result)
 
     def test_normal_escaping2(self):
         """Normal escaping should be unaltered part2."""
 
-        result = bre.SearchTemplate(r'\y \\y \\\y \\\\y \\\\\y').apply()
+        result = bre._SearchParser(r'\y \\y \\\y \\\\y \\\\\y').parse()
         self.assertEqual(r'\y \\y \\\y \\\\y \\\\\y', result)
 
     def test_unicode_shorthand_properties_capital(self):
@@ -666,7 +683,7 @@ class TestSearchTemplate(unittest.TestCase):
     def test_detect_verbose_string_flag_at_end(self):
         """Test verbose string flag `(?x)` at end."""
 
-        template = bre.SearchTemplate(
+        template = bre._SearchParser(
             r'''
             This is a # \Qcomment\E
             This is not a \# \Qcomment\E
@@ -675,7 +692,7 @@ class TestSearchTemplate(unittest.TestCase):
             This\ is\ a # \Qcomment\E (?x)
             '''
         )
-        template.apply()
+        template.parse()
 
         self.assertTrue(template.verbose)
 
@@ -731,60 +748,60 @@ class TestSearchTemplate(unittest.TestCase):
         """Test finding Unicode/ASCII string flag."""
 
         if PY3:
-            template = bre.SearchTemplate(r'Testing for (?ia) ASCII flag.', False, None)
-            template.apply()
+            template = bre._SearchParser(r'Testing for (?ia) ASCII flag.', False, None)
+            template.parse()
             self.assertFalse(template.unicode)
         else:
-            template = bre.SearchTemplate(r'Testing for (?iu) Unicode flag.', False, None)
-            template.apply()
+            template = bre._SearchParser(r'Testing for (?iu) Unicode flag.', False, None)
+            template.parse()
             self.assertTrue(template.unicode)
 
     def test_unicode_string_flag_in_group(self):
         """Test ignoring Unicode/ASCII string flag in group."""
 
         if PY3:
-            template = bre.SearchTemplate(r'Testing for [(?ia)] ASCII flag.', False, None)
-            template.apply()
+            template = bre._SearchParser(r'Testing for [(?ia)] ASCII flag.', False, None)
+            template.parse()
             self.assertTrue(template.unicode)
         else:
-            template = bre.SearchTemplate(r'Testing for [(?iu)] Unicode flag.', False, None)
-            template.apply()
+            template = bre._SearchParser(r'Testing for [(?iu)] Unicode flag.', False, None)
+            template.parse()
             self.assertFalse(template.unicode)
 
     def test_unicode_string_flag_escaped(self):
         """Test ignoring Unicode/ASCII string flag in group."""
 
         if PY3:
-            template = bre.SearchTemplate(r'Testing for \(?ia) ASCII flag.', False, None)
-            template.apply()
+            template = bre._SearchParser(r'Testing for \(?ia) ASCII flag.', False, None)
+            template.parse()
             self.assertTrue(template.unicode)
         else:
-            template = bre.SearchTemplate(r'Testing for \(?iu) Unicode flag.', False, None)
-            template.apply()
+            template = bre._SearchParser(r'Testing for \(?iu) Unicode flag.', False, None)
+            template.parse()
             self.assertFalse(template.unicode)
 
     def test_unicode_string_flag_unescaped(self):
         """Test unescaped Unicode string flag."""
 
         if PY3:
-            template = bre.SearchTemplate(r'Testing for \\(?ia) ASCII flag.', False, None)
-            template.apply()
+            template = bre._SearchParser(r'Testing for \\(?ia) ASCII flag.', False, None)
+            template.parse()
             self.assertFalse(template.unicode)
         else:
-            template = bre.SearchTemplate(r'Testing for \\(?iu) Unicode flag.', False, None)
-            template.apply()
+            template = bre._SearchParser(r'Testing for \\(?iu) Unicode flag.', False, None)
+            template.parse()
             self.assertTrue(template.unicode)
 
     def test_unicode_string_flag_escaped_deep(self):
         """Test deep escaped Unicode flag."""
 
         if PY3:
-            template = bre.SearchTemplate(r'Testing for \\\(?ia) ASCII flag.', False, None)
-            template.apply()
+            template = bre._SearchParser(r'Testing for \\\(?ia) ASCII flag.', False, None)
+            template.parse()
             self.assertTrue(template.unicode)
         else:
-            template = bre.SearchTemplate(r'Testing for \\\(?iu) Unicode flag.', False, None)
-            template.apply()
+            template = bre._SearchParser(r'Testing for \\\(?iu) Unicode flag.', False, None)
+            template.parse()
             self.assertFalse(template.unicode)
 
     def test_verbose_comment_no_nl(self):
@@ -829,6 +846,12 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_expand_with_none(self):
+        """Test none in expand."""
+
+        with pytest.raises(ValueError):
+            bre.expand(None, "")
+
     def test_unicode_narrow_value(self):
         """Test Unicode narrow value."""
 
@@ -846,13 +869,13 @@ class TestReplaceTemplate(unittest.TestCase):
 
         pattern = re.compile(r"(some)(.+?)(pattern)(!)")
         with pytest.raises(sre_constants.error):
-            bre.ReplaceTemplate(pattern, '\\1\\l\\')
+            bre._ReplaceParser().parse(pattern, '\\1\\l\\')
 
         with pytest.raises(sre_constants.error):
-            bre.ReplaceTemplate(pattern, '\\1\\L\\')
+            bre._ReplaceParser().parse(pattern, '\\1\\L\\')
 
         with pytest.raises(sre_constants.error):
-            bre.ReplaceTemplate(pattern, '\\1\\')
+            bre._ReplaceParser().parse(pattern, '\\1\\')
 
     def test_replace_unicode_name_ascii_range(self):
         """Test replacing Unicode names in the ASCII range."""
@@ -907,7 +930,8 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test retrieval of the replace template original string."""
 
         pattern = re.compile(r"(some)(.+?)(pattern)(!)")
-        template = bre.ReplaceTemplate(pattern, r'\c\1\2\C\3\E\4')
+        template = bre._ReplaceParser()
+        template.parse(pattern, r'\c\1\2\C\3\E\4')
 
         self.assertEqual(r'\c\1\2\C\3\E\4', template.get_base_template())
 
@@ -1350,7 +1374,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         text = "Replace with function test!"
         pattern = bre.compile_search('(.+)')
-        repl = bre.ReplaceTemplate(pattern, 'Success!')
+        repl = bre._ReplaceParser().parse(pattern, 'Success!')
         expand = bre.compile_replace(pattern, repl)
 
         m = pattern.match(text)
@@ -1623,6 +1647,14 @@ class TestExceptions(unittest.TestCase):
     #         bre.compile_replace(p, r'Replace \U fail!')
     #     self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
 
+    def test_immutable(self):
+        """Test immutable object."""
+
+        pattern = re.compile('test')
+        replace = bre.compile_replace(pattern, "whatever")
+        with pytest.raises(AttributeError):
+            replace.use_format = True
+
     def test_not_posix_at_end_group(self):
         """Test a situation that is not a POSIX at the end of a group."""
 
@@ -1839,13 +1871,13 @@ class TestExceptions(unittest.TestCase):
         with pytest.raises(ValueError) as excinfo:
             replace = bre.compile_replace(pattern, replace, bre.FORMAT)
 
-        assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
+        assert "Cannot process flags argument with a ReplaceTemplate!" in str(excinfo.value)
 
     def test_relace_flag_on_template(self):
         """Test when a compile occurs on a template with flags passed."""
 
         pattern = re.compile('test')
-        template = bre.ReplaceTemplate(pattern, 'whatever')
+        template = bre._ReplaceParser().parse(pattern, 'whatever')
 
         with pytest.raises(ValueError) as excinfo:
             bre.compile_replace(pattern, template, bre.FORMAT)
@@ -1983,10 +2015,29 @@ class TestConvenienceFunctions(unittest.TestCase):
         m = bre.match(r'This is a test for m[\l]+!', "This is a test for match!")
         self.assertTrue(m is not None)
 
+        p = bre.compile(r'This is a test for m[\l]+!')
+        m = p.match("This is a test for match!")
+        self.assertTrue(m is not None)
+
+    def test_fullmatch(self):
+        """Test that `fullmatch` works."""
+
+        if PY34_PLUS:
+            m = bre.fullmatch(r'This is a test for match!', "This is a test for match!")
+            self.assertTrue(m is not None)
+
+            p = bre.compile(r'This is a test for match!')
+            m = p.fullmatch("This is a test for match!")
+            self.assertTrue(m is not None)
+
     def test_search(self):
         """Test that `search` works."""
 
         m = bre.search(r'test', "This is a test for search!")
+        self.assertTrue(m is not None)
+
+        p = bre.compile(r'test')
+        m = p.search("This is a test for search!")
         self.assertTrue(m is not None)
 
     def test_split(self):
@@ -1997,11 +2048,23 @@ class TestConvenienceFunctions(unittest.TestCase):
             ["This", "is", "a", "test", "for", "split", ""]
         )
 
+        p = bre.compile(r'\W+')
+        self.assertEqual(
+            p.split("This is a test for split!"),
+            ["This", "is", "a", "test", "for", "split", ""]
+        )
+
     def test_sub(self):
         """Test that `sub` works."""
 
         self.assertEqual(
             bre.sub(r'tset', 'test', r'This is a tset for sub!'),
+            "This is a test for sub!"
+        )
+
+        p = bre.compile(r'tset')
+        self.assertEqual(
+            p.sub(r'test', r'This is a tset for sub!'),
             "This is a test for sub!"
         )
 
@@ -2016,11 +2079,24 @@ class TestConvenienceFunctions(unittest.TestCase):
             "This is a test for sub!"
         )
 
+        p = bre.compile(r'tset')
+        replace = p.compile('test')
+        self.assertEqual(
+            p.sub(replace, 'This is a tset for sub!'),
+            "This is a test for sub!"
+        )
+
     def test_subn(self):
         """Test that `subn` works."""
 
         self.assertEqual(
             bre.subn(r'tset', 'test', r'This is a tset for subn! This is a tset for subn!'),
+            ('This is a test for subn! This is a test for subn!', 2)
+        )
+
+        p = bre.compile(r'tset')
+        self.assertEqual(
+            p.subn('test', r'This is a tset for subn! This is a tset for subn!'),
             ('This is a test for subn! This is a test for subn!', 2)
         )
 
@@ -2032,11 +2108,23 @@ class TestConvenienceFunctions(unittest.TestCase):
             "This is a test for subf!"
         )
 
+        p = bre.compile(r'(t)(s)(e)(t)')
+        self.assertEqual(
+            p.subf('{1}{3}{2}{4}', r'This is a tset for subf!'),
+            "This is a test for subf!"
+        )
+
     def test_subfn(self):
         """Test that `subfn` works."""
 
         self.assertEqual(
             bre.subfn(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
+            ('This is a test for subfn! This is a test for subfn!', 2)
+        )
+
+        p = bre.compile(r'(t)(s)(e)(t)')
+        self.assertEqual(
+            p.subfn('{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
             ('This is a test for subfn! This is a test for subfn!', 2)
         )
 
@@ -2048,11 +2136,24 @@ class TestConvenienceFunctions(unittest.TestCase):
             ["This", "is", "a", "test", "for", "findall"]
         )
 
+        p = bre.compile(r'\w+')
+        self.assertEqual(
+            p.findall('This is a test for findall!'),
+            ["This", "is", "a", "test", "for", "findall"]
+        )
+
     def test_finditer(self):
         """Test that `finditer` works."""
 
         count = 0
         for m in bre.finditer(r'\w+', 'This is a test for finditer!'):
+            count += 1
+
+        self.assertEqual(count, 6)
+
+        count = 0
+        p = bre.compile(r'\w+')
+        for m in p.finditer('This is a test for finditer!'):
             count += 1
 
         self.assertEqual(count, 6)
@@ -2088,3 +2189,21 @@ class TestConvenienceFunctions(unittest.TestCase):
             bre.expandf(m, replace),
             'This is a test for MATCH!'
         )
+
+    def test_auto_compile_off(self):
+        """Test auto compile off."""
+
+        p = bre.compile('(test)s', auto_compile=False)
+        self.assertTrue(p.match('tests') is not None)
+
+        with pytest.raises(AttributeError):
+            p.subf(r'{1}', 'tests')
+
+        replace = p.compile(r'{1}')
+        with pytest.raises(ValueError):
+            p.subf(replace, 'tests')
+
+        replace = p.compile(r'{1}', bre.FORMAT)
+        self.assertEqual(p.subf(replace, 'tests'), 'test')
+
+        self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')

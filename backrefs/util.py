@@ -1,13 +1,14 @@
 """
-Compatibility abstraction.
+Utilities and compatibility abstraction.
 
 Licensed under MIT
-Copyright (c) 2015 - 2016 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2015 - 2018 Isaac Muse <isaacmuse@gmail.com>
 """
 import sys
 import struct
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
+PY34 = (3, 4) <= sys.version_info
 PY36 = (3, 6) <= sys.version_info
 PY37 = (3, 7) <= sys.version_info
 
@@ -51,3 +52,19 @@ def uchr(i):
         return unichar(i)
     except ValueError:  # pragma: no cover
         return struct.pack('i', i).decode('utf-32')
+
+
+class Immutable(object):
+    """Immutable."""
+
+    __slots__ = tuple()
+
+    def __init__(self, **kwargs):
+        """Initialize."""
+
+        for k, v in kwargs.items():
+            super(Immutable, self).__setattr__(k, v)
+
+    def __setattr__(self, name, value):
+        """Prevent mutability."""
+        raise AttributeError('Class is immutable!')

@@ -7,6 +7,7 @@ import regex
 import sys
 import pytest
 import _regex_core
+import random
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 
@@ -37,6 +38,21 @@ class TestSearchTemplate(unittest.TestCase):
             pattern.pattern,
             r"[\<]test"
         )
+
+    def test_cache(self):
+        """Test cache."""
+
+        bregex.purge()
+        self.assertEqual(len(bregex._search_cache), 0)
+        self.assertEqual(len(bregex._replace_cache), 0)
+        for x in range(1000):
+            value = str(random.randint(1, 10000))
+            p = bregex.compile(value)
+            p.sub('', value)
+            self.assertTrue(len(bregex._search_cache) <= 500)
+            self.assertTrue(len(bregex._replace_cache) <= 500)
+        self.assertTrue(len(bregex._search_cache) == 500)
+        self.assertTrue(len(bregex._replace_cache) == 500)
 
     def test_infinite_loop_catch(self):
         """Test infinite loop catch."""
@@ -166,13 +182,13 @@ class TestSearchTemplate(unittest.TestCase):
     def test_unrecognized_backrefs(self):
         """Test unrecognized backrefs."""
 
-        result = bregex.RegexSearchTemplate(r'Testing unrecognized backrefs \k!').apply()
+        result = bregex._SearchParser(r'Testing unrecognized backrefs \k!').parse()
         self.assertEqual(r'Testing unrecognized backrefs \k!', result)
 
     def test_quote(self):
         """Test quoting/escaping."""
 
-        result = bregex.RegexSearchTemplate(r'Testing \Q(\s+[quote]*\s+)?\E!').apply()
+        result = bregex._SearchParser(r'Testing \Q(\s+[quote]*\s+)?\E!').parse()
         self.assertEqual(r'Testing %s!' % regex.escape(r'(\s+[quote]*\s+)?'), result)
 
     def test_normal_backrefs(self):
@@ -182,49 +198,49 @@ class TestSearchTemplate(unittest.TestCase):
         They should all pass through unaltered.
         """
 
-        result = bregex.RegexSearchTemplate(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]\M\m\G').apply()
+        result = bregex._SearchParser(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]\M\m\G').parse()
         self.assertEqual(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]\M\m\G', result)
 
     def test_quote_no_end(self):
         r"""Test quote where no \E is defined."""
 
-        result = bregex.RegexSearchTemplate(r'Testing \Q(quote) with no [end]!').apply()
+        result = bregex._SearchParser(r'Testing \Q(quote) with no [end]!').parse()
         self.assertEqual(r'Testing %s' % regex.escape(r'(quote) with no [end]!'), result)
 
     def test_quote_in_char_groups(self):
         """Test that quote backrefs are handled in character groups."""
 
-        result = bregex.RegexSearchTemplate(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').apply()
+        result = bregex._SearchParser(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').parse()
         self.assertEqual(r'Testing [char block] [\(AVOIDANCE\)]!', result)
 
     def test_quote_in_char_groups_with_right_square_bracket_first(self):
         """Test that quote backrefs are handled in character groups that have a right square bracket as first char."""
 
-        result = bregex.RegexSearchTemplate(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').apply()
+        result = bregex._SearchParser(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').parse()
         self.assertEqual(r'Testing [^]char block] []\(AVOIDANCE\)]!', result)
 
     def test_extraneous_end_char(self):
         r"""Test that stray '\E's get removed."""
 
-        result = bregex.RegexSearchTemplate(r'Testing \Eextraneous end char\E!').apply()
+        result = bregex._SearchParser(r'Testing \Eextraneous end char\E!').parse()
         self.assertEqual(r'Testing extraneous end char!', result)
 
     def test_escaped_backrefs(self):
         """Ensure escaped backrefs don't get processed."""
 
-        result = bregex.RegexSearchTemplate(r'Testing escaped \\Qbackrefs\\E!').apply()
+        result = bregex._SearchParser(r'Testing escaped \\Qbackrefs\\E!').parse()
         self.assertEqual(r'Testing escaped \\Qbackrefs\\E!', result)
 
     def test_escaped_escaped_backrefs(self):
         """Ensure escaping escaped backrefs do get processed."""
 
-        result = bregex.RegexSearchTemplate(r'Testing escaped escaped \\\Qbackrefs\\\E!').apply()
+        result = bregex._SearchParser(r'Testing escaped escaped \\\Qbackrefs\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\backrefs\\\\!', result)
 
     def test_escaped_escaped_escaped_backrefs(self):
         """Ensure escaping escaped escaped backrefs don't get processed."""
 
-        result = bregex.RegexSearchTemplate(r'Testing escaped escaped \\\\Qbackrefs\\\\E!').apply()
+        result = bregex._SearchParser(r'Testing escaped escaped \\\\Qbackrefs\\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\\\Qbackrefs\\\\E!', result)
 
     def test_escaped_escaped_escaped_escaped_backrefs(self):
@@ -234,19 +250,19 @@ class TestSearchTemplate(unittest.TestCase):
         This is far enough to prove out that we are handling them well enough.
         """
 
-        result = bregex.RegexSearchTemplate(r'Testing escaped escaped \\\\\Qbackrefs\\\\\E!').apply()
+        result = bregex._SearchParser(r'Testing escaped escaped \\\\\Qbackrefs\\\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\\\backrefs\\\\\\\\!', result)
 
     def test_normal_escaping(self):
         """Normal escaping should be unaltered."""
 
-        result = bregex.RegexSearchTemplate(r'\n \\n \\\n \\\\n \\\\\n').apply()
+        result = bregex._SearchParser(r'\n \\n \\\n \\\\n \\\\\n').parse()
         self.assertEqual(r'\n \\n \\\n \\\\n \\\\\n', result)
 
     def test_normal_escaping2(self):
         """Normal escaping should be unaltered part2."""
 
-        result = bregex.RegexSearchTemplate(r'\y \\y \\\y \\\\y \\\\\y').apply()
+        result = bregex._SearchParser(r'\y \\y \\\y \\\\y \\\\\y').parse()
         self.assertEqual(r'\y \\y \\\y \\\\y \\\\\y', result)
 
     def test_unicode_and_verbose_flag(self):
@@ -258,7 +274,7 @@ class TestSearchTemplate(unittest.TestCase):
     def test_detect_verbose_string_flag_at_end(self):
         """Test verbose string flag `(?x)` at end."""
 
-        template = bregex.RegexSearchTemplate(
+        template = bregex._SearchParser(
             r'''
             This is a # \Qcomment\E
             This is not a \# \Qcomment\E
@@ -267,7 +283,7 @@ class TestSearchTemplate(unittest.TestCase):
             This\ is\ a # \Qcomment\E (?x)
             '''
         )
-        template.apply()
+        template.parse()
 
         self.assertTrue(template.verbose)
 
@@ -322,71 +338,71 @@ class TestSearchTemplate(unittest.TestCase):
     def test_version0_string_flag(self):
         """Test finding V0 string flag."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for (?V0) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for (?V0) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.V0)
 
     def test_version0_string_flag_in_group(self):
         """Test ignoring V0 string flag in group will still use the default."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for [(?V0)] version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for [(?V0)] version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version0_string_flag_escaped(self):
         """Test ignoring V0 string flag in group will still use the default."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \(?V0) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \(?V0) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version0_string_flag_unescaped(self):
         """Test unescaped V0 string flag."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \\(?V0) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \\(?V0) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.V0)
 
     def test_version0_string_flag_escaped_deep(self):
         """Test deep escaped V0 flag will still use the default."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \\\(?V0) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \\\(?V0) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version1_string_flag(self):
         """Test finding V1 string flag."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for (?V1) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for (?V1) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.V1)
 
     def test_version1_string_flag_in_group(self):
         """Test ignoring V1 string flag in group."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for [(?V1)] version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for [(?V1)] version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version1_string_flag_escaped(self):
         """Test ignoring V1 string flag in group."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \(?V1) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \(?V1) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version1_string_flag_unescaped(self):
         """Test unescaped V1 string flag."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \\(?V1) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \\(?V1) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.V1)
 
     def test_version1_string_flag_escaped_deep(self):
         """Test deep escaped V1 flag."""
 
-        template = bregex.RegexSearchTemplate(r'Testing for \\\(?V1) version flag.', False, False)
-        template.apply()
+        template = bregex._SearchParser(r'Testing for \\\(?V1) version flag.', False, False)
+        template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_verbose_comment_no_nl(self):
@@ -507,6 +523,12 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_expand_with_none(self):
+        """Test none in expand."""
+
+        with pytest.raises(ValueError):
+            bregex.expand(None, "")
+
     def test_unicode_narrow_value(self):
         """Test Unicode narrow value."""
 
@@ -524,13 +546,13 @@ class TestReplaceTemplate(unittest.TestCase):
 
         pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
         with pytest.raises(_regex_core.error):
-            bregex.ReplaceTemplate(pattern, '\\1\\l\\')
+            bregex._ReplaceParser().parse(pattern, '\\1\\l\\')
 
         with pytest.raises(_regex_core.error):
-            bregex.ReplaceTemplate(pattern, '\\1\\L\\')
+            bregex._ReplaceParser().parse(pattern, '\\1\\L\\')
 
         with pytest.raises(_regex_core.error):
-            bregex.ReplaceTemplate(pattern, '\\1\\')
+            bregex._ReplaceParser().parse(pattern, '\\1\\')
 
     def test_line_break(self):
         r"""Test line break \R."""
@@ -609,7 +631,8 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test retrieval of the replace template original string."""
 
         pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
-        template = bregex.ReplaceTemplate(pattern, r'\c\1\2\C\3\E\4')
+        template = bregex._ReplaceParser()
+        template.parse(pattern, r'\c\1\2\C\3\E\4')
 
         self.assertEqual(r'\c\1\2\C\3\E\4', template.get_base_template())
 
@@ -1060,7 +1083,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         text = "Replace with template test!"
         pattern = bregex.compile_search('(.+)')
-        repl = bregex.ReplaceTemplate(pattern, 'Success!')
+        repl = bregex._ReplaceParser().parse(pattern, 'Success!')
         expand = bregex.compile_replace(pattern, repl)
 
         m = pattern.match(text)
@@ -1329,6 +1352,14 @@ class TestExceptions(unittest.TestCase):
     #         bregex.compile_replace(p, r'Replace \U fail!')
     #     self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
 
+    def test_immutable(self):
+        """Test immutable object."""
+
+        pattern = regex.compile('test')
+        replace = bregex.compile_replace(pattern, "whatever")
+        with pytest.raises(AttributeError):
+            replace.use_format = True
+
     def test_incomplete_replace_unicode_name(self):
         """Test incomplete replace with Unicode name."""
 
@@ -1477,13 +1508,13 @@ class TestExceptions(unittest.TestCase):
         with pytest.raises(ValueError) as excinfo:
             replace = bregex.compile_replace(pattern, replace, bregex.FORMAT)
 
-        assert "Cannot process flags argument with a compiled pattern!" in str(excinfo.value)
+        assert "Cannot process flags argument with a ReplaceTemplate!" in str(excinfo.value)
 
     def test_relace_flag_on_template(self):
         """Test when a compile occurs on a template with flags passed."""
 
         pattern = regex.compile('test')
-        template = bregex.ReplaceTemplate(pattern, 'whatever')
+        template = bregex._ReplaceParser().parse(pattern, 'whatever')
 
         with pytest.raises(ValueError) as excinfo:
             bregex.compile_replace(pattern, template, bregex.FORMAT)
@@ -1621,10 +1652,18 @@ class TestConvenienceFunctions(unittest.TestCase):
         m = bregex.match(r'This is a test for match!', "This is a test for match!")
         self.assertTrue(m is not None)
 
+        p = bregex.compile(r'This is a test for match!')
+        m = p.match("This is a test for match!")
+        self.assertTrue(m is not None)
+
     def test_fullmatch(self):
-        """Test that `match` works."""
+        """Test that `fullmatch` works."""
 
         m = bregex.fullmatch(r'This is a test for match!', "This is a test for match!")
+        self.assertTrue(m is not None)
+
+        p = bregex.compile(r'This is a test for match!')
+        m = p.fullmatch("This is a test for match!")
         self.assertTrue(m is not None)
 
     def test_search(self):
@@ -1633,11 +1672,21 @@ class TestConvenienceFunctions(unittest.TestCase):
         m = bregex.search(r'test', "This is a test for search!")
         self.assertTrue(m is not None)
 
+        p = bregex.compile(r'test')
+        m = p.search("This is a test for search!")
+        self.assertTrue(m is not None)
+
     def test_split(self):
         """Test that `split` works."""
 
         self.assertEqual(
             bregex.split(r'\W+', "This is a test for split!"),
+            ["This", "is", "a", "test", "for", "split", ""]
+        )
+
+        p = bregex.compile(r'\W+')
+        self.assertEqual(
+            p.split("This is a test for split!"),
             ["This", "is", "a", "test", "for", "split", ""]
         )
 
@@ -1650,11 +1699,24 @@ class TestConvenienceFunctions(unittest.TestCase):
 
         self.assertEqual(array, ["This", "is", "a", "test", "for", "split", ""])
 
+        array = []
+        p = bregex.compile(r'\W+')
+        for x in p.splititer("This is a test for split!"):
+            array.append(x)
+
+        self.assertEqual(array, ["This", "is", "a", "test", "for", "split", ""])
+
     def test_sub(self):
         """Test that `sub` works."""
 
         self.assertEqual(
             bregex.sub(r'tset', 'test', r'This is a tset for sub!'),
+            "This is a test for sub!"
+        )
+
+        p = bregex.compile(r'tset')
+        self.assertEqual(
+            p.sub(r'test', r'This is a tset for sub!'),
             "This is a test for sub!"
         )
 
@@ -1669,11 +1731,24 @@ class TestConvenienceFunctions(unittest.TestCase):
             "This is a test for sub!"
         )
 
+        p = bregex.compile(r'tset')
+        replace = p.compile('test')
+        self.assertEqual(
+            p.sub(replace, 'This is a tset for sub!'),
+            "This is a test for sub!"
+        )
+
     def test_subn(self):
         """Test that `subn` works."""
 
         self.assertEqual(
             bregex.subn(r'tset', 'test', r'This is a tset for subn! This is a tset for subn!'),
+            ('This is a test for subn! This is a test for subn!', 2)
+        )
+
+        p = bregex.compile(r'tset')
+        self.assertEqual(
+            p.subn('test', r'This is a tset for subn! This is a tset for subn!'),
             ('This is a test for subn! This is a test for subn!', 2)
         )
 
@@ -1685,11 +1760,23 @@ class TestConvenienceFunctions(unittest.TestCase):
             "This is a test for subf!"
         )
 
+        p = bregex.compile(r'(t)(s)(e)(t)')
+        self.assertEqual(
+            p.subf('{1}{3}{2}{4}', r'This is a tset for subf!'),
+            "This is a test for subf!"
+        )
+
     def test_subfn(self):
         """Test that `subfn` works."""
 
         self.assertEqual(
             bregex.subfn(r'(t)(s)(e)(t)', '{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
+            ('This is a test for subfn! This is a test for subfn!', 2)
+        )
+
+        p = bregex.compile(r'(t)(s)(e)(t)')
+        self.assertEqual(
+            p.subfn('{1}{3}{2}{4}', r'This is a tset for subfn! This is a tset for subfn!'),
             ('This is a test for subfn! This is a test for subfn!', 2)
         )
 
@@ -1701,11 +1788,24 @@ class TestConvenienceFunctions(unittest.TestCase):
             ["This", "is", "a", "test", "for", "findall"]
         )
 
+        p = bregex.compile(r'\w+')
+        self.assertEqual(
+            p.findall('This is a test for findall!'),
+            ["This", "is", "a", "test", "for", "findall"]
+        )
+
     def test_finditer(self):
         """Test that `finditer` works."""
 
         count = 0
         for m in bregex.finditer(r'\w+', 'This is a test for finditer!'):
+            count += 1
+
+        self.assertEqual(count, 6)
+
+        count = 0
+        p = bregex.compile(r'\w+')
+        for m in p.finditer('This is a test for finditer!'):
             count += 1
 
         self.assertEqual(count, 6)
@@ -1741,3 +1841,21 @@ class TestConvenienceFunctions(unittest.TestCase):
             bregex.expandf(m, replace),
             'This is a test for MATCH!'
         )
+
+    def test_auto_compile_off(self):
+        """Test auto compile off."""
+
+        p = bregex.compile('(test)s', auto_compile=False)
+        self.assertTrue(p.match('tests') is not None)
+
+        with pytest.raises(AttributeError):
+            p.subf(r'{1}', 'tests')
+
+        replace = p.compile(r'{1}')
+        with pytest.raises(ValueError):
+            p.subf(replace, 'tests')
+
+        replace = p.compile(r'{1}', bregex.FORMAT)
+        self.assertEqual(p.subf(replace, 'tests'), 'test')
+
+        self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')

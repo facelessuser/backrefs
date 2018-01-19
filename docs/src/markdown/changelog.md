@@ -2,6 +2,8 @@
 
 ## 2.3.0
 
+- **NEW**: Added new `compile` function that returns a pattern object that feels like Re's and Regex's pattern object.
+- **NEW**: Add some caching of search and replace patterns.
 - **NEW**: Completely refactored algorithm for search and replace pattern augmentation.
 - **NEW**: Add support for `\e` for escape character `\x1b` in both Re and Regex.
 - **NEW**: Add support for `\R` for generic newlines in the Regex module (Regex only).
