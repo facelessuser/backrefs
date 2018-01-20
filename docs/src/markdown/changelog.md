@@ -2,6 +2,8 @@
 
 ## 2.3.0
 
+Jan 20, 2018
+
 - **NEW**: Added new `compile` function that returns a pattern object that feels like Re's and Regex's pattern object.
 - **NEW**: Add some caching of search and replace patterns.
 - **NEW**: Completely refactored algorithm for search and replace pattern augmentation.
@@ -20,10 +22,14 @@
 
 ## 2.2.0
 
+Dec 11, 2017
+
 - **NEW**: Proper support for `\N{Unicode Name}`.
 - **FIX**: Incomplete escapes will not be passed through, but will instead throw an error. For instance `\p` should only be passed through if it is complete `\p{category}`.  Python 3.7 will error on this if we pass it through, and Python 3.6 will generate warnings.  We should just consistently fail on it for all Python versions.
 
 ## 2.1.0
+
+Sep 29, 2017
 
 - **NEW**: Handle Unicode and byte notation in Re replace templates.
 - **NEW**: Rework algorithm to handle replace casing back references in Python 3.7 development builds in preparation for Python 3.7 release.

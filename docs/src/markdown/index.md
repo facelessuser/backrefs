@@ -4,6 +4,31 @@
 
 Backrefs is a wrapper around Python's built-in [Re][re] and the 3rd party [Regex][regex] library.  Backrefs adds various additional back references (and a couple other features) that are known to some regular expression engines, but not to Python's Re and/or Regex.  The supported back references actually vary depending on the regular expression engine being used as the engine may already have support for some, or things that prevent implementation of a feature.
 
+It is important to note that Backrefs doesn't alter the regular expression engine that it wraps around, it is essentially a string processor that looks for certain symbols in a regular expression search or replace string, and alters the pattern before sending it to the regular expression engine.
+
+For instance, if we used `\<` in our regular expression, it would be transformed into `\b(?=\w)`.
+
+```pycon3
+>>> bre.compile(r'test \<').pattern
+re.compile('test \\b(?=\\w)')
+```
+
+Or if we used a Unicode property, it would be transformed into a character group:
+
+```pycon3
+>>> bre.compile(r'test \p{Cs}').pattern
+re.compile('test [\ud800\udb7f-\udb80\udbff-\udc00\udfff]')
+```
+
+The same goes for replace templates, but a bit more involved. Backrefs will basically process replace templates and break them up into literals and groups applying lowercase and and uppercase to the literal pieces. Then on replace, Backrefs will reassemble the final result from the regular expressions match object applying casing as needed to captured groups.
+
+```pycon3
+>>> pattern = bre.compile_search(r'(\p{Letter}+)')
+>>> replace = bre.compile_replace(pattern, r'\C\1\E')
+>>> text = pattern.sub(replace, 'sometext')
+'SOMETEXT'
+```
+
 ## Using Backrefs
 
 Depending on which regular expression engine you are using (Re or Regex), you can import the appropriate module.

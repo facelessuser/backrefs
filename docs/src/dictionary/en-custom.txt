@@ -3,6 +3,7 @@ Backrefs
 Changelog
 EmojiOne
 GitHub
+Jan
 MERCHANTABILITY
 MkDocs
 NONINFRINGEMENT
