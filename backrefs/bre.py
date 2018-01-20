@@ -1576,7 +1576,8 @@ def subn(pattern, repl, string, count=0, flags=0):
         pattern, (compile_replace(pattern, repl) if is_replace or is_string else repl), string, count, flags
     )
 
-def subfn(pattern, format, string, count=0, flags=0):  # noqa B002
+
+def subfn(pattern, format, string, count=0, flags=0):  # noqa: B002
     """Apply `subn` after applying backrefs."""
 
     is_replace = _is_replace(format)

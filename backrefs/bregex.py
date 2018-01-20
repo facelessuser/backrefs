@@ -1311,7 +1311,7 @@ if REGEX_SUPPORT:
 
             return self.pattern.sub(self._auto_compile(repl), string, count, pos, endpos, concurrent)
 
-        def subf(self, repl, string, count=0,  pos=None, endpos=None, concurrent=None):  # noqa B002
+        def subf(self, repl, string, count=0, pos=None, endpos=None, concurrent=None):  # noqa B002
             """Apply `sub` with format style replace."""
 
             return self.pattern.subf(self._auto_compile(repl, True), string, count, pos, endpos, concurrent)
@@ -1321,7 +1321,7 @@ if REGEX_SUPPORT:
 
             return self.pattern.subn(self._auto_compile(repl), string, count, pos, endpos, concurrent)
 
-        def subfn(self, repl, string, count=0,  pos=None, endpos=None, concurrent=None):  # noqa B002
+        def subfn(self, repl, string, count=0, pos=None, endpos=None, concurrent=None):  # noqa B002
             """Apply `subn` after applying backrefs."""
 
             return self.pattern.subfn(self._auto_compile(repl, True), string, count, pos, endpos, concurrent)
