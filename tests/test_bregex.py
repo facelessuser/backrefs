@@ -20,6 +20,34 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_not_flags(self):
+        """Test invalid flags."""
+
+        with pytest.raises(_regex_core.error):
+            bregex.compile(r'(?-q:test)')
+
+        with pytest.raises(_regex_core.error):
+            bregex.compile(r'(?V2:test)')
+
+    def test_comment_failures(self):
+        """Test comment failures."""
+
+        with pytest.raises(SyntaxError):
+            bregex.compile(r'test(?#test')
+
+    def test_inverse_posix_property(self):
+        """Test inverse POSIX property."""
+
+        self.assertTrue(bregex.compile(r'[[:^xdigit:]]').match('i') is not None)
+
+    def test_posix_property_bad_syntax(self):
+        """Test that we ignore an incomplete POSIX syntax."""
+
+        self.assertTrue(bregex.compile(r'[[:a]]', regex.V0).match('a]') is not None)
+        self.assertTrue(bregex.compile(r'[[:a]]', regex.V1).match('a') is not None)
+        self.assertTrue(bregex.compile(r'[[:a]', regex.V0).match('a') is not None)
+        self.assertTrue(bregex.compile(r'[[:graph:a]', regex.V0).match('a') is not None)
+
     def test_word_boundary(self):
         """Test word boundary."""
 
@@ -522,6 +550,71 @@ class TestSearchTemplate(unittest.TestCase):
 
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
+
+    def test_format_failures(self):
+        """Test format parsing failures."""
+
+        with pytest.raises(SyntaxError):
+            bregex.subf('test', r'{1.}', 'test', bregex.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bregex.subf('test', r'{a.}', 'test', bregex.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bregex.subf('test', r'{1[}', 'test', bregex.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bregex.subf('test', r'{a[}', 'test', bregex.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bregex.subf('test', r'test } test', 'test', bregex.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bregex.subf('test', r'test {test', 'test', bregex.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bregex.subf('test', r'test { test', 'test', bregex.FORMAT)
+
+    def test_named_unicode_failures(self):
+        """Test named Unicode failures."""
+
+        with pytest.raises(SyntaxError):
+            bregex.sub('test', r'\N', 'test')
+
+        with pytest.raises(SyntaxError):
+            bregex.sub('test', r'\Na', 'test')
+
+        with pytest.raises(SyntaxError):
+            bregex.sub('test', r'\N{A.', 'test')
+
+        with pytest.raises(SyntaxError):
+            bregex.sub('test', r'\N{A', 'test')
+
+    def test_group_failures(self):
+        """Test group failures."""
+
+        with pytest.raises(SyntaxError):
+            bregex.sub('test', r'\g', 'test')
+
+        with pytest.raises(SyntaxError):
+            bregex.sub('test', r'\ga', 'test')
+
+        with pytest.raises(SyntaxError):
+            bregex.sub('test', r'\g<.', 'test')
+
+        with pytest.raises(SyntaxError):
+            bregex.sub('test', r'\g<a.', 'test')
+
+        with pytest.raises(SyntaxError):
+            bregex.sub('test', r'\g<3', 'test')
+
+    def test_double_digit_group(self):
+        """Test double digit group."""
+
+        self.assertEqual(
+            bregex.sub('(t)(e)(s)(t)(i)(n)(g)( )(g)(r)(o)(u)(p)', r'\c\10', 'testing group'),
+            'R'
+        )
 
     def test_expand_with_none(self):
         """Test none in expand."""
@@ -1360,51 +1453,12 @@ class TestExceptions(unittest.TestCase):
         with pytest.raises(AttributeError):
             replace.use_format = True
 
-    def test_incomplete_replace_unicode_name(self):
-        """Test incomplete replace with Unicode name."""
-
-        p = bregex.compile_search(r'test')
-        with self.assertRaises(SyntaxError) as e:
-            bregex.compile_replace(p, r'Replace \N fail!')
-        self.assertTrue(str(e), 'Format for Unicode name is \\N{name}!')
-
-    def test_incomplete_replace_group(self):
-        """Test incomplete replace group."""
-
-        p = bregex.compile_search(r'test')
-        with self.assertRaises(SyntaxError) as e:
-            bregex.compile_replace(p, r'Replace \g fail!')
-        self.assertTrue(str(e), 'Format for group is \\g<group_name_or_index>!')
-
     def test_incomplete_replace_byte(self):
         """Test incomplete byte group."""
 
         p = bregex.compile_search(r'test')
-        with self.assertRaises(SyntaxError) as e:
+        with pytest.raises(SyntaxError):
             bregex.compile_replace(p, r'Replace \x fail!')
-        self.assertTrue(str(e), 'Format for byte is \\xXX!')
-
-    def test_bad_left_format_bracket(self):
-        """Test bad left format bracket."""
-
-        text_pattern = r"(Bad )(format)!"
-        pattern = regex.compile(text_pattern)
-
-        with pytest.raises(ValueError) as excinfo:
-            bregex.compile_replace(pattern, r'Bad format { test', bregex.FORMAT)
-
-        assert "Single unmatched curly bracket!" in str(excinfo.value)
-
-    def test_bad_right_format_bracket(self):
-        """Test bad right format bracket."""
-
-        text_pattern = r"(Bad )(format)!"
-        pattern = regex.compile(text_pattern)
-
-        with pytest.raises(ValueError) as excinfo:
-            bregex.compile_replace(pattern, r'Bad format } test', bregex.FORMAT)
-
-        assert "Single unmatched curly bracket!" in str(excinfo.value)
 
     def test_switch_from_format_auto(self):
         """Test a switch from auto to manual format."""

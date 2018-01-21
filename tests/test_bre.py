@@ -23,6 +23,74 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_not_flags(self):
+        """Test invalid flags."""
+
+        if PY36_PLUS:
+            with pytest.raises(sre_constants.error):
+                bre.compile(r'(?-q:test)')
+
+            if not PY37_PLUS:
+                with pytest.raises(sre_constants.error):
+                    bre.compile(r'(?a:test)')
+
+    def test_comment_failures(self):
+        """Test comment failures."""
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'test(?#test')
+
+    def test_inverse_posix_property(self):
+        """Test inverse POSIX property."""
+
+        self.assertTrue(bre.compile(r'[[:^xdigit:]]').match('i') is not None)
+
+    def test_posix_property_bad_syntax(self):
+        """Test that we ignore an incomplete POSIX syntax."""
+
+        self.assertTrue(bre.compile(r'[[:a]]').match('a]') is not None)
+        self.assertTrue(bre.compile(r'[[:a]').match('a') is not None)
+        self.assertTrue(bre.compile(r'[[:graph:a]').match('a') is not None)
+
+    def test_unicode_property_failures(self):
+        """Test Unicode property."""
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\p')
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\p.')
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\p{')
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\p{A.')
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\p{A')
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\p{a:}')
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\p{a:.')
+
+    def test_named_unicode_failures(self):
+        """Test named Unicode failures."""
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\N')
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\Na')
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\N{A.')
+
+        with pytest.raises(SyntaxError):
+            bre.compile(r'\N{A')
+
     def test_word_boundary(self):
         """Test word boundary."""
 
@@ -846,6 +914,71 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_format_failures(self):
+        """Test format parsing failures."""
+
+        with pytest.raises(SyntaxError):
+            bre.subf('test', r'{1.}', 'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf('test', r'{a.}', 'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf('test', r'{1[}', 'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf('test', r'{a[}', 'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf('test', r'test } test', 'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf('test', r'test {test', 'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf('test', r'test { test', 'test', bre.FORMAT)
+
+    def test_named_unicode_failures(self):
+        """Test named Unicode failures."""
+
+        with pytest.raises(SyntaxError):
+            bre.sub('test', r'\N', 'test')
+
+        with pytest.raises(SyntaxError):
+            bre.sub('test', r'\Na', 'test')
+
+        with pytest.raises(SyntaxError):
+            bre.sub('test', r'\N{A.', 'test')
+
+        with pytest.raises(SyntaxError):
+            bre.sub('test', r'\N{A', 'test')
+
+    def test_group_failures(self):
+        """Test group failures."""
+
+        with pytest.raises(SyntaxError):
+            bre.sub('test', r'\g', 'test')
+
+        with pytest.raises(SyntaxError):
+            bre.sub('test', r'\ga', 'test')
+
+        with pytest.raises(SyntaxError):
+            bre.sub('test', r'\g<.', 'test')
+
+        with pytest.raises(SyntaxError):
+            bre.sub('test', r'\g<a.', 'test')
+
+        with pytest.raises(SyntaxError):
+            bre.sub('test', r'\g<3', 'test')
+
+    def test_double_digit_group(self):
+        """Test double digit group."""
+
+        self.assertEqual(
+            bre.sub('(t)(e)(s)(t)(i)(n)(g)( )(g)(r)(o)(u)(p)', r'\c\10', 'testing group'),
+            'R'
+        )
+
     def test_expand_with_none(self):
         """Test none in expand."""
 
@@ -1662,29 +1795,12 @@ class TestExceptions(unittest.TestCase):
             bre.compile_search(r'Test [[:graph:]')
         self.assertTrue(excinfo is not None)
 
-    def test_incomplete_replace_unicode_name(self):
-        """Test incomplete replace with Unicode name."""
-
-        p = bre.compile_search(r'test')
-        with pytest.raises(SyntaxError) as e:
-            bre.compile_replace(p, r'Replace \N fail!')
-        self.assertEqual(str(e.value), 'Format for Unicode name is \\N{name}!')
-
-    def test_incomplete_replace_group(self):
-        """Test incomplete replace group."""
-
-        p = bre.compile_search(r'test')
-        with pytest.raises(SyntaxError) as e:
-            bre.compile_replace(p, r'Replace \g fail!')
-        self.assertEqual(str(e.value), 'Format for group is \\g<group_name_or_index>!')
-
     def test_incomplete_replace_byte(self):
         """Test incomplete byte group."""
 
         p = bre.compile_search(r'test')
-        with pytest.raises(SyntaxError) as e:
+        with pytest.raises(SyntaxError):
             bre.compile_replace(p, r'Replace \x fail!')
-        self.assertEqual(str(e.value), 'Format for byte is \\xXX!')
 
     def test_bad_posix(self):
         """Test bad posix."""
@@ -1722,52 +1838,6 @@ class TestExceptions(unittest.TestCase):
             bre.compile_search(r'\pQ', re.UNICODE)
 
         self.assertEqual(str(e.value), 'Invalid Unicode property!')
-
-    def test_incomplete_inverse_category(self):
-        """Test incomplete inverse category."""
-
-        with pytest.raises(SyntaxError) as e:
-            bre.compile_search(r'\p', re.UNICODE)
-
-        self.assertEqual(str(e.value), 'Format for Unicode property is \\p{property} or \\pP!')
-
-    def test_incomplete_category(self):
-        """Test incomplete category."""
-
-        with pytest.raises(SyntaxError) as e:
-            bre.compile_search(r'\P', re.UNICODE)
-
-        self.assertEqual(str(e.value), 'Format for inverse Unicode property is \\P{property} or \\PP!')
-
-    def test_incomplete_unicode_name(self):
-        """Test incomplete Unicode name."""
-
-        with pytest.raises(SyntaxError) as e:
-            bre.compile_search(r'\N', re.UNICODE)
-
-        self.assertEqual(str(e.value), 'Format for Unicode name is \\N{name}!')
-
-    def test_bad_left_format_bracket(self):
-        """Test bad left format bracket."""
-
-        text_pattern = r"(Bad )(format)!"
-        pattern = re.compile(text_pattern)
-
-        with pytest.raises(ValueError) as excinfo:
-            bre.compile_replace(pattern, r'Bad format { test', bre.FORMAT)
-
-        assert "Single unmatched curly bracket!" in str(excinfo.value)
-
-    def test_bad_right_format_bracket(self):
-        """Test bad right format bracket."""
-
-        text_pattern = r"(Bad )(format)!"
-        pattern = re.compile(text_pattern)
-
-        with pytest.raises(ValueError) as excinfo:
-            bre.compile_replace(pattern, r'Bad format } test', bre.FORMAT)
-
-        assert "Single unmatched curly bracket!" in str(excinfo.value)
 
     def test_switch_from_format_auto(self):
         """Test a switch from auto to manual format."""

@@ -171,8 +171,8 @@ if REGEX_SUPPORT:
                 raise StopIteration
 
             char = self.string[self.index]
-
             self.index += 1
+
             return char
 
     class _ReplaceParser(object):
@@ -222,7 +222,7 @@ if REGEX_SUPPORT:
                         c = next(i)
                         while c not in ('}', '['):
                             if c not in _WORD and c not in _DIGIT:
-                                raise ValueError('Invalid character!')
+                                raise SyntaxError('Invalid character at %d!' % (i.index - 1))
                             value.append(c)
                             c = next(i)
                     elif c in _DIGIT:
@@ -231,30 +231,26 @@ if REGEX_SUPPORT:
                         c = next(i)
                         while c not in ('}', '['):
                             if c not in _DIGIT:
-                                raise ValueError('Invalid character!')
+                                raise SyntaxError('Invalid character! at %d' % (i.index - 1))
                             value.append(c)
                             c = next(i)
                     if c == '[':
+                        sindex = i.index - 1
                         value.append(c)
                         c = next(i)
                         while c not in (']', '}'):
                             value.append(c)
                             c = next(i)
                         if c != ']':
-                            raise ValueError('Unmatched [')
+                            raise SyntaxError("Unmatched '[' at %d" % (sindex - 1))
                         value.append(c)
                         c = next(i)
                 if c != '}':
-                    raise ValueError('Unmatched }')
-            except ValueError:
-                value = []
+                    raise SyntaxError("Unmatched '{' at %d" % (index - 1))
             except StopIteration:
-                value = []
+                raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
 
-            if not value:
-                i.rewind(i.index - index)
-
-            return ''.join(value) if value else None
+            return ''.join(value)
 
         def handle_format(self, t, i):
             """Handle format."""
@@ -266,8 +262,6 @@ if REGEX_SUPPORT:
                     self.result.append(t)
                 else:
                     text = self.get_format(t, i)
-                    if text is None:
-                        raise ValueError("Single unmatched curly bracket!")
                     self.handle_format_group(text.strip())
             else:
                 t = next(i)
@@ -275,7 +269,7 @@ if REGEX_SUPPORT:
                     self.get_single_stack()
                     self.result.append(t)
                 else:
-                    raise ValueError("Single unmatched curly bracket!")
+                    raise SyntaxError("Unmatched '}' at %d!" % (i.index - 2))
 
         def get_octal(self, c, i):
             """Get octal."""
@@ -330,18 +324,19 @@ if REGEX_SUPPORT:
         def get_named_unicode(self, i):
             """Get named Unicode."""
 
+            index = i.index
             value = []
             try:
                 if next(i) != '{':
-                    raise SyntaxError('Format for Unicode name is \\N{name}!')
+                    raise SyntaxError("Named Unicode missing '{' at %d!" % (i.index - 1))
                 c = next(i)
                 while c != '}':
                     if c not in _WORD and c != ' ':
-                        raise SyntaxError('Format for Unicode name is \\N{name}!')
+                        raise SyntaxError("Bad named Unicode character at %d!" % (index - 1))
                     value.append(c)
                     c = next(i)
             except StopIteration:
-                raise SyntaxError('Format for Unicode name is \\N{name}!')
+                raise SyntaxError("Unmatched '{' at %d!" % index)
 
             return ''.join(value)
 
@@ -368,21 +363,21 @@ if REGEX_SUPPORT:
                 c = next(i)
                 if c == '0':
                     value.append(c)
-                else:
-                    raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
+                else:  # pragma: no cover
+                    raise SyntaxError('Invalid wide Unicode character at %d!' % (i.index - 1))
 
             c = next(i)
             if c in ('0', '1'):
                 value.append(c)
-            else:
-                raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
+            else:  # pragma: no cover
+                raise SyntaxError('Invalid wide Unicode character at %d!' % (i.index - 1))
 
             for x in range(4):
                 c = next(i)
                 if c.lower() in _HEX:
                     value.append(c)
-                else:
-                    raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
+                else:  # pragma: no cover
+                    raise SyntaxError('Invalid wide Unicode character at %d!' % (i.index - 1))
             return ''.join(value)
 
         def get_narrow_unicode(self, i):
@@ -393,8 +388,8 @@ if REGEX_SUPPORT:
                 c = next(i)
                 if c.lower() in _HEX:
                     value.append(c)
-                else:
-                    raise SyntaxError('Format for Unicode is \\uXXXX!')
+                else:  # pragma: no cover
+                    raise SyntaxError('Invalid Unicode character at %d!' % (i.index - 1))
             return ''.join(value)
 
         def parse_unicode(self, i, wide=False):
@@ -421,8 +416,8 @@ if REGEX_SUPPORT:
                 c = next(i)
                 if c.lower() in _HEX:
                     value.append(c)
-                else:
-                    raise SyntaxError('Format for byte is \\xXX!')
+                else:  # pragma: no cover
+                    raise SyntaxError('Invalid byte character at %d!' % (i.index - 1))
             return ''.join(value)
 
         def parse_bytes(self, i):
@@ -440,11 +435,12 @@ if REGEX_SUPPORT:
         def get_named_group(self, t, i):
             """Get group number."""
 
+            index = i.index
             value = [t]
             try:
                 c = next(i)
                 if c != "<":
-                    raise SyntaxError('Format for group is \\g<group_name_or_index>!')
+                    raise SyntaxError("Group missing '<' at %d!" % (i.index - 1))
                 value.append(c)
                 c = next(i)
                 if c in _DIGIT:
@@ -464,9 +460,9 @@ if REGEX_SUPPORT:
                         c = next(i)
                     value.append(c)
                 else:
-                    raise SyntaxError('Format for group is \\g<group_name_or_index>!')
+                    raise SyntaxError("Invalid group character at %d!" % (i.index - 1))
             except StopIteration:
-                raise SyntaxError('Format for group is \\g<group_name_or_index>!')
+                raise SyntaxError("Unmatched '<' at %d!" % index)
 
             return ''.join(value)
 
@@ -869,17 +865,6 @@ if REGEX_SUPPORT:
 
             self.index -= count
 
-        def get_scoped_flags(self, version0=False):
-            """Get scoped flags."""
-
-            text = None
-            pattern = self._scoped_regex_flags
-            m = pattern.match(self.string, self.index - 1)
-            if m:
-                text = m.group(0)
-                self.index = m.end(0)
-            return text
-
         def iternext(self):
             """
             Iterate through characters of the string.
@@ -1078,7 +1063,7 @@ if REGEX_SUPPORT:
                 value.append(c)
                 c = next(i)
                 while c != ')' or escaped is True:
-                    if REGEX_COMMENT_FIX:
+                    if REGEX_COMMENT_FIX:  # pragma: no cover
                         if escaped:
                             escaped = False
                         elif c == '\\':
@@ -1087,8 +1072,7 @@ if REGEX_SUPPORT:
                     c = next(i)
                 value.append(c)
             except StopIteration:
-                i.rewind(i.index - index)
-                value = []
+                raise SyntaxError("Unmatched '(' at %d!" % (index - 1))
 
             return ''.join(value) if value else None
 

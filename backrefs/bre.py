@@ -179,8 +179,8 @@ class _ReplaceTokens(_util.Tokens):
             raise StopIteration
 
         char = self.string[self.index]
-
         self.index += 1
+
         return char
 
 
@@ -217,7 +217,7 @@ class _ReplaceParser(object):
                     c = next(i)
                     while c not in ('}', '['):
                         if c not in _WORD and c not in _DIGIT:
-                            raise ValueError('Invalid character!')
+                            raise SyntaxError('Invalid format character at %d!' % (i.index - 1))
                         value.append(c)
                         c = next(i)
                 elif c in _DIGIT:
@@ -226,30 +226,26 @@ class _ReplaceParser(object):
                     c = next(i)
                     while c not in ('}', '['):
                         if c not in _DIGIT:
-                            raise ValueError('Invalid character!')
+                            raise SyntaxError('Invalid format character at %d' % (i.index - 1))
                         value.append(c)
                         c = next(i)
                 if c == '[':
+                    sindex = i.index - 1
                     value.append(c)
                     c = next(i)
                     while c not in (']', '}'):
                         value.append(c)
                         c = next(i)
                     if c != ']':
-                        raise ValueError('Unmatched [')
+                        raise SyntaxError("Unmatched '[' at %d!" % (sindex - 1))
                     value.append(c)
                     c = next(i)
             if c != '}':
-                raise ValueError('Unmatched }')
-        except ValueError:
-            value = []
+                raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
         except StopIteration:
-            value = []
+            raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
 
-        if not value:
-            i.rewind(i.index - index)
-
-        return ''.join(value) if value else None
+        return ''.join(value)
 
     def handle_format(self, t, i):
         """Handle format."""
@@ -261,8 +257,6 @@ class _ReplaceParser(object):
                 self.result.append(t)
             else:
                 text = self.get_format(t, i)
-                if text is None:
-                    raise ValueError("Single unmatched curly bracket!")
                 self.handle_format_group(text.strip())
         else:
             t = next(i)
@@ -270,7 +264,7 @@ class _ReplaceParser(object):
                 self.get_single_stack()
                 self.result.append(t)
             else:
-                raise ValueError("Single unmatched curly bracket!")
+                raise SyntaxError("Unmatched '}' at %d!" % (i.index - 2))
 
     def get_octal(self, c, i):
         """Get octal."""
@@ -325,18 +319,19 @@ class _ReplaceParser(object):
     def get_named_unicode(self, i):
         """Get named Unicode."""
 
+        index = i.index
         value = []
         try:
             if next(i) != '{':
-                raise SyntaxError('Format for Unicode name is \\N{name}!')
+                raise SyntaxError("Named Unicode missing '{'' at %d!" % (i.index - 1))
             c = next(i)
             while c != '}':
                 if c not in _WORD and c != ' ':
-                    raise SyntaxError('Format for Unicode name is \\N{name}!')
+                    raise SyntaxError("Bad named Unicode character at %d!" % (index - 1))
                 value.append(c)
                 c = next(i)
         except StopIteration:
-            raise SyntaxError('Format for Unicode name is \\N{name}!')
+            raise SyntaxError("Unmatched '}' at %d!" % index)
 
         return ''.join(value)
 
@@ -363,21 +358,21 @@ class _ReplaceParser(object):
             c = next(i)
             if c == '0':
                 value.append(c)
-            else:
-                raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
+            else:  # pragma: no cover
+                raise SyntaxError('Invalid wide Unicode character at %d!' % (i.index - 1))
 
         c = next(i)
         if c in ('0', '1'):
             value.append(c)
-        else:
-            raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
+        else:  # pragma: no cover
+            raise SyntaxError('Invalid wide Unicode character at %d!' % (i.index - 1))
 
         for x in range(4):
             c = next(i)
             if c.lower() in _HEX:
                 value.append(c)
-            else:
-                raise SyntaxError('Format for wide Unicode is \\UXXXXXXXX!')
+            else:  # pragma: no cover
+                raise SyntaxError('Invalid wide Unicode character at %d!' % (i.index - 1))
         return ''.join(value)
 
     def get_narrow_unicode(self, i):
@@ -388,8 +383,8 @@ class _ReplaceParser(object):
             c = next(i)
             if c.lower() in _HEX:
                 value.append(c)
-            else:
-                raise SyntaxError('Format for Unicode is \\uXXXX!')
+            else:  # pragma: no cover
+                raise SyntaxError('Invalid Unicode character at %d!' % (i.index - 1))
         return ''.join(value)
 
     def parse_unicode(self, i, wide=False):
@@ -416,8 +411,8 @@ class _ReplaceParser(object):
             c = next(i)
             if c.lower() in _HEX:
                 value.append(c)
-            else:
-                raise SyntaxError('Format for byte is \\xXX!')
+            else:  # pragma: no cover
+                raise SyntaxError('Invalid byte character at %d!' % (i.index - 1))
         return ''.join(value)
 
     def parse_bytes(self, i):
@@ -435,11 +430,12 @@ class _ReplaceParser(object):
     def get_named_group(self, t, i):
         """Get group number."""
 
+        index = i.index
         value = [t]
         try:
             c = next(i)
             if c != "<":
-                raise SyntaxError('Format for group is \\g<group_name_or_index>!')
+                raise SyntaxError("Group missing '<' at %d!" % (i.index - 1))
             value.append(c)
             c = next(i)
             if c in _DIGIT:
@@ -459,9 +455,9 @@ class _ReplaceParser(object):
                     c = next(i)
                 value.append(c)
             else:
-                raise SyntaxError('Format for group is \\g<group_name_or_index>!')
+                raise SyntaxError("Invalid group character at %d!" % (i.index - 1))
         except StopIteration:
-            raise SyntaxError('Format for group is \\g<group_name_or_index>!')
+            raise SyntaxError("Unmatched '<' at %d!" % index)
 
         return ''.join(value)
 
@@ -968,10 +964,10 @@ class _SearchParser(object):
         if global_retry:
             raise GlobalRetryException('Global Retry')
 
-    def get_unicode_property(self, t, i):
+    def get_unicode_property(self, i):
         """Get Unicode property."""
 
-        prop_type = t
+        index = i.index
         prop = []
         value = []
         try:
@@ -979,7 +975,7 @@ class _SearchParser(object):
             if c.upper() in _ASCII_LETTERS:
                 prop.append(c)
             elif c != '{':
-                raise ValueError('Not a valid property!')
+                raise SyntaxError("Unicode property missing '{' at %d!" % (i.index - 1))
             else:
                 c = next(i)
                 if c == '^':
@@ -987,7 +983,7 @@ class _SearchParser(object):
                     c = next(i)
                 while c not in (':', '=', '}'):
                     if c not in _PROPERTY:
-                        raise ValueError('Not a valid property!')
+                        raise SyntaxError('Invalid Unicode property character at %d!' % (i.index - 1))
                     if c not in _PROPERTY_STRIP:
                         prop.append(c)
                     c = next(i)
@@ -995,34 +991,33 @@ class _SearchParser(object):
                     c = next(i)
                     while c != '}':
                         if c not in _PROPERTY:
-                            raise ValueError('Not a valid property!')
+                            raise SyntaxError('Invalid Unicode property character at %d!' % (i.index - 1))
                         if c not in _PROPERTY_STRIP:
                             value.append(c)
                         c = next(i)
                     if not value:
-                        raise ValueError('Not a valid property!')
-        except Exception:
-            if prop_type == 'p':
-                raise SyntaxError('Format for Unicode property is \\p{property} or \\pP!')
-            elif prop_type == 'P':
-                raise SyntaxError('Format for inverse Unicode property is \\P{property} or \\PP!')
-        return (''.join(prop).lower(), ''.join(value).lower()) if prop else None
+                        raise SyntaxError('Invalid Unicode property!')
+        except StopIteration:
+            raise SyntaxError("Missing or unmatched '{' at %d!" % index)
+
+        return ''.join(prop).lower(), ''.join(value).lower()
 
     def get_named_property(self, i):
         """Get Unicode name."""
 
+        index = i.index
         value = []
         try:
             if next(i) != '{':
-                raise ValueError('Invalid name!')
+                raise ValueError("Named Unicode missing '{' %d!" % (i.index - 1))
             c = next(i)
             while c != '}':
                 if c not in _WORD and c != ' ':
-                    raise ValueError('Invalid name!')
+                    raise ValueError('Invalid named Unicode character %d!' % (i.index - 1))
                 value.append(c)
                 c = next(i)
         except Exception:
-            raise SyntaxError('Format for Unicode name is \\N{name}!')
+            raise SyntaxError("Unmatched '{' at %d!" % index)
 
         return ''.join(value)
 
@@ -1047,12 +1042,12 @@ class _SearchParser(object):
             current.extend(self.letter_case_props(_UPPER, in_group, negate=True))
 
         elif t == 'p':
-            prop = self.get_unicode_property(t, i)
+            prop = self.get_unicode_property(i)
             current.extend(self.unicode_props(prop[0], prop[1], in_group=in_group))
             if in_group:
                 self.found_property = True
         elif t == 'P':
-            prop = self.get_unicode_property(t, i)
+            prop = self.get_unicode_property(i)
             current.extend(self.unicode_props(prop[0], prop[1], in_group=in_group, negate=True))
             if in_group:
                 self.found_property = True
@@ -1092,10 +1087,9 @@ class _SearchParser(object):
                 c = next(i)
             value.append(c)
         except StopIteration:
-            i.rewind(i.index - index)
-            value = []
+            raise SyntaxError("Unmatched '(' at %d!" % (index - 1))
 
-        return ''.join(value) if value else None
+        return ''.join(value)
 
     def get_flags(self, i, scoped=False):
         """Get flags."""
@@ -1200,7 +1194,7 @@ class _SearchParser(object):
                         value.append(c)
                     c = next(i)
                 if next(i) != ']' or not value:
-                    raise ValueError('Unmatched ]')
+                    raise ValueError('Not a valid property!')
         except Exception:
             i.rewind(i.index - index)
             value = []
