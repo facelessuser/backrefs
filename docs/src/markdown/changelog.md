@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.1
+
+- **FIX**: Do not accidentally `\.` as a group in replace strings (don't use `isdigit` string method).
+- **FIX**: Group names can start with `_` in replace strings.
+- **FIX**: Do not rely on Re for parsing string.
+- **FIX**: Match behavior in `\g<group>` parsing better.
+
 ## 3.0.0
 
 Jan 20, 2018
