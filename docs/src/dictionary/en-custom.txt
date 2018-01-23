@@ -1,5 +1,7 @@
 API
 Backrefs
+Bre
+Bregex
 Changelog
 EmojiOne
 GitHub
