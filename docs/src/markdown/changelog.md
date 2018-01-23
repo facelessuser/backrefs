@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.2
+
+Jan 22, 2018
+
+- **FIX**: Bregex purge was calling Re's purge instead of Regex's purge.
+
 ## 3.0.1
 
 Jan 21, 2018
