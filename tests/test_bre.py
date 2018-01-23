@@ -8,6 +8,7 @@ import sys
 import pytest
 import sre_constants
 import random
+from backrefs import _bre_parse
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY34_PLUS = (3, 4) <= sys.version_info
@@ -124,15 +125,19 @@ class TestSearchTemplate(unittest.TestCase):
             self.assertTrue(bre._get_cache_size() > 0)
         self.assertTrue(bre._get_cache_size() == 500)
         self.assertTrue(bre._get_cache_size(True) == 500)
+        bre.purge()
+        self.assertEqual(bre._get_cache_size(), 0)
+        self.assertEqual(bre._get_cache_size(True), 0)
+        self.assertEqual(len(re._cache), 0)
 
     def test_infinite_loop_catch(self):
         """Test infinite loop catch."""
 
         if PY3:
-            with pytest.raises(bre.LoopException):
+            with pytest.raises(_bre_parse.LoopException):
                 bre.compile_search(r'((?a)(?u))')
         if PY36_PLUS:
-            with pytest.raises(bre.LoopException):
+            with pytest.raises(_bre_parse.LoopException):
                 bre.compile_search(r'(?-x:(?x))', re.VERBOSE)
 
     def test_unicode_ascii_swap(self):
@@ -473,13 +478,13 @@ class TestSearchTemplate(unittest.TestCase):
     def test_unrecognized_backrefs(self):
         """Test unrecognized backrefs."""
 
-        result = bre._SearchParser(r'Testing unrecognized backrefs \k!').parse()
+        result = _bre_parse._SearchParser(r'Testing unrecognized backrefs \k!').parse()
         self.assertEqual(r'Testing unrecognized backrefs \k!', result)
 
     def test_quote(self):
         """Test quoting/escaping."""
 
-        result = bre._SearchParser(r'Testing \Q(\s+[quote]*\s+)?\E!').parse()
+        result = _bre_parse._SearchParser(r'Testing \Q(\s+[quote]*\s+)?\E!').parse()
         self.assertEqual(r'Testing %s!' % re.escape(r'(\s+[quote]*\s+)?'), result)
 
     def test_normal_backrefs(self):
@@ -489,49 +494,49 @@ class TestSearchTemplate(unittest.TestCase):
         They should all pass through unaltered.
         """
 
-        result = bre._SearchParser(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]').parse()
+        result = _bre_parse._SearchParser(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]').parse()
         self.assertEqual(r'\a\b\f\n\r\t\v\A\b\B\d\D\s\S\w\W\Z\\[\b]', result)
 
     def test_quote_no_end(self):
         r"""Test quote where no `\E` is defined."""
 
-        result = bre._SearchParser(r'Testing \Q(quote) with no [end]!').parse()
+        result = _bre_parse._SearchParser(r'Testing \Q(quote) with no [end]!').parse()
         self.assertEqual(r'Testing %s' % re.escape(r'(quote) with no [end]!'), result)
 
     def test_quote_in_char_groups(self):
         """Test that quote backrefs are handled in character groups."""
 
-        result = bre._SearchParser(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').parse()
+        result = _bre_parse._SearchParser(r'Testing [\Qchar\E block] [\Q(AVOIDANCE)\E]!').parse()
         self.assertEqual(r'Testing [char block] [\(AVOIDANCE\)]!', result)
 
     def test_quote_in_char_groups_with_right_square_bracket_first(self):
         """Test that quote backrefs are handled in character groups that have a right square bracket as first char."""
 
-        result = bre._SearchParser(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').parse()
+        result = _bre_parse._SearchParser(r'Testing [^]\Qchar\E block] []\Q(AVOIDANCE)\E]!').parse()
         self.assertEqual(r'Testing [^]char block] []\(AVOIDANCE\)]!', result)
 
     def test_extraneous_end_char(self):
         r"""Test that stray '\E's get removed."""
 
-        result = bre._SearchParser(r'Testing \Eextraneous end char\E!').parse()
+        result = _bre_parse._SearchParser(r'Testing \Eextraneous end char\E!').parse()
         self.assertEqual(r'Testing extraneous end char!', result)
 
     def test_escaped_backrefs(self):
         """Ensure escaped backrefs don't get processed."""
 
-        result = bre._SearchParser(r'\\cTesting\\C \\lescaped\\L \\Qbackrefs\\E!').parse()
+        result = _bre_parse._SearchParser(r'\\cTesting\\C \\lescaped\\L \\Qbackrefs\\E!').parse()
         self.assertEqual(r'\\cTesting\\C \\lescaped\\L \\Qbackrefs\\E!', result)
 
     def test_escaped_escaped_backrefs(self):
         """Ensure escaping escaped backrefs do get processed."""
 
-        result = bre._SearchParser(r'Testing escaped escaped \\\Qbackrefs\\\E!').parse()
+        result = _bre_parse._SearchParser(r'Testing escaped escaped \\\Qbackrefs\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\backrefs\\\\!', result)
 
     def test_escaped_escaped_escaped_backrefs(self):
         """Ensure escaping escaped escaped backrefs don't get processed."""
 
-        result = bre._SearchParser(r'Testing escaped escaped \\\\Qbackrefs\\\\E!').parse()
+        result = _bre_parse._SearchParser(r'Testing escaped escaped \\\\Qbackrefs\\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\\\Qbackrefs\\\\E!', result)
 
     def test_escaped_escaped_escaped_escaped_backrefs(self):
@@ -541,19 +546,19 @@ class TestSearchTemplate(unittest.TestCase):
         This is far enough to prove out that we are handling them well enough.
         """
 
-        result = bre._SearchParser(r'Testing escaped escaped \\\\\Qbackrefs\\\\\E!').parse()
+        result = _bre_parse._SearchParser(r'Testing escaped escaped \\\\\Qbackrefs\\\\\E!').parse()
         self.assertEqual(r'Testing escaped escaped \\\\backrefs\\\\\\\\!', result)
 
     def test_normal_escaping(self):
         """Normal escaping should be unaltered."""
 
-        result = bre._SearchParser(r'\n \\n \\\n \\\\n \\\\\n').parse()
+        result = _bre_parse._SearchParser(r'\n \\n \\\n \\\\n \\\\\n').parse()
         self.assertEqual(r'\n \\n \\\n \\\\n \\\\\n', result)
 
     def test_normal_escaping2(self):
         """Normal escaping should be unaltered part2."""
 
-        result = bre._SearchParser(r'\y \\y \\\y \\\\y \\\\\y').parse()
+        result = _bre_parse._SearchParser(r'\y \\y \\\y \\\\y \\\\\y').parse()
         self.assertEqual(r'\y \\y \\\y \\\\y \\\\\y', result)
 
     def test_unicode_shorthand_properties_capital(self):
@@ -751,7 +756,7 @@ class TestSearchTemplate(unittest.TestCase):
     def test_detect_verbose_string_flag_at_end(self):
         """Test verbose string flag `(?x)` at end."""
 
-        template = bre._SearchParser(
+        template = _bre_parse._SearchParser(
             r'''
             This is a # \Qcomment\E
             This is not a \# \Qcomment\E
@@ -816,11 +821,11 @@ class TestSearchTemplate(unittest.TestCase):
         """Test finding Unicode/ASCII string flag."""
 
         if PY3:
-            template = bre._SearchParser(r'Testing for (?ia) ASCII flag.', False, None)
+            template = _bre_parse._SearchParser(r'Testing for (?ia) ASCII flag.', False, None)
             template.parse()
             self.assertFalse(template.unicode)
         else:
-            template = bre._SearchParser(r'Testing for (?iu) Unicode flag.', False, None)
+            template = _bre_parse._SearchParser(r'Testing for (?iu) Unicode flag.', False, None)
             template.parse()
             self.assertTrue(template.unicode)
 
@@ -828,11 +833,11 @@ class TestSearchTemplate(unittest.TestCase):
         """Test ignoring Unicode/ASCII string flag in group."""
 
         if PY3:
-            template = bre._SearchParser(r'Testing for [(?ia)] ASCII flag.', False, None)
+            template = _bre_parse._SearchParser(r'Testing for [(?ia)] ASCII flag.', False, None)
             template.parse()
             self.assertTrue(template.unicode)
         else:
-            template = bre._SearchParser(r'Testing for [(?iu)] Unicode flag.', False, None)
+            template = _bre_parse._SearchParser(r'Testing for [(?iu)] Unicode flag.', False, None)
             template.parse()
             self.assertFalse(template.unicode)
 
@@ -840,11 +845,11 @@ class TestSearchTemplate(unittest.TestCase):
         """Test ignoring Unicode/ASCII string flag in group."""
 
         if PY3:
-            template = bre._SearchParser(r'Testing for \(?ia) ASCII flag.', False, None)
+            template = _bre_parse._SearchParser(r'Testing for \(?ia) ASCII flag.', False, None)
             template.parse()
             self.assertTrue(template.unicode)
         else:
-            template = bre._SearchParser(r'Testing for \(?iu) Unicode flag.', False, None)
+            template = _bre_parse._SearchParser(r'Testing for \(?iu) Unicode flag.', False, None)
             template.parse()
             self.assertFalse(template.unicode)
 
@@ -852,11 +857,11 @@ class TestSearchTemplate(unittest.TestCase):
         """Test unescaped Unicode string flag."""
 
         if PY3:
-            template = bre._SearchParser(r'Testing for \\(?ia) ASCII flag.', False, None)
+            template = _bre_parse._SearchParser(r'Testing for \\(?ia) ASCII flag.', False, None)
             template.parse()
             self.assertFalse(template.unicode)
         else:
-            template = bre._SearchParser(r'Testing for \\(?iu) Unicode flag.', False, None)
+            template = _bre_parse._SearchParser(r'Testing for \\(?iu) Unicode flag.', False, None)
             template.parse()
             self.assertTrue(template.unicode)
 
@@ -864,11 +869,11 @@ class TestSearchTemplate(unittest.TestCase):
         """Test deep escaped Unicode flag."""
 
         if PY3:
-            template = bre._SearchParser(r'Testing for \\\(?ia) ASCII flag.', False, None)
+            template = _bre_parse._SearchParser(r'Testing for \\\(?ia) ASCII flag.', False, None)
             template.parse()
             self.assertTrue(template.unicode)
         else:
-            template = bre._SearchParser(r'Testing for \\\(?iu) Unicode flag.', False, None)
+            template = _bre_parse._SearchParser(r'Testing for \\\(?iu) Unicode flag.', False, None)
             template.parse()
             self.assertFalse(template.unicode)
 
@@ -1002,13 +1007,13 @@ class TestReplaceTemplate(unittest.TestCase):
 
         pattern = re.compile(r"(some)(.+?)(pattern)(!)")
         with pytest.raises(sre_constants.error):
-            bre._ReplaceParser().parse(pattern, '\\1\\l\\')
+            _bre_parse._ReplaceParser().parse(pattern, '\\1\\l\\')
 
         with pytest.raises(sre_constants.error):
-            bre._ReplaceParser().parse(pattern, '\\1\\L\\')
+            _bre_parse._ReplaceParser().parse(pattern, '\\1\\L\\')
 
         with pytest.raises(sre_constants.error):
-            bre._ReplaceParser().parse(pattern, '\\1\\')
+            _bre_parse._ReplaceParser().parse(pattern, '\\1\\')
 
     def test_replace_unicode_name_ascii_range(self):
         """Test replacing Unicode names in the ASCII range."""
@@ -1063,7 +1068,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test retrieval of the replace template original string."""
 
         pattern = re.compile(r"(some)(.+?)(pattern)(!)")
-        template = bre._ReplaceParser()
+        template = _bre_parse._ReplaceParser()
         template.parse(pattern, r'\c\1\2\C\3\E\4')
 
         self.assertEqual(r'\c\1\2\C\3\E\4', template.get_base_template())
@@ -1507,7 +1512,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         text = "Replace with function test!"
         pattern = bre.compile_search('(.+)')
-        repl = bre._ReplaceParser().parse(pattern, 'Success!')
+        repl = _bre_parse._ReplaceParser().parse(pattern, 'Success!')
         expand = bre.compile_replace(pattern, repl)
 
         m = pattern.match(text)
@@ -1947,7 +1952,7 @@ class TestExceptions(unittest.TestCase):
         """Test when a compile occurs on a template with flags passed."""
 
         pattern = re.compile('test')
-        template = bre._ReplaceParser().parse(pattern, 'whatever')
+        template = _bre_parse._ReplaceParser().parse(pattern, 'whatever')
 
         with pytest.raises(ValueError) as excinfo:
             bre.compile_replace(pattern, template, bre.FORMAT)

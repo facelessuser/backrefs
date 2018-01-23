@@ -19,17 +19,6 @@ if PY3:
     binary_type = bytes
     unichar = chr
 
-    class Tokens(object):
-        """Tokens base for Python 3."""
-
-        def iternext(self):
-            """Common override method."""
-
-        def __next__(self):
-            """Python 3 iterator compatible next."""
-
-            return self.iternext()
-
 else:
     from backports.functools_lru_cache import lru_cache  # noqa: F401
 
@@ -37,16 +26,45 @@ else:
     binary_type = str  # noqa F821
     unichar = unichr  # noqa F821
 
-    class Tokens(object):
-        """Tokens base for Python 2."""
 
-        def iternext(self):
-            """Common override method."""
+class StringIter(object):
+    """Preprocess replace tokens."""
 
-        def next(self):
-            """Python 2 iterator compatible next."""
+    def __init__(self, string):
+        """Initialize."""
 
-            return self.iternext()
+        self.string = string
+        self.max_index = len(string) - 1
+        self.index = 0
+
+    def __iter__(self):
+        """Iterate."""
+
+        return self
+
+    def __next__(self):
+        """Python 3 iterator compatible next."""
+
+        return self.iternext()
+
+    def rewind(self, count):
+        """Rewind index."""
+
+        self.index -= count
+
+    def iternext(self):
+        """Iterate through characters of the string."""
+
+        if self.index > self.max_index:
+            raise StopIteration
+
+        char = self.string[self.index]
+        self.index += 1
+
+        return char
+
+    # Python 2 iterator compatible next.
+    next = __next__  # noqa A002
 
 
 def uchr(i):
