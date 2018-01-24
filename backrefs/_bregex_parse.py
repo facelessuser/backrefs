@@ -9,6 +9,7 @@ import sys as _sys
 import unicodedata as _unicodedata
 from . import util as _util
 import regex as _regex
+import copyreg
 
 _REGEX_COMMENT_FIX = tuple([int(x) for x in _regex.__version__.split('.')]) > (2, 4, 136)
 
@@ -1063,7 +1064,7 @@ class _ReplaceParser(object):
 class ReplaceTemplate(_util.Immutable):
     """Replacement template expander."""
 
-    __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format")
+    __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format", "_hash")
 
     def __init__(self, groups, group_slots, literals, pattern_hash, use_format):
         """Initialize."""
@@ -1073,13 +1074,58 @@ class ReplaceTemplate(_util.Immutable):
             groups=groups,
             group_slots=group_slots,
             literals=literals,
-            pattern_hash=pattern_hash
+            pattern_hash=pattern_hash,
+            _hash=hash(
+                (
+                    type(self),
+                    groups, group_slots, literals,
+                    pattern_hash, use_format
+                )
+            )
         )
 
     def __call__(self, m):
         """Call."""
 
         return self.expand(m)
+
+    def __hash__(self):
+        """Hash."""
+
+        return self._hash
+
+    def __eq__(self, other):
+        """Equal."""
+
+        return (
+            isinstance(other, ReplaceTemplate) and
+            self.groups == other.groups and
+            self.group_slots == other.group_slots and
+            self.literals == other.literals and
+            self.pattern_hash == other.pattern_hash and
+            self.use_format == other.use_format
+        )
+
+    def __ne__(self, other):
+        """Equal."""
+
+        return (
+            not isinstance(other, ReplaceTemplate) or
+            self.groups != other.groups or
+            self.group_slots != other.group_slots or
+            self.literals != other.literals or
+            self.pattern_hash != other.pattern_hash or
+            self.use_format != other.use_format
+        )
+
+    def __repr__(self):
+        """Representation."""
+
+        return "%s.%s(%r, %r, %r, %r, %r)" % (
+            self.__module__, self.__class__.__name__,
+            self.groups, self.group_slots, self.literals,
+            self.pattern_hash, self.use_format
+        )
 
     def get_group_index(self, index):
         """Find and return the appropriate group index."""
@@ -1133,3 +1179,12 @@ class ReplaceTemplate(_util.Immutable):
             text.append(l)
 
         return sep.join(text)
+
+
+def _pickle(r):
+    """Pickle."""
+
+    return ReplaceTemplate, (r.groups, r.group_slots, r.literals, r.pattern_hash, r.use_format)
+
+
+copyreg.pickle(ReplaceTemplate, _pickle)

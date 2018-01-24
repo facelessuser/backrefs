@@ -29,6 +29,7 @@ import re as _re
 from . import util as _util
 from . import _bre_parse
 from ._bre_parse import ReplaceTemplate
+import copyreg
 
 __all__ = (
     "expand", "expandf", "search", "match", "fullmatch", "split", "findall", "finditer", "sub", "subf",
@@ -156,12 +157,76 @@ def _assert_expandable(repl, use_format=False):
 class Bre(_util.Immutable):
     """Bre object."""
 
-    __slots__ = ("pattern", "auto_compile")
+    __slots__ = ("_pattern", "auto_compile", "_hash")
 
     def __init__(self, pattern, auto_compile=True):
         """Initialization."""
 
-        super(Bre, self).__init__(pattern=pattern, auto_compile=auto_compile)
+        super(Bre, self).__init__(
+            _pattern=pattern,
+            auto_compile=auto_compile,
+            _hash=hash((type(self), pattern, auto_compile))
+        )
+
+    @property
+    def pattern(self):
+        """Return pattern."""
+
+        return self._pattern
+
+    @property
+    def flags(self):
+        """Return flags."""
+
+        return self._pattern.flags
+
+    @property
+    def groupindex(self):
+        """Return groupindex."""
+
+        return self._pattern.groupindex
+
+    @property
+    def groups(self):
+        """Return groups."""
+
+        return self._pattern.groups
+
+    @property
+    def scanner(self):
+        """Return groups."""
+
+        return self._pattern.scanner
+
+    def __hash__(self):
+        """Hash."""
+
+        return self._hash
+
+    def __eq__(self, other):
+        """Equal."""
+
+        return (
+            isinstance(other, Bre) and
+            self._pattern == other._pattern and
+            self.auto_compile == other.auto_compile
+        )
+
+    def __ne__(self, other):
+        """Equal."""
+
+        return (
+            not isinstance(other, Bre) or
+            self._pattern != other._pattern or
+            self.auto_compile != other.auto_compile
+        )
+
+    def __repr__(self):
+        """Representation."""
+
+        return '%s.%s(%r, auto_compile=%r)' % (
+            self.__module__, self.__class__.__name__, self._pattern, self.auto_compile
+        )
 
     def _auto_compile(self, template, use_format=False):
         """Compile replacements."""
@@ -388,3 +453,10 @@ def subfn(pattern, format, string, count=0, flags=0):  # noqa A002
         pattern, (compile_replace(pattern, format, flags=rflags) if is_replace or is_string else format),
         string, count, flags
     )
+
+
+def _pickle(p):
+    return Bre, (p._pattern, p.auto_compile)
+
+
+copyreg.pickle(Bre, _pickle)

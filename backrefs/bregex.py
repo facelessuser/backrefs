@@ -21,6 +21,7 @@ import regex as _regex
 from . import util as _util
 from . import _bregex_parse
 from ._bregex_parse import ReplaceTemplate
+import copyreg
 
 __all__ = (
     "expand", "expandf", "match", "fullmatch", "search", "sub", "subf", "subn", "subfn", "split", "splititer",
@@ -207,12 +208,76 @@ def compile_replace(pattern, repl, flags=0):
 class Bregex(_util.Immutable):
     """Bregex object."""
 
-    __slots__ = ("pattern", "auto_compile")
+    __slots__ = ("_pattern", "auto_compile", "_hash")
 
     def __init__(self, pattern, auto_compile=True):
         """Initialization."""
 
-        super(Bregex, self).__init__(pattern=pattern, auto_compile=auto_compile)
+        super(Bregex, self).__init__(
+            _pattern=pattern,
+            auto_compile=auto_compile,
+            _hash=hash((type(self), pattern, auto_compile))
+        )
+
+    @property
+    def pattern(self):
+        """Return pattern."""
+
+        return self._pattern
+
+    @property
+    def flags(self):
+        """Return flags."""
+
+        return self._pattern.flags
+
+    @property
+    def groupindex(self):
+        """Return groupindex."""
+
+        return self._pattern.groupindex
+
+    @property
+    def groups(self):
+        """Return groups."""
+
+        return self._pattern.groups
+
+    @property
+    def scanner(self):
+        """Return groups."""
+
+        return self._pattern.scanner
+
+    def __hash__(self):
+        """Hash."""
+
+        return self._hash
+
+    def __eq__(self, other):
+        """Equal."""
+
+        return (
+            isinstance(other, Bregex) and
+            self._pattern == other._pattern and
+            self.auto_compile == other.auto_compile
+        )
+
+    def __ne__(self, other):
+        """Equal."""
+
+        return (
+            not isinstance(other, Bregex) or
+            self._pattern != other._pattern or
+            self.auto_compile != other.auto_compile
+        )
+
+    def __repr__(self):
+        """Representation."""
+
+        return '%s.%s(%r, auto_compile=%r)' % (
+            self.__module__, self.__class__.__name__, self._pattern, self.auto_compile
+        )
 
     def _auto_compile(self, template, use_format=False):
         """Compile replacements."""
@@ -442,3 +507,10 @@ def finditer(
         _apply_search_backrefs(pattern, flags), string,
         flags, pos, endpos, overlapped, partial, concurrent, **kwargs
     )
+
+
+def _pickle(p):
+    return Bregex, (p._pattern, p.auto_compile)
+
+
+copyreg.pickle(Bregex, _pickle)
