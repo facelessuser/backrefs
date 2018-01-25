@@ -129,7 +129,11 @@ def _apply_search_backrefs(pattern, flags=0):
             pattern = _cached_search_compile(pattern, re_verbose, re_unicode)
         else:  # pragma: no cover
             pattern = _bre_parse._SearchParser(pattern, re_verbose, re_unicode).parse()
-    elif isinstance(pattern, _RE_TYPE):
+    elif isinstance(pattern, Bre):
+        if flags:
+            raise ValueError("Cannot process flags argument with a compiled pattern")
+        pattern = pattern._pattern
+    elif isinstance(pattern, (_RE_TYPE, Bre)):
         if flags:
             raise ValueError("Cannot process flags argument with a compiled pattern!")
     else:
@@ -156,12 +160,76 @@ def _assert_expandable(repl, use_format=False):
 class Bre(_util.Immutable):
     """Bre object."""
 
-    __slots__ = ("pattern", "auto_compile")
+    __slots__ = ("_pattern", "auto_compile", "_hash")
 
     def __init__(self, pattern, auto_compile=True):
         """Initialization."""
 
-        super(Bre, self).__init__(pattern=pattern, auto_compile=auto_compile)
+        super(Bre, self).__init__(
+            _pattern=pattern,
+            auto_compile=auto_compile,
+            _hash=hash((type(self), pattern, auto_compile))
+        )
+
+    @property
+    def pattern(self):
+        """Return pattern."""
+
+        return self._pattern
+
+    @property
+    def flags(self):
+        """Return flags."""
+
+        return self._pattern.flags
+
+    @property
+    def groupindex(self):
+        """Return group index."""
+
+        return self._pattern.groupindex
+
+    @property
+    def groups(self):
+        """Return groups."""
+
+        return self._pattern.groups
+
+    @property
+    def scanner(self):
+        """Return scanner."""
+
+        return self._pattern.scanner
+
+    def __hash__(self):
+        """Hash."""
+
+        return self._hash
+
+    def __eq__(self, other):
+        """Equal."""
+
+        return (
+            isinstance(other, Bre) and
+            self._pattern == other._pattern and
+            self.auto_compile == other.auto_compile
+        )
+
+    def __ne__(self, other):
+        """Equal."""
+
+        return (
+            not isinstance(other, Bre) or
+            self._pattern != other._pattern or
+            self.auto_compile != other.auto_compile
+        )
+
+    def __repr__(self):  # pragma: no cover
+        """Representation."""
+
+        return '%s.%s(%r, auto_compile=%r)' % (
+            self.__module__, self.__class__.__name__, self._pattern, self.auto_compile
+        )
 
     def _auto_compile(self, template, use_format=False):
         """Compile replacements."""
@@ -237,10 +305,20 @@ class Bre(_util.Immutable):
         return self.pattern.subn(self._auto_compile(repl, True), string, count)
 
 
-def compile(pattern, flags=0, auto_compile=True):
+def compile(pattern, flags=0, auto_compile=None):
     """Compile both the search or search and replace into one object."""
 
-    return Bre(compile_search(pattern, flags), auto_compile)
+    if isinstance(pattern, Bre):
+        if auto_compile is not None:
+            raise ValueError("Cannot compile Bre with a different auto_compile!")
+        elif flags != 0:
+            raise ValueError("Cannot process flags argument with a compiled pattern")
+        return pattern
+    else:
+        if auto_compile is None:
+            auto_compile = True
+
+        return Bre(compile_search(pattern, flags), auto_compile)
 
 
 def compile_search(pattern, flags=0):
@@ -388,3 +466,10 @@ def subfn(pattern, format, string, count=0, flags=0):  # noqa A002
         pattern, (compile_replace(pattern, format, flags=rflags) if is_replace or is_string else format),
         string, count, flags
     )
+
+
+def _pickle(p):
+    return Bre, (p._pattern, p.auto_compile)
+
+
+_util.copyreg.pickle(Bre, _pickle)

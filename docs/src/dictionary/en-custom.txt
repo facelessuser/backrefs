@@ -16,6 +16,7 @@ Regex's
 Sep
 Tox
 emoji
+hashable
 namespaced
 natively
 plugin

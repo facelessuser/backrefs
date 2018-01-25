@@ -13,14 +13,16 @@ PY36 = (3, 6) <= sys.version_info
 PY37 = (3, 7) <= sys.version_info
 
 if PY3:
-    from functools import lru_cache  # noqa: F401
+    from functools import lru_cache  # noqa F401
+    import copyreg  # noqa F401
 
     string_type = str
     binary_type = bytes
     unichar = chr
 
 else:
-    from backports.functools_lru_cache import lru_cache  # noqa: F401
+    from backports.functools_lru_cache import lru_cache  # noqa F401
+    import copy_reg as copyreg  # noqa F401
 
     string_type = unicode  # noqa F821
     binary_type = str  # noqa F821

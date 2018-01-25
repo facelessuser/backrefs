@@ -145,6 +145,10 @@ def _apply_search_backrefs(pattern, flags=0):
             pattern = _cached_search_compile(pattern, re_verbose, re_version)
         else:  # pragma: no cover
             pattern = _bregex_parse._SearchParser(pattern, re_verbose, re_version).parse()
+    elif isinstance(pattern, Bregex):
+        if flags:
+            raise ValueError("Cannot process flags argument with a compiled pattern")
+        pattern = pattern._pattern
     elif isinstance(pattern, _REGEX_TYPE):
         if flags:
             raise ValueError("Cannot process flags argument with a compiled pattern!")
@@ -166,10 +170,20 @@ def _assert_expandable(repl, use_format=False):
         raise TypeError("Expected string, buffer, or compiled replace!")
 
 
-def compile(pattern, flags=0, auto_compile=True):
+def compile(pattern, flags=0, auto_compile=None):
     """Compile both the search or search and replace into one object."""
 
-    return Bregex(compile_search(pattern, flags), auto_compile)
+    if isinstance(pattern, Bregex):
+        if auto_compile is not None:
+            raise ValueError("Cannot compile Bregex with a different auto_compile!")
+        elif flags != 0:
+            raise ValueError("Cannot process flags argument with a compiled pattern")
+        return pattern
+    else:
+        if auto_compile is None:
+            auto_compile = True
+
+        return Bregex(compile_search(pattern, flags), auto_compile)
 
 
 def compile_search(pattern, flags=0, **kwargs):
@@ -207,12 +221,76 @@ def compile_replace(pattern, repl, flags=0):
 class Bregex(_util.Immutable):
     """Bregex object."""
 
-    __slots__ = ("pattern", "auto_compile")
+    __slots__ = ("_pattern", "auto_compile", "_hash")
 
     def __init__(self, pattern, auto_compile=True):
         """Initialization."""
 
-        super(Bregex, self).__init__(pattern=pattern, auto_compile=auto_compile)
+        super(Bregex, self).__init__(
+            _pattern=pattern,
+            auto_compile=auto_compile,
+            _hash=hash((type(self), pattern, auto_compile))
+        )
+
+    @property
+    def pattern(self):
+        """Return pattern."""
+
+        return self._pattern
+
+    @property
+    def flags(self):
+        """Return flags."""
+
+        return self._pattern.flags
+
+    @property
+    def groupindex(self):
+        """Return group index."""
+
+        return self._pattern.groupindex
+
+    @property
+    def groups(self):
+        """Return groups."""
+
+        return self._pattern.groups
+
+    @property
+    def scanner(self):
+        """Return scanner."""
+
+        return self._pattern.scanner
+
+    def __hash__(self):
+        """Hash."""
+
+        return self._hash
+
+    def __eq__(self, other):
+        """Equal."""
+
+        return (
+            isinstance(other, Bregex) and
+            self._pattern == other._pattern and
+            self.auto_compile == other.auto_compile
+        )
+
+    def __ne__(self, other):
+        """Equal."""
+
+        return (
+            not isinstance(other, Bregex) or
+            self._pattern != other._pattern or
+            self.auto_compile != other.auto_compile
+        )
+
+    def __repr__(self):  # pragma: no cover
+        """Representation."""
+
+        return '%s.%s(%r, auto_compile=%r)' % (
+            self.__module__, self.__class__.__name__, self._pattern, self.auto_compile
+        )
 
     def _auto_compile(self, template, use_format=False):
         """Compile replacements."""
@@ -442,3 +520,10 @@ def finditer(
         _apply_search_backrefs(pattern, flags), string,
         flags, pos, endpos, overlapped, partial, concurrent, **kwargs
     )
+
+
+def _pickle(p):
+    return Bregex, (p._pattern, p.auto_compile)
+
+
+_util.copyreg.pickle(Bregex, _pickle)
