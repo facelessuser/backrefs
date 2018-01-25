@@ -185,7 +185,7 @@ class Bre(_util.Immutable):
 
     @property
     def groupindex(self):
-        """Return groupindex."""
+        """Return group index."""
 
         return self._pattern.groupindex
 
@@ -197,7 +197,7 @@ class Bre(_util.Immutable):
 
     @property
     def scanner(self):
-        """Return groups."""
+        """Return scanner."""
 
         return self._pattern.scanner
 

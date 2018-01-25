@@ -246,7 +246,7 @@ class Bregex(_util.Immutable):
 
     @property
     def groupindex(self):
-        """Return groupindex."""
+        """Return group index."""
 
         return self._pattern.groupindex
 
@@ -258,7 +258,7 @@ class Bregex(_util.Immutable):
 
     @property
     def scanner(self):
-        """Return groups."""
+        """Return scanner."""
 
         return self._pattern.scanner
 
