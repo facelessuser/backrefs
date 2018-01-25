@@ -9,7 +9,6 @@ import sys as _sys
 import unicodedata as _unicodedata
 from . import util as _util
 import regex as _regex
-import copyreg
 
 _REGEX_COMMENT_FIX = tuple([int(x) for x in _regex.__version__.split('.')]) > (2, 4, 136)
 

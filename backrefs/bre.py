@@ -29,7 +29,6 @@ import re as _re
 from . import util as _util
 from . import _bre_parse
 from ._bre_parse import ReplaceTemplate
-import copyreg
 
 __all__ = (
     "expand", "expandf", "search", "match", "fullmatch", "split", "findall", "finditer", "sub", "subf",

@@ -21,7 +21,6 @@ import regex as _regex
 from . import util as _util
 from . import _bregex_parse
 from ._bregex_parse import ReplaceTemplate
-import copyreg
 
 __all__ = (
     "expand", "expandf", "match", "fullmatch", "search", "sub", "subf", "subn", "subfn", "split", "splititer",
