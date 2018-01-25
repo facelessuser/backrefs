@@ -146,6 +146,10 @@ def _apply_search_backrefs(pattern, flags=0):
             pattern = _cached_search_compile(pattern, re_verbose, re_version)
         else:  # pragma: no cover
             pattern = _bregex_parse._SearchParser(pattern, re_verbose, re_version).parse()
+    elif isinstance(pattern, Bregex):
+        if flags:
+            raise ValueError("Cannot process flags argument with a compiled pattern")
+        pattern = pattern._pattern
     elif isinstance(pattern, _REGEX_TYPE):
         if flags:
             raise ValueError("Cannot process flags argument with a compiled pattern!")
@@ -167,10 +171,20 @@ def _assert_expandable(repl, use_format=False):
         raise TypeError("Expected string, buffer, or compiled replace!")
 
 
-def compile(pattern, flags=0, auto_compile=True):
+def compile(pattern, flags=0, auto_compile=None):
     """Compile both the search or search and replace into one object."""
 
-    return Bregex(compile_search(pattern, flags), auto_compile)
+    if isinstance(pattern, Bregex):
+        if auto_compile is not None:
+            raise ValueError("Cannot compile Bregex with a different auto_compile!")
+        elif flags != 0:
+            raise ValueError("Cannot process flags argument with a compiled pattern")
+        return pattern
+    else:
+        if auto_compile is None:
+            auto_compile = True
+
+        return Bregex(compile_search(pattern, flags), auto_compile)
 
 
 def compile_search(pattern, flags=0, **kwargs):
@@ -272,7 +286,7 @@ class Bregex(_util.Immutable):
             self.auto_compile != other.auto_compile
         )
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         """Representation."""
 
         return '%s.%s(%r, auto_compile=%r)' % (

@@ -9,6 +9,7 @@ import pytest
 import sre_constants
 import random
 from backrefs import _bre_parse
+import copy
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY34_PLUS = (3, 4) <= sys.version_info
@@ -23,6 +24,43 @@ else:
 
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
+
+    def test_compile_attributes(self):
+        """Test compile attributes."""
+
+        p = bre.compile('(?x)test')
+        self.assertEqual(p.pattern, p._pattern)
+        self.assertEqual(p.flags, p._pattern.flags)
+        self.assertEqual(p.groups, p._pattern.groups)
+        self.assertEqual(p.groupindex, p._pattern.groupindex)
+        self.assertEqual(p.scanner, p._pattern.scanner)
+
+    def test_compile_passthrough(self):
+        """Test conditions where a compile object passes through functions."""
+
+        p = bre.compile('test')
+        self.assertTrue(p == bre.compile(p))
+        with pytest.raises(ValueError):
+            bre.compile(p, bre.X)
+        with pytest.raises(ValueError):
+            bre.compile(p, auto_compile=False)
+        with pytest.raises(ValueError):
+            bre.compile_search(p, bre.X)
+        self.assertEqual(bre.sub(p, 'success', 'test'), 'success')
+
+    def test_hash(self):
+        """Test hashing of search."""
+
+        p1 = bre.compile('test')
+        p2 = bre.compile('test')
+        p3 = bre.compile('test', bre.X)
+
+        self.assertTrue(p1 == p2)
+        self.assertTrue(p1 != p3)
+
+        p4 = copy.copy(p1)
+        self.assertTrue(p1 == p4)
+        self.assertTrue(p4 in {p1})
 
     def test_not_flags(self):
         """Test invalid flags."""
@@ -918,6 +956,24 @@ class TestSearchTemplate(unittest.TestCase):
 
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
+
+    def test_hash(self):
+        """Test hashing of replace."""
+
+        p1 = bre.compile('(test)')
+        p2 = bre.compile('(test)')
+        r1 = p1.compile(r'\1')
+        r2 = p1.compile(r'\1')
+        r3 = p2.compile(r'\1')
+        r4 = p2.compile(r'\1', bre.FORMAT)
+
+        self.assertTrue(r1 == r2)
+        self.assertTrue(r2 == r3)
+        self.assertTrue(r1 != r4)
+
+        r5 = copy.copy(r1)
+        self.assertTrue(r1 == r5)
+        self.assertTrue(r5 in {r1})
 
     def test_format_failures(self):
         """Test format parsing failures."""

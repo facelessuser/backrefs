@@ -1118,7 +1118,7 @@ class ReplaceTemplate(_util.Immutable):
             self.use_format != other.use_format
         )
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         """Representation."""
 
         return "%s.%s(%r, %r, %r, %r, %r)" % (

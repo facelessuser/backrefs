@@ -130,7 +130,11 @@ def _apply_search_backrefs(pattern, flags=0):
             pattern = _cached_search_compile(pattern, re_verbose, re_unicode)
         else:  # pragma: no cover
             pattern = _bre_parse._SearchParser(pattern, re_verbose, re_unicode).parse()
-    elif isinstance(pattern, _RE_TYPE):
+    elif isinstance(pattern, Bre):
+        if flags:
+            raise ValueError("Cannot process flags argument with a compiled pattern")
+        pattern = pattern._pattern
+    elif isinstance(pattern, (_RE_TYPE, Bre)):
         if flags:
             raise ValueError("Cannot process flags argument with a compiled pattern!")
     else:
@@ -221,7 +225,7 @@ class Bre(_util.Immutable):
             self.auto_compile != other.auto_compile
         )
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         """Representation."""
 
         return '%s.%s(%r, auto_compile=%r)' % (
@@ -302,10 +306,20 @@ class Bre(_util.Immutable):
         return self.pattern.subn(self._auto_compile(repl, True), string, count)
 
 
-def compile(pattern, flags=0, auto_compile=True):
+def compile(pattern, flags=0, auto_compile=None):
     """Compile both the search or search and replace into one object."""
 
-    return Bre(compile_search(pattern, flags), auto_compile)
+    if isinstance(pattern, Bre):
+        if auto_compile is not None:
+            raise ValueError("Cannot compile Bre with a different auto_compile!")
+        elif flags != 0:
+            raise ValueError("Cannot process flags argument with a compiled pattern")
+        return pattern
+    else:
+        if auto_compile is None:
+            auto_compile = True
+
+        return Bre(compile_search(pattern, flags), auto_compile)
 
 
 def compile_search(pattern, flags=0):
