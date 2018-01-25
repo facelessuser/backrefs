@@ -473,4 +473,4 @@ def _pickle(p):
     return Bre, (p._pattern, p.auto_compile)
 
 
-copyreg.pickle(Bre, _pickle)
+_util.copyreg.pickle(Bre, _pickle)

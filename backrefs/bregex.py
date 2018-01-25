@@ -527,4 +527,4 @@ def _pickle(p):
     return Bregex, (p._pattern, p.auto_compile)
 
 
-copyreg.pickle(Bregex, _pickle)
+_util.copyreg.pickle(Bregex, _pickle)

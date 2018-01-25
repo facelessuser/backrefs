@@ -1322,4 +1322,4 @@ def _pickle(r):
     return ReplaceTemplate, (r.groups, r.group_slots, r.literals, r.pattern_hash, r.use_format)
 
 
-copyreg.pickle(ReplaceTemplate, _pickle)
+_util.copyreg.pickle(ReplaceTemplate, _pickle)
