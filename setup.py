@@ -33,11 +33,12 @@ def get_version():
 def get_requirements():
     """Load list of dependencies."""
 
+    install_requires = []
     with open("requirments/project.txt") as f:
-        install_requires = []
         for line in f:
             if not line.startswith("#"):
                 install_requires.append(line.strip())
+    return install_requires
 
 
 def get_unicodedata():
