@@ -30,6 +30,17 @@ def get_version():
         fp.close()
 
 
+def get_requirements():
+    """Load list of dependencies."""
+
+    install_requires = []
+    with open("requirements/project.txt") as f:
+        for line in f:
+            if not line.startswith("#"):
+                install_requires.append(line.strip())
+    return install_requires
+
+
 def get_unicodedata():
     """Download the unicodedata version for the given Python version."""
 
@@ -104,9 +115,7 @@ setup(
     author_email='Isaac.Muse@gmail.com',
     url='https://github.com/facelessuser/backrefs',
     packages=find_packages(exclude=['tools', 'tests']),
-    install_requires=[
-        "backports.functools_lru_cache ; python_version < '3'"
-    ],
+    install_requires=get_requirements(),
     zip_safe=False,
     package_data={},
     license='MIT License',
