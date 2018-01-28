@@ -34,7 +34,7 @@ def get_requirements():
     """Load list of dependencies."""
 
     install_requires = []
-    with open("requirments/project.txt") as f:
+    with open("requirements/project.txt") as f:
         for line in f:
             if not line.startswith("#"):
                 install_requires.append(line.strip())
