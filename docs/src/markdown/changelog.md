@@ -2,7 +2,7 @@
 
 ## 3.0.3
 
-Jan 24, 2018
+Jan 28, 2018
 
 - **FIX**: Compiled search and replace objects should be hashable.
 - **FIX**: Handle cases where a new compiled pattern object is passed back through compile functions.
