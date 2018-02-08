@@ -152,7 +152,7 @@ class TestSearchTemplate(unittest.TestCase):
         """Test comments v0."""
 
         pattern = bregex.compile_search(
-            r'''(?uV0)Test # \R(?#\R\)(?x:
+            r'''(?uV0)Test # \R(?#\R\))(?x:
             Test #\R(?#\R\)
             (Test # \R
             )Test #\R
@@ -161,7 +161,7 @@ class TestSearchTemplate(unittest.TestCase):
 
         self.assertEqual(
             pattern.pattern,
-            r'''(?uV0)Test # (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\)(?x:
+            r'''(?uV0)Test # (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\))(?x:
             Test #\\R(?#\\R\)
             (Test # \\R
             )Test #\\R
@@ -187,7 +187,7 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bregex.compile_search(
             r'''(?xuV1)
             Test # \R
-            (?-x:Test #\R(?#\R\)((?x)
+            (?-x:Test #\R(?#\R\))((?x)
             Test # \R
             )Test #\R)
             Test # \R
@@ -198,7 +198,7 @@ class TestSearchTemplate(unittest.TestCase):
             pattern.pattern,
             r'''(?xuV1)
             Test # \\R
-            (?-x:Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\)((?x)
+            (?-x:Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\))((?x)
             Test # \\R
             )Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029))
             Test # \\R

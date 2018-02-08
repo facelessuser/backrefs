@@ -230,7 +230,7 @@ class _SearchParser(object):
             value.append(c)
             c = next(i)
             while c != ')' or escaped is True:
-                if _REGEX_COMMENT_FIX:  # pragma: no cover
+                if _REGEX_COMMENT_FIX:
                     if escaped:
                         escaped = False
                     elif c == '\\':
