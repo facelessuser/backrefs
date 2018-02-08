@@ -12,6 +12,7 @@ import regex as _regex
 
 _REGEX_COMMENT_FIX = tuple([int(x) for x in _regex.__version__.split('.')]) > (2, 4, 136)
 
+_MAXUNICODE = _sys.maxunicode
 _NARROW = _sys.maxunicode == 0xFFFF
 
 _ASCII_LETTERS = frozenset(
