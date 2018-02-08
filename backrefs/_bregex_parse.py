@@ -690,12 +690,14 @@ class _ReplaceParser(object):
 
         text = self.get_wide_unicode(i) if wide else self.get_narrow_unicode(i)
         value = int(text, 16)
+        skip_case = wide and _NARROW and value > _MAXUNICODE
         single = self.get_single_stack()
-        if self.span_stack:
-            text = self.convert_case(_util.uchr(value), self.span_stack[-1])
-            value = ord(self.convert_case(text, single)) if single is not None else ord(text)
-        elif single:
-            value = ord(self.convert_case(_util.uchr(value), single))
+        if not skip_case:
+            if self.span_stack:
+                text = self.convert_case(_util.uchr(value), self.span_stack[-1])
+                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
+            elif single:
+                value = ord(self.convert_case(_util.uchr(value), single))
         if value <= 0xFF:
             self.result.append('\\%03o' % value)
         else:
@@ -800,7 +802,7 @@ class _ReplaceParser(object):
             self.span_case(i, _UPPER)
         elif t == "E":
             self.end_found = True
-        elif not self.binary and not _NARROW and t == "U":
+        elif not self.binary and t == "U":
             self.parse_unicode(i, True)
         elif not self.binary and t == "u":
             self.parse_unicode(i)
