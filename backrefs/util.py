@@ -79,7 +79,7 @@ def uchr(i):
 
 
 def uord(c):
-    """Get Unicode ord."""
+    """Get Unicode ordinal."""
 
     if len(c) == 2:
         high, low = [ord(p) for p in c]

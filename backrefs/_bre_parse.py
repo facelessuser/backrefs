@@ -5,7 +5,6 @@ Licensed under MIT
 Copyright (c) 2011 - 2018 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import unicode_literals
-import sys as _sys
 import re as _re
 from . import util as _util
 import sre_parse as _sre_parse
