@@ -5,7 +5,7 @@
 Feb 8, 2018
 
 - **FIX**: Formally enable Python 3.7 support.
-- **FIX**: Tweak to Unicode wide character hadling.
+- **FIX**: Tweak to Unicode wide character handling.
 
 ## 3.0.3
 
