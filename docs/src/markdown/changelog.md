@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.5
+
+Feb 9, 2018
+
+- **FIX**: Process non raw string equivalent escaped Unicode on Python 2.7.
+- **FIX**: Compiled objects should return the pattern string, not the pattern object via the property `pattern`.
+
 ## 3.0.4
 
 Feb 8, 2018

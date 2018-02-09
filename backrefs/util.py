@@ -7,6 +7,7 @@ Copyright (c) 2015 - 2018 Isaac Muse <isaacmuse@gmail.com>
 import sys
 import struct
 
+PY2 = (2, 0) <= sys.version_info < (3, 0)
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY34 = (3, 4) <= sys.version_info
 PY36 = (3, 6) <= sys.version_info

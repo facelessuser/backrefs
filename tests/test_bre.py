@@ -25,11 +25,17 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_non_raw_string_unicode(self):
+        """Test non raw string Unicode notation."""
+
+        self.assertTrue(bre.compile('\\u0070\\U00000070').match('pp') is not None)
+        self.assertTrue(bre.compile('\\Q\\u0070\\U00000070\\E').match('\\u0070\\U00000070') is not None)
+
     def test_compile_attributes(self):
         """Test compile attributes."""
 
         p = bre.compile('(?x)test')
-        self.assertEqual(p.pattern, p._pattern)
+        self.assertEqual(p.pattern, p._pattern.pattern)
         self.assertEqual(p.flags, p._pattern.flags)
         self.assertEqual(p.groups, p._pattern.groups)
         self.assertEqual(p.groupindex, p._pattern.groupindex)
