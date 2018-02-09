@@ -1401,6 +1401,13 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
+    def test_normal_string_escaped_unicode(self):
+        """Test normal string escaped Unicode."""
+
+        pattern = bregex.compile('Test')
+        result = pattern.sub('\\C\\U00000070\\U0001F360\\E', 'Test')
+        self.assertEqual(result, 'P\U0001F360')
+
     def test_dont_case_special_refs(self):
         """Test that we don't case Unicode and bytes tokens, but case the character."""
 

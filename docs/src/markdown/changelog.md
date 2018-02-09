@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.4
+
+Feb 8, 2018
+
+- **FIX**: Formally enable Python 3.7 support.
+- **FIX**: Tweak to Unicode wide character hadling.
+
 ## 3.0.3
 
 Jan 28, 2018

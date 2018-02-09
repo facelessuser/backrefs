@@ -70,3 +70,4 @@ backrefs/uniprops/unidata/*
 *-sdist/*
 
 .~c9*
+.pytest_cache/*
