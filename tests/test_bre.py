@@ -35,7 +35,7 @@ class TestSearchTemplate(unittest.TestCase):
         """Test compile attributes."""
 
         p = bre.compile('(?x)test')
-        self.assertEqual(p.pattern, p._pattern)
+        self.assertEqual(p.pattern, p._pattern.pattern)
         self.assertEqual(p.flags, p._pattern.flags)
         self.assertEqual(p.groups, p._pattern.groups)
         self.assertEqual(p.groupindex, p._pattern.groupindex)

@@ -175,7 +175,7 @@ class Bre(_util.Immutable):
     def pattern(self):
         """Return pattern."""
 
-        return self._pattern
+        return self._pattern.pattern
 
     @property
     def flags(self):
@@ -251,58 +251,58 @@ class Bre(_util.Immutable):
     def compile(self, repl, flags=0):
         """Compile replace."""
 
-        return compile_replace(self.pattern, repl, flags)
+        return compile_replace(self._pattern, repl, flags)
 
     def search(self, string, pos=0, endpos=_sys.maxsize):
         """Apply `search`."""
 
-        return self.pattern.search(string, pos, endpos)
+        return self._pattern.search(string, pos, endpos)
 
     def match(self, string, pos=0, endpos=_sys.maxsize):
         """Apply `match`."""
 
-        return self.pattern.match(string, pos, endpos)
+        return self._pattern.match(string, pos, endpos)
 
     if _util.PY34:
         def fullmatch(self, string, pos=0, endpos=_sys.maxsize):
             """Apply `fullmatch`."""
 
-            return self.pattern.fullmatch(string, pos, endpos)
+            return self._pattern.fullmatch(string, pos, endpos)
 
     def split(self, string, maxsplit=0):
         """Apply `split`."""
 
-        return self.pattern.split(string, maxsplit)
+        return self._pattern.split(string, maxsplit)
 
     def findall(self, string, pos=0, endpos=_sys.maxsize):
         """Apply `findall`."""
 
-        return self.pattern.findall(string, pos, endpos)
+        return self._pattern.findall(string, pos, endpos)
 
     def finditer(self, string, pos=0, endpos=_sys.maxsize):
         """Apply `finditer`."""
 
-        return self.pattern.finditer(string, pos, endpos)
+        return self._pattern.finditer(string, pos, endpos)
 
     def sub(self, repl, string, count=0):
         """Apply `sub`."""
 
-        return self.pattern.sub(self._auto_compile(repl), string, count)
+        return self._pattern.sub(self._auto_compile(repl), string, count)
 
     def subf(self, repl, string, count=0):  # noqa A002
         """Apply `sub` with format style replace."""
 
-        return self.pattern.sub(self._auto_compile(repl, True), string, count)
+        return self._pattern.sub(self._auto_compile(repl, True), string, count)
 
     def subn(self, repl, string, count=0):
         """Apply `subn` with format style replace."""
 
-        return self.pattern.subn(self._auto_compile(repl), string, count)
+        return self._pattern.subn(self._auto_compile(repl), string, count)
 
     def subfn(self, repl, string, count=0):  # noqa A002
         """Apply `subn` after applying backrefs."""
 
-        return self.pattern.subn(self._auto_compile(repl, True), string, count)
+        return self._pattern.subn(self._auto_compile(repl, True), string, count)
 
 
 def compile(pattern, flags=0, auto_compile=None):

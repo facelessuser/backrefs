@@ -236,7 +236,7 @@ class Bregex(_util.Immutable):
     def pattern(self):
         """Return pattern."""
 
-        return self._pattern
+        return self._pattern.pattern
 
     @property
     def flags(self):
@@ -312,62 +312,62 @@ class Bregex(_util.Immutable):
     def compile(self, repl, flags=0):
         """Compile replace."""
 
-        return compile_replace(self.pattern, repl, flags)
+        return compile_replace(self._pattern, repl, flags)
 
     def search(self, string, pos=None, endpos=None, concurrent=None, partial=False,):
         """Apply `search`."""
 
-        return self.pattern.search(string, pos, endpos, concurrent, partial)
+        return self._pattern.search(string, pos, endpos, concurrent, partial)
 
     def match(self, string, pos=None, endpos=None, concurrent=None, partial=False,):
         """Apply `match`."""
 
-        return self.pattern.match(string, pos, endpos, concurrent, partial)
+        return self._pattern.match(string, pos, endpos, concurrent, partial)
 
     def fullmatch(self, string, pos=None, endpos=None, concurrent=None, partial=False):
         """Apply `fullmatch`."""
 
-        return self.pattern.fullmatch(string, pos, endpos, concurrent, partial)
+        return self._pattern.fullmatch(string, pos, endpos, concurrent, partial)
 
     def split(self, string, maxsplit=0, concurrent=None):
         """Apply `split`."""
 
-        return self.pattern.split(string, maxsplit, concurrent)
+        return self._pattern.split(string, maxsplit, concurrent)
 
     def splititer(self, string, maxsplit=0, concurrent=None):
         """Apply `splititer`."""
 
-        return self.pattern.splititer(string, maxsplit, concurrent)
+        return self._pattern.splititer(string, maxsplit, concurrent)
 
     def findall(self, string, pos=None, endpos=None, overlapped=False, concurrent=None):
         """Apply `findall`."""
 
-        return self.pattern.findall(string, pos, endpos, overlapped, concurrent)
+        return self._pattern.findall(string, pos, endpos, overlapped, concurrent)
 
     def finditer(self, string, pos=None, endpos=None, overlapped=False, concurrent=None, partial=False):
         """Apply `finditer`."""
 
-        return self.pattern.finditer(string, pos, endpos, overlapped, concurrent, partial)
+        return self._pattern.finditer(string, pos, endpos, overlapped, concurrent, partial)
 
     def sub(self, repl, string, count=0, pos=None, endpos=None, concurrent=None):
         """Apply `sub`."""
 
-        return self.pattern.sub(self._auto_compile(repl), string, count, pos, endpos, concurrent)
+        return self._pattern.sub(self._auto_compile(repl), string, count, pos, endpos, concurrent)
 
     def subf(self, repl, string, count=0, pos=None, endpos=None, concurrent=None):  # noqa A002
         """Apply `sub` with format style replace."""
 
-        return self.pattern.subf(self._auto_compile(repl, True), string, count, pos, endpos, concurrent)
+        return self._pattern.subf(self._auto_compile(repl, True), string, count, pos, endpos, concurrent)
 
     def subn(self, repl, string, count=0, pos=None, endpos=None, concurrent=None):
         """Apply `subn` with format style replace."""
 
-        return self.pattern.subn(self._auto_compile(repl), string, count, pos, endpos, concurrent)
+        return self._pattern.subn(self._auto_compile(repl), string, count, pos, endpos, concurrent)
 
     def subfn(self, repl, string, count=0, pos=None, endpos=None, concurrent=None):  # noqa A002
         """Apply `subn` after applying backrefs."""
 
-        return self.pattern.subfn(self._auto_compile(repl, True), string, count, pos, endpos, concurrent)
+        return self._pattern.subfn(self._auto_compile(repl, True), string, count, pos, endpos, concurrent)
 
 
 def purge():
