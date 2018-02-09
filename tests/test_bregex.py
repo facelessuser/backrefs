@@ -152,7 +152,7 @@ class TestSearchTemplate(unittest.TestCase):
         """Test comments v0."""
 
         pattern = bregex.compile_search(
-            r'''(?uV0)Test # \R(?#\R\)(?x:
+            r'''(?uV0)Test # \R(?#\R\))(?x:
             Test #\R(?#\R\)
             (Test # \R
             )Test #\R
@@ -161,7 +161,7 @@ class TestSearchTemplate(unittest.TestCase):
 
         self.assertEqual(
             pattern.pattern,
-            r'''(?uV0)Test # (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\)(?x:
+            r'''(?uV0)Test # (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\))(?x:
             Test #\\R(?#\\R\)
             (Test # \\R
             )Test #\\R
@@ -187,7 +187,7 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bregex.compile_search(
             r'''(?xuV1)
             Test # \R
-            (?-x:Test #\R(?#\R\)((?x)
+            (?-x:Test #\R(?#\R\))((?x)
             Test # \R
             )Test #\R)
             Test # \R
@@ -198,7 +198,7 @@ class TestSearchTemplate(unittest.TestCase):
             pattern.pattern,
             r'''(?xuV1)
             Test # \\R
-            (?-x:Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\)((?x)
+            (?-x:Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\))((?x)
             Test # \\R
             )Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029))
             Test # \\R
@@ -1400,6 +1400,13 @@ class TestReplaceTemplate(unittest.TestCase):
             '\\b\\b',
             results
         )
+
+    def test_normal_string_escaped_unicode(self):
+        """Test normal string escaped Unicode."""
+
+        pattern = bregex.compile('Test')
+        result = pattern.sub('\\C\\U00000070\\U0001F360\\E', 'Test')
+        self.assertEqual(result, 'P\U0001F360')
 
     def test_dont_case_special_refs(self):
         """Test that we don't case Unicode and bytes tokens, but case the character."""

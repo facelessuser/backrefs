@@ -182,7 +182,7 @@ class TestSearchTemplate(unittest.TestCase):
         """Test Unicode ASCII swapping."""
 
         if PY37_PLUS:
-            pattern = bre.compile_search(r'(?u:\C\w)(?a:\C\w)(?u:\C\w)')
+            pattern = bre.compile_search(r'(?u:\w{2})(?a:\w{2})(?u:\w{2})')
             self.assertTrue(pattern.match('ÀÀAAÀÀ') is not None)
             self.assertTrue(pattern.match('ÀÀAÀÀÀ') is None)
             self.assertTrue(pattern.match('ÀÀÀAÀÀ') is None)
@@ -1733,6 +1733,13 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
+    def test_normal_string_escaped_unicode(self):
+        """Test normal string escaped Unicode."""
+
+        pattern = bre.compile('Test')
+        result = pattern.sub('\\C\\U00000070\\U0001F360\\E', 'Test')
+        self.assertEqual(result, 'P\U0001F360')
+
     def test_dont_case_special_refs(self):
         """Test that we don't case Unicode and bytes tokens, but case the character."""
 
@@ -2337,4 +2344,9 @@ class TestConvenienceFunctions(unittest.TestCase):
         replace = p.compile(r'{1}', bre.FORMAT)
         self.assertEqual(p.subf(replace, 'tests'), 'test')
 
-        self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')
+        if PY37_PLUS:
+            # Fail due to `\l` being an invalid escape.
+            with pytest.raises(re.error):
+                p.sub(r'\ltest', 'tests')
+        else:
+            self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')

@@ -4,6 +4,7 @@ Bre
 Bregex
 Changelog
 EmojiOne
+Feb
 GitHub
 Jan
 MERCHANTABILITY
