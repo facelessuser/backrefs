@@ -22,6 +22,12 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_non_raw_string_unicode(self):
+        """Test non raw string Unicode notation."""
+
+        self.assertTrue(bregex.compile('\\u0070\\U00000070').match('pp'))
+        self.assertTrue(bregex.compile('\\Q\\u0070\\U00000070\\E').match('\\u0070\\U00000070'))
+
     def test_compile_attributes(self):
         """Test compile attributes."""
 

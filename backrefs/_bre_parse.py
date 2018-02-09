@@ -217,6 +217,49 @@ class _SearchParser(object):
 
         return ''.join(value)
 
+    def get_wide_unicode(self, i):
+        """Get narrow Unicode."""
+
+        value = []
+        for x in range(3):
+            c = next(i)
+            if c == '0':
+                value.append(c)
+            else:  # pragma: no cover
+                raise SyntaxError('Invalid wide Unicode character at %d!' % (i.index - 1))
+
+        c = next(i)
+        if c in ('0', '1'):
+            value.append(c)
+        else:  # pragma: no cover
+            raise SyntaxError('Invalid wide Unicode character at %d!' % (i.index - 1))
+
+        for x in range(4):
+            c = next(i)
+            if c.lower() in _HEX:
+                value.append(c)
+            else:  # pragma: no cover
+                raise SyntaxError('Invalid wide Unicode character at %d!' % (i.index - 1))
+        return ''.join(value)
+
+    def get_narrow_unicode(self, i):
+        """Get narrow Unicode."""
+
+        value = []
+        for x in range(4):
+            c = next(i)
+            if c.lower() in _HEX:
+                value.append(c)
+            else:  # pragma: no cover
+                raise SyntaxError('Invalid Unicode character at %d!' % (i.index - 1))
+        return ''.join(value)
+
+    def get_unicode(self, i, wide=False):
+        """Get Unicode character."""
+
+        value = int(self.get_wide_unicode(i) if wide else self.get_narrow_unicode(i), 16)
+        return ('\\%03o' % value) if value <= 0xFF else _util.uchr(value)
+
     def reference(self, t, i, in_group=False):
         """Handle references."""
 
@@ -237,6 +280,10 @@ class _SearchParser(object):
         elif t == "C":
             current.extend(self.letter_case_props(_UPPER, in_group, negate=True))
 
+        elif _util.PY2 and not self.binary and t == "U":
+            current.append(self.get_unicode(i, True))
+        elif _util.PY2 and not self.binary and t == "u":
+            current.append(self.get_unicode(i))
         elif t == 'p':
             prop = self.get_unicode_property(i)
             current.extend(self.unicode_props(prop[0], prop[1], in_group=in_group))
