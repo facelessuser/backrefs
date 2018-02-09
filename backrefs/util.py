@@ -74,8 +74,20 @@ def uchr(i):
 
     try:
         return unichar(i)
-    except ValueError:  # pragma: no cover
+    except ValueError:
         return struct.pack('i', i).decode('utf-32')
+
+
+def uord(c):
+    """Get Unicode ord."""
+
+    if len(c) == 2:
+        high, low = [ord(p) for p in c]
+        ordinal = (high - 0xD800) * 0x400 + low - 0xDC00 + 0x10000
+    else:
+        ordinal = ord(c)
+
+    return ordinal
 
 
 class Immutable(object):
@@ -91,4 +103,5 @@ class Immutable(object):
 
     def __setattr__(self, name, value):
         """Prevent mutability."""
+
         raise AttributeError('Class is immutable!')

@@ -12,9 +12,6 @@ import regex as _regex
 
 _REGEX_COMMENT_FIX = tuple([int(x) for x in _regex.__version__.split('.')]) > (2, 4, 136)
 
-_MAXUNICODE = _sys.maxunicode
-_NARROW = _sys.maxunicode == 0xFFFF
-
 _ASCII_LETTERS = frozenset(
     (
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -607,9 +604,9 @@ class _ReplaceParser(object):
             single = self.get_single_stack()
             if self.span_stack:
                 text = self.convert_case(_util.uchr(value), self.span_stack[-1])
-                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
+                value = _util.uord(self.convert_case(text, single)) if single is not None else _util.uord(text)
             elif single:
-                value = ord(self.convert_case(_util.uchr(value), single))
+                value = _util.uord(self.convert_case(_util.uchr(value), single))
             if value <= 0xFF:
                 self.result.append('\\%03o' % value)
             else:
@@ -637,13 +634,13 @@ class _ReplaceParser(object):
     def parse_named_unicode(self, i):
         """Parse named Unicode."""
 
-        value = ord(_unicodedata.lookup(self.get_named_unicode(i)))
+        value = _util.uord(_unicodedata.lookup(self.get_named_unicode(i)))
         single = self.get_single_stack()
         if self.span_stack:
             text = self.convert_case(_util.uchr(value), self.span_stack[-1])
-            value = ord(self.convert_case(text, single)) if single is not None else ord(text)
+            value = _util.uord(self.convert_case(text, single)) if single is not None else _util.uord(text)
         elif single:
-            value = ord(self.convert_case(_util.uchr(value), single))
+            value = _util.uord(self.convert_case(_util.uchr(value), single))
         if value <= 0xFF:
             self.result.append('\\%03o' % value)
         else:
@@ -691,14 +688,12 @@ class _ReplaceParser(object):
 
         text = self.get_wide_unicode(i) if wide else self.get_narrow_unicode(i)
         value = int(text, 16)
-        skip_case = wide and _NARROW and value > _MAXUNICODE
         single = self.get_single_stack()
-        if not skip_case:
-            if self.span_stack:
-                text = self.convert_case(_util.uchr(value), self.span_stack[-1])
-                value = ord(self.convert_case(text, single)) if single is not None else ord(text)
-            elif single:
-                value = ord(self.convert_case(_util.uchr(value), single))
+        if self.span_stack:
+            text = self.convert_case(_util.uchr(value), self.span_stack[-1])
+            value = _util.uord(self.convert_case(text, single)) if single is not None else _util.uord(text)
+        elif single:
+            value = _util.uord(self.convert_case(_util.uchr(value), single))
         if value <= 0xFF:
             self.result.append('\\%03o' % value)
         else:
@@ -723,9 +718,9 @@ class _ReplaceParser(object):
         single = self.get_single_stack()
         if self.span_stack:
             text = self.convert_case(chr(value), self.span_stack[-1])
-            value = ord(self.convert_case(text, single)) if single is not None else ord(text)
+            value = _util.uord(self.convert_case(text, single)) if single is not None else _util.uord(text)
         elif single:
-            value = ord(self.convert_case(chr(value), single))
+            value = _util.uord(self.convert_case(chr(value), single))
         self.result.append('\\%03o' % value)
 
     def get_named_group(self, t, i):
