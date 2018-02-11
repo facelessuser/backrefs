@@ -93,25 +93,6 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(bregex.compile(r'[[:a]', regex.V0).match('a') is not None)
         self.assertTrue(bregex.compile(r'[[:graph:a]', regex.V0).match('a') is not None)
 
-    def test_word_boundary(self):
-        """Test word boundary."""
-
-        pattern = bregex.compile_search(r'\<test')
-        self.assertEqual(
-            pattern.pattern,
-            r"\b(?=\w)test"
-        )
-        pattern = bregex.compile_search(r'test\>')
-        self.assertEqual(
-            pattern.pattern,
-            r"test\b(?<=\w)"
-        )
-        pattern = bregex.compile_search(r'[\<]test')
-        self.assertEqual(
-            pattern.pattern,
-            r"[\<]test"
-        )
-
     def test_cache(self):
         """Test cache."""
 

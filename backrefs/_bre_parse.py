@@ -53,7 +53,7 @@ class GlobalRetryException(Exception):
 class _SearchParser(object):
     """Search Template."""
 
-    _new_refs = ("e", "l", "L", "c", "C", "p", "P", "N", "Q", "E", "<", ">")
+    _new_refs = ("e", "l", "L", "c", "C", "p", "P", "N", "Q", "E", "m", "M")
     _re_escape = r"\x1b"
     _re_start_wb = r"\b(?=\w)"
     _re_end_wb = r"\b(?<=\w)"
@@ -265,9 +265,9 @@ class _SearchParser(object):
 
         current = []
 
-        if not in_group and t == "<":
+        if not in_group and t == "m":
             current.append(self._re_start_wb)
-        elif not in_group and t == ">":
+        elif not in_group and t == "M":
             current.append(self._re_end_wb)
         elif t == "e":
             current.append(self._re_escape)
