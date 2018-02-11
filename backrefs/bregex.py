@@ -168,7 +168,7 @@ def _assert_expandable(repl, use_format=False):
         raise TypeError("Expected string, buffer, or compiled replace!")
 
 
-def compile(pattern, flags=0, auto_compile=None):
+def compile(pattern, flags=0, auto_compile=None, **kwargs):
     """Compile both the search or search and replace into one object."""
 
     if isinstance(pattern, Bregex):
@@ -181,7 +181,7 @@ def compile(pattern, flags=0, auto_compile=None):
         if auto_compile is None:
             auto_compile = True
 
-        return Bregex(compile_search(pattern, flags), auto_compile)
+        return Bregex(compile_search(pattern, flags, **kwargs), auto_compile)
 
 
 def compile_search(pattern, flags=0, **kwargs):
@@ -312,12 +312,12 @@ class Bregex(_util.Immutable):
 
         return compile_replace(self._pattern, repl, flags)
 
-    def search(self, string, pos=None, endpos=None, concurrent=None, partial=False,):
+    def search(self, string, pos=None, endpos=None, concurrent=None, partial=False):
         """Apply `search`."""
 
         return self._pattern.search(string, pos, endpos, concurrent, partial)
 
-    def match(self, string, pos=None, endpos=None, concurrent=None, partial=False,):
+    def match(self, string, pos=None, endpos=None, concurrent=None, partial=False):
         """Apply `match`."""
 
         return self._pattern.match(string, pos, endpos, concurrent, partial)

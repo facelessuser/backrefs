@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.1
+
+- **FIX**: `bregex.compile` now supports additional keyword arguments for named lists like `bregex.compile_search` does.
+
 ## 3.1.0
 
 - **NEW**: Start and end word boundary back references are now specified with `\m` and `\M` like Regex does.  `\<` and `\>` have been removed from Regex.
