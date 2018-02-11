@@ -22,6 +22,17 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_named_lists(self):
+        """Test named lists."""
+
+        kwargs = {'name': ['blue', 'green']}
+        self.assertTrue(bregex.compile(r'\L<name>', name=['blue', 'green']).match('green') is not None)
+        self.assertTrue(bregex.compile(r'\L<name>', **kwargs).match('green') is not None)
+        self.assertTrue(bregex.compile_search(r'\L<name>', name=['blue', 'green']).match('green') is not None)
+        self.assertTrue(bregex.compile_search(r'\L<name>', **kwargs).match('green') is not None)
+        self.assertTrue(bregex.match(r'\L<name>', 'green', name=['blue', 'green']) is not None)
+        self.assertTrue(bregex.match(r'\L<name>', 'green', **kwargs) is not None)
+
     def test_non_raw_string_unicode(self):
         """Test non raw string Unicode notation."""
 
