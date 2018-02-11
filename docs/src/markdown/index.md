@@ -225,13 +225,15 @@ Back\ References      | Description
 `\PX`                 | Inverse Unicode property character class where `X` is the uppercase letter that represents the General Category property. For instance, `\PL` would be equivalent to `\P{L}` or `\P{Letter}`.
 `[[:alnum:]]`         | Though not really a back reference, support for POSIX style character classes is available. See [POSIX Style Properties](#posix-style-properties) for more info.
 `\N{UnicodeName}`     | Named characters are are normally ignored in Re, but Backrefs adds support for them.
-`\<`                  | Start word boundary. Translates to `\b(?=\w)`.
-`\>`                  | End word boundary. Translates to `\b(?<=\w)`.
+`\m`                  | Start word boundary. Translates to `\b(?=\w)`.
+`\M`                  | End word boundary. Translates to `\b(?<=\w)`.
 
 ### Regex
 
 !!! note
     Regex already natively supports `\p{...}`, `\P{...}`, `\pX`, `\PX`, and `\N{...}`, so Backrefs does not attempt to add this to search patterns.
+
+    `\m` and `\M` are also features already present in Regex.
 
     `\c`, `\l`, `L` and `L` are not used as some of these flags are already taken by Regex itself  These references are just shortcuts for the related POSIX properties in Backrefs.
 
@@ -240,8 +242,6 @@ Back\ References | Description
 `\e`             | Escape character `\x1b`.
 `\Q...\E`        | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
 `\R`             | Generic line breaks. When searching a Unicode string, this will use an atomic group and match `(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)`, and when applied to byte strings, this will match `(?>\r\n|\n|\x0b|\f|\r|\x85)`. Because it uses atomic groups, which Re does not support, this feature is only for Regex.
-`\<`             | Start word boundary. Translates to `\b(?=\w)`.
-`\>`             | End word boundary. Translates to `\b(?<=\w)`.
 
 ## Replace Back References
 

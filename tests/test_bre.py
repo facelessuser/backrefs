@@ -139,21 +139,26 @@ class TestSearchTemplate(unittest.TestCase):
     def test_word_boundary(self):
         """Test word boundary."""
 
-        pattern = bre.compile_search(r'\<test')
+        pattern = bre.compile_search(r'\mtest')
         self.assertEqual(
             pattern.pattern,
             r"\b(?=\w)test"
         )
-        pattern = bre.compile_search(r'test\>')
+        pattern = bre.compile_search(r'test\M')
         self.assertEqual(
             pattern.pattern,
             r"test\b(?<=\w)"
         )
-        pattern = bre.compile_search(r'[\<]test')
-        self.assertEqual(
-            pattern.pattern,
-            r"[\<]test"
-        )
+
+        if PY36_PLUS:
+            with pytest.raises(sre_constants.error):
+                bre.compile_search(r'[\m]test')
+        else:
+            pattern = bre.compile_search(r'[\m]test')
+            self.assertEqual(
+                pattern.pattern,
+                r"[\m]test"
+            )
 
     def test_cache(self):
         """Test cache."""
