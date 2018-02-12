@@ -14,7 +14,7 @@ Feb 11, 2018
 
 ## 3.1.0
 
-Feb 12, 2018
+Feb 11, 2018
 
 - **NEW**: Start and end word boundary back references are now specified with `\m` and `\M` like Regex does.  `\<` and `\>` have been removed from Regex.
 - **FIX**: Escaped `\<` and `\>` are no longer processed as Re is known to escape these in versions less than Python 3.7.
