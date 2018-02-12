@@ -19,6 +19,7 @@ HOME = os.path.dirname(os.path.abspath(__file__))
 MAXUNICODE = sys.maxunicode
 MAXASCII = 0xFF
 NARROW = sys.maxunicode == 0xFFFF
+GROUP_ESCAPES = frozenset([ord(x) for x in '-&[\\]^|~'])
 
 # Compatibility
 PY3 = sys.version_info >= (3, 0) and sys.version_info[0:2] < (4, 0)
@@ -53,9 +54,11 @@ def uchr(i):
 def uniformat(value):
     """Convert a Unicode char."""
 
-    # Escape #^-\]
-    if value in (0x55, 0x5c, 0x5d):
-        c = "\\u%04x\\u%04x" % (0x5c, value)
+    if value in GROUP_ESCAPES:
+        # Escape characters that are (or will be in the future) problematic
+        c = "\\x%02x\\x%02x" % (0x5c, value)
+    elif value <= 0xFF:
+        c = "\\x%02x" % value
     elif value <= 0xFFFF:
         c = "\\u%04x" % value
     else:
@@ -71,8 +74,8 @@ def format_name(text):
 def binaryformat(value):
     """Convert a binary value."""
 
-    # Escape #^-\]
-    if value in (0x55, 0x5c, 0x5d):
+    if value in GROUP_ESCAPES:
+        # Escape characters that are (or will be in the future) problematic
         c = "\\x%02x\\x%02x" % (0x5c, value)
     else:
         c = "\\x%02x" % value
