@@ -428,10 +428,10 @@ class TestSearchTemplate(unittest.TestCase):
         """Test posix in a group for ASCII."""
         if PY3:
             pattern = bre.compile_search(r'Test [[:graph:]]', re.ASCII)
-            pattern2 = bre.compile_search('Test [\u0021-\u007E]', re.ASCII)
+            pattern2 = bre.compile_search('Test [!-\\~]', re.ASCII)
         else:
             pattern = bre.compile_search(r'Test [[:graph:]]')
-            pattern2 = bre.compile_search(r'Test [\u0021-\u007E]')
+            pattern2 = bre.compile_search(r'Test [!-\~]')
         self.assertEqual(pattern.pattern, pattern2.pattern)
 
     def test_not_posix_at_start_group(self):
