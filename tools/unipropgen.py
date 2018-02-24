@@ -985,7 +985,6 @@ def gen_properties(output, ascii_props=False, append=False):
         'gc': os.path.join(output, 'generalcategory.py'),
         'blk': os.path.join(output, 'block.py'),
         'sc': os.path.join(output, 'script.py'),
-        'scx': os.path.join(output, 'scriptextensions.py'),
         'bc': os.path.join(output, 'bidiclass.py'),
         'binary': os.path.join(output, 'binary.py'),
         'posix': os.path.join(output, 'posix.py'),
@@ -1005,6 +1004,9 @@ def gen_properties(output, ascii_props=False, append=False):
         'qc': os.path.join(output, 'quickcheck.py'),
         'alias': os.path.join(output, 'alias.py')
     }
+
+    if PY3:
+        files['scx'] = os.path.join(output, 'scriptextensions.py')
 
     prefix = "ascii" if ascii_props else 'unicode'
 
@@ -1062,10 +1064,16 @@ def gen_properties(output, ascii_props=False, append=False):
 
     # Generate Unicode scripts
     print('Building: Scripts & Script Extensions')
-    gen_scripts(
-        'Scripts.txt', 'ScriptExtensions.txt', 'scripts', 'script_extensions', files['sc'], files['scx'],
-        notexplicit='zzzz', ascii_props=ascii_props, append=append, prefix=prefix
-    )
+    if PY3:
+        gen_scripts(
+            'Scripts.txt', 'ScriptExtensions.txt', 'scripts', 'script_extensions', files['sc'], files['scx'],
+            notexplicit='zzzz', ascii_props=ascii_props, append=append, prefix=prefix
+        )
+    else:
+        gen_scripts(
+            'Scripts.txt', None, 'scripts', None, files['sc'], None,
+            notexplicit='zzzz', ascii_props=ascii_props, append=append, prefix=prefix
+        )
 
     # Generate Unicode bidi classes
     print('Building: Bidi Classes')

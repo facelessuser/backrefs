@@ -57,24 +57,24 @@ class TestUniprops(unittest.TestCase):
 
         if PY2:
             with self.assertRaises(ValueError) as e:
-                uniprops.get_unicode_property('^adlam', 'scx')
+                uniprops.get_unicode_property('kana', 'scx')
 
             self.assertTrue(str(e), 'Invalid Unicode property!')
         else:
-            result = uniprops.get_unicode_property('adlam', 'scx')
-            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['adlam'])
+            result = uniprops.get_unicode_property('kana', 'scx')
+            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['katakana'])
 
     def test_inverse_script_extensions(self):
         """Test inverse `script extensions` Category."""
 
         if PY2:
             with self.assertRaises(ValueError) as e:
-                uniprops.get_unicode_property('^adlam', 'scx')
+                uniprops.get_unicode_property('^kana', 'scx')
 
             self.assertTrue(str(e), 'Invalid Unicode property!')
         else:
-            result = uniprops.get_unicode_property('^adlam', 'scx')
-            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^adlam'])
+            result = uniprops.get_unicode_property('^kana', 'scx')
+            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^katakana'])
 
     def test_bidi(self):
         """Test `bidi class` Category."""
