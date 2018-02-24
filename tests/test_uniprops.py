@@ -5,6 +5,7 @@ import sys
 from backrefs import uniprops
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
+PY2 = (2, 0) <= sys.version_info < (3, 0)
 
 if PY3:
     binary_type = bytes  # noqa
@@ -50,6 +51,30 @@ class TestUniprops(unittest.TestCase):
 
         result = uniprops.get_unicode_property('^latin', 'sc')
         self.assertEqual(result, uniprops.unidata.unicode_scripts['^latin'])
+
+    def test_script_extensions(self):
+        """Test `script extensions` Category."""
+
+        if PY2:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('^adlam', 'scx')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
+        else:
+            result = uniprops.get_unicode_property('adlam', 'scx')
+            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['adlam'])
+
+    def test_inverse_script_extensions(self):
+        """Test inverse `script extensions` Category."""
+
+        if PY2:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('^adlam', 'scx')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
+        else:
+            result = uniprops.get_unicode_property('^adlam', 'scx')
+            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^adlam'])
 
     def test_bidi(self):
         """Test `bidi class` Category."""

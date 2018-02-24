@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0
+
+- **FIX**: Add support for `Script_Extensions` Unicode properties (Python 3 only as Python 2, Unicode 5.2.0 does not define these).
+
 ## 3.1.2
 
 Feb 12, 2018

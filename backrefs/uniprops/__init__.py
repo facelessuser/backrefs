@@ -326,6 +326,20 @@ def get_script_property(value, binary=False):
     return obj[value]
 
 
+def get_script_extension_property(value, binary=False):
+    """Get `SCX` property."""
+
+    obj = unidata.ascii_script_extensions if binary else unidata.unicode_script_extensions
+
+    if value.startswith('^'):
+        negated = value[1:]
+        value = '^' + unidata.unicode_alias['script'].get(negated, negated)
+    else:
+        value = unidata.unicode_alias['script'].get(value, value)
+
+    return obj[value]
+
+
 def get_block_property(value, binary=False):
     """Get `BLK` property."""
 
@@ -370,6 +384,8 @@ def get_unicode_property(value, prop=None, binary=False):
                 return get_gc_property(value, binary)
             elif prop == 'script':
                 return get_script_property(value, binary)
+            elif PY3 and prop == 'scriptextensions':
+                return get_script_extension_property(value, binary)
             elif prop == 'block':
                 return get_block_property(value, binary)
             elif prop == 'binary':
