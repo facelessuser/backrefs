@@ -308,25 +308,37 @@ class TestUniprops(unittest.TestCase):
         """Test `isscript` Category."""
 
         result = uniprops.get_unicode_property('islatin')
-        self.assertEqual(result, uniprops.unidata.unicode_scripts['latin'])
+        self.assertEqual(result, uniprops.unidata.unicode_script_extensions['latin'])
 
     def test_inverse_is_script(self):
         """Test inverse `isscript` Category."""
 
         result = uniprops.get_unicode_property('^islatin')
-        self.assertEqual(result, uniprops.unidata.unicode_scripts['^latin'])
+        self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^latin'])
+
+    def test_is_binary(self):
+        """Test `isbinary` Category."""
+
+        result = uniprops.get_unicode_property('isalphabetic')
+        self.assertEqual(result, uniprops.unidata.unicode_binary['alphabetic'])
+
+    def test_inverse_is_binary(self):
+        """Test inverse `isbinary` Category."""
+
+        result = uniprops.get_unicode_property('^isalphabetic')
+        self.assertEqual(result, uniprops.unidata.unicode_binary['^alphabetic'])
 
     def test_script_simple(self):
         """Test script simple Category."""
 
         result = uniprops.get_unicode_property('latin')
-        self.assertEqual(result, uniprops.unidata.unicode_scripts['latin'])
+        self.assertEqual(result, uniprops.unidata.unicode_script_extensions['latin'])
 
     def test_inverse_script_simple(self):
         """Test inverse script simple Category."""
 
         result = uniprops.get_unicode_property('^latin')
-        self.assertEqual(result, uniprops.unidata.unicode_scripts['^latin'])
+        self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^latin'])
 
     def test_in_block(self):
         """Test `inblock` Category."""
