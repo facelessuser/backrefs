@@ -383,7 +383,10 @@ def get_is_property(value, binary=False):
     if prefix != 'is':
         raise ValueError("Does not start with 'is'!")
 
-    script_obj = unidata.ascii_script_extensions if binary else unidata.unicode_script_extensions
+    if PY3:
+        script_obj = unidata.ascii_script_extensions if binary else unidata.unicode_script_extensions
+    else:
+        script_obj = unidata.ascii_scripts if binary else unidata.unicode_scripts
     bin_obj = unidata.ascii_binary if binary else unidata.unicode_binary
 
     value = negate + unidata.unicode_alias['script'].get(temp, temp)
@@ -487,7 +490,10 @@ def get_unicode_property(value, prop=None, binary=False):
         pass
 
     try:
-        return get_script_extension_property(value, binary)
+        if PY3:
+            return get_script_extension_property(value, binary)
+        else:
+            return get_script_property(value, binary)
     except Exception:
         pass
 
