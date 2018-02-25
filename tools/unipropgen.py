@@ -11,7 +11,7 @@ import codecs
 import os
 import re
 
-__version__ = '3.0.0'
+__version__ = '4.0.0'
 
 UNIVERSION = unicodedata.unidata_version
 UNIVERSION_INFO = tuple([int(x) for x in UNIVERSION.split('.')])
@@ -288,6 +288,105 @@ def gen_ccc(output, ascii_props=False, append=False, prefix=""):
             else:
                 f.write(',\n')
             i += 1
+
+
+def gen_scripts(
+    file_name, file_name_ext, obj_name, obj_ext_name, output, output_ext,
+    field=1, notexplicit=None, ascii_props=False, append=False, prefix=""
+):
+    """Generate generic enum."""
+
+    obj = {}
+    obj2 = {}
+    if PY3:
+        aliases = {}
+        with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'PropertyValueAliases.txt'), 'r') as uf:
+            for line in uf:
+                if line.startswith('sc ;'):
+                    values = line.split(';')
+                    aliases[format_name(values[1].strip())] = format_name(values[2].strip())
+
+        with open(os.path.join(HOME, 'unicodedata', UNIVERSION, file_name_ext), 'r') as uf:
+            for line in uf:
+                if not line.startswith('#'):
+                    data = line.split('#')[0].split(';')
+                    if len(data) < 2:
+                        continue
+                    exts = [aliases[format_name(n)] for n in data[1].strip().split(' ')]
+                    span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
+                    for ext in exts:
+                        if ext not in obj2:
+                            obj2[ext] = []
+                        if span is None:
+                            continue
+
+                        obj2[ext].extend(span)
+
+    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, file_name), 'r') as uf:
+        for line in uf:
+            if not line.startswith('#'):
+                data = line.split('#')[0].split(';')
+                if len(data) < 2:
+                    continue
+                span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
+                name = format_name(data[1])
+                if name not in obj:
+                    obj[name] = []
+                if name not in obj2:
+                    obj2[name] = []
+
+                if span is None:
+                    continue
+
+                obj[name].extend(span)
+                obj2[name].extend(span)
+
+    for name in list(obj.keys()):
+        s = set(obj[name])
+        obj[name] = sorted(s)
+
+    for name in list(obj2.keys()):
+        s = set(obj2[name])
+        obj2[name] = sorted(s)
+
+    if notexplicit:
+        not_explicitly_defined(obj, notexplicit, binary=ascii_props)
+        not_explicitly_defined(obj2, notexplicit, binary=ascii_props)
+
+    # Convert characters values to ranges
+    char2range(obj, binary=ascii_props)
+    char2range(obj2, binary=ascii_props)
+
+    with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
+        if not append:
+            f.write(HEADER)
+        # Write out the unicode properties
+        f.write('%s_%s = {\n' % (prefix, obj_name))
+        count = len(obj) - 1
+        i = 0
+        for k1, v1 in sorted(obj.items()):
+            f.write('    "%s": "%s"' % (k1, v1))
+            if i == count:
+                f.write('\n}\n')
+            else:
+                f.write(',\n')
+            i += 1
+
+    if PY3:
+        with codecs.open(output_ext, 'a' if append else 'w', 'utf-8') as f:
+            if not append:
+                f.write(HEADER)
+            # Write out the unicode properties
+            f.write('%s_%s = {\n' % (prefix, obj_ext_name))
+            count = len(obj2) - 1
+            i = 0
+            for k1, v1 in sorted(obj2.items()):
+                f.write('    "%s": "%s"' % (k1, v1))
+                if i == count:
+                    f.write('\n}\n')
+                else:
+                    f.write(',\n')
+                i += 1
 
 
 def gen_enum(file_name, obj_name, output, field=1, notexplicit=None, ascii_props=False, append=False, prefix=""):
@@ -757,7 +856,8 @@ def gen_alias(enum, binary, output, ascii_props=False, append=False, prefix=""):
         'wordbreak', 'sentencebreak', 'graphemeclusterbreak',
         'joiningtype', 'joininggroup', 'numerictype',
         'numericvalue', 'canonicalcombiningclass', 'age',
-        'nfcquickcheck', 'nfdquickcheck', 'nfkcquickcheck', 'nfkdquickcheck'
+        'nfcquickcheck', 'nfdquickcheck', 'nfkcquickcheck', 'nfkdquickcheck',
+        'scriptextensions'
     )
 
     with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'PropertyAliases.txt'), 'r') as uf:
@@ -807,6 +907,8 @@ def gen_alias(enum, binary, output, ascii_props=False, append=False, prefix=""):
                 gather = original_name in categories
                 current_category = format_name(m.group(2))
                 line_re = re.compile(r'%s\s*;' % m.group(2), re.I)
+                if PY3 and original_name == 'scriptextensions':
+                    alias['_'][current_category] = original_name
             if gather and line_re.match(line):
                 data = [format_name(x) for x in line.split('#')[0].split(';')]
                 if current_category in ('sc', 'blk', 'dt', 'jg', 'sb', 'wb', 'lb', 'gcb', 'nt'):
@@ -903,6 +1005,9 @@ def gen_properties(output, ascii_props=False, append=False):
         'alias': os.path.join(output, 'alias.py')
     }
 
+    if PY3:
+        files['scx'] = os.path.join(output, 'scriptextensions.py')
+
     prefix = "ascii" if ascii_props else 'unicode'
 
     # L& or Lc won't be found in the table,
@@ -916,6 +1021,8 @@ def gen_properties(output, ascii_props=False, append=False):
         'joininggroup', 'numerictype', 'numericvalue',
         'canonicalcombiningclass', 'age'
     ]
+    if PY3:
+        categories.append('scriptextensions')
     if ascii_props:
         print('=========Ascii Tables=========')
     else:
@@ -956,11 +1063,17 @@ def gen_properties(output, ascii_props=False, append=False):
     gen_blocks(files['blk'], ascii_props, append, prefix)
 
     # Generate Unicode scripts
-    print('Building: Scripts')
-    gen_enum(
-        'Scripts.txt', 'scripts', files['sc'], notexplicit='zzzz',
-        ascii_props=ascii_props, append=append, prefix=prefix
-    )
+    print('Building: Scripts & Script Extensions')
+    if PY3:
+        gen_scripts(
+            'Scripts.txt', 'ScriptExtensions.txt', 'scripts', 'script_extensions', files['sc'], files['scx'],
+            notexplicit='zzzz', ascii_props=ascii_props, append=append, prefix=prefix
+        )
+    else:
+        gen_scripts(
+            'Scripts.txt', None, 'scripts', None, files['sc'], None,
+            notexplicit='zzzz', ascii_props=ascii_props, append=append, prefix=prefix
+        )
 
     # Generate Unicode bidi classes
     print('Building: Bidi Classes')

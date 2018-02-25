@@ -16,6 +16,7 @@ Regex
 Regex's
 Sep
 Tox
+boolean
 emoji
 hashable
 namespaced

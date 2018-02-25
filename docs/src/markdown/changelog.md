@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.2.0
+
+- **NEW**: Add support for `Script_Extensions` Unicode properties (Python 3 only as Python 2, Unicode 5.2.0 does not define these). Can be accessed via `\p{scripts_extensions: kana}` or `\p{scx: kana}`.
+- **NEW**: When defining scripts with just their name `\p{Kana}`, use `Script_Extensions` instead of `Scripts`. To get `Scripts` results, you must specify `\p{scripts: kana}` or `\p{sc: scripts}`.
+- **NEW**: Add support for `IsBinary` for binary properties: `\p{IsAlphabetic}` == `\p{Alphabetic: Y}`.
+- **FIX**: Tweaks/improvements to string iteration.
+
 ## 3.1.2
 
 Feb 12, 2018

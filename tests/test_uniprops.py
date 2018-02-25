@@ -5,6 +5,7 @@ import sys
 from backrefs import uniprops
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
+PY2 = (2, 0) <= sys.version_info < (3, 0)
 
 if PY3:
     binary_type = bytes  # noqa
@@ -50,6 +51,30 @@ class TestUniprops(unittest.TestCase):
 
         result = uniprops.get_unicode_property('^latin', 'sc')
         self.assertEqual(result, uniprops.unidata.unicode_scripts['^latin'])
+
+    def test_script_extensions(self):
+        """Test `script extensions` Category."""
+
+        if PY2:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('kana', 'scx')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
+        else:
+            result = uniprops.get_unicode_property('kana', 'scx')
+            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['katakana'])
+
+    def test_inverse_script_extensions(self):
+        """Test inverse `script extensions` Category."""
+
+        if PY2:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('^kana', 'scx')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
+        else:
+            result = uniprops.get_unicode_property('^kana', 'scx')
+            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^katakana'])
 
     def test_bidi(self):
         """Test `bidi class` Category."""
@@ -283,25 +308,49 @@ class TestUniprops(unittest.TestCase):
         """Test `isscript` Category."""
 
         result = uniprops.get_unicode_property('islatin')
-        self.assertEqual(result, uniprops.unidata.unicode_scripts['latin'])
+        if PY3:
+            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['latin'])
+        else:
+            self.assertEqual(result, uniprops.unidata.unicode_scripts['latin'])
 
     def test_inverse_is_script(self):
         """Test inverse `isscript` Category."""
 
         result = uniprops.get_unicode_property('^islatin')
-        self.assertEqual(result, uniprops.unidata.unicode_scripts['^latin'])
+        if PY3:
+            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^latin'])
+        else:
+            self.assertEqual(result, uniprops.unidata.unicode_scripts['^latin'])
+
+    def test_is_binary(self):
+        """Test `isbinary` Category."""
+
+        result = uniprops.get_unicode_property('isalphabetic')
+        self.assertEqual(result, uniprops.unidata.unicode_binary['alphabetic'])
+
+    def test_inverse_is_binary(self):
+        """Test inverse `isbinary` Category."""
+
+        result = uniprops.get_unicode_property('^isalphabetic')
+        self.assertEqual(result, uniprops.unidata.unicode_binary['^alphabetic'])
 
     def test_script_simple(self):
         """Test script simple Category."""
 
         result = uniprops.get_unicode_property('latin')
-        self.assertEqual(result, uniprops.unidata.unicode_scripts['latin'])
+        if PY3:
+            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['latin'])
+        else:
+            self.assertEqual(result, uniprops.unidata.unicode_scripts['latin'])
 
     def test_inverse_script_simple(self):
         """Test inverse script simple Category."""
 
         result = uniprops.get_unicode_property('^latin')
-        self.assertEqual(result, uniprops.unidata.unicode_scripts['^latin'])
+        if PY3:
+            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^latin'])
+        else:
+            self.assertEqual(result, uniprops.unidata.unicode_scripts['^latin'])
 
     def test_in_block(self):
         """Test `inblock` Category."""

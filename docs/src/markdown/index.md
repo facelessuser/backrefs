@@ -6,10 +6,10 @@ Backrefs is a wrapper around Python's built-in [Re][re] and the 3rd party [Regex
 
 It is important to note that Backrefs doesn't alter the regular expression engine that it wraps around, it is essentially a string processor that looks for certain symbols in a regular expression search or replace string, and alters the pattern before sending it to the regular expression engine.
 
-For instance, if we used `\<` in our regular expression, it would be transformed into `\b(?=\w)`.
+For instance, if we used `\m` in our regular expression, it would be transformed into `\b(?=\w)`.
 
 ```pycon3
->>> bre.compile(r'test \<').pattern
+>>> bre.compile(r'test \m').pattern
 re.compile('test \\b(?=\\w)')
 ```
 
@@ -20,7 +20,7 @@ Or if we used a Unicode property, it would be transformed into a character group
 re.compile('test [\ud800\udb7f-\udb80\udbff-\udc00\udfff]')
 ```
 
-The same goes for replace templates, but a bit more involved. Backrefs will basically process replace templates and break them up into literals and groups applying lowercase and and uppercase to the literal pieces. Then on replace, Backrefs will reassemble the final result from the regular expressions match object applying casing as needed to captured groups.
+Replace templates are a little different than searches and require a bit more control to accomplish some of the replace features. Backrefs, like with searches, processes the string before passing it through the regular expression engine. Once Backrefs has parsed and altered the string as needed, it is then passed the regular expression engine to extract string literals and the group mapping (search groups to replace group placeholders). Backrefs will then return a replace object that should be used to apply the replace. The object will handle applying casing (upper or lower) to the returned captured groups, and assemble the desired string output. For these reasons, Backrefs requires you to compile your replaces and use the returned replace object if you want to take advantage of replace features.
 
 ```pycon3
 >>> pattern = bre.compile_search(r'(\p{Letter}+)')
@@ -84,7 +84,7 @@ If you have a one time expand, and don't feel like pre-compiling, you can use Ba
 
 ### Search & Replace Together
 
-If you plan on using both the search and replace features, using `compile_search` and `compile_replace` can be a little awkward. If you wish to use something a bit more familiar, you can use the `compile` function to create a pattern object that mimics Re and Regex's pattern object. Once created, it will work very similar to how Re and Regex works.  It will also auto compile replace patterns for you:
+If you plan on using both the search and replace features, using `compile_search` and `compile_replace` can be a little awkward. If you wish to use something a bit more familiar, you can use the `compile` function to create a pattern object that mimics Re and Regex's pattern object. Once created, it will work very similar to how Re and Regex pattern objects work.  It will also auto compile replace patterns for you:
 
 ```pycon3
 >>> pattern = bre.compile(r'(\p{Letter}+)')
@@ -92,7 +92,7 @@ If you plan on using both the search and replace features, using `compile_search
 'SOMETEXT'
 ```
 
-If needed, you can use the objects `compile` function to pre-compile the replace patterns:
+If needed, you can use the object's `compile` function to pre-compile the replace patterns:
 
 ```pycon3
 >>> pattern = bre.compile(r'(\p{Letter}+)')
@@ -111,9 +111,9 @@ If you want to disable the patterns use of replace back references, you can disa
 
 ### Other Functions
 
-Backrefs exposes most of the usual functions which Backrefs wraps around.  For instance, Backrefs wraps around `purge` so that it can purge its cache along with the regular expression engine's cache.
+Backrefs exposes most of the usual functions which Backrefs is wrapped around.  For instance, Backrefs wraps around `purge` so that it can purge its cache along with the regular expression engine's cache.
 
-Backrefs also wraps around the global matching functions. So if you have a one time `finditer`, `match`, `sub`, `search`, or other match, search, or replace operation, Backrefs provides wrappers for these methods too.  The wrappers will compile the search and replace patterns for you on the fly, but they will also accept and pass pre-compiled patterns through as well.  They should take all the flags and options your chosen regular expression engine normally accepts with the same names and positions.
+Backrefs also wraps around the global matching functions. So if you have a one time `finditer`, `match`, `sub`, `search`, or other operation, Backrefs provides wrappers for these methods too.  The wrappers will compile the search and replace patterns for you on the fly, but they will also accept and pass pre-compiled patterns through as well.  They should take all the flags and options your chosen regular expression engine normally accepts with the same names and positions.
 
 ```pycon3
 >>> bre.sub(r'(\p{Letter}+)', r'\C\1\E', 'sometext')
@@ -137,7 +137,7 @@ In order to escape patterns formulated for Backrefs, you can simply use your reg
 
     1. Backrefs does not use Python's string format directly but mimics the feel for inserting groups into the final output.
     2. Indexing into different captures in Re is limited to `0` or `-1` since Re *only* maintains the last capture.
-    3. Raw string (`#!py3 r"..."`) handling for format replace is a bit different for Backrefs compared to Regex. Regex treats format strings as simply strings instead of as a regular replace template. So while in a regular replace template you can use `\n` to represent a new line, in format strings, you'd have use a literal new line or use a normal string (`#!py3 "..."`) with `\n`. Backrefs will actually process back references and format references.
+    3. Raw string (`#!py3 r"..."`) handling for format replace is a bit different for Backrefs compared to Regex. Regex treats format strings as simply strings instead of as a regular replace template. So while in a regular replace template you can use `\n` to represent a new line, in format strings, you'd have use a literal new line or use a normal string (`#!py3 "..."`) with `\n`. Since Backrefs allows for its own special back references in format strings, it will also process standard string and Unicode string back references as well.
 
 The Regex module offers a feature where you can apply replacements via a format string style.
 
@@ -188,8 +188,14 @@ Or using Backrefs' pattern object:
 >>> pattern = bre.compile(r"(\w+) (\w+)")
 >>> pattern.subf(r"{0} => \C{2} {1}\E", "foo bar")
 'foo bar => BAR FOO'
+```
+
+Pre-compiling a format replace template with Backrefs' pattern object:
+
+```pycon3
 >>> pattern = bre.compile(r"(?P<word1>\w+) (?P<word2>\w+)")
->>> pattern.subf(r"\c{word2} \c{word1}", "foo bar")
+>>> replace = pattern.compile(r"\c{word2} \c{word1}", bre.FORMAT)
+>>> pattern.subf(replace, "foo bar")
 'Bar Foo'
 ```
 
@@ -204,7 +210,7 @@ Backrefs also provides an `expand` variant for format templates called `expandf`
 
 ## Search Back References
 
-Added features available for search patterns. Features are broken up to show what is specifically added for Re and for Regex.
+Each supported regular expression engine's supported search features vary, so features are broken up to show what is specifically added for Re and for Regex.
 
 ### Re
 
@@ -245,12 +251,12 @@ Back\ References | Description
 
 ## Replace Back References
 
-Added features available for replace patterns. The references below apply to both Re **and** Regex and are essentially non-specific to the regular expression engine being used.  Casing is applied to the both the literal text and the replacement groups within the replace template.  In most cases you'd only need to wrap the groups, but it may be useful to apply casing to the literal portions if you are dynamically assembling replacement patterns.
+The replace back references below apply to both Re **and** Regex and are essentially non-specific to the regular expression engine being used.  Casing is applied to both the literal text and the replacement groups within the replace template.  In most cases you'd only need to wrap the groups, but it may be useful to apply casing to the literal portions if you are dynamically assembling replacement patterns.
 
 !!! info "`LOCALE` and Casing"
     `LOCALE` is not considered when applying character casing. Unicode casing is applied in Unicode strings and ASCII casing is applied to byte strings.
 
-Back&nbsp;References | Description
+Back\ References     | Description
 ---------------------|-------------
 `\c`                 | Uppercase the next character.
 `\l`                 | Lowercase the next character.
@@ -270,41 +276,72 @@ Back&nbsp;References | Description
 
 ## Unicode Properties
 
-!!! note "Note"
-    Unicode Properties are only added to Re as Regex already has **full** Unicode properties built in.
+A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own implementation of Unicode properties.
 
-There are quite a few properties that are also supported and an exhaustive list is not currently provided. This documentation will only briefly touch on [General Category](#general-category), [Block](#blocks), [Script](#script), and [Binary](#binary) properties.
+Supported\ Properties       | Aliases
+--------------------------- | -------
+`Age`                       | &nbsp;
+`Bidi_class`                | `bc`
+`Binary`                    | &nbsp;
+`Block`                     | `blk`
+`Canonical_Combining_Class` | `ccc`
+`Decomposition_Type`        | `dt`
+`East_Asian_Width`          | `ea`
+`General_Category`          | `gc`
+`Grapheme_Cluster_Break`    | `gcb`
+`Hangul_Syllable_Type`      | `hst`
+`Joining_Group`             | `jg`
+`Joining_Type`              | `jt`
+`Line_Break`                | `lb`
+`NFC_Quick_Check`           | `nfcqc`
+`NFD_Quick_Check`           | `nfdqc`
+`NFKC_Quick_Check`          | `nfkcqc`
+`NFKD_Quick_Check`          | `nfkdqc`
+`Numeric_Type`              | `nt`
+`Numeric_Value`             | `nv`
+`Script`                    | `sc`
+`Script_Extensions`         | `scx`
+`Sentence_Break`            | `sb`
+`Word_Break`                | `wb`
 
-Unicode properties are specific to search patterns and can be used to specify a request to match all the characters in a specific Unicode property. They can be specified with the format: `\p{property=value}`, `\p{property:value}`, `\p{value}`, `\p{^property=value}`, `\p{^value}`. Unicode properties can be used in byte strings, but the patterns will be restricted to the range `\x00-\xff`.
+!!! note
+    The Binary property is not actually a property, but a group of different properties with binary characteristics.
 
-The inverse of properties can also be used to specify everything not in a Unicode property: `\P{value}` or `\p{^value}`.
+Exhaustive documentation on all these properties and their values is not currently provided. In general, we'll cover the syntax rules, and [special exceptions](#special-syntax-exceptions) to those rules for specific properties. Though we will outline all the values for General Category, we will not outline all of the valid values for the other properties. You can look at [Perl's Unicode property documentation][perl-uniprops] to get an idea of what values are appropriate for a given property, but keep in mind, syntax may vary from Perl's syntax.
 
-Unicode properties may only have one property specified between the curly braces.  If you want to use multiple properties, you can place them in a character class: `[\p{UnicodeProperty}\p{OtherUnicodeProperty}]`.
+Unicode properties are specific to search patterns and can be used to specify a request to match all the characters in a specific Unicode property. Unicode properties can be used in byte strings, but the patterns will be restricted to the range `\x00-\xff`.
 
-When specifying a property, the value matching is case insensitive and characters like `[ -_]` will be stripped out.  So the following are all equivalent: `\p{Uppercase_Letter}`, `\p{Uppercase-letter}`, `\p{UPPERCASELETTER}`, `\p{upper case letter}`.
+If you are using a narrow python build, your max Unicode value will be `\uffff`.  Unicode blocks above that limit will not be available.  Also Unicode values above the limit will not be available in character classes either. If you are using a wide build, you should have access to all Unicode values.
 
-When evaluating a property in the form `\p{value}`, they are evaluated in this order:
+### Syntax
+
+Unicode properties can be specified with the format: `\p{property=value}`, `\p{property:value}`. You can also do inverse properties by using the `^` character (`\p{^property=value}`) or by using a capital `P` (`\P{property=value}`. `\P{property:value}`).
+
+Unicode properties may only have one property specified between the curly braces.  If you want to use multiple properties to capture a singe character, create a character class: `[\p{UnicodeProperty}\p{OtherUnicodeProperty}]`.
+
+When specifying a property, the property and value matching is case insensitive and characters like `[ -_]` will be stripped out.  So the following are all equivalent: `\p{Uppercase_Letter}`, `\p{Uppercase-letter}`, `\p{UPPERCASELETTER}`, `\p{upper case letter}`.
+
+There are a number of binary properties. In general, binary properties are specified by stating the binary property and a boolean value. True values can be `Yes`, `Y`, `True`, or `T`. False values can be `No`, `N`, `False`, or `F`. For example, to specify characters that are "alphabetic", we can use `\p{Alphabetic: Y}`. To specify characters that are **not** "alphabetic": `\p{Alphabetic: N}`.
+
+### Special Syntax Exceptions
+
+General Category, Script, Blocks, and Binary all can be specified by their value alone: `\p{value}`, but they will be evaluated in the following order to resolve name conflicts as some the same value that is used in Script may be used in Blocks etc.
 
 1. General Category
 2. Script
 3. Blocks
 4. Binary
-5. Others...
 
-All other properties are namespaced.  Example: `\p{Bidi_Class: White_Space}`.
+Script and Binary properties can also be defined in the format `IsValue`.  For instance, if we wanted to match characters in the `Latin` script, we could use the syntax `\p{IsLatin}`, which would be the same as `\p{Latin}` or `\p{scx: Latin}`.  For Binary properties, `\p{IsAlphabetic}` is the same as `\p{Alphabetic: Y}` or `\p{Alphabetic}`.
 
-When installed, the Unicode version that comes with the Python it is installed under will be used to generate all the Unicode tables.  For instance, Python 2.7 is currently using Unicode 5.2.0.  And Python 3.5 is using 8.0.0.
+!!! note
+    If you use the form `\p{Latin}` or `\p{IsLatin}` for Script, you will get `Scripts` on Python 2 and `Scripts_Extensions` on Python 3. This is because Python 2 uses Unicode version 5.2.0 which does not define `Scripts_Extensions`.
 
-To learn more about Unicode properties you can read [Perl's documentation](https://perldoc.perl.org/perluniprops.html), but keep in mind that not every category, block, etc. may be implemented.
+Block properties have a similar short form as Script and Binary properties.  For Blocks you can use `InValue` to specify a block. If we wanted to match characters in the `Basic_Latin` block, we could use the syntax `\p{InBasic_Latin}`. This would be the same as `\p{Block: Basic_Latin}` or `\p{Basic_Latin}`.
 
-!!! caution "Narrow Python Builds"
-    If you are using a narrow python build, your max Unicode value will be `\uffff`.  Unicode blocks above that limit will not be available.  Also Unicode values above the limit will not be available in character classes either.
+Lastly, you can specify general category properties in the form `\pX` where `X` is the single letter terse property form. In this form, you can only use the single character values. So you could specify `Letter`, whose terse form is `L` with `\pL`, but cannot specify `Cased_Letter` which has a terse form of `Lc`.
 
-    If you are using a wide build, you should have access to all Unicode values. If you are on a narrow build and need full Unicode ranges, you should consider using the Regex module.
-
-### General Category
-
-General categories can be specified in one of three ways: `\p{gc: value}`, `\p{General_Category: value}`, `\p{value}` etc.  Again, case is not important.  See the table below to see all the Unicode category properties that can be used.
+See the table below to see all the Unicode General Category values and their terse forms.
 
 Verbose\ Property\ Form            | Terse\ Property\ Form
 ---------------------------------- | ------------------------------
@@ -346,18 +383,6 @@ Verbose\ Property\ Form            | Terse\ Property\ Form
  `Space_Separator`                 | `Zs`
  `Line_Separator`                  | `Zl`
  `Paragraph_Separator`             | `Z`
-
-### Blocks
-
-There are a number of Unicode blocks and also aliases for blocks (they won't be listed here), but they can be specified in two ways: `\p{Block: Basic_Latin}` or `\p{InBasic_Latin}`.
-
-### Scripts
-
-There are a number of Unicode scripts and also aliases for scripts (they won't be listed here), but they can be specified in two ways: `\p{Script: Latin}` or `\p{IsLatin}`.
-
-### Binary
-
-There are a number of binary properties and even aliases for some of the binary properties.  Comprehensive lists are available on the web, but they are specified in the following way: `\p{Alphabetic}`.  Normal just specifying inverse via `\P{value}` or `\p{^value}` should be enough, but for completeness the form `\p{Alphabetic: Y}` and `\p{Alphabetic: N}` along with all the variants (Yes|No|T|F|True|False).
 
 ### POSIX Style Properties
 
