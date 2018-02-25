@@ -190,7 +190,7 @@ Or using Backrefs' pattern object:
 'foo bar => BAR FOO'
 ```
 
-Pre-compiling a format replace template with Backref's pattern object:
+Pre-compiling a format replace template with Backrefs' pattern object:
 
 ```pycon3
 >>> pattern = bre.compile(r"(?P<word1>\w+) (?P<word2>\w+)")
