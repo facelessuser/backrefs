@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.1
+
+Feb 26, 2018
+
+- **FIX**: `Bidi_Paired_Bracket_type` property's `None` value should be equivalent to all characters that are not `open` or `close` characters.
+
 ## 3.2.0
 
 Feb 25, 2018
