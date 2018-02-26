@@ -682,7 +682,7 @@ def gen_bidi(output, ascii_props=False, append=False, prefix=""):
 def gen_bidi_paired_bracket_type(output, ascii_props=False, append=False, prefix=''):
     """Generate bide paired bracket type properties."""
 
-    bpt_class = {'n': []}
+    bpt_class = {}
     max_range = MAXASCII if ascii_props else MAXUNICODE
     with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'BidiBrackets.txt'), 'r') as uf:
         for line in uf:
@@ -703,6 +703,8 @@ def gen_bidi_paired_bracket_type(output, ascii_props=False, append=False, prefix
     for name in list(bpt_class.keys()):
         s = set(bpt_class[name])
         bpt_class[name] = sorted(s)
+
+    not_explicitly_defined(bpt_class, 'n', binary=ascii_props)
 
     # Convert characters values to ranges
     char2range(bpt_class, binary=ascii_props)
