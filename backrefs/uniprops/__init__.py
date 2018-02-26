@@ -368,6 +368,20 @@ def get_bidi_property(value, binary=False):
     return obj[value]
 
 
+def get_bidi_paired_bracket_type_property(value, binary=False):
+    """Get `BPT` property."""
+
+    obj = unidata.ascii_bidi_paired_bracket_type if binary else unidata.unicode_bidi_paired_bracket_type
+
+    if value.startswith('^'):
+        negated = value[1:]
+        value = '^' + unidata.unicode_alias['bidipairedbrackettype'].get(negated, negated)
+    else:
+        value = unidata.unicode_alias['bidipairedbrackettype'].get(value, value)
+
+    return obj[value]
+
+
 def get_is_property(value, binary=False):
     """Get shortcut for `SC` or `Binary` property."""
 
@@ -445,6 +459,8 @@ def get_unicode_property(value, prop=None, binary=False):
                 return get_binary_property(value, binary)
             elif prop == 'bidiclass':
                 return get_bidi_property(value, binary)
+            elif prop == 'bidipairedbrackettype':
+                return get_bidi_paired_bracket_type_property(value, binary)
             elif prop == 'age':
                 return get_age_property(value, binary)
             elif prop == 'eastasianwidth':

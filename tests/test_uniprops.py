@@ -88,6 +88,18 @@ class TestUniprops(unittest.TestCase):
         result = uniprops.get_unicode_property('^en', 'bc')
         self.assertEqual(result, uniprops.unidata.unicode_bidi_classes['^en'])
 
+    def test_bidi_paired_bracket_type(self):
+        """Test `bidi paired bracket type` Category."""
+
+        result = uniprops.get_unicode_property('o', 'bpt')
+        self.assertEqual(result, uniprops.unidata.unicode_bidi_paired_bracket_type['o'])
+
+    def test_inverse_bidi_paired_bracket_type(self):
+        """Test inverse `bidi paired bracket type` Category."""
+
+        result = uniprops.get_unicode_property('^o', 'bpt')
+        self.assertEqual(result, uniprops.unidata.unicode_bidi_paired_bracket_type['^o'])
+
     def test_decompostion(self):
         """Test `decomposition type` Category."""
 

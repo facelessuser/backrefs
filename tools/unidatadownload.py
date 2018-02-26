@@ -7,6 +7,7 @@ import zipfile
 __version__ = '2.0.0'
 
 PY3 = sys.version_info >= (3, 0) and sys.version_info[0:2] < (4, 0)
+PY34 = sys.version_info >= (3, 4)
 
 if PY3:
     from urllib.request import urlopen
@@ -74,6 +75,8 @@ def download_unicodedata(version, output=HOME, no_zip=False):
 
     if PY3:
         files.append('ScriptExtensions.txt')
+    if PY34:
+        files.append('BidiBrackets.txt')
 
     http_url = 'http://www.unicode.org/Public/%s/ucd/' % version
     ftp_url = 'ftp://ftp.unicode.org/Public/%s/ucd/' % version
