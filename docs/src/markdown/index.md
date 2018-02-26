@@ -276,12 +276,13 @@ Back\ References     | Description
 
 ## Unicode Properties
 
-A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own implementation of Unicode properties.
+A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own implementation of Unicode properties. Some properties may not be available on certain Python versions due the Unicode build.
 
 Supported\ Properties       | Aliases
 --------------------------- | -------
 `Age`                       | &nbsp;
-`Bidi_class`                | `bc`
+`Bidi_Class`                | `bc`
+`Bidi_Paired_Bracket_Type`  | `bpt`
 `Binary`                    | &nbsp;
 `Block`                     | `blk`
 `Canonical_Combining_Class` | `ccc`

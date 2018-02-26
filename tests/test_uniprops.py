@@ -5,6 +5,7 @@ import sys
 from backrefs import uniprops
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
+PY34 = (3, 4) <= sys.version_info
 PY2 = (2, 0) <= sys.version_info < (3, 0)
 
 if PY3:
@@ -87,6 +88,30 @@ class TestUniprops(unittest.TestCase):
 
         result = uniprops.get_unicode_property('^en', 'bc')
         self.assertEqual(result, uniprops.unidata.unicode_bidi_classes['^en'])
+
+    def test_bidi_paired_bracket_type(self):
+        """Test `bidi paired bracket type` Category."""
+
+        if PY34:
+            result = uniprops.get_unicode_property('o', 'bpt')
+            self.assertEqual(result, uniprops.unidata.unicode_bidi_paired_bracket_type['o'])
+        else:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('o', 'bpt')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
+
+    def test_inverse_bidi_paired_bracket_type(self):
+        """Test inverse `bidi paired bracket type` Category."""
+
+        if PY34:
+            result = uniprops.get_unicode_property('^o', 'bpt')
+            self.assertEqual(result, uniprops.unidata.unicode_bidi_paired_bracket_type['^o'])
+        else:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('^o', 'bpt')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
 
     def test_decompostion(self):
         """Test `decomposition type` Category."""
