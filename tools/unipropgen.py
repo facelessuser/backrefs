@@ -1022,7 +1022,6 @@ def gen_properties(output, ascii_props=False, append=False):
         'blk': os.path.join(output, 'block.py'),
         'sc': os.path.join(output, 'script.py'),
         'bc': os.path.join(output, 'bidiclass.py'),
-        'bpt': os.path.join(output, 'bidipariedbrackettype.py'),
         'binary': os.path.join(output, 'binary.py'),
         'posix': os.path.join(output, 'posix.py'),
         'age': os.path.join(output, 'age.py'),
@@ -1044,6 +1043,8 @@ def gen_properties(output, ascii_props=False, append=False):
 
     if PY3:
         files['scx'] = os.path.join(output, 'scriptextensions.py')
+    if PY34:
+        files['bpt'] = os.path.join(output, 'bidipairedbrackettype.py')
 
     prefix = "ascii" if ascii_props else 'unicode'
 
