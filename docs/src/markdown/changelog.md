@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.3.0
+
+- **NEW**: Add support for `Indic_Positional_Category`\\`Indic_Matra_Category` and `Indic_Syllabic_Category` properties.
+
 ## 3.2.1
 
 Feb 26, 2018
