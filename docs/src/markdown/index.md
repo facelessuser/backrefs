@@ -276,7 +276,11 @@ Back\ References     | Description
 
 ## Unicode Properties
 
-A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own implementation of Unicode properties. Some properties may not be available on certain Python versions due the Unicode build.
+A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own implementation of Unicode properties. Some properties may not be available on certain Python versions due the included Unicode build.
+
+It is important to note that Backrefs handles Unicode properties by transforming them to character classes with all the associated characters: `\p{Cs}` --> `[\ud800\udb7f-\udb80\udbff-\udc00\udfff]`.  Because of this, Backrefs can create really large regular expressions that the underlying engine must walk through.  In short, Re with Backrefs will never be as efficient or fast as using Regex's Unicode properties, but it is very useful when you need or want to use Re.
+
+Also, keep in mind that there are most likely some differences between Regex's Unicode Properties and Backrefs' Unicode properties. One notable difference is Regex does not currently implement `script_extensions` while Backrefs' does and uses them as the default when specifying them in the form `\p{IsScriptValue}`  or `\p{ScriptValue}` just like Perl does.  See [Special Syntax Exceptions](#special-syntax-exceptions) for more info.
 
 Supported\ Properties                       | Aliases
 ------------------------------------------- | -------
@@ -332,7 +336,7 @@ There are a number of binary properties. In general, binary properties are speci
 General Category, Script, Blocks, and Binary all can be specified by their value alone: `\p{value}`, but they will be evaluated in the following order to resolve name conflicts as some the same value that is used in Script may be used in Blocks etc.
 
 1. General Category
-2. Script
+2. Script (with Script Extensions on Python 3+)
 3. Blocks
 4. Binary
 
