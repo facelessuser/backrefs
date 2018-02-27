@@ -8,6 +8,7 @@ __version__ = '2.0.0'
 
 PY3 = sys.version_info >= (3, 0) and sys.version_info[0:2] < (4, 0)
 PY34 = sys.version_info >= (3, 4)
+PY35 = sys.version_info >= (3, 5)
 
 if PY3:
     from urllib.request import urlopen
@@ -75,6 +76,12 @@ def download_unicodedata(version, output=HOME, no_zip=False):
 
     if PY3:
         files.append('ScriptExtensions.txt')
+        if PY35:
+            files.append('IndicPositionalCategory.txt')
+        else:
+            files.append('IndicMatraCategory.txt')
+        files.append('IndicSyllabicCategory.txt')
+
     if PY34:
         files.append('BidiBrackets.txt')
 

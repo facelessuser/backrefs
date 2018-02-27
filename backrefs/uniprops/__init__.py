@@ -10,6 +10,7 @@ else:
     UNICODE_RANGE = '\u0000-\U0010ffff'
 
 PY3 = sys.version_info >= (3, 0) and sys.version_info[0:2] < (4, 0)
+PY35 = sys.version_info >= (3, 5)
 if PY3:
     binary_type = bytes  # noqa
 else:
@@ -168,6 +169,39 @@ def get_hangul_syllable_type_property(value, binary=False):
         value = '^' + unidata.unicode_alias['hangulsyllabletype'].get(negated, negated)
     else:
         value = unidata.unicode_alias['hangulsyllabletype'].get(value, value)
+
+    return obj[value]
+
+
+def get_indic_positional_category_property(value, binary=False):
+    """Get `INDIC POSITIONAL/MATRA CATEGORY` property."""
+
+    if PY35:
+        obj = unidata.ascii_indic_positional_category if binary else unidata.unicode_indic_positional_category
+        alias_key = 'indicpositionalcategory'
+    else:
+        obj = unidata.ascii_indic_matra_category if binary else unidata.unicode_indic_matra_category
+        alias_key = 'indicmatracategory'
+
+    if value.startswith('^'):
+        negated = value[1:]
+        value = '^' + unidata.unicode_alias[alias_key].get(negated, negated)
+    else:
+        value = unidata.unicode_alias[alias_key].get(value, value)
+
+    return obj[value]
+
+
+def get_indic_syllabic_category_property(value, binary=False):
+    """Get `INDIC SYLLABIC CATEGORY` property."""
+
+    obj = unidata.ascii_indic_syllabic_category if binary else unidata.unicode_indic_syllabic_category
+
+    if value.startswith('^'):
+        negated = value[1:]
+        value = '^' + unidata.unicode_alias['indicsyllabiccategory'].get(negated, negated)
+    else:
+        value = unidata.unicode_alias['indicsyllabiccategory'].get(value, value)
 
     return obj[value]
 
@@ -465,6 +499,12 @@ def get_unicode_property(value, prop=None, binary=False):
                 return get_age_property(value, binary)
             elif prop == 'eastasianwidth':
                 return get_east_asian_width_property(value, binary)
+            elif PY35 and prop == 'indicpositionalcategory':
+                return get_indic_positional_category_property(value, binary)
+            elif PY3 and not PY35 and prop == 'indicmatracategory':
+                return get_indic_positional_category_property(value, binary)
+            elif PY3 and prop == 'indicsyllabiccategory':
+                return get_indic_syllabic_category_property(value, binary)
             elif prop == 'hangulsyllabletype':
                 return get_hangul_syllable_type_property(value, binary)
             elif prop == 'decompositiontype':

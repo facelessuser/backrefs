@@ -278,32 +278,35 @@ Back\ References     | Description
 
 A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own implementation of Unicode properties. Some properties may not be available on certain Python versions due the Unicode build.
 
-Supported\ Properties       | Aliases
---------------------------- | -------
-`Age`                       | &nbsp;
-`Bidi_Class`                | `bc`
-`Bidi_Paired_Bracket_Type`  | `bpt`
-`Binary`                    | &nbsp;
-`Block`                     | `blk`
-`Canonical_Combining_Class` | `ccc`
-`Decomposition_Type`        | `dt`
-`East_Asian_Width`          | `ea`
-`General_Category`          | `gc`
-`Grapheme_Cluster_Break`    | `gcb`
-`Hangul_Syllable_Type`      | `hst`
-`Joining_Group`             | `jg`
-`Joining_Type`              | `jt`
-`Line_Break`                | `lb`
-`NFC_Quick_Check`           | `nfcqc`
-`NFD_Quick_Check`           | `nfdqc`
-`NFKC_Quick_Check`          | `nfkcqc`
-`NFKD_Quick_Check`          | `nfkdqc`
-`Numeric_Type`              | `nt`
-`Numeric_Value`             | `nv`
-`Script`                    | `sc`
-`Script_Extensions`         | `scx`
-`Sentence_Break`            | `sb`
-`Word_Break`                | `wb`
+Supported\ Properties                       | Aliases
+------------------------------------------- | -------
+`Age`                                       | &nbsp;
+`Bidi_Class`                                | `bc`
+`Bidi_Paired_Bracket_Type`\ (Python\ 3+)    | `bpt`
+`Binary`                                    | &nbsp;
+`Block`                                     | `blk`
+`Canonical_Combining_Class`                 | `ccc`
+`Decomposition_Type`                        | `dt`
+`East_Asian_Width`                          | `ea`
+`General_Category`                          | `gc`
+`Grapheme_Cluster_Break`                    | `gcb`
+`Hangul_Syllable_Type`                      | `hst`
+`Indic_Positional_Category`\ (Python\ 3.5+) | `inpc`
+`Indic_Matra_Category`\ (Python\ ==\ 3.4)   | `inmc`
+`Indic_Syllabic_Category`\ (Python\ 3+)     | `insc`
+`Joining_Group`                             | `jg`
+`Joining_Type`                              | `jt`
+`Line_Break`                                | `lb`
+`NFC_Quick_Check`                           | `nfcqc`
+`NFD_Quick_Check`                           | `nfdqc`
+`NFKC_Quick_Check`                          | `nfkcqc`
+`NFKD_Quick_Check`                          | `nfkdqc`
+`Numeric_Type`                              | `nt`
+`Numeric_Value`                             | `nv`
+`Script`                                    | `sc`
+`Script_Extensions`\ (Python\ 3+)           | `scx`
+`Sentence_Break`                            | `sb`
+`Word_Break`                                | `wb`
 
 !!! note
     The Binary property is not actually a property, but a group of different properties with binary characteristics.

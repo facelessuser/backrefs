@@ -6,6 +6,7 @@ from backrefs import uniprops
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY34 = (3, 4) <= sys.version_info
+PY35 = (3, 5) <= sys.version_info
 PY2 = (2, 0) <= sys.version_info < (3, 0)
 
 if PY3:
@@ -148,6 +149,62 @@ class TestUniprops(unittest.TestCase):
 
         result = uniprops.get_unicode_property('^f', 'ea')
         self.assertEqual(result, uniprops.unidata.unicode_east_asian_width['^f'])
+
+    def test_indicpositionalcategory(self):
+        """Test `indic positional/matra category` Category."""
+
+        if PY3:
+            if PY35:
+                result = uniprops.get_unicode_property('top', 'inpc')
+                self.assertEqual(result, uniprops.unidata.unicode_indic_positional_category['top'])
+            else:
+                result = uniprops.get_unicode_property('top', 'inmc')
+                self.assertEqual(result, uniprops.unidata.unicode_indic_matra_category['top'])
+        else:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('top', 'inpc')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
+
+    def test_inverse_indicpositionalcategory(self):
+        """Test inverse `indic positional/matra category` Category."""
+
+        if PY3:
+            if PY35:
+                result = uniprops.get_unicode_property('^top', 'inpc')
+                self.assertEqual(result, uniprops.unidata.unicode_indic_positional_category['^top'])
+            else:
+                result = uniprops.get_unicode_property('^top', 'inmc')
+                self.assertEqual(result, uniprops.unidata.unicode_indic_matra_category['^top'])
+        else:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('^top', 'inpc')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
+
+    def test_indicsylabiccategory(self):
+        """Test `indic syllabic category` Category."""
+
+        if PY3:
+            result = uniprops.get_unicode_property('bindu', 'insc')
+            self.assertEqual(result, uniprops.unidata.unicode_indic_syllabic_category['bindu'])
+        else:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('bindu', 'insc')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
+
+    def test_inverse_indicsyllabiccategory(self):
+        """Test inverse `indic syllabic category` Category."""
+
+        if PY3:
+            result = uniprops.get_unicode_property('^bindu', 'insc')
+            self.assertEqual(result, uniprops.unidata.unicode_indic_syllabic_category['^bindu'])
+        else:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('^bindu', 'insc')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
 
     def test_hangulsyllabletype(self):
         """Test `hangul syllable type` Category."""
