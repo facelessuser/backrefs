@@ -11,7 +11,7 @@ import codecs
 import os
 import re
 
-__version__ = '4.0.0'
+__version__ = '4.2.0'
 
 UNIVERSION = unicodedata.unidata_version
 UNIVERSION_INFO = tuple([int(x) for x in UNIVERSION.split('.')])
@@ -25,6 +25,7 @@ GROUP_ESCAPES = frozenset([ord(x) for x in '-&[\\]^|~'])
 PY3 = sys.version_info >= (3, 0) and sys.version_info[0:2] < (4, 0)
 PY34 = sys.version_info >= (3, 4)
 PY35 = sys.version_info >= (3, 5)
+PY37 = sys.version_info >= (3, 7)
 
 if NARROW:
     UNICODE_RANGE = (0x0000, 0xFFFF)
@@ -245,7 +246,7 @@ def gen_blocks(output, ascii_props=False, append=False, prefix=""):
 
 
 def gen_ccc(output, ascii_props=False, append=False, prefix=""):
-    """Generate canonical combining class."""
+    """Generate `canonical combining class` property."""
 
     obj = {}
     with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedCombiningClass.txt'), 'r') as uf:
@@ -297,7 +298,7 @@ def gen_scripts(
     file_name, file_name_ext, obj_name, obj_ext_name, output, output_ext,
     field=1, notexplicit=None, ascii_props=False, append=False, prefix=""
 ):
-    """Generate generic enum."""
+    """Generate `script` property."""
 
     obj = {}
     obj2 = {}
@@ -439,7 +440,7 @@ def gen_enum(file_name, obj_name, output, field=1, notexplicit=None, ascii_props
 
 
 def gen_age(output, ascii_props=False, append=False, prefix=""):
-    """Generate Age."""
+    """Generate `age` property."""
 
     obj = {}
     all_chars = ALL_ASCII if ascii_props else ALL_CHARS
@@ -489,7 +490,7 @@ def gen_age(output, ascii_props=False, append=False, prefix=""):
 
 
 def gen_nf_quick_check(output, ascii_props=False, append=False, prefix=""):
-    """Generate binary properties."""
+    """Generate quick check properties."""
 
     categories = []
     nf = {}
@@ -638,7 +639,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix=""):
 
 
 def gen_bidi(output, ascii_props=False, append=False, prefix=""):
-    """Generate bidi class properties."""
+    """Generate `bidi class` property."""
 
     bidi_class = {}
     max_range = MAXASCII if ascii_props else MAXUNICODE
@@ -673,141 +674,6 @@ def gen_bidi(output, ascii_props=False, append=False, prefix=""):
         count = len(bidi_class) - 1
         i = 0
         for k1, v1 in sorted(bidi_class.items()):
-            f.write('    "%s": "%s"' % (k1, v1))
-            if i == count:
-                f.write('\n}\n')
-            else:
-                f.write(',\n')
-            i += 1
-
-
-def gen_bidi_paired_bracket_type(output, ascii_props=False, append=False, prefix=''):
-    """Generate bidi paired bracket type properties."""
-
-    bpt_class = {}
-    max_range = MAXASCII if ascii_props else MAXUNICODE
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'BidiBrackets.txt'), 'r') as uf:
-        for line in uf:
-            if not line.startswith('#'):
-                data = line.split('#')[0].strip().split(';')
-                if len(data) == 3:
-                    value = int(data[0].strip(), 16)
-                    bracket_type = data[2].strip()
-
-                    if bracket_type not in bpt_class:
-                        bpt_class[bracket_type] = []
-
-                    if value > max_range:
-                        continue
-
-                    bpt_class[bracket_type].append(value)
-
-    for name in list(bpt_class.keys()):
-        s = set(bpt_class[name])
-        bpt_class[name] = sorted(s)
-
-    not_explicitly_defined(bpt_class, 'n', binary=ascii_props)
-
-    # Convert characters values to ranges
-    char2range(bpt_class, binary=ascii_props)
-
-    with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
-        if not append:
-            f.write(HEADER)
-        f.write('%s_bidi_paired_bracket_type = {\n' % prefix)
-        count = len(bpt_class) - 1
-        i = 0
-        for k1, v1 in sorted(bpt_class.items()):
-            f.write('    "%s": "%s"' % (k1, v1))
-            if i == count:
-                f.write('\n}\n')
-            else:
-                f.write(',\n')
-            i += 1
-
-
-def gen_indic_pos(output, ascii_props=False, append=False, prefix='', matra=False):
-    """Generate `indic positional category` properties."""
-
-    obj = {}
-    input_file = 'IndicMatraCategory.txt' if matra else 'IndicPositionalCategory.txt'
-    obj_name = '_indic_matra_category' if matra else '_indic_positional_category'
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, input_file), 'r') as uf:
-        for line in uf:
-            if not line.startswith('#'):
-                data = line.split('#')[0].strip().split(';')
-                if len(data) == 2:
-                    span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
-                    indic_type = format_name(data[1].strip())
-
-                    if indic_type not in obj:
-                        obj[indic_type] = []
-
-                    if span is None:
-                        continue
-
-                    obj[indic_type].extend(span)
-
-    for name in list(obj.keys()):
-        s = set(obj[name])
-        obj[name] = sorted(s)
-
-    not_explicitly_defined(obj, 'na', binary=ascii_props)
-
-    # Convert characters values to ranges
-    char2range(obj, binary=ascii_props)
-
-    with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
-        if not append:
-            f.write(HEADER)
-        f.write('%s%s = {\n' % (prefix, obj_name))
-        count = len(obj) - 1
-        i = 0
-        for k1, v1 in sorted(obj.items()):
-            f.write('    "%s": "%s"' % (k1, v1))
-            if i == count:
-                f.write('\n}\n')
-            else:
-                f.write(',\n')
-            i += 1
-
-
-def gen_indic_syl(output, ascii_props=False, append=False, prefix=''):
-    """Generate `indic syllabic category` properties."""
-
-    obj = {}
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'IndicSyllabicCategory.txt'), 'r') as uf:
-        for line in uf:
-            if not line.startswith('#'):
-                data = line.split('#')[0].strip().split(';')
-                if len(data) == 2:
-                    span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
-                    indic_type = format_name(data[1].strip())
-
-                    if indic_type not in obj:
-                        obj[indic_type] = []
-
-                    if span is None:
-                        continue
-
-                    obj[indic_type].extend(span)
-
-    for name in list(obj.keys()):
-        s = set(obj[name])
-        obj[name] = sorted(s)
-
-    not_explicitly_defined(obj, 'other', binary=ascii_props)
-
-    # Convert characters values to ranges
-    char2range(obj, binary=ascii_props)
-
-    with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
-        if not append:
-            f.write(HEADER)
-        f.write('%s_indic_syllabic_category = {\n' % prefix)
-        count = len(obj) - 1
-        i = 0
-        for k1, v1 in sorted(obj.items()):
             f.write('    "%s": "%s"' % (k1, v1))
             if i == count:
                 f.write('\n}\n')
@@ -1144,6 +1010,8 @@ def gen_properties(output, ascii_props=False, append=False):
             files['inpc'] = os.path.join(output, 'indicpositionalcategory.py')
         else:
             files['inmc'] = os.path.join(output, 'indicmatracategory.py')
+        if PY37:
+            files['vo'] = os.path.join(output, 'verticalorientation.py')
 
     prefix = "ascii" if ascii_props else 'unicode'
 
@@ -1167,6 +1035,8 @@ def gen_properties(output, ascii_props=False, append=False):
             categories.append('indicpositionalcategory')
         else:
             categories.append('indicmatracategory')
+        if PY37:
+            categories.append('verticalorientation')
     if ascii_props:
         print('=========Ascii Tables=========')
     else:
@@ -1225,7 +1095,10 @@ def gen_properties(output, ascii_props=False, append=False):
 
     if PY34:
         print('Building: Bidi Paired Bracket Type')
-        gen_bidi_paired_bracket_type(files['bpt'], ascii_props, append, prefix)
+        gen_enum(
+            'BidiBrackets.txt', 'bidi_paired_bracket_type', files['bpt'], notexplicit='n',
+            field=2, ascii_props=ascii_props, append=append, prefix=prefix
+        )
 
     # Generate Unicode binary
     print('Building: Binary')
@@ -1271,12 +1144,21 @@ def gen_properties(output, ascii_props=False, append=False):
     if PY3:
         if PY35:
             print('Building: Indic Positional Category')
-            gen_indic_pos(files['inpc'], ascii_props, append, prefix)
+            gen_enum(
+                'IndicPositionalCategory.txt', 'indic_positional_category', files['inpc'], notexplicit='na',
+                ascii_props=ascii_props, append=append, prefix=prefix
+            )
         else:
             print('Building: Indic Matra Category')
-            gen_indic_pos(files['inmc'], ascii_props, append, prefix, matra=True)
+            gen_enum(
+                'IndicMatraCategory.txt', 'indic_matra_category', files['inmc'], notexplicit='na',
+                ascii_props=ascii_props, append=append, prefix=prefix
+            )
         print('Building: Indic Syllabic Category')
-        gen_indic_syl(files['insc'], ascii_props, append, prefix)
+        gen_enum(
+            'IndicSyllabicCategory.txt', 'indic_syllabic_category', files['insc'], notexplicit='other',
+            ascii_props=ascii_props, append=append, prefix=prefix
+        )
 
     print('Building: Hangul Syllable Type')
     gen_enum(
@@ -1319,6 +1201,13 @@ def gen_properties(output, ascii_props=False, append=False):
 
     print('Building: NF* Quick Check')
     categories.extend(gen_nf_quick_check(files['qc'], ascii_props, append, prefix))
+
+    if PY37:
+        print('Building: Vertical Orientation')
+        gen_enum(
+            'VerticalOrientation.txt', 'vertical_orientation', files['vo'], notexplicit='R',
+            ascii_props=ascii_props, append=append, prefix=prefix
+        )
 
     if not ascii_props:
         print('Building: Aliases')

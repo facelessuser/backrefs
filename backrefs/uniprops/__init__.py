@@ -11,6 +11,7 @@ else:
 
 PY3 = sys.version_info >= (3, 0) and sys.version_info[0:2] < (4, 0)
 PY35 = sys.version_info >= (3, 5)
+PY37 = sys.version_info >= (3, 7)
 if PY3:
     binary_type = bytes  # noqa
 else:
@@ -416,6 +417,20 @@ def get_bidi_paired_bracket_type_property(value, binary=False):
     return obj[value]
 
 
+def get_vertical_orientation_property(value, binary=False):
+    """Get `VO` property."""
+
+    obj = unidata.ascii_vertical_orientation if binary else unidata.unicode_vertical_orientation
+
+    if value.startswith('^'):
+        negated = value[1:]
+        value = '^' + unidata.unicode_alias['verticalorientation'].get(negated, negated)
+    else:
+        value = unidata.unicode_alias['verticalorientation'].get(value, value)
+
+    return obj[value]
+
+
 def get_is_property(value, binary=False):
     """Get shortcut for `SC` or `Binary` property."""
 
@@ -535,6 +550,8 @@ def get_unicode_property(value, prop=None, binary=False):
                 return get_nfkc_quick_check_property(value, binary)
             elif prop == 'nfkdquickcheck':
                 return get_nfkd_quick_check_property(value, binary)
+            elif PY37 and prop == 'verticalorientation':
+                return get_vertical_orientation_property(value, binary)
             else:
                 raise ValueError('Invalid Unicode property!')
         except Exception:
