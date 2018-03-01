@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.4.0
+
+- **NEW**: Add support for `Vertical_Orientation` property for Unicode 10.0.0 on Python 3.7.
+
 ## 3.3.0
 
 Feb 27, 2018

@@ -4,11 +4,12 @@ import sys
 import os
 import zipfile
 
-__version__ = '2.0.0'
+__version__ = '2.2.0'
 
 PY3 = sys.version_info >= (3, 0) and sys.version_info[0:2] < (4, 0)
 PY34 = sys.version_info >= (3, 4)
 PY35 = sys.version_info >= (3, 5)
+PY37 = sys.version_info >= (3, 7)
 
 if PY3:
     from urllib.request import urlopen
@@ -84,6 +85,9 @@ def download_unicodedata(version, output=HOME, no_zip=False):
 
     if PY34:
         files.append('BidiBrackets.txt')
+
+    if PY37:
+        files.append('VerticalOrientation.txt')
 
     http_url = 'http://www.unicode.org/Public/%s/ucd/' % version
     ftp_url = 'ftp://ftp.unicode.org/Public/%s/ucd/' % version

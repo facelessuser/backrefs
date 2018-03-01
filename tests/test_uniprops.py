@@ -7,6 +7,7 @@ from backrefs import uniprops
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY34 = (3, 4) <= sys.version_info
 PY35 = (3, 5) <= sys.version_info
+PY37 = (3, 7) <= sys.version_info
 PY2 = (2, 0) <= sys.version_info < (3, 0)
 
 if PY3:
@@ -373,6 +374,30 @@ class TestUniprops(unittest.TestCase):
 
         result = uniprops.get_unicode_property('^y', 'nfkdqc')
         self.assertEqual(result, uniprops.unidata.unicode_nfkd_quick_check['^y'])
+
+    def test_vertical_orientation(self):
+        """Test `vertical orientation` Category."""
+
+        if PY37:
+            result = uniprops.get_unicode_property('u', 'vo')
+            self.assertEqual(result, uniprops.unidata.unicode_vertical_orientation['u'])
+        else:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('u', 'vo')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
+
+    def test_inverse_vertical_orientation(self):
+        """Test inverse `vertical orientation` Category."""
+
+        if PY37:
+            result = uniprops.get_unicode_property('^u', 'vo')
+            self.assertEqual(result, uniprops.unidata.unicode_vertical_orientation['^u'])
+        else:
+            with self.assertRaises(ValueError) as e:
+                uniprops.get_unicode_property('^u', 'vo')
+
+            self.assertTrue(str(e), 'Invalid Unicode property!')
 
     def test_gc_simple(self):
         """Test `gc` simple Category."""
