@@ -17,8 +17,8 @@ Add the ability to use the following backrefs with re:
  - `\N{Black Club Suit}`                                         - Unicode character by name (search & replace)
  - `\u0000` and `\U00000000`                                     - Unicode characters (replace)
  - `\e`                                                          - Escape character (search)
- - `\<`                                                          - Starting word boundary (search)
- - `\>`                                                          - Ending word boundary (search)
+ - `\m`                                                          - Starting word boundary (search)
+ - `\M`                                                          - Ending word boundary (search)
 
 Licensed under MIT
 Copyright (c) 2011 - 2018 Isaac Muse <isaacmuse@gmail.com>
