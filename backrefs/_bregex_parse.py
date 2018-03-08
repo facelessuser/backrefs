@@ -49,8 +49,8 @@ class _SearchParser(object):
 
     _new_refs = ("e", "R", "Q", "E")
     _re_escape = r"\x1b"
-    _line_break = r'(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)'
-    _binary_line_break = r'(?>\r\n|\n|\x0b|\f|\r|\x85)'
+    _line_break = r'(?>\r\n|[\n\v\f\r\x85\u2028\u2029])'
+    _binary_line_break = r'(?>\r\n|[\n\v\f\r\x85])'
 
     def __init__(self, search, re_verbose=False, re_version=0):
         """Initialize."""

@@ -159,11 +159,11 @@ class TestSearchTemplate(unittest.TestCase):
 
         self.assertEqual(
             pattern.pattern,
-            r'''(?uV0)Test # (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\))(?x:
+            r'''(?uV0)Test # (?>\r\n|[\n\v\f\r\x85\u2028\u2029])(?#\R\))(?x:
             Test #\\R(?#\\R\)
             (Test # \\R
             )Test #\\R
-            )Test # (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)'''
+            )Test # (?>\r\n|[\n\v\f\r\x85\u2028\u2029])'''
         )
 
         self.assertTrue(pattern.match('Test # \nTestTestTestTest # \n') is not None)
@@ -174,7 +174,7 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bregex.compile_search(r'(?V1)# \R (?x) # \R')
         self.assertEqual(
             pattern.pattern,
-            r'(?V1)# (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029) (?x) # \\R'
+            r'(?V1)# (?>\r\n|[\n\v\f\r\x85\u2028\u2029]) (?x) # \\R'
         )
 
         self.assertTrue(pattern.match('# \n '))
@@ -196,9 +196,9 @@ class TestSearchTemplate(unittest.TestCase):
             pattern.pattern,
             r'''(?xuV1)
             Test # \\R
-            (?-x:Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)(?#\R\))((?x)
+            (?-x:Test #(?>\r\n|[\n\v\f\r\x85\u2028\u2029])(?#\R\))((?x)
             Test # \\R
-            )Test #(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029))
+            )Test #(?>\r\n|[\n\v\f\r\x85\u2028\u2029]))
             Test # \\R
             '''
         )
@@ -230,16 +230,16 @@ class TestSearchTemplate(unittest.TestCase):
         """Test char group with nested opening [."""
 
         pattern = bregex.compile_search(r'test [[] \R', regex.UNICODE)
-        self.assertEqual(pattern.pattern, r'test [[] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)', regex.UNICODE)
+        self.assertEqual(pattern.pattern, r'test [[] (?>\r\n|[\n\v\f\r\x85\u2028\u2029])', regex.UNICODE)
 
     def test_posix_parse(self):
         """Test posix in a group."""
 
         pattern = bregex.compile_search(r'test [[:graph:]] \R', regex.V0)
-        self.assertEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)')
+        self.assertEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|[\n\v\f\r\x85\u2028\u2029])')
 
         pattern = bregex.compile_search(r'test [[:graph:]] \R', regex.V1)
-        self.assertEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)')
+        self.assertEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|[\n\v\f\r\x85\u2028\u2029])')
 
     def test_inline_comments(self):
         """Test that we properly find inline comments and avoid them."""

@@ -19,6 +19,7 @@ Add the ability to use the following backrefs with re:
  - `\e`                                                          - Escape character (search)
  - `\m`                                                          - Starting word boundary (search)
  - `\M`                                                          - Ending word boundary (search)
+ - `\R`                                                          - Generic line breaks (search)
 
 Licensed under MIT
 Copyright (c) 2011 - 2018 Isaac Muse <isaacmuse@gmail.com>

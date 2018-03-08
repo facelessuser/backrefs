@@ -233,6 +233,8 @@ Back\ References      | Description
 `\N{UnicodeName}`     | Named characters are are normally ignored in Re, but Backrefs adds support for them.
 `\m`                  | Start word boundary. Translates to `\b(?=\w)`.
 `\M`                  | End word boundary. Translates to `\b(?<=\w)`.
+`\R`                  | Generic line breaks. When searching a Unicode string, this will use the *equivalent* of an atomic group and match `(?>\r\n|\n|\v|\f|\r|\x85|\u2028|\u2029)`, and when applied to byte strings, this will match the *equivalent* `(?>\r\n|\n|\v|\f|\r|\x85)`. Because it uses atomic groups, which Re does not support, this feature is only for Regex.
+
 
 ### Regex
 
