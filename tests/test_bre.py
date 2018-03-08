@@ -1082,6 +1082,34 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(sre_constants.error):
             _bre_parse._ReplaceParser().parse(pattern, '\\1\\')
 
+    def test_line_break(self):
+        r"""Test line break \R."""
+
+        self.assertEqual(
+            bre.sub(r"\R", ' ', 'line\r\nline\nline\r'),
+            'line line line '
+        )
+
+    def test_binary_line_break(self):
+        r"""Test binary line break \R."""
+
+        self.assertEqual(
+            bre.sub(br"\R", b' ', b'line\r\nline\nline\r'),
+            b'line line line '
+        )
+
+    def test_line_break_in_group(self):
+        """Test that line break in group matches a normal R."""
+
+        if PY36_PLUS:
+            with pytest.raises(sre_constants.error):
+                bre.sub(r"[\R]", 'l', 'Rine\r\nRine\nRine\r')
+        else:
+            self.assertEqual(
+                bre.sub(r"[\R]", 'l', 'Rine\r\nRine\nRine\r'),
+                'line\r\nline\nline\r'
+            )
+
     def test_replace_unicode_name_ascii_range(self):
         """Test replacing Unicode names in the ASCII range."""
 

@@ -57,6 +57,8 @@ class _SearchParser(object):
     _re_escape = r"\x1b"
     _re_start_wb = r"\b(?=\w)"
     _re_end_wb = r"\b(?<=\w)"
+    _line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])'
+    _binary_line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85])'
 
     def __init__(self, search, re_verbose=False, re_unicode=None):
         """Initialize."""
@@ -66,6 +68,10 @@ class _SearchParser(object):
         else:
             self.binary = False
 
+        if self.binary:
+            self._re_line_break = self._binary_line_break
+        else:
+            self._re_line_break = self._line_break
         self.search = search
         self.re_verbose = re_verbose
         self.re_unicode = re_unicode
@@ -269,6 +275,8 @@ class _SearchParser(object):
             current.append(self._re_start_wb)
         elif not in_group and t == "M":
             current.append(self._re_end_wb)
+        elif not in_group and t == "R":
+            current.append(self._re_line_break)
         elif t == "e":
             current.append(self._re_escape)
         elif t == "l":
