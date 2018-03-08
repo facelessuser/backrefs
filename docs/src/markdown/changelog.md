@@ -3,6 +3,7 @@
 ## 3.5.0
 
 - **NEW**: Add support for generic line breaks (`\R`) to Re.
+- **NEW**: Add support for an overly simplified form of grapheme clusters (`\X`) to Re. Roughly equivalent to `(?>\PM\pM*)`.
 
 ## 3.4.0
 
