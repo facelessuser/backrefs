@@ -233,15 +233,15 @@ Back\ References      | Description
 `\N{UnicodeName}`     | Named characters are are normally ignored in Re, but Backrefs adds support for them.
 `\m`                  | Start word boundary. Translates to `\b(?=\w)`.
 `\M`                  | End word boundary. Translates to `\b(?<=\w)`.
-`\R`                  | Generic line breaks. When searching a Unicode string, this will use the *equivalent* of an atomic group and match `(?>\r\n|\n|\v|\f|\r|\x85|\u2028|\u2029)`, and when applied to byte strings, this will match the *equivalent* `(?>\r\n|\n|\v|\f|\r|\x85)`. Because it uses atomic groups, which Re does not support, this feature is only for Regex.
-
+`\R`                  | Generic line breaks. This will use the pattern `(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])` which is roughly equivalent the atomic group form `(?>\r\n|[\n\v\f\r\x85\u2028\u2029])` that other engines use. When applied to byte strings, `(?:\r\n|[\n\v\f\r\x85])` will be used.
+`\X`                  | Grapheme clusters. This will use the pattern `(?>\PM\pM*(?!\pM))` which is roughly equivalent to the atomic group form `(?>\PM\pM*)` that other engines use. This does not implement full, proper grapheme clusters like the 3rd party Regex module does as this would require changes to the Re core engine. Instead it provides a simplified solution that has been seen in regular expression engines in the past.
 
 ### Regex
 
 !!! note
     Regex already natively supports `\p{...}`, `\P{...}`, `\pX`, `\PX`, and `\N{...}`, so Backrefs does not attempt to add this to search patterns.
 
-    `\m` and `\M` are also features already present in Regex.
+    `\X`, `\m` and `\M` are also features already present in Regex.
 
     `\c`, `\l`, `L` and `L` are not used as some of these flags are already taken by Regex itself  These references are just shortcuts for the related POSIX properties in Backrefs.
 
@@ -249,7 +249,7 @@ Back\ References | Description
 ---------------- | -----------
 `\e`             | Escape character `\x1b`.
 `\Q...\E`        | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
-`\R`             | Generic line breaks. When searching a Unicode string, this will use an atomic group and match `(?>\r\n|\n|\x0b|\f|\r|\x85|\u2028|\u2029)`, and when applied to byte strings, this will match `(?>\r\n|\n|\x0b|\f|\r|\x85)`. Because it uses atomic groups, which Re does not support, this feature is only for Regex.
+`\R`             | Generic line breaks. When searching a Unicode string, this will use the pattern `(?>\r\n|[\n\v\f\r\x85\u2028\u2029])`, and when applied to byte strings, this will use `(?>\r\n|[\n\v\f\r\x85])`.
 
 ## Replace Back References
 
