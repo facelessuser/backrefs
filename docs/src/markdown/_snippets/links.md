@@ -1,3 +1,4 @@
+[grapheme-boundaries]: http://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
 [mkdocs]: https://github.com/mkdocs/mkdocs
 [mkdocs-material]: https://github.com/squidfunk/mkdocs-material
 [perl-uniprops]: https://perldoc.perl.org/perluniprops.html
