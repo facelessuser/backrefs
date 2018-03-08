@@ -234,7 +234,7 @@ Back\ References      | Description
 `\m`                  | Start word boundary. Translates to `\b(?=\w)`.
 `\M`                  | End word boundary. Translates to `\b(?<=\w)`.
 `\R`                  | Generic line breaks. This will use the pattern `(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])` which is roughly equivalent the atomic group form `(?>\r\n|[\n\v\f\r\x85\u2028\u2029])` that other engines use. When applied to byte strings, `(?:\r\n|[\n\v\f\r\x85])` will be used.
-`\X`                  | Grapheme clusters. This will use the pattern `(?>\PM\pM*(?!\pM))` which is roughly equivalent to the atomic group form `(?>\PM\pM*)` that other engines use. This does not implement full, proper grapheme clusters like the 3rd party Regex module does as this would require changes to the Re core engine. Instead it provides a simplified solution that has been seen in regex engines in the past.
+`\X`                  | Grapheme clusters. This will use the pattern `(?>\PM\pM*(?!\pM))` which is roughly equivalent to the atomic group form `(?>\PM\pM*)` that other engines use. This does not implement full, proper grapheme clusters like the 3rd party Regex module does as this would require changes to the Re core engine. Instead it provides a simplified solution that has been seen in regular expression engines in the past.
 
 ### Regex
 
