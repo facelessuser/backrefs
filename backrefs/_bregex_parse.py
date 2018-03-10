@@ -494,7 +494,96 @@ class _ReplaceParser(object):
             text = int(text, base)
         except Exception:
             pass
-        return _util.string_type(text)
+        return text
+
+    def get_byte_format(self, c, i):
+        """Get byte format group."""
+
+        index = i.index
+        field = ''
+        value = []
+
+        try:
+            if c == '}':
+                value.append('')
+                value.append((False, -1))
+            else:
+                # Field
+                if c in _LETTERS_UNDERSCORE:
+                    # Handle name
+                    value.append(c)
+                    c = next(i)
+                    while c not in ('}', '['):
+                        if c not in _WORD:
+                            raise SyntaxError('Invalid character at %d!' % (i.index - 1))
+                        value.append(c)
+                        c = next(i)
+                elif c in _DIGIT:
+                    # Handle group number
+                    value.append(c)
+                    c = next(i)
+                    while c not in ('}', '['):
+                        if c not in _DIGIT:
+                            raise SyntaxError('Invalid character! at %d' % (i.index - 1))
+                        value.append(c)
+                        c = next(i)
+
+                # Try and covert to integer index
+                field = ''.join(value).strip()
+                try:
+                    value = [_util.string_type(int(field, 10))]
+                except ValueError:
+                    value = [field]
+                    pass
+
+                # Attributes and indexes
+                count = 0
+                while c in ('[', '.'):
+                    if c == '[':
+                        findex = []
+                        sindex = i.index - 1
+                        c = next(i)
+                        while c not in (']', '}'):
+                            findex.append(c)
+                            c = next(i)
+                        if c != ']':
+                            raise SyntaxError("Unmatched '[' at %d" % (sindex - 1))
+                        idx = self.parse_format_index(''.join(findex))
+                        if isinstance(idx, int):
+                            value.append((False, idx))
+                        else:
+                            value.append((False, idx))
+                        c = next(i)
+                    else:
+                        if count == 0:
+                            value.append((False, -1))
+                        findex = []
+                        c = next(i)
+                        while c in _WORD:
+                            findex.append(c)
+                            c = next(i)
+                        value.append((True, ''.join(findex)))
+                    count += 1
+
+                if count == 0:
+                    value.append((False, -1))
+
+                # Conversion
+                if c == '!':
+                    c = next(i)
+                    if c not in ('s', 'r', 'a'):
+                        raise SyntaxError("Invalid conversion type at %d!" % (i.index - 1))
+                    value.append(('!' + c))
+                    c = next(i)
+
+                # Format spec is not currently supported in byte strings.
+
+            if c != '}':
+                raise SyntaxError("Unmatched '{' at %d" % (index - 1))
+        except StopIteration:
+            raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
+
+        return field, tuple(value)
 
     def get_format(self, c, i):
         """Get format group."""
@@ -548,7 +637,7 @@ class _ReplaceParser(object):
                             c = next(i)
                         if c != ']':
                             raise SyntaxError("Unmatched '[' at %d" % (sindex - 1))
-                        value.append(self.parse_format_index(''.join(findex)))
+                        value.append(_util.string_type(self.parse_format_index(''.join(findex))))
                         value.append(c)
                         c = next(i)
                     else:
@@ -596,7 +685,10 @@ class _ReplaceParser(object):
                 self.get_single_stack()
                 self.result.append(t)
             else:
-                field, text = self.get_format(t, i)
+                if self.binary:
+                    field, text = self.get_byte_format(t, i)
+                else:
+                    field, text = self.get_format(t, i)
                 self.handle_format_group(field, text)
         else:
             t = next(i)
@@ -1002,12 +1094,18 @@ class _ReplaceParser(object):
         if field == '':
             if self.auto:
                 field = _util.string_type(self.auto_index)
-                text = field + text
+                if not self.binary:
+                    text = field + text
+                else:
+                    text[0] = field
                 self.auto_index += 1
             elif not self.manual and not self.auto:
                 self.auto = True
                 field = _util.string_type(self.auto_index)
-                text = field + text
+                if not self.binary:
+                    text = field + text
+                else:
+                    text[0] = field
                 self.auto_index += 1
             else:
                 raise ValueError("Cannot switch to auto format during manual format!")
@@ -1016,10 +1114,13 @@ class _ReplaceParser(object):
         elif not self.manual:
             raise ValueError("Cannot switch to manual format during auto format!")
 
-        self.handle_group(field, '{%s}' % text, True)
+        self.handle_group(field, ('{%s}' % text) if not self.binary else text, True)
 
-    def handle_group(self, text, capture='', is_format=False):
+    def handle_group(self, text, capture=None, is_format=False):
         """Handle groups."""
+
+        if capture is None:
+            capture = tuple() if self.binary else ''
 
         if len(self.result) > 1:
             self.literal_slots.append("".join(self.result))
@@ -1041,7 +1142,7 @@ class _ReplaceParser(object):
                 (
                     (self.span_stack[-1] if self.span_stack else None),
                     self.get_single_stack(),
-                    (capture.encode('latin-1') if self.binary else capture)
+                    capture
                 )
             )
         )
@@ -1165,8 +1266,7 @@ class ReplaceTemplate(_util.Immutable):
             raise ValueError("Match is None!")
 
         sep = m.string[:0]
-        if isinstance(sep, _util.binary_type) and self.use_format:
-            raise TypeError('Cannot format byte strings!')
+        is_binary = isinstance(sep, _util.binary_type)
         text = []
         # Expand string
         for x in range(0, len(self.literals)):
@@ -1181,6 +1281,36 @@ class ReplaceTemplate(_util.Immutable):
                         l = m.group(g_index)
                     except IndexError:
                         raise IndexError("'%d' is out of range!" % capture)
+                elif is_binary:
+                    try:
+                        l = m.captures(g_index)
+                    except IndexError:
+                        raise IndexError("'%d' is out of range!" % g_index)
+
+                    for x in capture[1:]:
+                        if isinstance(x, tuple):
+                            if x[0]:
+                                # Attribute
+                                l = getattr(l, x[1])
+                            else:
+                                # Index
+                                l = l[x[1]]
+                        elif x.startswith('!'):
+                            # Conversion
+                            conversion = x[1]
+                            if conversion in ('r', 'a'):
+                                l = repr(l).encode('ascii', 'backslashreplace')
+                            elif conversion == 's':
+                                # If the object is not string or byte string already
+                                if not isinstance(l, (_util.string_type, _util.binary_type)):
+                                    l = _util.string_type(l).encode('ascii', 'backslashreplace')
+                                elif isinstance(l, _util.string_type):
+                                    l = l.encode('ascii', 'backslashreplace')
+                    # Make sure the final object is a byte string
+                    if isinstance(l, _util.string_type):
+                        l = l.encode('ascii', 'backslashreplace')
+                    elif not isinstance(l, _util.binary_type):
+                        l = repr(l).encode('ascii', 'backslashreplace')
                 else:
                     # Format replace
                     l = _util.Formatter().format(capture, *m.captures(*range(len(m))), **m.capturesdict())

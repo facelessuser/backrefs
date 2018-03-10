@@ -1757,8 +1757,11 @@ class TestReplaceTemplate(unittest.TestCase):
             pattern, br'{1[-0x1]}{1[-0o1]}{1[-0b1]}', bre.FORMAT
         )
 
-        with pytest.raises(TypeError):
-            expand(pattern.match(text))
+        results = expand(pattern.match(text))
+        self.assertEqual(
+            b'989898',
+            results
+        )
 
     def test_format_escapes(self):
         """Test format escapes."""
@@ -1832,8 +1835,8 @@ class TestReplaceTemplate(unittest.TestCase):
             self.assertEqual(b'\\U0109\nWw\\u0109', results)
 
             expandf = bre.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bre.FORMAT)
-            with pytest.raises(TypeError):
-                expandf(pattern.match(b'Test'))
+            results = expandf(pattern.match(b'Test'))
+            self.assertEqual(b'\\U0109\nWw\\u0109', results)
 
             pattern = re.compile(b'Test')
             expand = bre.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
@@ -1841,8 +1844,8 @@ class TestReplaceTemplate(unittest.TestCase):
             self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
             expandf = bre.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bre.FORMAT)
-            with pytest.raises(TypeError):
-                expandf(pattern.match(b'Test'))
+            results = expandf(pattern.match(b'Test'))
+            self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
         # Format doesn't care about groups
         pattern = re.compile('Test')
@@ -1852,8 +1855,8 @@ class TestReplaceTemplate(unittest.TestCase):
 
         pattern = re.compile(b'Test')
         expandf = bre.compile_replace(pattern, br'\127\C\167\n\E\l\127', bre.FORMAT)
-        with pytest.raises(TypeError):
-            expandf(pattern.match(b'Test'))
+        results = expandf(pattern.match(b'Test'))
+        self.assertEqual(b'WW\nw', results)
 
         # Octal behavior in regex grabs \127 before it evaluates \27, so we must match that behavior
         pattern = re.compile('Test')
@@ -1884,8 +1887,8 @@ class TestReplaceTemplate(unittest.TestCase):
 
         pattern = re.compile(b'Test')
         expand = bre.compile_replace(pattern, br'\0\00\000', bre.FORMAT)
-        with pytest.raises(TypeError):
-            expand(pattern.match(b'Test'))
+        results = expand(pattern.match(b'Test'))
+        self.assertEqual(b'\x00\x00\x00', results)
 
 
 class TestExceptions(unittest.TestCase):
