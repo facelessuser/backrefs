@@ -19,11 +19,12 @@ _ASCII_LETTERS = frozenset(
         'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
     )
 )
+_DIGIT = frozenset(('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))
 _OCTAL = frozenset(('0', '1', '2', '3', '4', '5', '6', '7'))
 _HEX = frozenset(('a', 'b', 'c', 'd', 'e', 'f', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))
-_WORD = _ASCII_LETTERS | frozenset(('_',))
+_LETTERS_UNDERSCORE = _ASCII_LETTERS | frozenset(('_',))
+_WORD = _LETTERS_UNDERSCORE | _DIGIT
 _STANDARD_ESCAPES = frozenset(('a', 'b', 'f', 'n', 'r', 't', 'v'))
-_DIGIT = frozenset(('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))
 _CURLY_BRACKETS = frozenset(('{', '}'))
 _PROPERTY_STRIP = frozenset((' ', '-', '_'))
 _PROPERTY = _WORD | _DIGIT | _PROPERTY_STRIP
@@ -462,20 +463,6 @@ class _SearchParser(object):
 class _ReplaceParser(object):
     """Pre-replace template."""
 
-    _ascii_letters = (
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-        'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-        'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
-    )
-    _standard_escapes = ('a', 'b', 'f', 'n', 'r', 't', 'v')
-    _octal = ('0', '1', '2', '3', '4', '5', '6', '7')
-    _hex = ('a', 'b', 'c', 'd', 'e', 'f', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-    _word = _ascii_letters + ('_',)
-    _standard_escapes = ('a', 'b', 'f', 'n', 'r', 't', 'v')
-    _digit = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-    _curly_brackets = ('{', '}')
-
     def __init__(self):
         """Initialize."""
 
@@ -500,12 +487,12 @@ class _ReplaceParser(object):
             if c == '}':
                 value.append('')
             else:
-                if c in _WORD:
+                if c in _LETTERS_UNDERSCORE:
                     # Handle name
                     value.append(c)
                     c = next(i)
                     while c not in ('}', '['):
-                        if c not in _WORD and c not in _DIGIT:
+                        if c not in _WORD:
                             raise SyntaxError('Invalid character at %d!' % (i.index - 1))
                         value.append(c)
                         c = next(i)
@@ -615,8 +602,6 @@ class _ReplaceParser(object):
                 raise SyntaxError("Named Unicode missing '{' at %d!" % (i.index - 1))
             c = next(i)
             while c != '}':
-                if c not in _WORD and c != ' ':
-                    raise SyntaxError("Bad named Unicode character at %d!" % (index - 1))
                 value.append(c)
                 c = next(i)
         except StopIteration:
@@ -735,11 +720,11 @@ class _ReplaceParser(object):
                         value.append(c)
                     c = next(i)
                 value.append(c)
-            elif c in _WORD:
+            elif c in _LETTERS_UNDERSCORE:
                 value.append(c)
                 c = next(i)
                 while c != '>':
-                    if c in _WORD or c in _DIGIT:
+                    if c in _WORD:
                         value.append(c)
                     c = next(i)
                 value.append(c)

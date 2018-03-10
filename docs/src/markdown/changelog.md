@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.0
+
+- **FIX**: Relax validation so not exclude valid named Unicode values.
+
 ## 3.4.0
 
 Mar 8, 2018
