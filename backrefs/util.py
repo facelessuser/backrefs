@@ -7,7 +7,6 @@ Copyright (c) 2015 - 2018 Isaac Muse <isaacmuse@gmail.com>
 import sys
 import struct
 import string
-import _string
 
 PY2 = (2, 0) <= sys.version_info < (3, 0)
 PY3 = (3, 0) <= sys.version_info < (4, 0)
@@ -18,6 +17,7 @@ PY37 = (3, 7) <= sys.version_info
 if PY3:
     from functools import lru_cache  # noqa F401
     import copyreg  # noqa F401
+    import _string
 
     string_type = str
     binary_type = bytes
