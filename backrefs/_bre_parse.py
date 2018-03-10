@@ -79,14 +79,14 @@ class _SearchParser(object):
         self.re_verbose = re_verbose
         self.re_unicode = re_unicode
 
-    def process_quotes(self, string):
+    def process_quotes(self, text):
         """Process quotes."""
 
         escaped = False
         in_quotes = False
         current = []
         quoted = []
-        i = _util.StringIter(string)
+        i = _util.StringIter(text)
         iter(i)
         for t in i:
             if not escaped and t == "\\":
@@ -664,9 +664,9 @@ class _SearchParser(object):
             self.unicode = True
 
         new_pattern = []
-        string = self.process_quotes(self.search.decode('latin-1') if self.binary else self.search)
+        text = self.process_quotes(self.search.decode('latin-1') if self.binary else self.search)
 
-        i = _util.StringIter(string)
+        i = _util.StringIter(text)
         iter(i)
 
         retry = True
@@ -724,13 +724,14 @@ class _ReplaceParser(object):
             if c == '}':
                 value.append('')
             else:
-                if c in _ASCII_LETTERS:
+                # Field
+                if c in _LETTERS_UNDERSCORE:
                     # Handle name
                     value.append(c)
                     c = next(i)
                     while c not in ('}', '['):
                         if c not in _WORD:
-                            raise SyntaxError('Invalid format character at %d!' % (i.index - 1))
+                            raise SyntaxError('Invalid character at %d!' % (i.index - 1))
                         value.append(c)
                         c = next(i)
                 elif c in _DIGIT:
@@ -739,22 +740,45 @@ class _ReplaceParser(object):
                     c = next(i)
                     while c not in ('}', '['):
                         if c not in _DIGIT:
-                            raise SyntaxError('Invalid format character at %d' % (i.index - 1))
+                            raise SyntaxError('Invalid character! at %d' % (i.index - 1))
                         value.append(c)
                         c = next(i)
-                if c == '[':
-                    sindex = i.index - 1
-                    value.append(c)
-                    c = next(i)
-                    while c not in (']', '}'):
+                # Attributes and indexes
+                while c in ('[', '.'):
+                    if c == '[':
+                        sindex = i.index - 1
                         value.append(c)
                         c = next(i)
-                    if c != ']':
-                        raise SyntaxError("Unmatched '[' at %d!" % (sindex - 1))
+                        while c not in (']', '}'):
+                            value.append(c)
+                            c = next(i)
+                        if c != ']':
+                            raise SyntaxError("Unmatched '[' at %d" % (sindex - 1))
+                        value.append(c)
+                        c = next(i)
+                    else:
+                        value.append(c)
+                        c = next(i)
+                        while c in _WORD:
+                            value.append(c)
+                            c = next(i)
+                # Conversion
+                if c == '!':
                     value.append(c)
                     c = next(i)
+                    if c not in ('s', 'r', 'a'):
+                        raise SyntaxError("Invalid conversion type at %d!" % (i.index - 1))
+                    value.append(c)
+                    c = next(i)
+                # Format spec
+                if c == ':':
+                    value.append(c)
+                    c = next(i)
+                    while c != '}':
+                        value.append(c)
+                        c = next(i)
             if c != '}':
-                raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
+                raise SyntaxError("Unmatched '{' at %d" % (index - 1))
         except StopIteration:
             raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
 
@@ -1145,58 +1169,82 @@ class _ReplaceParser(object):
             single = self.single_stack.pop()
         return single
 
-    def get_capture(self, text):
-        """Get the capture."""
-
-        capture = -1
-        base = 10
-        try:
-            index = text.index("[")
-            capture = text[index + 1:-1]
-            text = text[:index]
-            prefix = capture[1:3] if capture[0] == "-" else capture[:2]
-            if prefix[0:1] == "0":
-                char = prefix[-1]
-                if char == "b":
-                    base = 2
-                elif char == "o":
-                    base = 8
-                elif char == "x":
-                    base = 16
-        except ValueError:
-            pass
-
-        if not isinstance(capture, int):
-            try:
-                capture = int(capture, base)
-            except ValueError:
-                raise ValueError("Capture index must be an integer!")
-        return text, capture
-
     def handle_format_group(self, text):
-        """Handle groups."""
+        """Handle format group."""
 
-        text, capture = self.get_capture(text)
+        group = ''
+        fields, spec, convert = next(_util._string.formatter_parser('{%s}' % text))[1:]
+        value, rest = _util._string.formatter_field_name_split(fields)
+        extra = [
+            ((":" + spec) if spec else spec),
+            ('' if convert is None else '!' + convert)
+        ]
 
-        # Handle auto or manual format
-        if text == "":
+        # Format the group name/index
+        if not isinstance(value, int):
+            try:
+                value = _util.string_type(int(value, 10))
+            except ValueError:
+                pass
+        else:
+            value = _util.string_type(value)
+        capture = [_util.string_type(value)]
+
+        # Format integer indexes inside []
+        for is_attr, i in rest:
+            # We don't care about attributes, so just add it back
+            if is_attr:
+                capture.append('.' + i)
+
+            # Parse various integer formats
+            elif not isinstance(i, int):
+                base = 10
+                prefix = i[1:3] if i[0] == "-" else i[:2]
+                if prefix[0:1] == "0":
+                    char = prefix[-1]
+                    if char == "b":
+                        base = 2
+                    elif char == "o":
+                        base = 8
+                    elif char == "x":
+                        base = 16
+                try:
+                    i = int(i, base)
+                except Exception:
+                    pass
+                capture.append('[%s]' % _util.string_type(i))
+
+            # Index is already an integer
+            else:
+                capture.append('[%s]' % _util.string_type(i))
+
+        # Rebuild format string
+        text = ''.join(capture + extra)
+
+        # Handle auot incrementing group indexes
+        if value == '':
             if self.auto:
-                text = _util.string_type(self.auto_index)
+                group = _util.string_type(self.auto_index)
+                text = group + text
                 self.auto_index += 1
             elif not self.manual and not self.auto:
                 self.auto = True
-                text = _util.string_type(self.auto_index)
+                group = _util.string_type(self.auto_index)
+                text = group + text
                 self.auto_index += 1
             else:
                 raise ValueError("Cannot switch to auto format during manual format!")
         elif not self.manual and not self.auto:
+            group = value
             self.manual = True
         elif not self.manual:
             raise ValueError("Cannot switch to manual format during auto format!")
+        else:
+            group = value
 
-        self.handle_group(text, capture, True)
+        self.handle_group(group, '{%s}' % text, True)
 
-    def handle_group(self, text, capture=-1, is_format=False):
+    def handle_group(self, text, capture='', is_format=False):
         """Handle groups."""
 
         if len(self.result) > 1:
@@ -1217,9 +1265,9 @@ class _ReplaceParser(object):
             (
                 self.slot,
                 (
-                    self.span_stack[-1] if self.span_stack else None,
+                    (self.span_stack[-1] if self.span_stack else None),
                     self.get_single_stack(),
-                    capture
+                    (capture.encode('latin-1') if self.binary else capture)
                 )
             )
         )
@@ -1343,6 +1391,8 @@ class ReplaceTemplate(_util.Immutable):
             raise ValueError("Match is None!")
 
         sep = m.string[:0]
+        if isinstance(sep, _util.binary_type) and self.use_format:
+            raise TypeError('Cannot format byte strings!')
         text = []
         # Expand string
         for x in range(0, len(self.literals)):
@@ -1351,9 +1401,15 @@ class ReplaceTemplate(_util.Immutable):
             if l is None:
                 g_index = self.get_group_index(index)
                 span_case, single_case, capture = self.get_group_attributes(index)
-                if capture not in (0, -1):
-                    raise IndexError("'%d' is out of range!" % capture)
-                l = m.group(g_index)
+                if not self.use_format:
+                    # Non format replace
+                    try:
+                        l = m.group(g_index)
+                    except IndexError:
+                        raise IndexError("'%d' is out of range!" % g_index)
+                else:
+                    # Format replace
+                    l = _util.Formatter().format(capture, m.group(0), *m.groups(), **m.groupdict())
                 if span_case is not None:
                     if span_case == _LOWER:
                         l = l.lower()

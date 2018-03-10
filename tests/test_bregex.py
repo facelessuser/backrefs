@@ -1361,11 +1361,9 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bregex.compile_replace(
             pattern, br'{1[-0x1]}{1[0o3]}{1[0b101]}', bregex.FORMAT
         )
-        results = expand(pattern.match(text))
-        self.assertEqual(
-            b'bbb',
-            results
-        )
+
+        with pytest.raises(TypeError):
+            expand(pattern.match(text))
 
     def test_format_escapes(self):
         """Test format escapes."""
@@ -1436,8 +1434,9 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(b'\\U0109\nWw\\u0109', results)
 
         expandf = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bregex.FORMAT)
-        results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'\\U0109\nWw\\u0109', results)
+        with pytest.raises(TypeError):
+            results = expandf(pattern.match(b'Test'))
+        # self.assertEqual(b'\\U0109\nWw\\u0109', results)
 
         pattern = regex.compile(b'Test')
         expand = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
@@ -1445,8 +1444,9 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
         expandf = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bregex.FORMAT)
-        results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'\U00000109\nWw\U00000109', results)
+        with pytest.raises(TypeError):
+            results = expandf(pattern.match(b'Test'))
+        # self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
         # Format doesn't care about groups
         pattern = regex.compile('Test')
@@ -1456,8 +1456,8 @@ class TestReplaceTemplate(unittest.TestCase):
 
         pattern = regex.compile(b'Test')
         expandf = bregex.compile_replace(pattern, br'\127\C\167\n\E\l\127', bregex.FORMAT)
-        results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'WW\nw', results)
+        with pytest.raises(TypeError):
+            expandf(pattern.match(b'Test'))
 
         # Octal behavior in regex grabs \127 before it evaluates \27, so we must match that behavior
         pattern = regex.compile('Test')
@@ -1466,8 +1466,8 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual('W\u01b6W\u01b5\nw\u01b5', results)
 
         pattern = regex.compile(b'Test')
-        expandf = bregex.compile_replace(pattern, br'\127\C\167\n\E\l\127\c')
-        results = expandf(pattern.match(b'Test'))
+        expand = bregex.compile_replace(pattern, br'\127\C\167\n\E\l\127\c')
+        results = expand(pattern.match(b'Test'))
         self.assertEqual(b'WW\nw', results)
 
         # Null should pass through
@@ -1482,14 +1482,14 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(b'\x00\x00\x00', results)
 
         pattern = regex.compile('Test')
-        expand = bregex.compile_replace(pattern, r'\0\00\000', bregex.FORMAT)
-        results = expand(pattern.match('Test'))
+        expandf = bregex.compile_replace(pattern, r'\0\00\000', bregex.FORMAT)
+        results = expandf(pattern.match('Test'))
         self.assertEqual('\x00\x00\x00', results)
 
         pattern = regex.compile(b'Test')
-        expand = bregex.compile_replace(pattern, br'\0\00\000', bregex.FORMAT)
-        results = expand(pattern.match(b'Test'))
-        self.assertEqual(b'\x00\x00\x00', results)
+        expandf = bregex.compile_replace(pattern, br'\0\00\000', bregex.FORMAT)
+        with pytest.raises(TypeError):
+            expandf(pattern.match(b'Test'))
 
 
 class TestExceptions(unittest.TestCase):
@@ -1558,12 +1558,10 @@ class TestExceptions(unittest.TestCase):
         text_pattern = r"(\w)+"
         pattern = regex.compile(text_pattern)
 
-        with pytest.raises(ValueError) as excinfo:
-            bregex.compile_replace(
-                pattern, r'{1[0o3f]}', bregex.FORMAT
+        with pytest.raises(TypeError):
+            bregex.subf(
+                pattern, r'{1[0o3f]}', 'test'
             )
-
-        assert "Capture index must be an integer!" in str(excinfo.value)
 
     def test_format_bad_capture_range(self):
         """Test a bad capture."""
@@ -1574,10 +1572,8 @@ class TestExceptions(unittest.TestCase):
             pattern, r'{1[37]}', bregex.FORMAT
         )
 
-        with pytest.raises(IndexError) as excinfo:
+        with pytest.raises(IndexError):
             expand(pattern.match('text'))
-
-        assert "is out of range!" in str(excinfo.value)
 
     def test_require_compiled_pattern(self):
         """Test a bad capture."""
