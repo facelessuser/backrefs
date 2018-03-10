@@ -1758,16 +1758,10 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
         results = expand(pattern.match(text))
-        if PY27:
-            self.assertEqual(
-                b'bbb',
-                results
-            )
-        else:
-            self.assertEqual(
-                b'989898',
-                results
-            )
+        self.assertEqual(
+            (b'989898' if PY3 else b'bbb'),
+            results
+        )
 
     def test_format_escapes(self):
         """Test format escapes."""
