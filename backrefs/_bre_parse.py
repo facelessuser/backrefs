@@ -714,12 +714,32 @@ class _ReplaceParser(object):
         self.auto = False
         self.auto_index = 0
 
+    def parse_format_index(self, text):
+        """Parse format index."""
+
+        base = 10
+        prefix = text[1:3] if text[0] == "-" else text[:2]
+        if prefix[0:1] == "0":
+            char = prefix[-1]
+            if char == "b":
+                base = 2
+            elif char == "o":
+                base = 8
+            elif char == "x":
+                base = 16
+        try:
+            text = int(text, base)
+        except Exception:
+            pass
+        return _util.string_type(text)
+
     def get_format(self, c, i):
         """Get format group."""
 
         index = i.index
-
+        field = ''
         value = []
+
         try:
             if c == '}':
                 value.append('')
@@ -743,17 +763,28 @@ class _ReplaceParser(object):
                             raise SyntaxError('Invalid character! at %d' % (i.index - 1))
                         value.append(c)
                         c = next(i)
+
+                # Try and covert to integer index
+                field = ''.join(value).strip()
+                try:
+                    value = [_util.string_type(int(field, 10))]
+                except ValueError:
+                    value = [field]
+                    pass
+
                 # Attributes and indexes
                 while c in ('[', '.'):
                     if c == '[':
+                        findex = []
                         sindex = i.index - 1
                         value.append(c)
                         c = next(i)
                         while c not in (']', '}'):
-                            value.append(c)
+                            findex.append(c)
                             c = next(i)
                         if c != ']':
                             raise SyntaxError("Unmatched '[' at %d" % (sindex - 1))
+                        value.append(self.parse_format_index(''.join(findex)))
                         value.append(c)
                         c = next(i)
                     else:
@@ -782,7 +813,7 @@ class _ReplaceParser(object):
         except StopIteration:
             raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
 
-        return ''.join(value)
+        return field, ''.join(value).strip()
 
     def handle_format(self, t, i):
         """Handle format."""
@@ -793,8 +824,8 @@ class _ReplaceParser(object):
                 self.get_single_stack()
                 self.result.append(t)
             else:
-                text = self.get_format(t, i)
-                self.handle_format_group(text.strip())
+                field, text = self.get_format(t, i)
+                self.handle_format_group(field, text)
         else:
             t = next(i)
             if t == '}':
@@ -1169,80 +1200,28 @@ class _ReplaceParser(object):
             single = self.single_stack.pop()
         return single
 
-    def handle_format_group(self, text):
+    def handle_format_group(self, field, text):
         """Handle format group."""
 
-        group = ''
-        fields, spec, convert = next(_util._string.formatter_parser('{%s}' % text))[1:]
-        value, rest = _util._string.formatter_field_name_split(fields)
-        extra = [
-            ((":" + spec) if spec else spec),
-            ('' if convert is None else '!' + convert)
-        ]
-
-        # Format the group name/index
-        if not isinstance(value, int):
-            try:
-                value = _util.string_type(int(value, 10))
-            except ValueError:
-                pass
-        else:
-            value = _util.string_type(value)
-        capture = [_util.string_type(value)]
-
-        # Format integer indexes inside []
-        for is_attr, i in rest:
-            # We don't care about attributes, so just add it back
-            if is_attr:
-                capture.append('.' + i)
-
-            # Parse various integer formats
-            elif not isinstance(i, int):
-                base = 10
-                prefix = i[1:3] if i[0] == "-" else i[:2]
-                if prefix[0:1] == "0":
-                    char = prefix[-1]
-                    if char == "b":
-                        base = 2
-                    elif char == "o":
-                        base = 8
-                    elif char == "x":
-                        base = 16
-                try:
-                    i = int(i, base)
-                except Exception:
-                    pass
-                capture.append('[%s]' % _util.string_type(i))
-
-            # Index is already an integer
-            else:
-                capture.append('[%s]' % _util.string_type(i))
-
-        # Rebuild format string
-        text = ''.join(capture + extra)
-
-        # Handle auot incrementing group indexes
-        if value == '':
+        # Handle auto incrementing group indexes
+        if field == '':
             if self.auto:
-                group = _util.string_type(self.auto_index)
-                text = group + text
+                field = _util.string_type(self.auto_index)
+                text = field + text
                 self.auto_index += 1
             elif not self.manual and not self.auto:
                 self.auto = True
-                group = _util.string_type(self.auto_index)
-                text = group + text
+                field = _util.string_type(self.auto_index)
+                text = field + text
                 self.auto_index += 1
             else:
                 raise ValueError("Cannot switch to auto format during manual format!")
         elif not self.manual and not self.auto:
-            group = value
             self.manual = True
         elif not self.manual:
             raise ValueError("Cannot switch to manual format during auto format!")
-        else:
-            group = value
 
-        self.handle_group(group, '{%s}' % text, True)
+        self.handle_group(field, '{%s}' % text, True)
 
     def handle_group(self, text, capture='', is_format=False):
         """Handle groups."""

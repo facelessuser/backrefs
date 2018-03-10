@@ -124,7 +124,10 @@ class Formatter(string.Formatter):
     def get_field(self, field_name, args, kwargs):
         """Get field."""
 
-        first, rest = _string.formatter_field_name_split(field_name)
+        if PY3:
+            first, rest = _string.formatter_field_name_split(field_name)
+        else:
+            first, rest = field_name._formatter_field_name_split()
 
         obj = self.get_value(first, args, kwargs)
 

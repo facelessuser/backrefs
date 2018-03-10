@@ -5,6 +5,7 @@ Bregex
 Changelog
 EmojiOne
 Feb
+Formatter
 GitHub
 Jan
 MERCHANTABILITY
