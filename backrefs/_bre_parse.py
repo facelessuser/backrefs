@@ -23,11 +23,12 @@ _ASCII_LETTERS = frozenset(
         'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
     )
 )
+_DIGIT = frozenset(('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))
 _OCTAL = frozenset(('0', '1', '2', '3', '4', '5', '6', '7'))
 _HEX = frozenset(('a', 'b', 'c', 'd', 'e', 'f', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))
-_WORD = _ASCII_LETTERS | frozenset(('_',))
+_LETTERS_UNDERSCORE = _ASCII_LETTERS | frozenset(('_',))
+_WORD = _LETTERS_UNDERSCORE | _DIGIT
 _STANDARD_ESCAPES = frozenset(('a', 'b', 'f', 'n', 'r', 't', 'v'))
-_DIGIT = frozenset(('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'))
 _CURLY_BRACKETS = frozenset(('{', '}'))
 _PROPERTY_STRIP = frozenset((' ', '-', '_'))
 _PROPERTY = _WORD | _DIGIT | _PROPERTY_STRIP
@@ -206,7 +207,7 @@ class _SearchParser(object):
 
         return ''.join(prop).lower(), ''.join(value).lower()
 
-    def get_named_property(self, i):
+    def get_named_unicode(self, i):
         """Get Unicode name."""
 
         index = i.index
@@ -216,8 +217,6 @@ class _SearchParser(object):
                 raise ValueError("Named Unicode missing '{' %d!" % (i.index - 1))
             c = next(i)
             while c != '}':
-                if c not in _WORD and c != ' ':
-                    raise ValueError('Invalid named Unicode character %d!' % (i.index - 1))
                 value.append(c)
                 c = next(i)
         except Exception:
@@ -309,7 +308,7 @@ class _SearchParser(object):
             if in_group:
                 self.found_property = True
         elif t == "N":
-            text = self.get_named_property(i)
+            text = self.get_named_unicode(i)
             current.extend(self.unicode_name(text, in_group))
             if in_group:
                 self.found_property = True
@@ -725,12 +724,12 @@ class _ReplaceParser(object):
             if c == '}':
                 value.append('')
             else:
-                if c in _WORD:
+                if c in _ASCII_LETTERS:
                     # Handle name
                     value.append(c)
                     c = next(i)
                     while c not in ('}', '['):
-                        if c not in _WORD and c not in _DIGIT:
+                        if c not in _WORD:
                             raise SyntaxError('Invalid format character at %d!' % (i.index - 1))
                         value.append(c)
                         c = next(i)
@@ -840,8 +839,6 @@ class _ReplaceParser(object):
                 raise SyntaxError("Named Unicode missing '{'' at %d!" % (i.index - 1))
             c = next(i)
             while c != '}':
-                if c not in _WORD and c != ' ':
-                    raise SyntaxError("Bad named Unicode character at %d!" % (index - 1))
                 value.append(c)
                 c = next(i)
         except StopIteration:
@@ -960,11 +957,11 @@ class _ReplaceParser(object):
                         value.append(c)
                     c = next(i)
                 value.append(c)
-            elif c in _WORD:
+            elif c in _LETTERS_UNDERSCORE:
                 value.append(c)
                 c = next(i)
                 while c != '>':
-                    if c in _WORD or c in _DIGIT:
+                    if c in _WORD:
                         value.append(c)
                     c = next(i)
                 value.append(c)
