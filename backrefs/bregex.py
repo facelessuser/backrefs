@@ -197,7 +197,7 @@ def compile_replace(pattern, repl, flags=0):
     if pattern is not None and isinstance(pattern, _REGEX_TYPE):
         if isinstance(repl, (_util.string_type, _util.binary_type)):
             if not (pattern.flags & DEBUG):
-                call = _cached_replace_compile(pattern, repl, flags, type(pattern))
+                call = _cached_replace_compile(pattern, repl, flags, type(repl))
             else:  # pragma: no cover
                 call = _bregex_parse._ReplaceParser().parse(pattern, repl, bool(flags & FORMAT))
         elif isinstance(repl, ReplaceTemplate):

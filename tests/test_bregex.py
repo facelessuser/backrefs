@@ -15,8 +15,10 @@ PY3 = (3, 0) <= sys.version_info < (4, 0)
 
 if PY3:
     binary_type = bytes  # noqa
+    string_type = str  # noqa
 else:
     binary_type = str  # noqa
+    string_type = unicode  # noqa
 
 
 class TestSearchTemplate(unittest.TestCase):
@@ -68,13 +70,15 @@ class TestSearchTemplate(unittest.TestCase):
         p1 = bregex.compile('test')
         p2 = bregex.compile('test')
         p3 = bregex.compile('test', bregex.X)
+        p4 = bregex.compile(b'test')
 
         self.assertTrue(p1 == p2)
         self.assertTrue(p1 != p3)
+        self.assertTrue(p1 != p4)
 
-        p4 = copy.copy(p1)
-        self.assertTrue(p1 == p4)
-        self.assertTrue(p4 in {p1})
+        p5 = copy.copy(p1)
+        self.assertTrue(p1 == p5)
+        self.assertTrue(p5 in {p1})
 
     def test_not_flags(self):
         """Test invalid flags."""
@@ -111,7 +115,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(bregex._get_cache_size(), 0)
         self.assertEqual(bregex._get_cache_size(True), 0)
         for x in range(1000):
-            value = str(random.randint(1, 10000))
+            value = string_type(random.randint(1, 10000))
             p = bregex.compile(value)
             p.sub('', value)
             self.assertTrue(bregex._get_cache_size() > 0)
@@ -597,14 +601,17 @@ class TestReplaceTemplate(unittest.TestCase):
 
         p1 = bregex.compile('(test)')
         p2 = bregex.compile('(test)')
+        p3 = bregex.compile(b'(test)')
         r1 = p1.compile(r'\1')
         r2 = p1.compile(r'\1')
         r3 = p2.compile(r'\1')
         r4 = p2.compile(r'\1', bregex.FORMAT)
+        r5 = p3.compile(br'\1')
 
         self.assertTrue(r1 == r2)
         self.assertTrue(r2 == r3)
         self.assertTrue(r1 != r4)
+        self.assertTrue(r1 != r5)
 
         r5 = copy.copy(r1)
         self.assertTrue(r1 == r5)
@@ -1411,7 +1418,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test format features."""
 
         pattern = bregex.compile(r'(Te)(st)(?P<group>ing)')
-        self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'),  ('str' if PY3 else 'unicode'))
+        self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'), ('str' if PY3 else 'unicode'))
 
         self.assertEqual(pattern.subf(r'{1:<30}', 'Testing'), 'Te                            ')
 

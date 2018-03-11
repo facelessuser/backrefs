@@ -1160,6 +1160,8 @@ class _ReplaceParser(object):
             self.binary = True
         else:
             self.binary = False
+        if isinstance(pattern.pattern, _util.binary_type) != self.binary:
+            raise TypeError('Pattern string type must match replace template string type!')
         self._original = template
         self.use_format = use_format
         self.parse_template(pattern)
@@ -1270,7 +1272,8 @@ class ReplaceTemplate(_util.Immutable):
             raise ValueError("Match is None!")
 
         sep = m.string[:0]
-        is_binary = isinstance(sep, _util.binary_type)
+        if isinstance(sep, _util.binary_type) != self._binary:
+            raise TypeError('Match string type does not match expander string type!')
         text = []
         # Expand string
         for x in range(0, len(self.literals)):
@@ -1285,7 +1288,7 @@ class ReplaceTemplate(_util.Immutable):
                         l = m.group(g_index)
                     except IndexError:
                         raise IndexError("'%d' is out of range!" % capture)
-                elif is_binary:
+                elif self._binary:
                     try:
                         l = m.captures(g_index)
                     except IndexError:
