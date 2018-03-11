@@ -989,7 +989,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_format_failures(self):
         """Test format parsing failures."""
 
-        with pytest.raises(sre_constants.error if PY3 else IndexError):
+        with pytest.raises(sre_constants.error if PY36_PLUS else IndexError):
             bre.subf('test', r'{1.}', 'test', bre.FORMAT)
 
         with pytest.raises(IndexError):
