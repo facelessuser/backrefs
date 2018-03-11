@@ -1415,7 +1415,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual(pattern.subf(r'{1:<30}', 'Testing'), 'Te                            ')
 
-        self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'" if PY3 else "b'st'")
+        self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'" if PY3 else "u'st'")
 
         with pytest.raises(SyntaxError):
             pattern.subf(r'{2!x}', 'Testing')
@@ -1430,9 +1430,9 @@ class TestReplaceTemplate(unittest.TestCase):
             pattern.subf(r'{a$}', 'Testing')
 
         pattern = bregex.compile(br'(Te)(st)(?P<group>ing)')
-        self.assertEqual(pattern.subf(br'{.__class__.__name__}', b'Testing'), b'bytes')
+        self.assertEqual(pattern.subf(br'{.__class__.__name__}', b'Testing'), (b'bytes' if PY3 else b'str'))
 
-        self.assertEqual(pattern.subf(br'{2!r}', b'Testing'), b"b'st'")
+        self.assertEqual(pattern.subf(br'{2!r}', b'Testing'), b"b'st'" if PY3 else b"'st'")
 
         with pytest.raises(SyntaxError):
             pattern.subf(br'{2!x}', b'Testing')

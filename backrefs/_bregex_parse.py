@@ -1169,16 +1169,17 @@ class _ReplaceParser(object):
             tuple(self.group_slots),
             tuple(self.literals),
             hash(pattern),
-            self.use_format
+            self.use_format,
+            self.binary
         )
 
 
 class ReplaceTemplate(_util.Immutable):
     """Replacement template expander."""
 
-    __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format", "_hash")
+    __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format", "_hash", "_binary")
 
-    def __init__(self, groups, group_slots, literals, pattern_hash, use_format):
+    def __init__(self, groups, group_slots, literals, pattern_hash, use_format, binary):
         """Initialize."""
 
         super(ReplaceTemplate, self).__init__(
@@ -1187,11 +1188,12 @@ class ReplaceTemplate(_util.Immutable):
             group_slots=group_slots,
             literals=literals,
             pattern_hash=pattern_hash,
+            _binary=binary,
             _hash=hash(
                 (
                     type(self),
                     groups, group_slots, literals,
-                    pattern_hash, use_format
+                    pattern_hash, use_format, binary
                 )
             )
         )
@@ -1215,7 +1217,8 @@ class ReplaceTemplate(_util.Immutable):
             self.group_slots == other.group_slots and
             self.literals == other.literals and
             self.pattern_hash == other.pattern_hash and
-            self.use_format == other.use_format
+            self.use_format == other.use_format and
+            self._binary == other._binary
         )
 
     def __ne__(self, other):
@@ -1227,7 +1230,8 @@ class ReplaceTemplate(_util.Immutable):
             self.group_slots != other.group_slots or
             self.literals != other.literals or
             self.pattern_hash != other.pattern_hash or
-            self.use_format != other.use_format
+            self.use_format != other.use_format or
+            self._binary != other._binary
         )
 
     def __repr__(self):  # pragma: no cover
@@ -1332,7 +1336,7 @@ class ReplaceTemplate(_util.Immutable):
 def _pickle(r):
     """Pickle."""
 
-    return ReplaceTemplate, (r.groups, r.group_slots, r.literals, r.pattern_hash, r.use_format)
+    return ReplaceTemplate, (r.groups, r.group_slots, r.literals, r.pattern_hash, r.use_format, r._binary)
 
 
 _util.copyreg.pickle(ReplaceTemplate, _pickle)

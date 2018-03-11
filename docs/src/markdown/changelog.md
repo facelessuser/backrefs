@@ -1,8 +1,9 @@
 # Changelog
 
-## 0.0.0
+## 3.5.0
 
 - **FIX**: Relax validation so not exclude valid named Unicode values.
+- **FIX**: Caching issues where byte string patterns were confused with Unicode patterns.
 
 ## 3.4.0
 
