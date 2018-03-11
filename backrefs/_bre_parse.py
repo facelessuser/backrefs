@@ -749,7 +749,7 @@ class _ReplaceParser(object):
                     # Handle name
                     value.append(c)
                     c = next(i)
-                    while c not in ('}', '['):
+                    while c not in ('}', '[', ':', '!', '.'):
                         if c not in _WORD:
                             raise SyntaxError('Invalid character at %d!' % (i.index - 1))
                         value.append(c)
@@ -758,7 +758,7 @@ class _ReplaceParser(object):
                     # Handle group number
                     value.append(c)
                     c = next(i)
-                    while c not in ('}', '['):
+                    while c not in ('}', '[', ':', '!', '.'):
                         if c not in _DIGIT:
                             raise SyntaxError('Invalid character! at %d' % (i.index - 1))
                         value.append(c)
@@ -812,7 +812,7 @@ class _ReplaceParser(object):
         except StopIteration:
             raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
 
-        return field, tuple(value)
+        return field, value
 
     def get_format(self, c, i):
         """Get format group."""
@@ -830,7 +830,7 @@ class _ReplaceParser(object):
                     # Handle name
                     value.append(c)
                     c = next(i)
-                    while c not in ('}', '['):
+                    while c not in ('}', '[', ':', '!', '.'):
                         if c not in _WORD:
                             raise SyntaxError('Invalid character at %d!' % (i.index - 1))
                         value.append(c)
@@ -839,7 +839,7 @@ class _ReplaceParser(object):
                     # Handle group number
                     value.append(c)
                     c = next(i)
-                    while c not in ('}', '['):
+                    while c not in ('}', '[', ':', '!', '.'):
                         if c not in _DIGIT:
                             raise SyntaxError('Invalid character! at %d' % (i.index - 1))
                         value.append(c)
@@ -1311,7 +1311,7 @@ class _ReplaceParser(object):
         elif not self.manual:
             raise ValueError("Cannot switch to manual format during auto format!")
 
-        self.handle_group(field, ('{%s}' % text) if not self.binary else text, True)
+        self.handle_group(field, ('{%s}' % text) if not self.binary else tuple(text), True)
 
     def handle_group(self, text, capture=None, is_format=False):
         """Handle groups."""

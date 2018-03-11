@@ -989,10 +989,10 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_format_failures(self):
         """Test format parsing failures."""
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(sre_constants.error):
             bre.subf('test', r'{1.}', 'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(IndexError):
             bre.subf('test', r'{a.}', 'test', bre.FORMAT)
 
         with pytest.raises(SyntaxError):
@@ -1801,6 +1801,45 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = bre.compile('Test')
         result = pattern.sub('\\C\\U00000070\\U0001F360\\E', 'Test')
         self.assertEqual(result, 'P\U0001F360')
+
+    def test_fromat_features(self):
+        """Test format features."""
+
+        pattern = bre.compile(r'(Te)(st)(?P<group>ing)')
+        self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'), 'str')
+
+        self.assertEqual(pattern.subf(r'{1:<30}', 'Testing'), 'Te                            ')
+
+        self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'")
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(r'{2!x}', 'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(r'{2$}', 'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(r'{2$}', 'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(r'{a$}', 'Testing')
+
+        pattern = bre.compile(br'(Te)(st)(?P<group>ing)')
+        self.assertEqual(pattern.subf(br'{.__class__.__name__}', b'Testing'), b'bytes')
+
+        self.assertEqual(pattern.subf(br'{2!r}', b'Testing'), b"b'st'")
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(br'{2!x}', b'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(br'{2$}', b'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(br'{2$}', b'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(br'{a$}', b'Testing')
 
     def test_dont_case_special_refs(self):
         """Test that we don't case Unicode and bytes tokens, but case the character."""
