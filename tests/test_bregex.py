@@ -613,7 +613,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_format_failures(self):
         """Test format parsing failures."""
 
-        with pytest.raises(_regex_core.error if PY3 else IndexError):
+        with pytest.raises(_regex_core.error):
             bregex.subf('test', r'{1.}', 'test', bregex.FORMAT)
 
         with pytest.raises(IndexError):
@@ -1407,7 +1407,7 @@ class TestReplaceTemplate(unittest.TestCase):
         result = pattern.sub('\\C\\U00000070\\U0001F360\\E', 'Test')
         self.assertEqual(result, 'P\U0001F360')
 
-    def test_fromat_features(self):
+    def test_format_features(self):
         """Test format features."""
 
         pattern = bregex.compile(r'(Te)(st)(?P<group>ing)')
@@ -1415,7 +1415,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual(pattern.subf(r'{1:<30}', 'Testing'), 'Te                            ')
 
-        self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'")
+        self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'" if PY3 else "b'st'")
 
         with pytest.raises(SyntaxError):
             pattern.subf(r'{2!x}', 'Testing')

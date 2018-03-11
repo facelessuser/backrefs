@@ -1802,7 +1802,7 @@ class TestReplaceTemplate(unittest.TestCase):
         result = pattern.sub('\\C\\U00000070\\U0001F360\\E', 'Test')
         self.assertEqual(result, 'P\U0001F360')
 
-    def test_fromat_features(self):
+    def test_format_features(self):
         """Test format features."""
 
         pattern = bre.compile(r'(Te)(st)(?P<group>ing)')
@@ -1810,7 +1810,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual(pattern.subf(r'{1:<30}', 'Testing'), 'Te                            ')
 
-        self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'")
+        self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'" if PY3 else "b'st'")
 
         with pytest.raises(SyntaxError):
             pattern.subf(r'{2!x}', 'Testing')
