@@ -613,7 +613,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_format_failures(self):
         """Test format parsing failures."""
 
-        with pytest.raises(_regex_core.error):
+        with pytest.raises(_regex_core.error if PY3 else IndexError):
             bregex.subf('test', r'{1.}', 'test', bregex.FORMAT)
 
         with pytest.raises(IndexError):
@@ -1411,7 +1411,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test format features."""
 
         pattern = bregex.compile(r'(Te)(st)(?P<group>ing)')
-        self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'), 'str')
+        self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'),  ('str' if PY3 else 'unicode'))
 
         self.assertEqual(pattern.subf(r'{1:<30}', 'Testing'), 'Te                            ')
 

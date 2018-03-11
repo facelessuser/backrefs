@@ -989,7 +989,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_format_failures(self):
         """Test format parsing failures."""
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(sre_constants.error if PY3 else IndexError):
             bre.subf('test', r'{1.}', 'test', bre.FORMAT)
 
         with pytest.raises(IndexError):
@@ -1806,7 +1806,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test format features."""
 
         pattern = bre.compile(r'(Te)(st)(?P<group>ing)')
-        self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'), 'str')
+        self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'), ('str' if PY3 else 'unicode'))
 
         self.assertEqual(pattern.subf(r'{1:<30}', 'Testing'), 'Te                            ')
 
