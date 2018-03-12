@@ -1017,6 +1017,42 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(SyntaxError):
             bre.subf('test', r'test { test', 'test', bre.FORMAT)
 
+        with pytest.raises(sre_constants.error if PY36_PLUS else IndexError):
+            bre.subf(b'test', br'{1.}', b'test', bre.FORMAT)
+
+        with pytest.raises(IndexError):
+            bre.subf(b'test', br'{a.}', b'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf(b'test', br'{1[}', b'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf(b'test', br'{a[}', b'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf(b'test', br'test } test', b'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf(b'test', br'test {test', b'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf(b'test', br'test { test', b'test', bre.FORMAT)
+
+        with pytest.raises(TypeError):
+            bre.subf(b'test', br'{[test]}', b'test', bre.FORMAT)
+
+    def test_incompatible_strings(self):
+        """Test incompatible string types."""
+
+        with pytest.raises(TypeError):
+            bre.compile('test').compile(b'test')
+
+        p1 = bre.compile('test')
+        repl = bre.compile(b'test').compile(b'other')
+        m = p1.match('test')
+        with pytest.raises(TypeError):
+            repl(m)
+
     def test_named_unicode_failures(self):
         """Test named Unicode failures."""
 
@@ -1666,10 +1702,21 @@ class TestReplaceTemplate(unittest.TestCase):
         text_pattern = r"(this )(.+?)(numeric capture )(groups)(!)"
         pattern = re.compile(text_pattern)
 
-        expand = bre.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT)
-        results = expand(pattern.match(text))
+        expandf = bre.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT)
+        results = expandf(pattern.match(text))
         self.assertEqual(
             'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
+            results
+        )
+
+        text = b"this is a test for numeric capture groups!"
+        text_pattern = br"(this )(.+?)(numeric capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expandf = bre.compile_replace(pattern, br'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT)
+        results = expandf(pattern.match(text))
+        self.assertEqual(
+            b'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
             results
         )
 
@@ -1680,12 +1727,25 @@ class TestReplaceTemplate(unittest.TestCase):
         text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = re.compile(text_pattern)
 
-        expand = bre.compile_replace(
+        expandf = bre.compile_replace(
             pattern, r'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT
         )
-        results = expand(pattern.match(text))
+        results = expandf(pattern.match(text))
         self.assertEqual(
             '{0001}{IS A TEST FOR }Format capture GROUPS!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
+            results
+        )
+
+        text = b"this is a test for format capture groups!"
+        text_pattern = br"(this )(.+?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expandf = bre.compile_replace(
+            pattern, br'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT
+        )
+        results = expandf(pattern.match(text))
+        self.assertEqual(
+            b'{0001}{IS A TEST FOR }Format capture GROUPS!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
             results
         )
 
@@ -1696,12 +1756,25 @@ class TestReplaceTemplate(unittest.TestCase):
         text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = re.compile(text_pattern)
 
-        expand = bre.compile_replace(
+        expandf = bre.compile_replace(
             pattern, r'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', bre.FORMAT
         )
-        results = expand(pattern.match(text))
+        results = expandf(pattern.match(text))
         self.assertEqual(
             'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\ntHIS iS A TEST FOR Format capture GROUPS!{}',
+            results
+        )
+
+        text = b"this is a test for format capture groups!"
+        text_pattern = br"(this )(.+?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expandf = bre.compile_replace(
+            pattern, br'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', bre.FORMAT
+        )
+        results = expandf(pattern.match(text))
+        self.assertEqual(
+            b'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\ntHIS iS A TEST FOR Format capture GROUPS!{}',
             results
         )
 
