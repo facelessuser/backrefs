@@ -1483,12 +1483,12 @@ class ReplaceTemplate(_util.Immutable):
                     # Non format replace
                     try:
                         l = m.group(g_index)
-                    except IndexError:
+                    except IndexError:  # pragma: no cover
                         raise IndexError("'%d' is out of range!" % g_index)
                 elif self._binary:
                     try:
                         l = m.group(g_index)
-                    except IndexError:
+                    except IndexError:  # pragma: no cover
                         raise IndexError("'%d' is out of range!" % g_index)
 
                     for x in capture[1:]:

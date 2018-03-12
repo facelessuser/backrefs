@@ -1041,6 +1041,14 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(TypeError):
             bre.subf(b'test', br'{[test]}', b'test', bre.FORMAT)
 
+    def test_byte_format_conversions(self):
+        """Test byte string format conversion paths."""
+
+        self.assertTrue(bre.subf(b'test', br'{0.index}', b'test').startswith(b'<built-in method'))
+        self.assertEqual(bre.subf(b'test', br'{0.__class__.__name__}', b'test'), (b'bytes' if PY3 else b'str'))
+        self.assertTrue(bre.subf(b'test', br'{0.index!s}', b'test').startswith(b'<built-in method'))
+        self.assertEqual(bre.subf(b'test', br'{0.__class__.__name__!s}', b'test'), (b'bytes' if PY3 else b'str'))
+
     def test_incompatible_strings(self):
         """Test incompatible string types."""
 

@@ -2,8 +2,10 @@
 
 ## 3.5.0
 
+- **NEW**: Use true string format for format style replacements. Byte strings still use a simulated format replace, though slightly more advanced.
 - **FIX**: Relax validation so not exclude valid named Unicode values.
 - **FIX**: Caching issues where byte string patterns were confused with Unicode patterns.
+- **FIX**: More protection against using conflicting string type combinations with search and replace.
 
 ## 3.4.0
 
