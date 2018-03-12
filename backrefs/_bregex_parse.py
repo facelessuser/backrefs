@@ -1274,6 +1274,9 @@ class ReplaceTemplate(_util.Immutable):
         sep = m.string[:0]
         if isinstance(sep, _util.binary_type) != self._binary:
             raise TypeError('Match string type does not match expander string type!')
+        if self.use_format and not self._binary:
+            capture_args = m.captures(*_util.iter_range(len(m)))
+            capture_dict = m.capturesdict()
         text = []
         # Expand string
         for x in range(0, len(self.literals)):
@@ -1320,7 +1323,7 @@ class ReplaceTemplate(_util.Immutable):
                         l = repr(l).encode('ascii', 'backslashreplace')
                 else:
                     # Format replace
-                    l = _util.Formatter().format(capture, *m.captures(*range(len(m))), **m.capturesdict())
+                    l = _util.Formatter().vformat(capture, capture_args, capture_dict)
                 if span_case is not None:
                     if span_case == _LOWER:
                         l = l.lower()

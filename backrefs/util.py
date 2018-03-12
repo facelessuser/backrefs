@@ -22,6 +22,7 @@ if PY3:
     string_type = str
     binary_type = bytes
     unichar = chr
+    iter_range = range  # noqa F821
 
 else:
     from backports.functools_lru_cache import lru_cache  # noqa F401
@@ -30,6 +31,7 @@ else:
     string_type = unicode  # noqa F821
     binary_type = str  # noqa F821
     unichar = unichr  # noqa F821
+    iter_range = xrange  # noqa F821
 
 
 class StringIter(object):
