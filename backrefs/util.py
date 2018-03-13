@@ -16,7 +16,6 @@ PY37 = (3, 7) <= sys.version_info
 if PY3:
     from functools import lru_cache  # noqa F401
     import copyreg  # noqa F401
-    import _string
 
     string_type = str
     binary_type = bytes
