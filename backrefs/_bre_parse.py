@@ -38,9 +38,25 @@ else:
     _GLOBAL_FLAGS = frozenset(('u', 'L'))
 _SCOPED_FLAGS = frozenset(('i', 'm', 's', 'u', 'x'))
 
+_CURLY_BRACKETS_ORD = frozenset((0x7b, 0x7d))
+
 # Case upper or lower
 _UPPER = 1
 _LOWER = 2
+
+# Format Constants
+_BACK_SLASH_TRANSLATION = {
+    "\\a": '\a',
+    "\\b": '\b',
+    "\\f": '\f',
+    "\\r": '\r',
+    "\\t": '\t',
+    "\\n": '\n',
+    "\\v": '\v',
+    "\\\\": '\\'
+}
+
+_FMT_CONV_TYPE = ('a', 'r', 's') if _util.PY3 else ('r', 's')
 
 
 class LoopException(Exception):
@@ -79,14 +95,14 @@ class _SearchParser(object):
         self.re_verbose = re_verbose
         self.re_unicode = re_unicode
 
-    def process_quotes(self, string):
+    def process_quotes(self, text):
         """Process quotes."""
 
         escaped = False
         in_quotes = False
         current = []
         quoted = []
-        i = _util.StringIter(string)
+        i = _util.StringIter(text)
         iter(i)
         for t in i:
             if not escaped and t == "\\":
@@ -664,9 +680,9 @@ class _SearchParser(object):
             self.unicode = True
 
         new_pattern = []
-        string = self.process_quotes(self.search.decode('latin-1') if self.binary else self.search)
+        text = self.process_quotes(self.search.decode('latin-1') if self.binary else self.search)
 
-        i = _util.StringIter(string)
+        i = _util.StringIter(text)
         iter(i)
 
         retry = True
@@ -714,65 +730,172 @@ class _ReplaceParser(object):
         self.auto = False
         self.auto_index = 0
 
+    def parse_format_index(self, text):
+        """Parse format index."""
+
+        base = 10
+        prefix = text[1:3] if text[0] == "-" else text[:2]
+        if prefix[0:1] == "0":
+            char = prefix[-1]
+            if char == "b":
+                base = 2
+            elif char == "o":
+                base = 8
+            elif char == "x":
+                base = 16
+        try:
+            text = int(text, base)
+        except Exception:
+            pass
+        return text
+
     def get_format(self, c, i):
         """Get format group."""
 
         index = i.index
-
+        field = ''
         value = []
+
         try:
             if c == '}':
-                value.append('')
+                value.append((_util.FMT_FIELD, ''))
             else:
-                if c in _ASCII_LETTERS:
+                # Field
+                if c in _LETTERS_UNDERSCORE:
                     # Handle name
                     value.append(c)
-                    c = next(i)
-                    while c not in ('}', '['):
-                        if c not in _WORD:
-                            raise SyntaxError('Invalid format character at %d!' % (i.index - 1))
+                    c = self.format_next(i)
+                    while c in _WORD:
                         value.append(c)
-                        c = next(i)
+                        c = self.format_next(i)
                 elif c in _DIGIT:
                     # Handle group number
                     value.append(c)
-                    c = next(i)
-                    while c not in ('}', '['):
-                        if c not in _DIGIT:
-                            raise SyntaxError('Invalid format character at %d' % (i.index - 1))
+                    c = self.format_next(i)
+                    while c in _DIGIT:
                         value.append(c)
-                        c = next(i)
-                if c == '[':
-                    sindex = i.index - 1
-                    value.append(c)
-                    c = next(i)
-                    while c not in (']', '}'):
-                        value.append(c)
-                        c = next(i)
-                    if c != ']':
-                        raise SyntaxError("Unmatched '[' at %d!" % (sindex - 1))
-                    value.append(c)
-                    c = next(i)
+                        c = self.format_next(i)
+
+                # Try and covert to integer index
+                field = ''.join(value).strip()
+                try:
+                    value = [(_util.FMT_FIELD, _util.string_type(int(field, 10)))]
+                except ValueError:
+                    value = [(_util.FMT_FIELD, field)]
+                    pass
+
+                # Attributes and indexes
+                while c in ('[', '.'):
+                    if c == '[':
+                        findex = []
+                        sindex = i.index - 1
+                        c = self.format_next(i)
+                        try:
+                            while c != ']':
+                                findex.append(c)
+                                c = self.format_next(i)
+                        except StopIteration:
+                            raise SyntaxError("Unmatched '[' at %d" % (sindex - 1))
+                        idx = self.parse_format_index(''.join(findex))
+                        if isinstance(idx, int):
+                            value.append((_util.FMT_INDEX, idx))
+                        else:
+                            value.append((_util.FMT_INDEX, idx))
+                        c = self.format_next(i)
+                    else:
+                        findex = []
+                        c = self.format_next(i)
+                        while c in _WORD:
+                            findex.append(c)
+                            c = self.format_next(i)
+                        value.append((_util.FMT_ATTR, ''.join(findex)))
+
+                # Conversion
+                if c == '!':
+                    c = self.format_next(i)
+                    if c not in _FMT_CONV_TYPE:
+                        raise SyntaxError("Invalid conversion type at %d!" % (i.index - 1))
+                    value.append((_util.FMT_CONV, c))
+                    c = self.format_next(i)
+
+                # Format spec
+                if c == ':':
+                    fill = None
+                    width = []
+                    align = None
+                    convert = None
+                    c = self.format_next(i)
+
+                    if c in ('<', '>', '^'):
+                        # Get fill and alignment
+                        align = c
+                        c = self.format_next(i)
+                        if c in ('<', '>', '^'):
+                            fill = align
+                            align = c
+                            c = self.format_next(i)
+                    elif c in _DIGIT:
+                        # Get Width
+                        fill = c
+                        c = self.format_next(i)
+                        if c in ('<', '>', '^'):
+                            align = c
+                            c = self.format_next(i)
+                        else:
+                            width.append(fill)
+                            fill = None
+                    else:
+                        fill = c
+                        c = self.format_next(i)
+                        if fill == 's' and c == '}':
+                            convert = fill
+                            fill = None
+                        if fill is not None:
+                            if c not in ('<', '>', '^'):
+                                raise SyntaxError('Invalid format spec char at %d!' % (i.index - 1))
+                            align = c
+                            c = self.format_next(i)
+
+                    while c in _DIGIT:
+                        width.append(c)
+                        c = self.format_next(i)
+
+                    if not align and len(width) and width[0] == '0':
+                        raise ValueError("'=' alignment is not supported!")
+                    if align and not fill and len(width) and width[0] == '0':
+                        fill = '0'
+
+                    if c == 's':
+                        convert = c
+                        c = self.format_next(i)
+
+                    if fill and self.binary:
+                        fill = fill.encode('latin-1')
+                    elif not fill:
+                        fill = b' ' if self.binary else ' '
+
+                    value.append((_util.FMT_SPEC, (fill, align, (int(''.join(width)) if width else 0), convert)))
+
             if c != '}':
-                raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
+                raise SyntaxError("Unmatched '{' at %d" % (index - 1))
         except StopIteration:
             raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
 
-        return ''.join(value)
+        return field, value
 
     def handle_format(self, t, i):
         """Handle format."""
 
         if t == '{':
-            t = next(i)
+            t = self.format_next(i)
             if t == '{':
                 self.get_single_stack()
                 self.result.append(t)
             else:
-                text = self.get_format(t, i)
-                self.handle_format_group(text.strip())
+                field, text = self.get_format(t, i)
+                self.handle_format_group(field, text)
         else:
-            t = next(i)
+            t = self.format_next(i)
             if t == '}':
                 self.get_single_stack()
                 self.result.append(t)
@@ -804,13 +927,13 @@ class _ReplaceParser(object):
             pass
 
         octal_count = len(value)
-        if not (zero_count and octal_count < 3) and octal_count != 3:
+        if not (self.use_format and octal_count) and not (zero_count and octal_count < 3) and octal_count != 3:
             i.rewind(i.index - index)
             value = []
 
         return ''.join(value) if value else None
 
-    def parse_octal(self, text):
+    def parse_octal(self, text, i):
         """Parse octal value."""
 
         value = int(text, 8)
@@ -824,7 +947,9 @@ class _ReplaceParser(object):
                 value = _util.uord(self.convert_case(text, single)) if single is not None else _util.uord(text)
             elif single:
                 value = _util.uord(self.convert_case(_util.uchr(value), single))
-            if value <= 0xFF:
+            if self.use_format and value in _CURLY_BRACKETS_ORD:
+                self.handle_format(_util.uchr(value), i)
+            elif value <= 0xFF:
                 self.result.append('\\%03o' % value)
             else:
                 self.result.append(_util.uchr(value))
@@ -856,7 +981,9 @@ class _ReplaceParser(object):
             value = _util.uord(self.convert_case(text, single)) if single is not None else _util.uord(text)
         elif single:
             value = _util.uord(self.convert_case(_util.uchr(value), single))
-        if value <= 0xFF:
+        if self.use_format and value in _CURLY_BRACKETS_ORD:
+            self.handle_format(_util.uchr(value), i)
+        elif value <= 0xFF:
             self.result.append('\\%03o' % value)
         else:
             self.result.append(_util.uchr(value))
@@ -909,7 +1036,9 @@ class _ReplaceParser(object):
             value = _util.uord(self.convert_case(text, single)) if single is not None else _util.uord(text)
         elif single:
             value = _util.uord(self.convert_case(_util.uchr(value), single))
-        if value <= 0xFF:
+        if self.use_format and value in _CURLY_BRACKETS_ORD:
+            self.handle_format(_util.uchr(value), i)
+        elif value <= 0xFF:
             self.result.append('\\%03o' % value)
         else:
             self.result.append(_util.uchr(value))
@@ -936,7 +1065,10 @@ class _ReplaceParser(object):
             value = _util.uord(self.convert_case(text, single)) if single is not None else _util.uord(text)
         elif single:
             value = _util.uord(self.convert_case(chr(value), single))
-        self.result.append('\\%03o' % value)
+        if self.use_format and value in _CURLY_BRACKETS_ORD:
+            self.handle_format(_util.uchr(value), i)
+        else:
+            self.result.append('\\%03o' % value)
 
     def get_named_group(self, t, i):
         """Get group number."""
@@ -988,13 +1120,42 @@ class _ReplaceParser(object):
             pass
         return ''.join(value) if value else None
 
+    def format_next(self, i):
+        """Get next format char."""
+
+        c = next(i)
+        return self.format_references(next(i), i) if c == '\\' else c
+
+    def format_references(self, t, i):
+        """Handle format references."""
+
+        octal = self.get_octal(t, i)
+        if octal:
+            value = int(octal, 8)
+            if value > 0xFF and self.binary:
+                # Re fails on octal greater than 0o377 or 0xFF
+                raise ValueError("octal escape value outside of range 0-0o377!")
+            value = _util.uchr(value)
+        elif t in _STANDARD_ESCAPES or t == '\\':
+            value = _BACK_SLASH_TRANSLATION['\\' + t]
+        elif not self.binary and t == "U":
+            value = _util.uchr(int(self.get_wide_unicode(i), 16))
+        elif not self.binary and t == "u":
+            value = _util.uchr(int(self.get_narrow_unicode(i), 16))
+        elif not self.binary and t == "N":
+            value = _unicodedata.lookup(self.get_named_unicode(i))
+        elif t == "x":
+            value = _util.uchr(int(self.get_byte(i), 16))
+        else:
+            i.rewind(1)
+            value = '\\'
+        return value
+
     def reference(self, t, i):
         """Handle references."""
         octal = self.get_octal(t, i)
-        if t in _OCTAL and (self.use_format or octal):
-            if not octal:
-                octal = self.get_group(t, i)
-            self.parse_octal(octal)
+        if t in _OCTAL and octal:
+            self.parse_octal(octal, i)
         elif (t in _DIGIT or t == 'g') and not self.use_format:
             group = self.get_group(t, i)
             if not group:
@@ -1145,47 +1306,19 @@ class _ReplaceParser(object):
             single = self.single_stack.pop()
         return single
 
-    def get_capture(self, text):
-        """Get the capture."""
+    def handle_format_group(self, field, text):
+        """Handle format group."""
 
-        capture = -1
-        base = 10
-        try:
-            index = text.index("[")
-            capture = text[index + 1:-1]
-            text = text[:index]
-            prefix = capture[1:3] if capture[0] == "-" else capture[:2]
-            if prefix[0:1] == "0":
-                char = prefix[-1]
-                if char == "b":
-                    base = 2
-                elif char == "o":
-                    base = 8
-                elif char == "x":
-                    base = 16
-        except ValueError:
-            pass
-
-        if not isinstance(capture, int):
-            try:
-                capture = int(capture, base)
-            except ValueError:
-                raise ValueError("Capture index must be an integer!")
-        return text, capture
-
-    def handle_format_group(self, text):
-        """Handle groups."""
-
-        text, capture = self.get_capture(text)
-
-        # Handle auto or manual format
-        if text == "":
+        # Handle auto incrementing group indexes
+        if field == '':
             if self.auto:
-                text = _util.string_type(self.auto_index)
+                field = _util.string_type(self.auto_index)
+                text[0] = (_util.FMT_FIELD, field)
                 self.auto_index += 1
             elif not self.manual and not self.auto:
                 self.auto = True
-                text = _util.string_type(self.auto_index)
+                field = _util.string_type(self.auto_index)
+                text[0] = (_util.FMT_FIELD, field)
                 self.auto_index += 1
             else:
                 raise ValueError("Cannot switch to auto format during manual format!")
@@ -1194,10 +1327,13 @@ class _ReplaceParser(object):
         elif not self.manual:
             raise ValueError("Cannot switch to manual format during auto format!")
 
-        self.handle_group(text, capture, True)
+        self.handle_group(field, tuple(text), True)
 
-    def handle_group(self, text, capture=-1, is_format=False):
+    def handle_group(self, text, capture=None, is_format=False):
         """Handle groups."""
+
+        if capture is None:
+            capture = tuple() if self.binary else ''
 
         if len(self.result) > 1:
             self.literal_slots.append("".join(self.result))
@@ -1217,7 +1353,7 @@ class _ReplaceParser(object):
             (
                 self.slot,
                 (
-                    self.span_stack[-1] if self.span_stack else None,
+                    (self.span_stack[-1] if self.span_stack else None),
                     self.get_single_stack(),
                     capture
                 )
@@ -1237,6 +1373,8 @@ class _ReplaceParser(object):
             self.binary = True
         else:
             self.binary = False
+        if isinstance(pattern.pattern, _util.binary_type) != self.binary:
+            raise TypeError('Pattern string type must match replace template string type!')
         self._original = template
         self.use_format = use_format
         self.parse_template(pattern)
@@ -1246,16 +1384,17 @@ class _ReplaceParser(object):
             tuple(self.group_slots),
             tuple(self.literals),
             hash(pattern),
-            self.use_format
+            self.use_format,
+            self.binary
         )
 
 
 class ReplaceTemplate(_util.Immutable):
     """Replacement template expander."""
 
-    __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format", "_hash")
+    __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format", "_hash", "_binary")
 
-    def __init__(self, groups, group_slots, literals, pattern_hash, use_format):
+    def __init__(self, groups, group_slots, literals, pattern_hash, use_format, binary):
         """Initialize."""
 
         super(ReplaceTemplate, self).__init__(
@@ -1264,11 +1403,12 @@ class ReplaceTemplate(_util.Immutable):
             group_slots=group_slots,
             literals=literals,
             pattern_hash=pattern_hash,
+            _binary=binary,
             _hash=hash(
                 (
                     type(self),
                     groups, group_slots, literals,
-                    pattern_hash, use_format
+                    pattern_hash, use_format, binary
                 )
             )
         )
@@ -1292,7 +1432,8 @@ class ReplaceTemplate(_util.Immutable):
             self.group_slots == other.group_slots and
             self.literals == other.literals and
             self.pattern_hash == other.pattern_hash and
-            self.use_format == other.use_format
+            self.use_format == other.use_format and
+            self._binary == other._binary
         )
 
     def __ne__(self, other):
@@ -1304,7 +1445,8 @@ class ReplaceTemplate(_util.Immutable):
             self.group_slots != other.group_slots or
             self.literals != other.literals or
             self.pattern_hash != other.pattern_hash or
-            self.use_format != other.use_format
+            self.use_format != other.use_format or
+            self._binary != self._binary
         )
 
     def __repr__(self):  # pragma: no cover
@@ -1316,7 +1458,7 @@ class ReplaceTemplate(_util.Immutable):
             self.pattern_hash, self.use_format
         )
 
-    def get_group_index(self, index):
+    def _get_group_index(self, index):
         """Find and return the appropriate group index."""
 
         g_index = None
@@ -1326,7 +1468,7 @@ class ReplaceTemplate(_util.Immutable):
                 break
         return g_index
 
-    def get_group_attributes(self, index):
+    def _get_group_attributes(self, index):
         """Find and return the appropriate group case."""
 
         g_case = (None, None, -1)
@@ -1343,17 +1485,29 @@ class ReplaceTemplate(_util.Immutable):
             raise ValueError("Match is None!")
 
         sep = m.string[:0]
+        if isinstance(sep, _util.binary_type) != self._binary:
+            raise TypeError('Match string type does not match expander string type!')
         text = []
         # Expand string
         for x in range(0, len(self.literals)):
             index = x
             l = self.literals[x]
             if l is None:
-                g_index = self.get_group_index(index)
-                span_case, single_case, capture = self.get_group_attributes(index)
-                if capture not in (0, -1):
-                    raise IndexError("'%d' is out of range!" % capture)
-                l = m.group(g_index)
+                g_index = self._get_group_index(index)
+                span_case, single_case, capture = self._get_group_attributes(index)
+                if not self.use_format:
+                    # Non format replace
+                    try:
+                        l = m.group(g_index)
+                    except IndexError:  # pragma: no cover
+                        raise IndexError("'%d' is out of range!" % g_index)
+                else:
+                    # String format replace
+                    try:
+                        obj = m.group(g_index)
+                    except IndexError:  # pragma: no cover
+                        raise IndexError("'%d' is out of range!" % g_index)
+                    l = _util.format(m, obj, capture, self._binary)
                 if span_case is not None:
                     if span_case == _LOWER:
                         l = l.lower()
@@ -1372,7 +1526,7 @@ class ReplaceTemplate(_util.Immutable):
 def _pickle(r):
     """Pickle."""
 
-    return ReplaceTemplate, (r.groups, r.group_slots, r.literals, r.pattern_hash, r.use_format)
+    return ReplaceTemplate, (r.groups, r.group_slots, r.literals, r.pattern_hash, r.use_format, r._binary)
 
 
 _util.copyreg.pickle(ReplaceTemplate, _pickle)

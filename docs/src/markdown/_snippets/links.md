@@ -1,3 +1,4 @@
+[format-spec]: https://docs.python.org/3/library/string.html#formatspec
 [grapheme-boundaries]: http://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
 [mkdocs]: https://github.com/mkdocs/mkdocs
 [mkdocs-material]: https://github.com/squidfunk/mkdocs-material

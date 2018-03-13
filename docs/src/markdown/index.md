@@ -132,14 +132,7 @@ In order to escape patterns formulated for Backrefs, you can simply use your reg
 
 ### Format Replacements
 
-!!! note "Backrefs' Format Differences"
-    Even though this is a Regex specific feature, this replace format is supported by Backrefs for both Regex *and* Re with some slight differences.  These differences apply to both Regex as well as Re as Backrefs must augment the format to allow casing back references.
-
-    1. Backrefs does not use Python's string format directly but mimics the feel for inserting groups into the final output.
-    2. Indexing into different captures in Re is limited to `0` or `-1` since Re *only* maintains the last capture.
-    3. Raw string (`#!py3 r"..."`) handling for format replace is a bit different for Backrefs compared to Regex. Regex treats format strings as simply strings instead of as a regular replace template. So while in a regular replace template you can use `\n` to represent a new line, in format strings, you'd have use a literal new line or use a normal string (`#!py3 "..."`) with `\n`. Since Backrefs allows for its own special back references in format strings, it will also process standard string and Unicode string back references as well.
-
-The Regex module offers a feature where you can apply replacements via a format string style.
+The Regex library has a feature where you can use format strings to implement replacements. This is useful for Regex as it provides a way to access different captures when multiple are captured by a single group. Most likely it was born from the need to provide an easy way to access multiple captures as Regex stores all captures while Re stores only the last.
 
 ```pycon3
 >>> regex.subf(r"(\w+) (\w+)", "{0} => {2} {1}", "foo bar")
@@ -148,14 +141,74 @@ The Regex module offers a feature where you can apply replacements via a format 
 'bar foo'
 ```
 
-You can even index into groups that have multiple captures.
-
 ```pycon3
 >>> regex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
 'foo bar => bar f'
 ```
 
-Backrefs supports this functionality in a similar way, and you can do it with Regex *or* Re. This allows you to use case back references and the format style replacements.
+Backrefs implements format string replacements in a way that is similar to Regex's that works for both Re and Regex.  While it is similar to Regex's implementation, there are some differences.
+
+1. Though you can use normal strings with Backrefs' format templates, it is recommended to use raw strings for format replacements as back slashes are handled special to implement lower casing and upper casing via the replace back references. In Backrefs a template would look like `#!py r'\L{1}{2}\E'`, and if you used a normal string it would look like `#!py '\\L{1}{2}\\E'`.  Because Backrefs more or less requires raw strings for sane replace template creation, you can also use normal string and Unicode escapes in the format replace templates, so it should feel like a normal string.
+
+    ```pycon3
+    >>> bregex.subf(r'(test)', r'{0:\n^8}', 'test')
+    '\n\ntest\n\n'
+    >>> bregex.subf(r'(test)', r'\C{0:\u007c^8}\E', 'test')
+    '||TEST||'
+    ```
+
+2. Normally format strings don't allow you to index with negative integers as they are recognized as strings, but like Regex's format implementation, Backrefs allows you to use negative numbers (`-1`), hex (`0x01`), octal (`0o001`), or even binary (`0b1`).  While it may not be practical to use some of the latter forms, they are available to have feature parity with Regex's implementation.
+
+
+    ```pycon3
+    >>> bregex.subf(r'(test)', r'{0[-1]}', 'test')
+    'test'
+    ```
+
+3. Backrefs implements a subset of the [Format Specification Mini-Language][format-spec] that allows for a few more additional features that Regex doesn't (`format_spec`). As regular expression replace is only dealing with strings (or byte strings), only string features are available with the `format_spec`.
+
+    ```
+    replacement_field ::=  "{" [field_name] ["!" conversion] [":" format_spec] "}"
+    field_name        ::=  arg_name ("." attribute_name | "[" element_index "]")*
+    arg_name          ::=  [identifier | integer]
+    attribute_name    ::=  identifier
+    element_index     ::=  integer | index_string
+    index_string      ::=  <any source character except "]"> +
+    conversion        ::=  "r" | "s" | "a"
+    format_spec       ::=  <described in the next section>
+    ```
+
+    Conversion `a` is not supported in Python 2.
+
+    ```
+    format_spec ::=  [[fill]align][0][width][type]
+    fill        ::=  <any character>
+    align       ::=  "<" | ">" | "^"
+    width       ::=  integer
+    type        ::=  "s"
+    ```
+
+    Note that in situations such as `{:030}`, where a width has a leading zero and no alignment specified, this would normally trigger the integer alignment `=`, but since integer features are not implemented, this would fail.
+
+4. Backrefs allows format strings to work for byte strings as well. In almost all instances, using conversion types won't make sense in a regular expression replace as the objects will already be strings in the needed format, but if you were to use a conversion, ASCII would be assumed, and the object or Unicode string would be encoded with `backslashreplace`.
+
+When using Backrefs' format replace, it should feel similar to Regex's format replace, except you will use raw strings:
+
+```pycon3
+>>> bregex.subf(r"(\w+) (\w+)", r"{0} => {2} {1}", "foo bar")
+'foo bar => bar foo'
+>>> bregex.subf(r"(?P<word1>\w+) (?P<word2>\w+)", r"{word2} {word1}", "foo bar")
+'bar foo'
+```
+
+If using `bregex`, you can even index into groups that have multiple captures.
+
+```pycon3
+>>> bregex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
+'foo bar => bar f'
+```
+
+Formats also work for Re as well.
 
 
 ```pycon3
@@ -182,7 +235,7 @@ To pre-compile a format replace template, you can use the Backrefs' `compile_rep
 'foo bar => bar foo'
 ```
 
-Or using Backrefs' pattern object:
+Or you can use Backrefs' pattern objects.
 
 ```pycon3
 >>> pattern = bre.compile(r"(\w+) (\w+)")
@@ -190,7 +243,7 @@ Or using Backrefs' pattern object:
 'foo bar => BAR FOO'
 ```
 
-Pre-compiling a format replace template with Backrefs' pattern object:
+Pre-compiled pattern objects can also create a compiled format replace object.
 
 ```pycon3
 >>> pattern = bre.compile(r"(?P<word1>\w+) (?P<word2>\w+)")
@@ -219,7 +272,7 @@ Each supported regular expression engine's supported search features vary, so fe
 
 Back\ References      | Description
 --------------------- |------------
-'\e'                  | Escape character `\x1b`.
+`\e`                  | Escape character `\x1b`.
 `\c`                  | Shortcut for the uppercase [POSIX character class](#posix-style-properties) `[[:upper:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\l`                  | Shortcut for the lowercase [POSIX character class](#posix-style-properties) `[[:lower:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\C`                  | Shortcut for the inverse uppercase [POSIX character class](#posix-style-properties) `[[:^upper:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
@@ -243,7 +296,7 @@ Back\ References      | Description
 
     `\X`, `\m` and `\M` are also features already present in Regex.
 
-    `\c`, `\l`, `L` and `L` are not used as some of these flags are already taken by Regex itself  These references are just shortcuts for the related POSIX properties in Backrefs.
+    `\c`, `\l`, `L` and `L` are not used as some of these flags are already taken by Regex itself. These references are just shortcuts for the related POSIX properties which can be accessed in different ways.
 
 Back\ References | Description
 ---------------- | -----------
@@ -278,7 +331,7 @@ Back\ References     | Description
 
 ## Unicode Properties
 
-A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own implementation of Unicode properties. Some properties may not be available on certain Python versions due the included Unicode build.
+A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own implementation of Unicode properties. Some properties may not be available on certain Python versions due to the included Unicode build.
 
 It is important to note that Backrefs handles Unicode properties by transforming them to character classes with all the associated characters: `\p{Cs}` --> `[\ud800\udb7f-\udb80\udbff-\udc00\udfff]`.  Because of this, Backrefs can create really large regular expressions that the underlying engine must walk through.  In short, Re with Backrefs will never be as efficient or fast as using Regex's Unicode properties, but it is very useful when you need or want to use Re.
 
@@ -312,10 +365,11 @@ Supported\ Properties                       | Aliases
 `Script`                                    | `sc`
 `Script_Extensions`\ (Python\ 3+)           | `scx`
 `Sentence_Break`                            | `sb`
+`Vertical_Orientation`\ (Python\ 3.7+)      | `vt`
 `Word_Break`                                | `wb`
 
 !!! note
-    The Binary property is not actually a property, but a group of different properties with binary characteristics.
+    The Binary property is not actually a property, but a group of different properties with binary characteristics. The available binary properties may differ from Unicode version to Unicode version.
 
 Exhaustive documentation on all these properties and their values is not currently provided. In general, we'll cover the syntax rules, and [special exceptions](#special-syntax-exceptions) to those rules for specific properties. Though we will outline all the values for General Category, we will not outline all of the valid values for the other properties. You can look at [Perl's Unicode property documentation][perl-uniprops] to get an idea of what values are appropriate for a given property, but keep in mind, syntax may vary from Perl's syntax.
 

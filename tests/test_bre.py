@@ -18,8 +18,10 @@ PY37_PLUS = (3, 7) <= sys.version_info
 
 if PY3:
     binary_type = bytes  # noqa
+    string_type = str  # noqa
 else:
     binary_type = str  # noqa
+    string_type = unicode  # noqa
 
 
 class TestSearchTemplate(unittest.TestCase):
@@ -60,13 +62,15 @@ class TestSearchTemplate(unittest.TestCase):
         p1 = bre.compile('test')
         p2 = bre.compile('test')
         p3 = bre.compile('test', bre.X)
+        p4 = bre.compile(b'test')
 
         self.assertTrue(p1 == p2)
         self.assertTrue(p1 != p3)
+        self.assertTrue(p1 != p4)
 
-        p4 = copy.copy(p1)
-        self.assertTrue(p1 == p4)
-        self.assertTrue(p4 in {p1})
+        p5 = copy.copy(p1)
+        self.assertTrue(p1 == p5)
+        self.assertTrue(p5 in {p1})
 
     def test_not_flags(self):
         """Test invalid flags."""
@@ -167,7 +171,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(bre._get_cache_size(), 0)
         self.assertEqual(bre._get_cache_size(True), 0)
         for x in range(1000):
-            value = str(random.randint(1, 10000))
+            value = string_type(random.randint(1, 10000))
             p = bre.compile(value)
             p.sub('', value)
             self.assertTrue(bre._get_cache_size() > 0)
@@ -973,26 +977,29 @@ class TestReplaceTemplate(unittest.TestCase):
 
         p1 = bre.compile('(test)')
         p2 = bre.compile('(test)')
+        p3 = bre.compile(b'(test)')
         r1 = p1.compile(r'\1')
         r2 = p1.compile(r'\1')
         r3 = p2.compile(r'\1')
         r4 = p2.compile(r'\1', bre.FORMAT)
+        r5 = p3.compile(br'\1')
 
         self.assertTrue(r1 == r2)
         self.assertTrue(r2 == r3)
         self.assertTrue(r1 != r4)
+        self.assertTrue(r1 != r5)
 
-        r5 = copy.copy(r1)
-        self.assertTrue(r1 == r5)
-        self.assertTrue(r5 in {r1})
+        r6 = copy.copy(r1)
+        self.assertTrue(r1 == r6)
+        self.assertTrue(r6 in {r1})
 
     def test_format_failures(self):
         """Test format parsing failures."""
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(sre_constants.error if PY36_PLUS else IndexError):
             bre.subf('test', r'{1.}', 'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(IndexError):
             bre.subf('test', r'{a.}', 'test', bre.FORMAT)
 
         with pytest.raises(SyntaxError):
@@ -1009,6 +1016,59 @@ class TestReplaceTemplate(unittest.TestCase):
 
         with pytest.raises(SyntaxError):
             bre.subf('test', r'test { test', 'test', bre.FORMAT)
+
+        with pytest.raises(sre_constants.error if PY36_PLUS else IndexError):
+            bre.subf(b'test', br'{1.}', b'test', bre.FORMAT)
+
+        with pytest.raises(IndexError):
+            bre.subf(b'test', br'{a.}', b'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf(b'test', br'{1[}', b'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf(b'test', br'{a[}', b'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf(b'test', br'test } test', b'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf(b'test', br'test {test', b'test', bre.FORMAT)
+
+        with pytest.raises(SyntaxError):
+            bre.subf(b'test', br'test { test', b'test', bre.FORMAT)
+
+        with pytest.raises(TypeError):
+            bre.subf(b'test', br'{[test]}', b'test', bre.FORMAT)
+
+    def test_format_conversions(self):
+        """Test string format conversion paths."""
+
+        self.assertTrue(bre.subf('test', r'{0.index}', 'test').startswith('<built-in method'))
+        self.assertEqual(bre.subf('test', r'{0.__class__.__name__}', 'test'), ('str' if PY3 else 'unicode'))
+        self.assertTrue(bre.subf('test', r'{0.index!s}', 'test').startswith('<built-in method'))
+        self.assertEqual(bre.subf('test', r'{0.__class__.__name__!s}', 'test'), ('str' if PY3 else 'unicode'))
+        if PY3:
+            self.assertTrue(bre.subf('test', r'{0.index!a}', 'test').startswith('<built-in method'))
+
+        self.assertTrue(bre.subf(b'test', br'{0.index}', b'test').startswith(b'<built-in method'))
+        self.assertEqual(bre.subf(b'test', br'{0.__class__.__name__}', b'test'), (b'bytes' if PY3 else b'str'))
+        self.assertTrue(bre.subf(b'test', br'{0.index!s}', b'test').startswith(b'<built-in method'))
+        self.assertEqual(bre.subf(b'test', br'{0.__class__.__name__!s}', b'test'), (b'bytes' if PY3 else b'str'))
+        if PY3:
+            self.assertTrue(bre.subf('test', r'{0.index!a}', 'test').startswith('<built-in method'))
+
+    def test_incompatible_strings(self):
+        """Test incompatible string types."""
+
+        with pytest.raises(TypeError):
+            bre.compile('test').compile(b'test')
+
+        p1 = bre.compile('test')
+        repl = bre.compile(b'test').compile(b'other')
+        m = p1.match('test')
+        with pytest.raises(TypeError):
+            repl(m)
 
     def test_named_unicode_failures(self):
         """Test named Unicode failures."""
@@ -1659,10 +1719,21 @@ class TestReplaceTemplate(unittest.TestCase):
         text_pattern = r"(this )(.+?)(numeric capture )(groups)(!)"
         pattern = re.compile(text_pattern)
 
-        expand = bre.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT)
-        results = expand(pattern.match(text))
+        expandf = bre.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT)
+        results = expandf(pattern.match(text))
         self.assertEqual(
             'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
+            results
+        )
+
+        text = b"this is a test for numeric capture groups!"
+        text_pattern = br"(this )(.+?)(numeric capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expandf = bre.compile_replace(pattern, br'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT)
+        results = expandf(pattern.match(text))
+        self.assertEqual(
+            b'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
             results
         )
 
@@ -1673,12 +1744,25 @@ class TestReplaceTemplate(unittest.TestCase):
         text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = re.compile(text_pattern)
 
-        expand = bre.compile_replace(
+        expandf = bre.compile_replace(
             pattern, r'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT
         )
-        results = expand(pattern.match(text))
+        results = expandf(pattern.match(text))
         self.assertEqual(
             '{0001}{IS A TEST FOR }Format capture GROUPS!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
+            results
+        )
+
+        text = b"this is a test for format capture groups!"
+        text_pattern = br"(this )(.+?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expandf = bre.compile_replace(
+            pattern, br'\l\C{{0001}}\l{{{02}}}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT
+        )
+        results = expandf(pattern.match(text))
+        self.assertEqual(
+            b'{0001}{IS A TEST FOR }Format capture GROUPS!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
             results
         )
 
@@ -1689,12 +1773,25 @@ class TestReplaceTemplate(unittest.TestCase):
         text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = re.compile(text_pattern)
 
-        expand = bre.compile_replace(
+        expandf = bre.compile_replace(
             pattern, r'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', bre.FORMAT
         )
-        results = expand(pattern.match(text))
+        results = expandf(pattern.match(text))
         self.assertEqual(
             'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\ntHIS iS A TEST FOR Format capture GROUPS!{}',
+            results
+        )
+
+        text = b"this is a test for format capture groups!"
+        text_pattern = br"(this )(.+?)(format capture )(groups)(!)"
+        pattern = re.compile(text_pattern)
+
+        expandf = bre.compile_replace(
+            pattern, br'\C{}\E\n\l\C{}\l{}\L\c{}\E{}\E{}{{}}', bre.FORMAT
+        )
+        results = expandf(pattern.match(text))
+        self.assertEqual(
+            b'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\ntHIS iS A TEST FOR Format capture GROUPS!{}',
             results
         )
 
@@ -1718,7 +1815,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test format auto capture indexing."""
 
         text = "abababab"
-        text_pattern = r"(\w)+"
+        text_pattern = r"(\w{2})+"
         pattern = re.compile(text_pattern)
 
         expand = bre.compile_replace(
@@ -1726,7 +1823,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
         results = expand(pattern.match(text))
         self.assertEqual(
-            'ababababb',
+            'ba',
             results
         )
 
@@ -1756,9 +1853,10 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(
             pattern, br'{1[-0x1]}{1[-0o1]}{1[-0b1]}', bre.FORMAT
         )
+
         results = expand(pattern.match(text))
         self.assertEqual(
-            b'bbb',
+            (b'989898' if PY3 else b'bbb'),
             results
         )
 
@@ -1786,7 +1884,7 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = re.compile(text_pattern)
 
         expand = bre.compile_replace(
-            pattern, r'\{1[-1]}\\{1[-1]}', bre.FORMAT
+            pattern, r'\{1}\\{1}', bre.FORMAT
         )
         results = expand(pattern.match(text))
         self.assertEqual(
@@ -1800,6 +1898,99 @@ class TestReplaceTemplate(unittest.TestCase):
         pattern = bre.compile('Test')
         result = pattern.sub('\\C\\U00000070\\U0001F360\\E', 'Test')
         self.assertEqual(result, 'P\U0001F360')
+
+    def test_format_inter_escape(self):
+        """Test escaped characters inside format group."""
+
+        self.assertEqual(
+            bre.subf(
+                r'(Te)(st)(ing)(!)',
+                r'\x7b1\x7d-\u007b2\u007d-\U0000007b3\U0000007d-\N{LEFT CURLY BRACKET}4\N{RIGHT CURLY BRACKET}',
+                'Testing!'
+            ),
+            "Te-st-ing-!"
+        )
+        self.assertEqual(
+            bre.subf(
+                r'(Te)(st)(ing)(!)',
+                r'\1731\175-{2:\\^6}',
+                'Testing!'
+            ),
+            "Te-\\\\st\\\\"
+        )
+
+        with pytest.raises(SyntaxError):
+            bre.subf(r'(test)', r'{\g}', 'test')
+
+        with pytest.raises(ValueError):
+            bre.subf(br'(test)', br'{\777}', b'test')
+
+    def test_format_features(self):
+        """Test format features."""
+
+        pattern = bre.compile(r'(Te)(st)(?P<group>ing)')
+        self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'), ('str' if PY3 else 'unicode'))
+        self.assertEqual(pattern.subf(r'{1:<30}', 'Testing'), 'Te                            ')
+        self.assertEqual(pattern.subf(r'{1:30}', 'Testing'), 'Te                            ')
+        self.assertEqual(pattern.subf(r'{1:>30}', 'Testing'), '                            Te')
+        self.assertEqual(pattern.subf(r'{1:^30}', 'Testing'), '              Te              ')
+        self.assertEqual(pattern.subf(r'{1:*^30}', 'Testing'), '**************Te**************')
+        self.assertEqual(pattern.subf(r'{1:^030}', 'Testing'), '00000000000000Te00000000000000')
+        self.assertEqual(pattern.subf(r'{1:^^30}', 'Testing'), '^^^^^^^^^^^^^^Te^^^^^^^^^^^^^^')
+        self.assertEqual(pattern.subf(r'{1:1^30}', 'Testing'), '11111111111111Te11111111111111')
+        self.assertEqual(pattern.subf(r'{1:<30s}', 'Testing'), 'Te                            ')
+        self.assertEqual(pattern.subf(r'{1:s}', 'Testing'), 'Te')
+        self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'" if PY3 else "u'st'")
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(r'{2!x}', 'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(r'{2$}', 'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(r'{2$}', 'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(r'{a$}', 'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(r'{:ss}', 'Testing')
+
+        with pytest.raises(ValueError):
+            pattern.subf(r'{:030}', 'Testing')
+
+        pattern = bre.compile(br'(Te)(st)(?P<group>ing)')
+        self.assertEqual(pattern.subf(br'{.__class__.__name__}', b'Testing'), (b'bytes' if PY3 else b'str'))
+        self.assertEqual(pattern.subf(br'{1:<30}', b'Testing'), b'Te                            ')
+        self.assertEqual(pattern.subf(br'{1:30}', b'Testing'), b'Te                            ')
+        self.assertEqual(pattern.subf(br'{1:>30}', b'Testing'), b'                            Te')
+        self.assertEqual(pattern.subf(br'{1:^30}', b'Testing'), b'              Te              ')
+        self.assertEqual(pattern.subf(br'{1:*^30}', b'Testing'), b'**************Te**************')
+        self.assertEqual(pattern.subf(br'{1:^030}', b'Testing'), b'00000000000000Te00000000000000')
+        self.assertEqual(pattern.subf(br'{1:^^30}', b'Testing'), b'^^^^^^^^^^^^^^Te^^^^^^^^^^^^^^')
+        self.assertEqual(pattern.subf(br'{1:1^30}', b'Testing'), b'11111111111111Te11111111111111')
+        self.assertEqual(pattern.subf(br'{1:<30s}', b'Testing'), b'Te                            ')
+        self.assertEqual(pattern.subf(br'{1:s}', b'Testing'), b'Te')
+        self.assertEqual(pattern.subf(br'{2!r}', b'Testing'), b"b'st'" if PY3 else b"'st'")
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(br'{2!x}', b'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(br'{2$}', b'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(br'{2$}', b'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(br'{a$}', b'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(br'{:ss}', b'Testing')
+
+        with pytest.raises(ValueError):
+            pattern.subf(br'{:030}', b'Testing')
 
     def test_dont_case_special_refs(self):
         """Test that we don't case Unicode and bytes tokens, but case the character."""
@@ -2000,12 +2191,10 @@ class TestExceptions(unittest.TestCase):
         text_pattern = r"(\w)+"
         pattern = re.compile(text_pattern)
 
-        with pytest.raises(ValueError) as excinfo:
-            bre.compile_replace(
-                pattern, r'{1[0o3f]}', bre.FORMAT
+        with pytest.raises(TypeError):
+            bre.subf(
+                pattern, r'{1[0o3f]}', 'test'
             )
-
-        assert "Capture index must be an integer!" in str(excinfo.value)
 
     def test_format_bad_capture_range(self):
         """Test a bad capture."""
@@ -2016,10 +2205,8 @@ class TestExceptions(unittest.TestCase):
             pattern, r'{1[37]}', bre.FORMAT
         )
 
-        with pytest.raises(IndexError) as excinfo:
+        with pytest.raises(IndexError):
             expand(pattern.match('text'))
-
-        assert "is out of range!" in str(excinfo.value)
 
     def test_require_compiled_pattern(self):
         """Test a bad capture."""
