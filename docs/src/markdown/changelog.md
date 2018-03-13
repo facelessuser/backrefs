@@ -2,6 +2,8 @@
 
 ## 3.5.0
 
+Mar 13, 2018
+
 - **NEW**: Use a more advanced format string implementation that implements all string features, included those found in `format_spec`.
 - **FIX**: Relax validation so not to exclude valid named Unicode values.
 - **FIX**: Caching issues where byte string patterns were confused with Unicode patterns.
