@@ -56,12 +56,6 @@ _BACK_SLASH_TRANSLATION = {
     "\\\\": '\\'
 }
 
-_FMT_FIELD = 0
-_FMT_INDEX = 1
-_FMT_ATTR = 2
-_FMT_CONV = 3
-_FMT_SPEC = 4
-
 _FMT_CONV_TYPE = ('a', 'r', 's') if _util.PY3 else ('r', 's')
 
 
@@ -764,7 +758,7 @@ class _ReplaceParser(object):
 
         try:
             if c == '}':
-                value.append((_FMT_FIELD, ''))
+                value.append((_util.FMT_FIELD, ''))
             else:
                 # Field
                 if c in _LETTERS_UNDERSCORE:
@@ -785,9 +779,9 @@ class _ReplaceParser(object):
                 # Try and covert to integer index
                 field = ''.join(value).strip()
                 try:
-                    value = [(_FMT_FIELD, _util.string_type(int(field, 10)))]
+                    value = [(_util.FMT_FIELD, _util.string_type(int(field, 10)))]
                 except ValueError:
-                    value = [(_FMT_FIELD, field)]
+                    value = [(_util.FMT_FIELD, field)]
                     pass
 
                 # Attributes and indexes
@@ -804,9 +798,9 @@ class _ReplaceParser(object):
                             raise SyntaxError("Unmatched '[' at %d" % (sindex - 1))
                         idx = self.parse_format_index(''.join(findex))
                         if isinstance(idx, int):
-                            value.append((_FMT_INDEX, idx))
+                            value.append((_util.FMT_INDEX, idx))
                         else:
-                            value.append((_FMT_INDEX, idx))
+                            value.append((_util.FMT_INDEX, idx))
                         c = self.format_next(i)
                     else:
                         findex = []
@@ -814,14 +808,14 @@ class _ReplaceParser(object):
                         while c in _WORD:
                             findex.append(c)
                             c = self.format_next(i)
-                        value.append((_FMT_ATTR, ''.join(findex)))
+                        value.append((_util.FMT_ATTR, ''.join(findex)))
 
                 # Conversion
                 if c == '!':
                     c = self.format_next(i)
-                    if c not in ('s', 'r', 'a'):
+                    if c not in _FMT_CONV_TYPE:
                         raise SyntaxError("Invalid conversion type at %d!" % (i.index - 1))
-                    value.append((_FMT_CONV, c))
+                    value.append((_util.FMT_CONV, c))
                     c = self.format_next(i)
 
                 # Format spec
@@ -880,10 +874,9 @@ class _ReplaceParser(object):
                     elif not fill:
                         fill = b' ' if self.binary else ' '
 
-                    value.append((_FMT_SPEC, (fill, align, (int(''.join(width)) if width else 0), convert)))
+                    value.append((_util.FMT_SPEC, (fill, align, (int(''.join(width)) if width else 0), convert)))
 
             if c != '}':
-                print(c)
                 raise SyntaxError("Unmatched '{' at %d" % (index - 1))
         except StopIteration:
             raise SyntaxError("Unmatched '{' at %d!" % (index - 1))
@@ -1320,12 +1313,12 @@ class _ReplaceParser(object):
         if field == '':
             if self.auto:
                 field = _util.string_type(self.auto_index)
-                text[0] = (_FMT_FIELD, field)
+                text[0] = (_util.FMT_FIELD, field)
                 self.auto_index += 1
             elif not self.manual and not self.auto:
                 self.auto = True
                 field = _util.string_type(self.auto_index)
-                text[0] = (_FMT_FIELD, field)
+                text[0] = (_util.FMT_FIELD, field)
                 self.auto_index += 1
             else:
                 raise ValueError("Cannot switch to auto format during manual format!")
@@ -1394,71 +1387,6 @@ class _ReplaceParser(object):
             self.use_format,
             self.binary
         )
-
-
-def _to_bstr(l):
-    """Convert to byte string."""
-
-    if isinstance(l, _util.string_type):
-        l = l.encode('ascii', 'backslashreplace')
-    elif not isinstance(l, _util.binary_type):
-        l = _util.string_type(l).encode('ascii', 'backslashreplace')
-    return l
-
-
-def _format(m, group_index, capture, binary):
-    """Perform a string format."""
-
-    try:
-        l = m.group(group_index)
-    except IndexError:  # pragma: no cover
-        raise IndexError("'%d' is out of range!" % group_index)
-
-    for fmt_type, value in capture[1:]:
-        if fmt_type == _FMT_ATTR:
-            # Attribute
-            l = getattr(l, value)
-        elif fmt_type == _FMT_INDEX:
-            # Index
-            l = l[value]
-        elif fmt_type == _FMT_CONV:
-            if binary:
-                # Conversion
-                if value in ('r', 'a'):
-                    l = repr(l).encode('ascii', 'backslashreplace')
-                elif value == 's':
-                    # If the object is not string or byte string already
-                    l = _to_bstr(l)
-            else:
-                # Conversion
-                if value == 'a':
-                    l = ascii(l)
-                elif value == 'r':
-                    l = repr(l)
-                elif value == 's':
-                    # If the object is not string or byte string already
-                    l = _util.string_type(l)
-        elif fmt_type == _FMT_SPEC:
-            # Integers and floats don't have an explicit 's' format type.
-            if value[3] and value[3] == 's':
-                if isinstance(l, int):  # pragma: no cover
-                    raise ValueError("Unknown format code 's' for object of type 'int'")
-                if isinstance(l, float):  # pragma: no cover
-                    raise ValueError("Unknown format code 's' for object of type 'float'")
-
-            # Ensure object is a byte string
-            l = _to_bstr(l) if binary else _util.string_type(l)
-
-            spec_type = value[1]
-            if spec_type == '^':
-                l = l.center(value[2], value[0])
-            elif spec_type == ">":
-                l = l.rjust(value[2], value[0])
-            else:
-                l = l.ljust(value[2], value[0])
-
-    # Make sure the final object is a byte string
-    return _to_bstr(l) if binary else _util.string_type(l)
 
 
 class ReplaceTemplate(_util.Immutable):
@@ -1575,7 +1503,11 @@ class ReplaceTemplate(_util.Immutable):
                         raise IndexError("'%d' is out of range!" % g_index)
                 else:
                     # String format replace
-                    l = _format(m, g_index, capture, self._binary)
+                    try:
+                        obj = m.group(g_index)
+                    except IndexError:  # pragma: no cover
+                        raise IndexError("'%d' is out of range!" % g_index)
+                    l = _util.format(m, obj, capture, self._binary)
                 if span_case is not None:
                     if span_case == _LOWER:
                         l = l.lower()
