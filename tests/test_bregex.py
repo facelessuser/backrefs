@@ -665,13 +665,22 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(TypeError):
             bregex.subf(b'test', br'{[test]}', b'test', bregex.FORMAT)
 
-    def test_byte_format_conversions(self):
-        """Test byte string format conversion paths."""
+    def test_format_conversions(self):
+        """Test string format conversion paths."""
+
+        self.assertTrue(bregex.subf('test', r'{0.index}', 'test').startswith('<built-in method'))
+        self.assertEqual(bregex.subf('test', r'{0.__class__.__name__}', 'test'), ('str' if PY3 else 'unicode'))
+        self.assertTrue(bregex.subf('test', r'{0.index!s}', 'test').startswith('<built-in method'))
+        self.assertEqual(bregex.subf('test', r'{0.__class__.__name__!s}', 'test'), ('str' if PY3 else 'unicode'))
+        if PY3:
+            self.assertTrue(bregex.subf('test', r'{0.index!a}', 'test').startswith('<built-in method'))
 
         self.assertTrue(bregex.subf(b'test', br'{0.index}', b'test').startswith(b'<built-in method'))
         self.assertEqual(bregex.subf(b'test', br'{0.__class__.__name__}', b'test'), (b'bytes' if PY3 else b'str'))
         self.assertTrue(bregex.subf(b'test', br'{0.index!s}', b'test').startswith(b'<built-in method'))
         self.assertEqual(bregex.subf(b'test', br'{0.__class__.__name__!s}', b'test'), (b'bytes' if PY3 else b'str'))
+        if PY3:
+            self.assertTrue(bregex.subf('test', r'{0.index!a}', 'test').startswith('<built-in method'))
 
     def test_incompatible_strings(self):
         """Test incompatible string types."""
@@ -1495,14 +1504,47 @@ class TestReplaceTemplate(unittest.TestCase):
         result = pattern.sub('\\C\\U00000070\\U0001F360\\E', 'Test')
         self.assertEqual(result, 'P\U0001F360')
 
+    def test_format_inter_escape(self):
+        """Test escaped characters inside format group."""
+
+        self.assertEqual(
+            bregex.subf(
+                r'(Te)(st)(ing)(!)',
+                r'\x7b1\x7d-\u007b2\u007d-\U0000007b3\U0000007d-\N{LEFT CURLY BRACKET}4\N{RIGHT CURLY BRACKET}',
+                'Testing!'
+            ),
+            "Te-st-ing-!"
+        )
+        self.assertEqual(
+            bregex.subf(
+                r'(Te)(st)(ing)(!)',
+                r'\1731\175-{2:\\^6}',
+                'Testing!'
+            ),
+            "Te-\\\\st\\\\"
+        )
+
+        with pytest.raises(SyntaxError):
+            bregex.subf(r'(test)', r'{\g}', 'test')
+
+        with pytest.raises(ValueError):
+            bregex.subf(br'(test)', br'{\777}', b'test')
+
     def test_format_features(self):
         """Test format features."""
 
         pattern = bregex.compile(r'(Te)(st)(?P<group>ing)')
         self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'), ('str' if PY3 else 'unicode'))
-
         self.assertEqual(pattern.subf(r'{1:<30}', 'Testing'), 'Te                            ')
-
+        self.assertEqual(pattern.subf(r'{1:30}', 'Testing'), 'Te                            ')
+        self.assertEqual(pattern.subf(r'{1:>30}', 'Testing'), '                            Te')
+        self.assertEqual(pattern.subf(r'{1:^30}', 'Testing'), '              Te              ')
+        self.assertEqual(pattern.subf(r'{1:*^30}', 'Testing'), '**************Te**************')
+        self.assertEqual(pattern.subf(r'{1:^030}', 'Testing'), '00000000000000Te00000000000000')
+        self.assertEqual(pattern.subf(r'{1:^^30}', 'Testing'), '^^^^^^^^^^^^^^Te^^^^^^^^^^^^^^')
+        self.assertEqual(pattern.subf(r'{1:1^30}', 'Testing'), '11111111111111Te11111111111111')
+        self.assertEqual(pattern.subf(r'{1:<30s}', 'Testing'), 'Te                            ')
+        self.assertEqual(pattern.subf(r'{1:s}', 'Testing'), 'Te')
         self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'" if PY3 else "u'st'")
 
         with pytest.raises(SyntaxError):
@@ -1517,9 +1559,24 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(SyntaxError):
             pattern.subf(r'{a$}', 'Testing')
 
+        with pytest.raises(SyntaxError):
+            pattern.subf(r'{:ss}', 'Testing')
+
+        with pytest.raises(ValueError):
+            pattern.subf(r'{:030}', 'Testing')
+
         pattern = bregex.compile(br'(Te)(st)(?P<group>ing)')
         self.assertEqual(pattern.subf(br'{.__class__.__name__}', b'Testing'), (b'bytes' if PY3 else b'str'))
-
+        self.assertEqual(pattern.subf(br'{1:<30}', b'Testing'), b'Te                            ')
+        self.assertEqual(pattern.subf(br'{1:30}', b'Testing'), b'Te                            ')
+        self.assertEqual(pattern.subf(br'{1:>30}', b'Testing'), b'                            Te')
+        self.assertEqual(pattern.subf(br'{1:^30}', b'Testing'), b'              Te              ')
+        self.assertEqual(pattern.subf(br'{1:*^30}', b'Testing'), b'**************Te**************')
+        self.assertEqual(pattern.subf(br'{1:^030}', b'Testing'), b'00000000000000Te00000000000000')
+        self.assertEqual(pattern.subf(br'{1:^^30}', b'Testing'), b'^^^^^^^^^^^^^^Te^^^^^^^^^^^^^^')
+        self.assertEqual(pattern.subf(br'{1:1^30}', b'Testing'), b'11111111111111Te11111111111111')
+        self.assertEqual(pattern.subf(br'{1:<30s}', b'Testing'), b'Te                            ')
+        self.assertEqual(pattern.subf(br'{1:s}', b'Testing'), b'Te')
         self.assertEqual(pattern.subf(br'{2!r}', b'Testing'), b"b'st'" if PY3 else b"'st'")
 
         with pytest.raises(SyntaxError):
@@ -1533,6 +1590,12 @@ class TestReplaceTemplate(unittest.TestCase):
 
         with pytest.raises(SyntaxError):
             pattern.subf(br'{a$}', b'Testing')
+
+        with pytest.raises(SyntaxError):
+            pattern.subf(br'{:ss}', b'Testing')
+
+        with pytest.raises(ValueError):
+            pattern.subf(br'{:030}', b'Testing')
 
     def test_dont_case_special_refs(self):
         """Test that we don't case Unicode and bytes tokens, but case the character."""
