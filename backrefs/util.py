@@ -6,7 +6,6 @@ Copyright (c) 2015 - 2018 Isaac Muse <isaacmuse@gmail.com>
 """
 import sys
 import struct
-import string
 
 PY2 = (2, 0) <= sys.version_info < (3, 0)
 PY3 = (3, 0) <= sys.version_info < (4, 0)
@@ -118,31 +117,3 @@ class Immutable(object):
         """Prevent mutability."""
 
         raise AttributeError('Class is immutable!')
-
-
-class Formatter(string.Formatter):
-    """Formatter."""
-
-    def get_field(self, field_name, args, kwargs):
-        """Get field."""
-
-        if PY3:
-            first, rest = _string.formatter_field_name_split(field_name)
-        else:
-            first, rest = field_name._formatter_field_name_split()
-
-        obj = self.get_value(first, args, kwargs)
-
-        # loop through the rest of the field_name, doing
-        #  getattr or getitem as needed
-        for is_attr, i in rest:
-            if is_attr:
-                obj = getattr(obj, i)
-            else:
-                try:
-                    i = int(i, 10)
-                except Exception:
-                    pass
-                obj = obj[i]
-
-        return obj, first
