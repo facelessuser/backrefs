@@ -132,81 +132,130 @@ In order to escape patterns formulated for Backrefs, you can simply use your reg
 
 ### Format Replacements
 
-!!! note "Backrefs' Format Differences"
-    Even though this is a Regex specific feature, this replace format is supported by Backrefs for both Regex *and* Re with some slight differences.  These differences apply to both Regex as well as Re as Backrefs must augment the format to allow casing back references.
+Backrefs implements format string replacements that are similar to Regex's that works for both Re and Regex.  While it is similar to Regex's implementation, there are some differences.
 
-    1. Backrefs does not use Python's string format directly but mimics the feel for inserting groups into the final output.
-    2. Indexing into different captures in Re is limited to `0` or `-1` since Re *only* maintains the last capture.
-    3. Raw string (`#!py3 r"..."`) handling for format replace is a bit different for Backrefs compared to Regex. Regex treats format strings as simply strings instead of as a regular replace template. So while in a regular replace template you can use `\n` to represent a new line, in format strings, you'd have use a literal new line or use a normal string (`#!py3 "..."`) with `\n`. Since Backrefs allows for its own special back references in format strings, it will also process standard string and Unicode string back references as well.
+1. Backrefs does not use Python's string format directly but mimics the feel for inserting groups into the final output, but it should essentially feel and behave the same feature wise.  This is due to the fact that Backrefs allows its own casing back references and normal string and Unicode back references in the replacement strings.
 
-The Regex module offers a feature where you can apply replacements via a format string style.
+2. It is recommended to use raw strings for format replacements as back slashes are handled special to implement lower casing and upper casing via the replace back references: `#!py r'\L{1}{2}\E`.  You should be able to use normal string and Unicode escapes in raw strings, so it should feel like a normal string.
 
-```pycon3
->>> regex.subf(r"(\w+) (\w+)", "{0} => {2} {1}", "foo bar")
-'foo bar => bar foo'
->>> regex.subf(r"(?P<word1>\w+) (?P<word2>\w+)", "{word2} {word1}", "foo bar")
-'bar foo'
-```
+    ```pycon3
+    >>> bregex.subf(r'(test)', r'{0:\n^8}', 'test')
+    '\n\ntest\n\n'
+    >>> bregex.subf(r'(test)', r'\C{0:\u007c^8}\E', 'test')
+    '||TEST||'
+    ```
 
-You can even index into groups that have multiple captures.
-
-```pycon3
->>> regex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
-'foo bar => bar f'
-```
-
-Backrefs supports this functionality in a similar way, and you can do it with Regex *or* Re. This allows you to use case back references and the format style replacements.
+3. Normally format strings don't allow you to index with negative integers as they are recognized as strings, but like Regex's format implementation, Backrefs allows you to use negative numbers (`-1`), hex (`0x01`), octal (`0o001`), or even binary (`0b1`).  While it may not be practical to use some of the latter forms, they are available to have feature parity with Regex's implementation.
 
 
-```pycon3
->>> bre.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
-'foo bar => BAR FOO'
->>> bre.subf(r"(?P<word1>\w+) (?P<word2>\w+)", r"\c{word2} \c{word1}", "foo bar")
-'Bar Foo'
-```
+    ```pycon3
+    >>> bregex.subf(r'(test)', r'{0[-1]}', 'test')
+    'test'
+    ```
 
-You can also use `{} {}` which is the same as `{0} {1}`.
+4. Backrefs implements a sub set of the Format Specification Mini-Language that Regex doesn't, particularly fill and alignment. Only string features are available, no integer features.
 
-```pycon3
->>> bre.subf(r"(\w+) (\w+)", r"{} => \C{} {}\E", "foo bar")
-'foo bar => FOO BAR'
-```
+    ```
+    replacement_field ::=  "{" [field_name] ["!" conversion] [":" format_spec] "}"
+    field_name        ::=  arg_name ("." attribute_name | "[" element_index "]")*
+    arg_name          ::=  [identifier | integer]
+    attribute_name    ::=  identifier
+    element_index     ::=  integer | index_string
+    index_string      ::=  <any source character except "]"> +
+    conversion        ::=  "r" | "s" | "a"
+    format_spec       ::=  <described in the next section>
+    ```
 
-To pre-compile a format replace template, you can use the Backrefs' `compile_replace` method with the `FORMAT` flag.
+    Conversion `a` is not supported in Python 2.
 
-```pycon3
->>> pattern = bre.compile_search(r"(\w+) (\w+)")
->>> replace = bre.compile_replace(pattern, r"{0} => {2} {1}", bre.FORMAT)
->>> m = pattern.match("foo bar")
->>> replace(m)
-'foo bar => bar foo'
-```
+    ```
+    format_spec ::=  [[fill]align][0][width][type]
+    fill        ::=  <any character>
+    align       ::=  "<" | ">" | "^"
+    width       ::=  integer
+    type        ::=  "s"
+    ```
 
-Or using Backrefs' pattern object:
+    Note that in situations such as `{:030}`, where a width has a leading zero and no alignment specified, this would normally trigger the integer alignment `=` which is not supported. Since integer features are not implemented (and not needed for string only replacements) this would fail.
 
-```pycon3
->>> pattern = bre.compile(r"(\w+) (\w+)")
->>> pattern.subf(r"{0} => \C{2} {1}\E", "foo bar")
-'foo bar => BAR FOO'
-```
+5. Backrefs allows format strings to work for byte strings as well. In almost all instances, using conversion types won't make sense in a regular expression replace as the objects will already be strings in the needed format, but if you were to use a conversion, ASCII would be assumed, and the object or Unicode string would be encoded with `backslashreplace`.
 
-Pre-compiling a format replace template with Backrefs' pattern object:
+!!! example "Format Replace"
+    Format replace.
 
-```pycon3
->>> pattern = bre.compile(r"(?P<word1>\w+) (?P<word2>\w+)")
->>> replace = pattern.compile(r"\c{word2} \c{word1}", bre.FORMAT)
->>> pattern.subf(replace, "foo bar")
-'Bar Foo'
-```
+    ```pycon3
+    >>> regex.subf(r"(\w+) (\w+)", "{0} => {2} {1}", "foo bar")
+    'foo bar => bar foo'
+    >>> regex.subf(r"(?P<word1>\w+) (?P<word2>\w+)", "{word2} {word1}", "foo bar")
+    'bar foo'
+    ```
 
-Backrefs also provides an `expand` variant for format templates called `expandf`.
+!!! example "Multiple Captures"
+    You can even index into groups that have multiple captures.
 
-```pycon3
->>> pattern = bre.compile_search(r"(\w+) (\w+)")
->>> m = pattern.match('foo bar')
->>> bre.expandf(m, r"{0} => {2} {1}")
-'foo bar => bar foo'
-```
+    ```pycon3
+    >>> regex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
+    'foo bar => bar f'
+    ```
+
+!!! example "Format Replace in Re"
+    Works for Re as well.
+
+
+    ```pycon3
+    >>> bre.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
+    'foo bar => BAR FOO'
+    >>> bre.subf(r"(?P<word1>\w+) (?P<word2>\w+)", r"\c{word2} \c{word1}", "foo bar")
+    'Bar Foo'
+    ```
+
+!!! example "Implicit Groups"
+    You can also use `{} {}` which is the same as `{0} {1}`.
+
+    ```pycon3
+    >>> bre.subf(r"(\w+) (\w+)", r"{} => \C{} {}\E", "foo bar")
+    'foo bar => FOO BAR'
+    ```
+
+!!! example "Pre-Compiled Format Replace"
+    To pre-compile a format replace template, you can use the Backrefs' `compile_replace` method with the `FORMAT` flag.
+
+    ```pycon3
+    >>> pattern = bre.compile_search(r"(\w+) (\w+)")
+    >>> replace = bre.compile_replace(pattern, r"{0} => {2} {1}", bre.FORMAT)
+    >>> m = pattern.match("foo bar")
+    >>> replace(m)
+    'foo bar => bar foo'
+    ```
+
+!!! example "Using Backref Compiled Pattern"
+    Or using Backrefs' pattern object:
+
+    ```pycon3
+    >>> pattern = bre.compile(r"(\w+) (\w+)")
+    >>> pattern.subf(r"{0} => \C{2} {1}\E", "foo bar")
+    'foo bar => BAR FOO'
+    ```
+
+!!! example "Pre-Compile Format from Pre-Compiled Pattern"
+    Pre-compiling a format replace template with Backrefs' pattern object:
+
+    ```pycon3
+    >>> pattern = bre.compile(r"(?P<word1>\w+) (?P<word2>\w+)")
+    >>> replace = pattern.compile(r"\c{word2} \c{word1}", bre.FORMAT)
+    >>> pattern.subf(replace, "foo bar")
+    'Bar Foo'
+    ```
+
+!!! example "Format Expand"
+    Backrefs also provides an `expand` variant for format templates called `expandf`.
+
+    ```pycon3
+    >>> pattern = bre.compile_search(r"(\w+) (\w+)")
+    >>> m = pattern.match('foo bar')
+    >>> bre.expandf(m, r"{0} => {2} {1}")
+    'foo bar => bar foo'
+    ```
 
 ## Search Back References
 
