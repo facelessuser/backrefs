@@ -117,7 +117,7 @@ def _to_bstr(l):
     return l
 
 
-def format(m, l, capture, binary):
+def format_string(m, l, capture, binary):
     """Perform a string format."""
 
     for fmt_type, value in capture[1:]:
