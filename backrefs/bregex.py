@@ -168,7 +168,7 @@ def _assert_expandable(repl, use_format=False):
         raise TypeError("Expected string, buffer, or compiled replace!")
 
 
-def compile(pattern, flags=0, auto_compile=None, **kwargs):
+def compile(pattern, flags=0, auto_compile=None, **kwargs):  # noqa A001
     """Compile both the search or search and replace into one object."""
 
     if isinstance(pattern, Bregex):
@@ -307,7 +307,7 @@ class Bregex(_util.Immutable):
         else:
             return template
 
-    def compile(self, repl, flags=0):
+    def compile(self, repl, flags=0):  # noqa A001
         """Compile replace."""
 
         return compile_replace(self._pattern, repl, flags)

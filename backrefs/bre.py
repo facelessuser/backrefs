@@ -250,7 +250,7 @@ class Bre(_util.Immutable):
         else:
             return template
 
-    def compile(self, repl, flags=0):
+    def compile(self, repl, flags=0):  # noqa A001
         """Compile replace."""
 
         return compile_replace(self._pattern, repl, flags)
@@ -307,7 +307,7 @@ class Bre(_util.Immutable):
         return self._pattern.subn(self._auto_compile(repl, True), string, count)
 
 
-def compile(pattern, flags=0, auto_compile=None):
+def compile(pattern, flags=0, auto_compile=None):  # noqa A001
     """Compile both the search or search and replace into one object."""
 
     if isinstance(pattern, Bre):

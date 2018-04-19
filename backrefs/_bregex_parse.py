@@ -1301,7 +1301,7 @@ class ReplaceTemplate(_util.Immutable):
                         obj = m.captures(g_index)
                     except IndexError:  # pragma: no cover
                         raise IndexError("'%d' is out of range!" % g_index)
-                    l = _util.format(m, obj, capture, self._binary)
+                    l = _util.format_string(m, obj, capture, self._binary)
                 if span_case is not None:
                     if span_case == _LOWER:
                         l = l.lower()
