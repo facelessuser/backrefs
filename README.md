@@ -1,6 +1,5 @@
 [![Unix Build Status][travis-image]][travis-link]
 [![Windows Build Status][appveyor-image]][appveyor-link]
-[![Code Health][landscape-image]][landscape-link]
 [![Coverage][codecov-image]][codecov-link]
 [![Requirements Status][requires-image]][requires-link]
 [![pypi-version][pypi-image]][pypi-link]
@@ -30,8 +29,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 [appveyor-image]: https://img.shields.io/appveyor/ci/facelessuser/backrefs/master.svg?label=Windows%20Build
 [appveyor-link]: https://ci.appveyor.com/project/facelessuser/backrefs
 [license-image]: https://img.shields.io/badge/license-MIT-blue.svg
-[landscape-image]: https://landscape.io/github/facelessuser/backrefs/master/landscape.svg?style=flat
-[landscape-link]: https://landscape.io/github/facelessuser/backrefs/master
 [codecov-image]: https://img.shields.io/codecov/c/github/facelessuser/backrefs/master.svg
 [codecov-link]: http://codecov.io/github/facelessuser/backrefs?branch=master
 [requires-image]: https://img.shields.io/requires/github/facelessuser/backrefs/master.svg
