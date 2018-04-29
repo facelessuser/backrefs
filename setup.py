@@ -84,33 +84,25 @@ def generate_unicode_table():
     assert not fail, "Failed uniprops.py generation!"
 
 
+def get_description():
+    """Get long description."""
+
+    with open("README.md", 'r') as f:
+        desc = f.read()
+    return desc
+
+
 VER, DEVSTATUS = get_version()
 get_unicodedata()
 generate_unicode_table()
-
-LONG_DESC = '''
-Backrefs is a library that wraps the default Python re module or the third party regex module in order
-to add additional back refrences.
-You can check out the list of available extensions and learn more about them by `reading the docs`_.
-
-.. _`reading the docs`: http://facelessuser.github.io/backrefs/
-
-Support
-=======
-
-Help and support is available here at the repository's `bug tracker`_.
-Please read about `support and contributing`_ before creating issues.
-
-.. _`bug tracker`: https://github.com/facelessuser/backrefs/issues
-.. _`support and contributing`: http://facelessuser.github.io/backrefs/contributing/
-'''
 
 setup(
     name='backrefs',
     version=VER,
     keywords='regex re',
     description='A wrapper around re and regex that adds additional back references.',
-    long_description=LONG_DESC,
+    long_description=get_description(),
+    long_description_content_type='text/markdown',
     author='Isaac Muse',
     author_email='Isaac.Muse@gmail.com',
     url='https://github.com/facelessuser/backrefs',
