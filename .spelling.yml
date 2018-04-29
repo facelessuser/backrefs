@@ -30,6 +30,10 @@ documents:
 
 - name: markdown
   parser: pyspelling.parsers.markdown_parser
+  options:
+    markdown_extensions:
+    - pymdownx.superfences:
+    - pymdownx.highlight:
   sources:
   - README.md
   aspell:
