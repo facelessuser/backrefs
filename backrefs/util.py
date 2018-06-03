@@ -24,7 +24,7 @@ if PY3:
     import copyreg  # noqa F401
 
     string_type = str
-    binary_type = bytes
+    bytes_type = bytes
     unichar = chr
     iter_range = range  # noqa F821
 
@@ -33,7 +33,7 @@ else:
     import copy_reg as copyreg  # noqa F401
 
     string_type = unicode  # noqa F821
-    binary_type = str  # noqa F821
+    bytes_type = str  # noqa F821
     unichar = unichr  # noqa F821
     iter_range = xrange  # noqa F821
 
@@ -112,12 +112,12 @@ def _to_bstr(l):
 
     if isinstance(l, string_type):
         l = l.encode('ascii', 'backslashreplace')
-    elif not isinstance(l, binary_type):
+    elif not isinstance(l, bytes_type):
         l = string_type(l).encode('ascii', 'backslashreplace')
     return l
 
 
-def format_string(m, l, capture, binary):
+def format_string(m, l, capture, is_bytes):
     """Perform a string format."""
 
     for fmt_type, value in capture[1:]:
@@ -128,7 +128,7 @@ def format_string(m, l, capture, binary):
             # Index
             l = l[value]
         elif fmt_type == FMT_CONV:
-            if binary:
+            if is_bytes:
                 # Conversion
                 if value in ('r', 'a'):
                     l = repr(l).encode('ascii', 'backslashreplace')
@@ -153,7 +153,7 @@ def format_string(m, l, capture, binary):
                     raise ValueError("Unknown format code 's' for object of type 'float'")
 
             # Ensure object is a byte string
-            l = _to_bstr(l) if binary else string_type(l)
+            l = _to_bstr(l) if is_bytes else string_type(l)
 
             spec_type = value[1]
             if spec_type == '^':
@@ -164,7 +164,7 @@ def format_string(m, l, capture, binary):
                 l = l.ljust(value[2], value[0])
 
     # Make sure the final object is a byte string
-    return _to_bstr(l) if binary else string_type(l)
+    return _to_bstr(l) if is_bytes else string_type(l)
 
 
 class Immutable(object):

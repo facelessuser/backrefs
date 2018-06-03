@@ -17,10 +17,10 @@ PY36_PLUS = (3, 6) <= sys.version_info
 PY37_PLUS = (3, 7) <= sys.version_info
 
 if PY3:
-    binary_type = bytes  # noqa
+    bytes_type = bytes  # noqa
     string_type = str  # noqa
 else:
-    binary_type = str  # noqa
+    bytes_type = str  # noqa
     string_type = unicode  # noqa
 
 
@@ -760,14 +760,14 @@ class TestSearchTemplate(unittest.TestCase):
         m = pattern.match(r'P')
         self.assertTrue(m is None)
 
-    def test_binary_property(self):
-        r"""Binary patterns should match `\p` references."""
+    def test_bytes_property(self):
+        r"""Byte patterns should match `\p` references."""
 
         pattern = bre.compile_search(br'EX\p{Lu}MPLE')
         m = pattern.match(br'EXAMPLE')
         self.assertTrue(m is not None)
 
-    def test_binary_property_no_value(self):
+    def test_bytes_property_no_value(self):
         """Test when a property returns nothing in byte string."""
 
         pattern = bre.compile_search(br'EX\p{OtherAlphabetic}MPLE')
@@ -1150,8 +1150,8 @@ class TestReplaceTemplate(unittest.TestCase):
             'line line line '
         )
 
-    def test_binary_line_break(self):
-        r"""Test binary line break \R."""
+    def test_bytes_line_break(self):
+        r"""Test bytes line break \R."""
 
         self.assertEqual(
             bre.sub(br"\R", b' ', b'line\r\nline\nline\r'),
@@ -1574,8 +1574,8 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(results2, results)
         self.assertEqual('\t \\t \\\t \\\\t \\\\\t', results)
 
-    def test_binary_normal_escaping(self):
-        """Test binary normal escaped slash."""
+    def test_bytes_normal_escaping(self):
+        """Test bytes normal escaped slash."""
 
         text = b"This is a test of normal escaping!"
         pattern = re.compile(br"(.+)")
@@ -1673,16 +1673,16 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(result, "This is awesome!  Here we go!  This is awesome!  Here we go!")
         self.assertEqual(count, 2)
 
-    def test_binary_replace(self):
-        """Test that binary regex result is a binary string."""
+    def test_bytes_replace(self):
+        """Test that bytes regex result is a bytes string."""
 
-        text = b"This is some binary text!"
-        pattern = bre.compile_search(br"This is (some binary text)!")
+        text = b"This is some bytes text!"
+        pattern = bre.compile_search(br"This is (some bytes text)!")
         expand = bre.compile_replace(pattern, br'\C\1\E')
         m = pattern.match(text)
         result = expand(m)
-        self.assertEqual(result, b"SOME BINARY TEXT")
-        self.assertTrue(isinstance(result, binary_type))
+        self.assertEqual(result, b"SOME BYTES TEXT")
+        self.assertTrue(isinstance(result, bytes_type))
 
     def test_template_replace(self):
         """Test replace by passing in replace function."""
@@ -1843,7 +1843,7 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
-    def test_binary_format_capture_bases(self):
+    def test_bytes_format_capture_bases(self):
         """Test capture bases."""
 
         text = b"abababab"
@@ -2018,7 +2018,7 @@ class TestReplaceTemplate(unittest.TestCase):
         # Python 3.7 will choke on \U and \u as invalid escapes, so
         # don't bother running these tests there.
         if not PY37_PLUS:
-            # Binary doesn't care about Unicode, but should evaluate bytes
+            # Bytes doesn't care about Unicode, but should evaluate bytes
             pattern = re.compile(b'Test')
             expand = bre.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
             results = expand(pattern.match(b'Test'))
@@ -2130,16 +2130,16 @@ class TestExceptions(unittest.TestCase):
 
         self.assertEqual(str(e.value), 'Invalid POSIX property!')
 
-    def test_bad_binary(self):
-        """Test bad binary."""
+    def test_bad_bytes(self):
+        """Test bad bytes."""
 
         with pytest.raises(ValueError) as e:
-            bre.compile_search(r'\p{bad_binary:n}', re.UNICODE)
+            bre.compile_search(r'\p{bad_bytes:n}', re.UNICODE)
 
         self.assertEqual(str(e.value), 'Invalid Unicode property!')
 
         with pytest.raises(ValueError) as e:
-            bre.compile_search(r'\p{bad_binary:y}', re.UNICODE)
+            bre.compile_search(r'\p{bad_bytes:y}', re.UNICODE)
 
         self.assertEqual(str(e.value), 'Invalid Unicode property!')
 
