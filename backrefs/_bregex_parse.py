@@ -73,11 +73,11 @@ class _SearchParser(object):
         """Initialize."""
 
         if isinstance(search, _util.bytes_type):
-            self.binary = True
+            self.is_bytes = True
         else:
-            self.binary = False
+            self.is_bytes = False
 
-        if self.binary:
+        if self.is_bytes:
             self._re_line_break = self._bytes_line_break
         else:
             self._re_line_break = self._line_break
@@ -352,7 +352,7 @@ class _SearchParser(object):
                     current.append(t)
                 elif t == "[" and found and self.version == _regex.V1:
                     # Start of sub char set found
-                    posix = None if self.binary else self.get_posix(i)
+                    posix = None if self.is_bytes else self.get_posix(i)
                     if posix:
                         current.append(posix)
                         pos = i.index - 2
@@ -361,7 +361,7 @@ class _SearchParser(object):
                         sub_first = pos
                         current.append(t)
                 elif t == "[":
-                    posix = None if self.binary else self.get_posix(i)
+                    posix = None if self.is_bytes else self.get_posix(i)
                     if posix:
                         current.append(posix)
                         pos = i.index - 2
@@ -443,7 +443,7 @@ class _SearchParser(object):
         }
 
         new_pattern = []
-        text = self.process_quotes(self.search.decode('latin-1') if self.binary else self.search)
+        text = self.process_quotes(self.search.decode('latin-1') if self.is_bytes else self.search)
 
         i = _util.StringIter(text)
         iter(i)
@@ -473,7 +473,7 @@ class _SearchParser(object):
                 i.rewind(i.index)
                 retry = True
 
-        return "".join(new_pattern).encode('latin-1') if self.binary else "".join(new_pattern)
+        return "".join(new_pattern).encode('latin-1') if self.is_bytes else "".join(new_pattern)
 
 
 class _ReplaceParser(object):
@@ -640,10 +640,10 @@ class _ReplaceParser(object):
                         convert = c
                         c = self.format_next(i)
 
-                    if fill and self.binary:
+                    if fill and self.is_bytes:
                         fill = fill.encode('latin-1')
                     elif not fill:
-                        fill = b' ' if self.binary else ' '
+                        fill = b' ' if self.is_bytes else ' '
 
                     value.append((_util.FMT_SPEC, (fill, align, (int(''.join(width)) if width else 0), convert)))
 
@@ -708,7 +708,7 @@ class _ReplaceParser(object):
         """Parse octal value."""
 
         value = int(text, 8)
-        if value > 0xFF and self.binary:
+        if value > 0xFF and self.is_bytes:
             # Re fails on octal greater than 0o377 or 0xFF
             raise ValueError("octal escape value outside of range 0-0o377!")
         else:
@@ -903,17 +903,17 @@ class _ReplaceParser(object):
         octal = self.get_octal(t, i)
         if octal:
             value = int(octal, 8)
-            if value > 0xFF and self.binary:
+            if value > 0xFF and self.is_bytes:
                 # Re fails on octal greater than 0o377 or 0xFF
                 raise ValueError("octal escape value outside of range 0-0o377!")
             value = _util.uchr(value)
         elif t in _STANDARD_ESCAPES or t == '\\':
             value = _BACK_SLASH_TRANSLATION['\\' + t]
-        elif not self.binary and t == "U":
+        elif not self.is_bytes and t == "U":
             value = _util.uchr(int(self.get_wide_unicode(i), 16))
-        elif not self.binary and t == "u":
+        elif not self.is_bytes and t == "u":
             value = _util.uchr(int(self.get_narrow_unicode(i), 16))
-        elif not self.binary and t == "N":
+        elif not self.is_bytes and t == "N":
             value = _unicodedata.lookup(self.get_named_unicode(i))
         elif t == "x":
             value = _util.uchr(int(self.get_byte(i), 16))
@@ -945,11 +945,11 @@ class _ReplaceParser(object):
             self.span_case(i, _UPPER)
         elif t == "E":
             self.end_found = True
-        elif not self.binary and t == "U":
+        elif not self.is_bytes and t == "U":
             self.parse_unicode(i, True)
-        elif not self.binary and t == "u":
+        elif not self.is_bytes and t == "u":
             self.parse_unicode(i)
-        elif not self.binary and t == "N":
+        elif not self.is_bytes and t == "N":
             self.parse_named_unicode(i)
         elif t == "x":
             self.parse_bytes(i)
@@ -992,7 +992,7 @@ class _ReplaceParser(object):
     def parse_template(self, pattern):
         """Parse template."""
 
-        i = _util.StringIter((self._original.decode('latin-1') if self.binary else self._original))
+        i = _util.StringIter((self._original.decode('latin-1') if self.is_bytes else self._original))
         iter(i)
         self.result = [""]
 
@@ -1020,7 +1020,7 @@ class _ReplaceParser(object):
             self.result.append("")
             self.slot += 1
 
-        if self.binary:
+        if self.is_bytes:
             self._template = "".join(self.literal_slots).encode('latin-1')
         else:
             self._template = "".join(self.literal_slots)
@@ -1061,7 +1061,7 @@ class _ReplaceParser(object):
     def convert_case(self, value, case):
         """Convert case."""
 
-        if self.binary:
+        if self.is_bytes:
             cased = []
             for c in value:
                 if c in _ASCII_LETTERS:
@@ -1127,7 +1127,7 @@ class _ReplaceParser(object):
         """Handle groups."""
 
         if capture is None:
-            capture = tuple() if self.binary else ''
+            capture = tuple() if self.is_bytes else ''
 
         if len(self.result) > 1:
             self.literal_slots.append("".join(self.result))
@@ -1164,10 +1164,10 @@ class _ReplaceParser(object):
         """Parse template."""
 
         if isinstance(template, _util.bytes_type):
-            self.binary = True
+            self.is_bytes = True
         else:
-            self.binary = False
-        if isinstance(pattern.pattern, _util.bytes_type) != self.binary:
+            self.is_bytes = False
+        if isinstance(pattern.pattern, _util.bytes_type) != self.is_bytes:
             raise TypeError('Pattern string type must match replace template string type!')
         self._original = template
         self.use_format = use_format
@@ -1179,7 +1179,7 @@ class _ReplaceParser(object):
             tuple(self.literals),
             hash(pattern),
             self.use_format,
-            self.binary
+            self.is_bytes
         )
 
 
@@ -1188,7 +1188,7 @@ class ReplaceTemplate(_util.Immutable):
 
     __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format", "_hash", "_bytes")
 
-    def __init__(self, groups, group_slots, literals, pattern_hash, use_format, binary):
+    def __init__(self, groups, group_slots, literals, pattern_hash, use_format, is_bytes):
         """Initialize."""
 
         super(ReplaceTemplate, self).__init__(
@@ -1197,12 +1197,12 @@ class ReplaceTemplate(_util.Immutable):
             group_slots=group_slots,
             literals=literals,
             pattern_hash=pattern_hash,
-            _bytes=binary,
+            _bytes=is_bytes,
             _hash=hash(
                 (
                     type(self),
                     groups, group_slots, literals,
-                    pattern_hash, use_format, binary
+                    pattern_hash, use_format, is_bytes
                 )
             )
         )
