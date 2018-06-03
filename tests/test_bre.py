@@ -27,6 +27,33 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_posix_unicode_and_range(self):
+        """POSIX and Unicode classes should not be part of a range."""
+
+        self.assertTrue(bre.match(r'[[:upper:]-[:digit:]]', '-') is not None)
+        self.assertTrue(bre.match(r'[[:upper:]-[:digit:]]', 'Z') is not None)
+        self.assertTrue(bre.match(r'[[:upper:]-[:digit:]]', '0') is not None)
+
+        self.assertTrue(bre.match(r'[[:digit:]-[:upper:]]', 'A') is not None)
+        self.assertTrue(bre.match(r'[[:digit:]-[:upper:]]', '9') is not None)
+        self.assertTrue(bre.match(r'[[:digit:]-[:upper:]]', '-') is not None)
+
+        self.assertTrue(bre.match(r'[0-[:upper:]]', '-') is not None)
+        self.assertTrue(bre.match(r'[0-[:upper:]]', '0') is not None)
+        self.assertTrue(bre.match(r'[0-[:upper:]]', 'A') is not None)
+
+        self.assertTrue(bre.match(r'[[:digit:]-Z]', 'Z') is not None)
+        self.assertTrue(bre.match(r'[[:digit:]-Z]', '9') is not None)
+        self.assertTrue(bre.match(r'[[:digit:]-Z]', '-') is not None)
+
+        self.assertTrue(bre.match(r'[\p{digit}-Z]', 'Z') is not None)
+        self.assertTrue(bre.match(r'[\p{digit}-Z]', '9') is not None)
+        self.assertTrue(bre.match(r'[\p{digit}-Z]', '-') is not None)
+
+        self.assertTrue(bre.match(r'[0-\c]', '-') is not None)
+        self.assertTrue(bre.match(r'[0-\c]', '0') is not None)
+        self.assertTrue(bre.match(r'[0-\c]', 'A') is not None)
+
     def test_non_raw_string_unicode(self):
         """Test non raw string Unicode notation."""
 
