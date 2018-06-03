@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.5.1
+
+- **FIX**: POSIX character classes should not be part of a range.
+
 ## 3.5.0
 
 Mar 13, 2018

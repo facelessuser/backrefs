@@ -302,12 +302,16 @@ class _SearchParser(object):
             current.append(self._re_escape)
         elif t == "l":
             current.extend(self.letter_case_props(_LOWER, in_group))
+            self.found_property = True
         elif t == "L":
             current.extend(self.letter_case_props(_LOWER, in_group, negate=True))
+            self.found_property = True
         elif t == "c":
             current.extend(self.letter_case_props(_UPPER, in_group))
+            self.found_property = True
         elif t == "C":
             current.extend(self.letter_case_props(_UPPER, in_group, negate=True))
+            self.found_property = True
 
         elif _util.PY2 and not self.binary and t == "U":
             current.append(self.get_unicode(i, True))
@@ -327,7 +331,7 @@ class _SearchParser(object):
             text = self.get_named_unicode(i)
             current.extend(self.unicode_name(text, in_group))
             if in_group:
-                self.found_property = True
+                self.found_named_unicode = True
         else:
             current.extend(["\\", t])
         return current
@@ -480,15 +484,33 @@ class _SearchParser(object):
         found = False
         escaped = False
         first = None
+        found_property = False
         self.found_property = False
+        self.found_named_unicode = False
 
         try:
             while True:
+                # Prevent POSIX/Unicode class from being part of a range.
+                if self.found_property and t == '-':
+                    current.append(_re.escape(t))
+                    pos += 1
+                    t = next(i)
+                    self.found_property = False
+                    continue
+                else:
+                    self.found_property = False
+
                 if not escaped and t == "\\":
                     escaped = True
                 elif escaped:
                     escaped = False
+                    idx = len(current) - 1
                     current.extend(self.reference(t, i, True))
+                    if self.found_property:
+                        # Prevent Unicode class from being part of a range.
+                        if idx >= 0 and current[idx] == '-':
+                            current[idx] = _re.escape('-')
+                        found_property = True
                 elif t == "[" and not found:
                     found = True
                     first = pos
@@ -496,8 +518,11 @@ class _SearchParser(object):
                 elif t == "[":
                     posix = self.get_posix(i)
                     if posix:
+                        # Prevent POSIX class from being part of a range.
+                        if current[-1] == '-':
+                            current[-1] = _re.escape('-')
                         current.extend(self.posix_props(posix, in_group=True))
-                        self.found_property = True
+                        found_property = True
                         pos = i.index - 2
                     else:
                         current.append(t)
@@ -522,7 +547,7 @@ class _SearchParser(object):
         # This will occur when a property's values exceed
         # either the Unicode char limit on a narrow system,
         # or the ASCII limit in a byte string pattern.
-        if self.found_property:
+        if found_property or self.found_named_unicode:
             value = "".join(current)
             if value == '[]':
                 # We specified some properities, but they are all
