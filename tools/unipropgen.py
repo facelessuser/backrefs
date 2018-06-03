@@ -75,8 +75,8 @@ def format_name(text):
     return text.strip().lower().replace(' ', '').replace('-', '').replace('_', '')
 
 
-def binaryformat(value):
-    """Convert a binary value."""
+def bytesformat(value):
+    """Convert a bytes value."""
 
     if value in GROUP_ESCAPES:
         # Escape characters that are (or will be in the future) problematic
@@ -86,12 +86,12 @@ def binaryformat(value):
     return c
 
 
-def create_span(unirange, binary=False):
+def create_span(unirange, is_bytes=False):
     """Clamp the Unicode range."""
 
     if len(unirange) < 2:
         unirange.append(unirange[0])
-    if binary:
+    if is_bytes:
         if unirange[0] > MAXASCII:
             return None
         if unirange[1] > MAXASCII:
@@ -104,10 +104,10 @@ def create_span(unirange, binary=False):
     return [x for x in range(unirange[0], unirange[1] + 1)]
 
 
-def not_explicitly_defined(table, name, binary=False):
+def not_explicitly_defined(table, name, is_bytes=False):
     """Compose a table with the specified entry name of values not explicitly defined."""
 
-    all_chars = ALL_ASCII if binary else ALL_CHARS
+    all_chars = ALL_ASCII if is_bytes else ALL_CHARS
     s = set()
     for k, v in table.items():
         s.update(v)
@@ -117,16 +117,16 @@ def not_explicitly_defined(table, name, binary=False):
         table[name] = list(all_chars - s)
 
 
-def char2range(d, binary=False, invert=True):
+def char2range(d, is_bytes=False, invert=True):
     """Convert the characters in the dict to a range in string form."""
 
-    fmt = binaryformat if binary else uniformat
-    maxrange = MAXASCII if binary else MAXUNICODE
+    fmt = bytesformat if is_bytes else uniformat
+    maxrange = MAXASCII if is_bytes else MAXUNICODE
 
     for k1 in sorted(d.keys()):
         v1 = d[k1]
         if not isinstance(v1, list):
-            char2range(v1, binary=binary, invert=invert)
+            char2range(v1, is_bytes=is_bytes, invert=invert)
         else:
             inverted = k1.startswith('^')
             v1.sort()
@@ -195,7 +195,7 @@ def gen_blocks(output, ascii_props=False, append=False, prefix=""):
         last = -1
 
         max_range = MAXASCII if ascii_props else MAXUNICODE
-        formatter = binaryformat if ascii_props else uniformat
+        formatter = bytesformat if ascii_props else uniformat
 
         with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'Blocks.txt'), 'r') as uf:
             for line in uf:
@@ -255,7 +255,7 @@ def gen_ccc(output, ascii_props=False, append=False, prefix=""):
                 data = line.split('#')[0].split(';')
                 if len(data) < 2:
                     continue
-                span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
+                span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=ascii_props)
                 if span is None:
                     continue
                 name = format_name(data[1])
@@ -273,10 +273,10 @@ def gen_ccc(output, ascii_props=False, append=False, prefix=""):
         s = set(obj[name])
         obj[name] = sorted(s)
 
-    not_explicitly_defined(obj, '0', binary=ascii_props)
+    not_explicitly_defined(obj, '0', is_bytes=ascii_props)
 
     # Convert characters values to ranges
-    char2range(obj, binary=ascii_props)
+    char2range(obj, is_bytes=ascii_props)
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
@@ -317,7 +317,7 @@ def gen_scripts(
                     if len(data) < 2:
                         continue
                     exts = [aliases[format_name(n)] for n in data[1].strip().split(' ')]
-                    span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
+                    span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=ascii_props)
                     for ext in exts:
                         if ext not in obj2:
                             obj2[ext] = []
@@ -332,7 +332,7 @@ def gen_scripts(
                 data = line.split('#')[0].split(';')
                 if len(data) < 2:
                     continue
-                span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
+                span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=ascii_props)
                 name = format_name(data[1])
                 if name not in obj:
                     obj[name] = []
@@ -354,12 +354,12 @@ def gen_scripts(
         obj2[name] = sorted(s)
 
     if notexplicit:
-        not_explicitly_defined(obj, notexplicit, binary=ascii_props)
-        not_explicitly_defined(obj2, notexplicit, binary=ascii_props)
+        not_explicitly_defined(obj, notexplicit, is_bytes=ascii_props)
+        not_explicitly_defined(obj2, notexplicit, is_bytes=ascii_props)
 
     # Convert characters values to ranges
-    char2range(obj, binary=ascii_props)
-    char2range(obj2, binary=ascii_props)
+    char2range(obj, is_bytes=ascii_props)
+    char2range(obj2, is_bytes=ascii_props)
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
@@ -403,7 +403,7 @@ def gen_enum(file_name, obj_name, output, field=1, notexplicit=None, ascii_props
                 data = line.split('#')[0].split(';')
                 if len(data) < 2:
                     continue
-                span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
+                span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=ascii_props)
                 name = format_name(data[field])
                 if name not in obj:
                     obj[name] = []
@@ -418,10 +418,10 @@ def gen_enum(file_name, obj_name, output, field=1, notexplicit=None, ascii_props
         obj[name] = sorted(s)
 
     if notexplicit:
-        not_explicitly_defined(obj, notexplicit, binary=ascii_props)
+        not_explicitly_defined(obj, notexplicit, is_bytes=ascii_props)
 
     # Convert characters values to ranges
-    char2range(obj, binary=ascii_props)
+    char2range(obj, is_bytes=ascii_props)
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
@@ -450,7 +450,7 @@ def gen_age(output, ascii_props=False, append=False, prefix=""):
                 data = line.split('#')[0].split(';')
                 if len(data) < 2:
                     continue
-                span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
+                span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=ascii_props)
                 name = format_name(data[1])
 
                 if name not in obj:
@@ -471,7 +471,7 @@ def gen_age(output, ascii_props=False, append=False, prefix=""):
         obj[name] = sorted(s)
 
     # Convert characters values to ranges
-    char2range(obj, binary=ascii_props)
+    char2range(obj, is_bytes=ascii_props)
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
@@ -503,7 +503,7 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix=""):
                     continue
                 if not data[1].strip().lower().endswith('_qc'):
                     continue
-                span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
+                span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=ascii_props)
                 if span is None:
                     continue
                 name = format_name(data[1][:-3] + 'quickcheck')
@@ -528,7 +528,7 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix=""):
             nf[k1][name] = sorted(s)
 
     # Convert characters values to ranges
-    char2range(nf, binary=ascii_props)
+    char2range(nf, is_bytes=ascii_props)
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
@@ -568,7 +568,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix=""):
                         continue
                     if include and data[1].strip() not in include:
                         continue
-                    span = create_span([int(i, 16) for i in data[0].strip().split('..')], binary=ascii_props)
+                    span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=ascii_props)
                     name = format_name(data[1])
 
                     if name not in binary:
@@ -585,7 +585,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix=""):
                 data = [x.strip() for x in line.split('#')[0] if x.strip()]
                 if not data:
                     continue
-                span = create_span([int(data[0], 16)], binary=ascii_props)
+                span = create_span([int(data[0], 16)], is_bytes=ascii_props)
                 if span is None:
                     continue
 
@@ -602,7 +602,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix=""):
             if data:
                 if data[9].strip().lower() != 'y':
                     continue
-                span = create_span([int(data[0].strip(), 16)], binary=ascii_props)
+                span = create_span([int(data[0].strip(), 16)], is_bytes=ascii_props)
                 if span is None:
                     continue
 
@@ -618,7 +618,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix=""):
     gen_uposix(table, binary)
 
     # Convert characters values to ranges
-    char2range(binary, binary=ascii_props)
+    char2range(binary, is_bytes=ascii_props)
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
@@ -665,7 +665,7 @@ def gen_bidi(output, ascii_props=False, append=False, prefix=""):
         bidi_class[name] = sorted(s)
 
     # Convert characters values to ranges
-    char2range(bidi_class, binary=ascii_props)
+    char2range(bidi_class, is_bytes=ascii_props)
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
@@ -682,8 +682,8 @@ def gen_bidi(output, ascii_props=False, append=False, prefix=""):
             i += 1
 
 
-def gen_posix(output, binary=False, append=False, prefix=""):
-    """Generate the binary posix table and write out to file."""
+def gen_posix(output, is_bytes=False, append=False, prefix=""):
+    """Generate the bytes posix table and write out to file."""
 
     posix_table = {}
 
@@ -748,7 +748,7 @@ def gen_posix(output, binary=False, append=False, prefix=""):
     posix_table["xdigit"] = list(s)
 
     # Convert characters values to ranges
-    char2range(posix_table, binary=binary)
+    char2range(posix_table, is_bytes=is_bytes)
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
@@ -1106,7 +1106,7 @@ def gen_properties(output, ascii_props=False, append=False):
 
     # Generate posix table and write out to file.
     print('Building: Posix')
-    gen_posix(files['posix'], binary=ascii_props, append=append, prefix=prefix)
+    gen_posix(files['posix'], is_bytes=ascii_props, append=append, prefix=prefix)
 
     print('Building: Age')
     gen_age(files['age'], ascii_props, append, prefix)
@@ -1214,8 +1214,8 @@ def gen_properties(output, ascii_props=False, append=False):
         gen_alias(categories, binary, files['alias'], ascii_props, append, prefix)
 
     # Convert char values to string ranges.
-    char2range(table, binary=ascii_props)
-    char2range(itable, binary=ascii_props, invert=False)
+    char2range(table, is_bytes=ascii_props)
+    char2range(itable, is_bytes=ascii_props, invert=False)
     for k1, v1 in itable.items():
         table[k1]['^'] = v1['^']
 

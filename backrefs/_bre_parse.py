@@ -75,20 +75,20 @@ class _SearchParser(object):
     _re_start_wb = r"\b(?=\w)"
     _re_end_wb = r"\b(?<=\w)"
     _line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])'
-    _binary_line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85])'
+    _bytes_line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85])'
     # (?:\PM\pM*(?!\pM)) ~= (?>\PM\pM*)
     _grapheme_cluster = r'(?:%s%s*(?!%s))'
 
     def __init__(self, search, re_verbose=False, re_unicode=None):
         """Initialize."""
 
-        if isinstance(search, _util.binary_type):
+        if isinstance(search, _util.bytes_type):
             self.binary = True
         else:
             self.binary = False
 
         if self.binary:
-            self._re_line_break = self._binary_line_break
+            self._re_line_break = self._bytes_line_break
         else:
             self._re_line_break = self._line_break
         self.search = search
@@ -568,7 +568,7 @@ class _SearchParser(object):
         try:
             if self.binary or not self.unicode:
                 pattern = _uniprops.get_posix_property(
-                    prop, (_uniprops.POSIX_BINARY if self.binary else _uniprops.POSIX)
+                    prop, (_uniprops.POSIX_BYTES if self.binary else _uniprops.POSIX)
                 )
             else:
                 pattern = _uniprops.get_posix_property(prop, _uniprops.POSIX_UNICODE)
@@ -1369,11 +1369,11 @@ class _ReplaceParser(object):
     def parse(self, pattern, template, use_format=False):
         """Parse template."""
 
-        if isinstance(template, _util.binary_type):
+        if isinstance(template, _util.bytes_type):
             self.binary = True
         else:
             self.binary = False
-        if isinstance(pattern.pattern, _util.binary_type) != self.binary:
+        if isinstance(pattern.pattern, _util.bytes_type) != self.binary:
             raise TypeError('Pattern string type must match replace template string type!')
         self._original = template
         self.use_format = use_format
@@ -1392,7 +1392,7 @@ class _ReplaceParser(object):
 class ReplaceTemplate(_util.Immutable):
     """Replacement template expander."""
 
-    __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format", "_hash", "_binary")
+    __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format", "_hash", "_bytes")
 
     def __init__(self, groups, group_slots, literals, pattern_hash, use_format, binary):
         """Initialize."""
@@ -1403,7 +1403,7 @@ class ReplaceTemplate(_util.Immutable):
             group_slots=group_slots,
             literals=literals,
             pattern_hash=pattern_hash,
-            _binary=binary,
+            _bytes=binary,
             _hash=hash(
                 (
                     type(self),
@@ -1433,7 +1433,7 @@ class ReplaceTemplate(_util.Immutable):
             self.literals == other.literals and
             self.pattern_hash == other.pattern_hash and
             self.use_format == other.use_format and
-            self._binary == other._binary
+            self._bytes == other._bytes
         )
 
     def __ne__(self, other):
@@ -1446,7 +1446,7 @@ class ReplaceTemplate(_util.Immutable):
             self.literals != other.literals or
             self.pattern_hash != other.pattern_hash or
             self.use_format != other.use_format or
-            self._binary != self._binary
+            self._bytes != self._bytes
         )
 
     def __repr__(self):  # pragma: no cover
@@ -1485,7 +1485,7 @@ class ReplaceTemplate(_util.Immutable):
             raise ValueError("Match is None!")
 
         sep = m.string[:0]
-        if isinstance(sep, _util.binary_type) != self._binary:
+        if isinstance(sep, _util.bytes_type) != self._bytes:
             raise TypeError('Match string type does not match expander string type!')
         text = []
         # Expand string
@@ -1507,7 +1507,7 @@ class ReplaceTemplate(_util.Immutable):
                         obj = m.group(g_index)
                     except IndexError:  # pragma: no cover
                         raise IndexError("'%d' is out of range!" % g_index)
-                    l = _util.format_string(m, obj, capture, self._binary)
+                    l = _util.format_string(m, obj, capture, self._bytes)
                 if span_case is not None:
                     if span_case == _LOWER:
                         l = l.lower()
@@ -1526,7 +1526,7 @@ class ReplaceTemplate(_util.Immutable):
 def _pickle(r):
     """Pickle."""
 
-    return ReplaceTemplate, (r.groups, r.group_slots, r.literals, r.pattern_hash, r.use_format, r._binary)
+    return ReplaceTemplate, (r.groups, r.group_slots, r.literals, r.pattern_hash, r.use_format, r._bytes)
 
 
 _util.copyreg.pickle(ReplaceTemplate, _pickle)

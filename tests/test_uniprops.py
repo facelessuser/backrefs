@@ -11,9 +11,9 @@ PY37 = (3, 7) <= sys.version_info
 PY2 = (2, 0) <= sys.version_info < (3, 0)
 
 if PY3:
-    binary_type = bytes  # noqa
+    bytes_type = bytes  # noqa
 else:
-    binary_type = str  # noqa
+    bytes_type = str  # noqa
 
 
 class TestUniprops(unittest.TestCase):
@@ -550,13 +550,13 @@ class TestUniprops(unittest.TestCase):
     def test_posix_binary(self):
         """Test binary `posix` Category."""
 
-        result = uniprops.get_posix_property('punct', uniprops.POSIX_BINARY)
+        result = uniprops.get_posix_property('punct', uniprops.POSIX_BYTES)
         self.assertEqual(result, uniprops.unidata.ascii_posix_properties['punct'])
 
     def test_inverse_posix_binary(self):
         """Test inverse binary `posix` Category."""
 
-        result = uniprops.get_posix_property('^punct', uniprops.POSIX_BINARY)
+        result = uniprops.get_posix_property('^punct', uniprops.POSIX_BYTES)
         self.assertEqual(result, uniprops.unidata.ascii_posix_properties['^punct'])
 
     def test_posix(self):

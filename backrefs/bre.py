@@ -113,14 +113,14 @@ def _apply_replace_backrefs(m, repl=None, flags=0):
     else:
         if isinstance(repl, ReplaceTemplate):
             return repl.expand(m)
-        elif isinstance(repl, (_util.string_type, _util.binary_type)):
+        elif isinstance(repl, (_util.string_type, _util.bytes_type)):
             return _bre_parse._ReplaceParser().parse(m.re, repl, bool(flags & FORMAT)).expand(m)
 
 
 def _apply_search_backrefs(pattern, flags=0):
     """Apply the search backrefs to the search pattern."""
 
-    if isinstance(pattern, (_util.string_type, _util.binary_type)):
+    if isinstance(pattern, (_util.string_type, _util.bytes_type)):
         re_verbose = bool(VERBOSE & flags)
         re_unicode = None
         if _util.PY3 and bool((ASCII | LOCALE) & flags):
@@ -152,7 +152,7 @@ def _assert_expandable(repl, use_format=False):
                 raise ValueError("Replace not compiled as a format replace")
             else:
                 raise ValueError("Replace should not be compiled as a format replace!")
-    elif not isinstance(repl, (_util.string_type, _util.binary_type)):
+    elif not isinstance(repl, (_util.string_type, _util.bytes_type)):
         raise TypeError("Expected string, buffer, or compiled replace!")
 
 
@@ -237,7 +237,7 @@ class Bre(_util.Immutable):
         """Compile replacements."""
 
         is_replace = _is_replace(template)
-        is_string = isinstance(template, (_util.string_type, _util.binary_type))
+        is_string = isinstance(template, (_util.string_type, _util.bytes_type))
         if is_replace and use_format != template.use_format:
             raise ValueError("Compiled replace cannot be a format object!")
         if is_replace or (is_string and self.auto_compile):
@@ -334,7 +334,7 @@ def compile_replace(pattern, repl, flags=0):
 
     call = None
     if pattern is not None and isinstance(pattern, _RE_TYPE):
-        if isinstance(repl, (_util.string_type, _util.binary_type)):
+        if isinstance(repl, (_util.string_type, _util.bytes_type)):
             if not (pattern.flags & DEBUG):
                 call = _cached_replace_compile(pattern, repl, flags, type(repl))
             else:  # pragma: no cover
@@ -414,7 +414,7 @@ def sub(pattern, repl, string, count=0, flags=0):
     """Apply `sub` after applying backrefs."""
 
     is_replace = _is_replace(repl)
-    is_string = isinstance(repl, (_util.string_type, _util.binary_type))
+    is_string = isinstance(repl, (_util.string_type, _util.bytes_type))
     if is_replace and repl.use_format:
         raise ValueError("Compiled replace cannot be a format object!")
 
@@ -428,7 +428,7 @@ def subf(pattern, format, string, count=0, flags=0):  # noqa A002
     """Apply `sub` with format style replace."""
 
     is_replace = _is_replace(format)
-    is_string = isinstance(format, (_util.string_type, _util.binary_type))
+    is_string = isinstance(format, (_util.string_type, _util.bytes_type))
     if is_replace and not format.use_format:
         raise ValueError("Compiled replace is not a format object!")
 
@@ -444,7 +444,7 @@ def subn(pattern, repl, string, count=0, flags=0):
     """Apply `subn` with format style replace."""
 
     is_replace = _is_replace(repl)
-    is_string = isinstance(repl, (_util.string_type, _util.binary_type))
+    is_string = isinstance(repl, (_util.string_type, _util.bytes_type))
     if is_replace and repl.use_format:
         raise ValueError("Compiled replace cannot be a format object!")
 
@@ -458,7 +458,7 @@ def subfn(pattern, format, string, count=0, flags=0):  # noqa A002
     """Apply `subn` after applying backrefs."""
 
     is_replace = _is_replace(format)
-    is_string = isinstance(format, (_util.string_type, _util.binary_type))
+    is_string = isinstance(format, (_util.string_type, _util.bytes_type))
     if is_replace and not format.use_format:
         raise ValueError("Compiled replace is not a format object!")
 

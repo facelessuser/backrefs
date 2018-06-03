@@ -14,10 +14,10 @@ import copy
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 
 if PY3:
-    binary_type = bytes  # noqa
+    bytes_type = bytes  # noqa
     string_type = str  # noqa
 else:
-    binary_type = str  # noqa
+    bytes_type = str  # noqa
     string_type = unicode  # noqa
 
 
@@ -774,8 +774,8 @@ class TestReplaceTemplate(unittest.TestCase):
             'line line line '
         )
 
-    def test_binary_line_break(self):
-        r"""Test binary line break \R."""
+    def test_bytes_line_break(self):
+        r"""Test bytes line break \R."""
 
         self.assertEqual(
             bregex.sub(br"\R", b' ', b'line\r\nline\nline\r'),
@@ -1172,8 +1172,8 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(results2, results)
         self.assertEqual('\e \\e \\\e \\\\e \\\\\e', results)
 
-    def test_binary_normal_escaping(self):
-        """Test binary normal escaped slash."""
+    def test_bytes_normal_escaping(self):
+        """Test bytes normal escaped slash."""
 
         text = b"This is a test of normal escaping!"
         pattern = regex.compile(br"(.+)")
@@ -1279,16 +1279,16 @@ class TestReplaceTemplate(unittest.TestCase):
 
     #     self.assertEqual(result, "Here is a nested [] group search!")
 
-    def test_binary_replace(self):
-        """Test that binary regex result is a binary string."""
+    def test_bytes_replace(self):
+        """Test that bytes regex result is a bytes string."""
 
-        text = b"This is some binary text!"
-        pattern = bregex.compile_search(br"This is (some binary text)!")
+        text = b"This is some bytes text!"
+        pattern = bregex.compile_search(br"This is (some bytes text)!")
         expand = bregex.compile_replace(pattern, br'\C\1\E')
         m = pattern.match(text)
         result = expand(m)
-        self.assertEqual(result, b"SOME BINARY TEXT")
-        self.assertTrue(isinstance(result, binary_type))
+        self.assertEqual(result, b"SOME BYTES TEXT")
+        self.assertTrue(isinstance(result, bytes_type))
 
     def test_template_replace(self):
         """Test replace by passing in replace template."""
@@ -1448,7 +1448,7 @@ class TestReplaceTemplate(unittest.TestCase):
             results
         )
 
-    def test_binary_format_capture_bases(self):
+    def test_bytes_format_capture_bases(self):
         """Test capture bases."""
 
         text = b"abababab"
@@ -1620,7 +1620,7 @@ class TestReplaceTemplate(unittest.TestCase):
         results = expandf(pattern.match('Test'))
         self.assertEqual('\u0108\nWw\u0108', results)
 
-        # Binary doesn't care about Unicode, but should evaluate bytes
+        # Bytes doesn't care about Unicode, but should evaluate bytes
         pattern = regex.compile(b'Test')
         expand = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
         results = expand(pattern.match(b'Test'))
