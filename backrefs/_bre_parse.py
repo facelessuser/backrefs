@@ -1260,7 +1260,13 @@ class _ReplaceParser(object):
     def span_case(self, i, case):
         """Uppercase or lowercase the next range of characters until end marker is found."""
 
+        # A new \L, \C or \E should pop the last in the stack.
+        if self.span_stack:
+            self.span_stack.pop()
+        if self.single_stack:
+            self.single_stack.pop()
         self.span_stack.append(case)
+        count = len(self.span_stack)
         self.end_found = False
         try:
             while not self.end_found:
@@ -1282,12 +1288,13 @@ class _ReplaceParser(object):
                     self.result.append(text)
                 else:
                     self.result.append(self.convert_case(t, case))
-                if self.end_found:
+                if self.end_found or count > len(self.span_stack):
                     self.end_found = False
                     break
         except StopIteration:
             pass
-        self.span_stack.pop()
+        if count == len(self.span_stack):
+            self.span_stack.pop()
 
     def convert_case(self, value, case):
         """Convert case."""
@@ -1318,7 +1325,7 @@ class _ReplaceParser(object):
                 except StopIteration:
                     self.result.append(t)
                     raise
-            else:
+            elif self.single_stack:
                 self.result.append(self.convert_case(t, self.get_single_stack()))
         except StopIteration:
             pass

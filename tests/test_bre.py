@@ -1341,7 +1341,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(pattern, r'\1\c\L\l\2\E\3')
         results = expand(pattern.match(text))
 
-        self.assertEqual('This is a test for Stacking!', results)
+        self.assertEqual('This is a test for stacking!', results)
 
     def test_single_case_followed_by_bslash(self):
         """Test single backslash following a single case reference."""
@@ -1371,7 +1371,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(pattern, r'Test \l\Cstacked\E\3')
         results = expand(pattern.match(text))
 
-        self.assertEqual('Test sTACKED!', results)
+        self.assertEqual('Test STACKED!', results)
 
     def test_extraneous_end_char(self):
         """Test for extraneous end characters."""
@@ -1461,7 +1461,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(pattern, r'\1\C\C\2\E\3\E')
         results = expand(pattern.match(text))
 
-        self.assertEqual('This is a complex UPPERCASE TEST!', results)
+        self.assertEqual('This is a complex UPPERCASE test!', results)
 
     def test_lower_after_lower(self):
         """Test lowercase after lowercase."""
@@ -1481,7 +1481,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(pattern, r'\1\L\L\2\E\3\E')
         results = expand(pattern.match(text))
 
-        self.assertEqual('This is a complex lowercase test!', results)
+        self.assertEqual('This is a complex lowercase TEST!', results)
 
     def test_span_upper_after_lower(self):
         """Test lowercase followed by uppercase span."""
@@ -1491,7 +1491,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(pattern, r'\1\l\C\2\E\3')
         results = expand(pattern.match(text))
 
-        self.assertEqual('This is a complex uPPERCASE test!', results)
+        self.assertEqual('This is a complex UPPERCASE test!', results)
 
     def test_span_lower_after_upper(self):
         """Test uppercase followed by lowercase span."""
@@ -1501,7 +1501,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(pattern, r'\1\c\L\2\E\3')
         results = expand(pattern.match(text))
 
-        self.assertEqual('This is a complex Lowercase test!', results)
+        self.assertEqual('This is a complex lowercase test!', results)
 
     def test_span_upper_around_lower(self):
         """Test uppercase span around a lowercase."""
@@ -1668,7 +1668,7 @@ class TestReplaceTemplate(unittest.TestCase):
         # Use text pattern directly.
         expand = bre.compile_replace(pattern, r'\l\C\g<first>\l\g<second>\L\c\g<third>\E\g<fourth>\E\5')
         results = expand(pattern.match(text))
-        self.assertEqual('tHIS iS A TEST FOR Named capture GROUPS!', results)
+        self.assertEqual('THIS iS A TEST FOR Named capture groups!', results)
 
     def test_mixed_groups2(self):
         """Test mix of upper and lower case with group indexes and a string replace pattern."""
@@ -1680,7 +1680,7 @@ class TestReplaceTemplate(unittest.TestCase):
         # This will pass because we do not need to resolve named groups.
         expand = bre.compile_replace(pattern, r'\l\C\g<1>\l\g<2>\L\c\g<3>\E\g<4>\E\5')
         results = expand(pattern.match(text))
-        self.assertEqual('tHIS iS A TEST FOR Named capture GROUPS!', results)
+        self.assertEqual('THIS iS A TEST FOR Named capture groups!', results)
 
     def test_mixed_groups3(self):
         """Test mix of upper and lower case with named groups and a compiled replace pattern."""
@@ -1692,7 +1692,7 @@ class TestReplaceTemplate(unittest.TestCase):
         # Now using compiled pattern, we can use named groups in replace template.
         expand = bre.compile_replace(pattern, r'\l\C\g<first>\l\g<second>\L\c\g<third>\E\g<fourth>\E\5')
         results = expand(pattern.match(text))
-        self.assertEqual('tHIS iS A TEST FOR Named capture GROUPS!', results)
+        self.assertEqual('THIS iS A TEST FOR Named capture groups!', results)
 
     def test_as_replace_function(self):
         """Test that replace can be used as a replace function."""
@@ -1741,7 +1741,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(pattern, r'\l\C\g<0001>\l\g<02>\L\c\g<03>\E\g<004>\E\5\n\C\g<000>\E')
         results = expand(pattern.match(text))
         self.assertEqual(
-            'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
+            'THIS iS A TEST FOR Numeric capture groups!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
             results
         )
 
@@ -1755,7 +1755,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expandf = bre.compile_replace(pattern, r'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT)
         results = expandf(pattern.match(text))
         self.assertEqual(
-            'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
+            'THIS iS A TEST FOR Numeric capture groups!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
             results
         )
 
@@ -1766,7 +1766,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expandf = bre.compile_replace(pattern, br'\l\C{0001}\l{02}\L\c{03}\E{004}\E{5}\n\C{000}\E', bre.FORMAT)
         results = expandf(pattern.match(text))
         self.assertEqual(
-            b'tHIS iS A TEST FOR Numeric capture GROUPS!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
+            b'THIS iS A TEST FOR Numeric capture groups!\nTHIS IS A TEST FOR NUMERIC CAPTURE GROUPS!',
             results
         )
 
@@ -1782,7 +1782,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
         results = expandf(pattern.match(text))
         self.assertEqual(
-            '{0001}{IS A TEST FOR }Format capture GROUPS!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
+            '{0001}{IS A TEST FOR }Format capture groups!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
             results
         )
 
@@ -1795,7 +1795,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
         results = expandf(pattern.match(text))
         self.assertEqual(
-            b'{0001}{IS A TEST FOR }Format capture GROUPS!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
+            b'{0001}{IS A TEST FOR }Format capture groups!\nTHIS IS A TEST FOR FORMAT CAPTURE GROUPS!',
             results
         )
 
@@ -1811,7 +1811,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
         results = expandf(pattern.match(text))
         self.assertEqual(
-            'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\ntHIS iS A TEST FOR Format capture GROUPS!{}',
+            'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\nTHIS iS A TEST FOR Format capture groups!{}',
             results
         )
 
@@ -1824,7 +1824,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
         results = expandf(pattern.match(text))
         self.assertEqual(
-            b'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\ntHIS iS A TEST FOR Format capture GROUPS!{}',
+            b'THIS IS A TEST FOR FORMAT CAPTURE GROUPS!\nTHIS iS A TEST FOR Format capture groups!{}',
             results
         )
 
