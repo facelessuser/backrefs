@@ -3,6 +3,7 @@
 ## 3.5.1
 
 - **FIX**: POSIX character classes should not be part of a range.
+- **FIX**: Replace string casing logic properly follows other implementations like Boost etc. `\L`, `\C`, and `\E` should all terminate `\L`, and `\C`. `\l` and `\c` will be ignored if followed by `\C` or `\L`.
 
 ## 3.5.0
 

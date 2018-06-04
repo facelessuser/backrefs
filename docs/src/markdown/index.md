@@ -315,8 +315,8 @@ Back\ References     | Description
 ---------------------|-------------
 `\c`                 | Uppercase the next character.
 `\l`                 | Lowercase the next character.
-`\C...\E`            | Apply uppercase to all characters until either the end of the string or the end marker `\E` is found.
-`\L...\E`            | Apply lowercase to all characters until either the end of the string or the end marker `\E` is found.
+`\C...\E`            | Apply uppercase to all characters until either the end of the string, the end marker `\E` is found, or another `\C` or `\L` is encountered.
+`\L...\E`            | Apply lowercase to all characters until either the end of the string, the end marker `\E` is found, or another `\L` or `\C` is encountered.
 `\U`                 | Wide Unicode character `\U00000057`. Re doesn't translate this notation in raw strings (`#!py3 r"..."`), and Regex doesn't in format templates in raw strings (`#!py3 r"{} {}"`).  This adds support for them.
 `\u`                 | Narrow Unicode character `\u0057`. Re doesn't translate this notation in raw strings (`#!py3 r"..."`), and Regex doesn't in format templates in raw strings (`#!py3 r"{} {}"`).  This adds support for them.
 `\x`                 | Byte character `\x57`. Re doesn't translate this notation in raw strings (`#!py3 r"..."`), and Regex doesn't in format templates in raw strings (`#!py3 r"{} {}"`).  This adds support for them.
@@ -326,7 +326,7 @@ Back\ References     | Description
     Complex configurations of casing should work fine.
 
     - `\L\cTEST\E` --> `Test`
-    - `\c\LTEST\E` --> `Test`
+    - `\c\LTEST\E` --> `test`
     - `\L\cTEST \cTEST\E` --> `Test Test`
 
 ## Unicode Properties
