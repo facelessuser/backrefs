@@ -896,7 +896,7 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bregex.compile_replace(pattern, r'\1\c\l\2\3')
         results = expand(pattern.match(text))
 
-        self.assertEqual('This is a test for Stacking!', results)
+        self.assertEqual('This is a test for stacking!', results)
 
     def test_span_stacked_case(self):
         """Test stacked casing of non-spans in and out of a span."""

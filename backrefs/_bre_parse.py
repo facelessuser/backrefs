@@ -1280,12 +1280,6 @@ class _ReplaceParser(object):
                     except StopIteration:
                         self.result.append(t)
                         raise
-                elif self.single_stack:
-                    single = self.get_single_stack()
-                    text = self.convert_case(t, case)
-                    if single:
-                        text = self.convert_case(text[0], single) + text[1:]
-                    self.result.append(text)
                 else:
                     self.result.append(self.convert_case(t, case))
                 if self.end_found or count > len(self.span_stack):
@@ -1313,6 +1307,9 @@ class _ReplaceParser(object):
     def single_case(self, i, case):
         """Uppercase or lowercase the next character."""
 
+        # Pop a previous case if we have consecutive ones.
+        if self.single_stack:
+            self.single_stack.pop()
         self.single_stack.append(case)
         try:
             t = next(i)
