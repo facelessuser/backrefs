@@ -22,7 +22,7 @@ theme:
   feature:
     tabs: true
 
-pages:
+nav:
   - User Guide: index.md
   - Installation: installation.md
   - Contributing &amp; Support: contributing.md

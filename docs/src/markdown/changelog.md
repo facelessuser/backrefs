@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.5.2
+
+- **FIX**: Include zip for Unicode 11 (Python 3.7) to make installation more reliable.
+
 ## 3.5.1
 
 Jun 3, 2018
