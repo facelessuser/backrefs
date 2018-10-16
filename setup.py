@@ -42,7 +42,7 @@ def get_requirements():
 
 
 def get_unicodedata():
-    """Download the unicodedata version for the given Python version."""
+    """Download the `unicodedata` version for the given Python version."""
 
     import unicodedata
 
@@ -62,7 +62,7 @@ def get_unicodedata():
 
 
 def generate_unicode_table():
-    """Generate the unicode table for the given Python version."""
+    """Generate the Unicode table for the given Python version."""
 
     fail = False
     path = os.path.join(os.path.dirname(__file__), 'tools')
