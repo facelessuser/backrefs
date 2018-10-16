@@ -41,7 +41,7 @@ script:
   - tox
 
 after_success:
-  - codecov
+  - if [ $TOXENV != "3.8-dev" ]; then codecov; fi
 
 deploy:
   - provider: pypi
