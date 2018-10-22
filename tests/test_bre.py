@@ -2117,22 +2117,6 @@ class TestReplaceTemplate(unittest.TestCase):
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
 
-    # def test_incomplete_replace_narrow_unicode(self):
-    #     """Test incomplete replace of narrow Unicode."""
-
-    #     p = bre.compile_search(r'test')
-    #     with self.assertRaises(SyntaxError) as e:
-    #         bre.compile_replace(p, r'Replace \u fail!')
-    #     self.assertTrue(str(e), 'Format for Unicode is \\uXXXX!')
-
-    # def test_incomplete_replace_wide_unicode(self):
-    #     """Test incomplete replace wide Unicode."""
-
-    #     p = bre.compile_search(r'test')
-    #     with self.assertRaises(SyntaxError) as e:
-    #         bre.compile_replace(p, r'Replace \U fail!')
-    #     self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
-
     def test_immutable(self):
         """Test immutable object."""
 
