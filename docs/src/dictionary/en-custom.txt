@@ -20,9 +20,11 @@ Regex's
 Sep
 Tox
 boolean
+decrement
 emoji
 grapheme
 hashable
+incrementing
 namespaced
 natively
 plugin
@@ -35,4 +37,5 @@ refactored
 reinstalling
 requesters
 sublicense
+uncompiled
 unescaped

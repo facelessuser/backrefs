@@ -40,7 +40,7 @@ __all__ = (
 ) + (("A", "ASCII") if _util.PY3 else tuple()) + (("fullmatch",) if _util.PY34 else tuple())
 
 # Expose some common re flags and methods to
-# save having to import re and backrefs libs
+# save having to import re and backrefs libraries
 DEBUG = _re.DEBUG
 I = _re.I
 IGNORECASE = _re.IGNORECASE

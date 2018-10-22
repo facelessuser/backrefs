@@ -368,11 +368,11 @@ class _SearchParser(object):
                     else:
                         current.append(t)
                 elif t == "^" and found == 1 and (pos == first + 1):
-                    # Found ^ at start of first char set; adjust 1st char pos
+                    # Found ^ at start of first char set; adjust 1st char position
                     current.append(t)
                     first = pos
                 elif self.version == _regex.V1 and t == "^" and found > 1 and (pos == sub_first + 1):
-                    # Found ^ at start of sub char set; adjust 1st char sub pos
+                    # Found ^ at start of sub char set; adjust 1st char sub position
                     current.append(t)
                     sub_first = pos
                 elif t == "]" and found == 1 and (pos != first + 1):
@@ -709,7 +709,7 @@ class _ReplaceParser(object):
 
         value = int(text, 8)
         if value > 0xFF and self.is_bytes:
-            # Re fails on octal greater than 0o377 or 0xFF
+            # Re fails on octal greater than `0o377` or `0xFF`
             raise ValueError("octal escape value outside of range 0-0o377!")
         else:
             single = self.get_single_stack()
@@ -904,7 +904,7 @@ class _ReplaceParser(object):
         if octal:
             value = int(octal, 8)
             if value > 0xFF and self.is_bytes:
-                # Re fails on octal greater than 0o377 or 0xFF
+                # Re fails on octal greater than `0o377` or `0xFF`
                 raise ValueError("octal escape value outside of range 0-0o377!")
             value = _util.uchr(value)
         elif t in _STANDARD_ESCAPES or t == '\\':

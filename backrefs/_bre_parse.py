@@ -76,7 +76,6 @@ class _SearchParser(object):
     _re_end_wb = r"\b(?<=\w)"
     _line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])'
     _bytes_line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85])'
-    # (?:\PM\pM*(?!\pM)) ~= (?>\PM\pM*)
     _grapheme_cluster = r'(?:%s%s*(?!%s))'
 
     def __init__(self, search, re_verbose=False, re_unicode=None):
@@ -550,7 +549,7 @@ class _SearchParser(object):
         if found_property or self.found_named_unicode:
             value = "".join(current)
             if value == '[]':
-                # We specified some properities, but they are all
+                # We specified some properties, but they are all
                 # out of reach.  Therefore we can match nothing.
                 current = ['[^%s]' % ('\x00-\xff' if self.is_bytes else _uniprops.UNICODE_RANGE)]
             elif value == '[^]':
@@ -625,10 +624,10 @@ class _SearchParser(object):
         Case doesn't matter and `[ -_]` will be stripped out.
         """
 
-        # 'GC = Some_Unpredictable-Category Name' -> 'gc=someunpredictablecategoryname'
+        # `'GC = Some_Unpredictable-Category Name' -> 'gc=someunpredictablecategoryname'`
         category = None
 
-        # \p{^negated} Strip off the caret after evaluation.
+        # `\p{^negated}` Strip off the caret after evaluation.
         if props.startswith("^"):
             negate = not negate
         if props.startswith("^"):
@@ -636,7 +635,7 @@ class _SearchParser(object):
 
         # Get the property and value.
         # If a property is present and not block,
-        # we can assume GC as that is all we support.
+        # we can assume `GC` as that is all we support.
         # If we are wrong it will fail.
         if value:
             if _uniprops.is_enum(props):
@@ -663,8 +662,8 @@ class _SearchParser(object):
         """Insert letter (ASCII or Unicode) case properties."""
 
         # Use traditional ASCII upper/lower case unless:
-        #    1. The strings fed in are not byts
-        #    2. And the the unicode flag was used
+        #    1. The strings fed in are not bytes
+        #    2. And the the Unicode flag was used
         if not in_group:
             v = self.posix_props(("^" if negate else "") + ("upper" if case == _UPPER else "lower"), in_group=in_group)
             v[0] = "[%s]" % v[0]
@@ -963,7 +962,7 @@ class _ReplaceParser(object):
 
         value = int(text, 8)
         if value > 0xFF and self.is_bytes:
-            # Re fails on octal greater than 0o377 or 0xFF
+            # Re fails on octal greater than `0o377` or `0xFF`
             raise ValueError("octal escape value outside of range 0-0o377!")
         else:
             single = self.get_single_stack()
@@ -1158,7 +1157,7 @@ class _ReplaceParser(object):
         if octal:
             value = int(octal, 8)
             if value > 0xFF and self.is_bytes:
-                # Re fails on octal greater than 0o377 or 0xFF
+                # Re fails on octal greater than `0o377` or `0xFF`
                 raise ValueError("octal escape value outside of range 0-0o377!")
             value = _util.uchr(value)
         elif t in _STANDARD_ESCAPES or t == '\\':

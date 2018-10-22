@@ -1268,17 +1268,6 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(result, "This is awesome!  Here we go!  This is awesome!  Here we go!")
         self.assertEqual(count, 2)
 
-    # def test_nested_group(self):
-    #     """Test that replace can be used as a replace function."""
-
-    #     text = "Here is a nested [] group search!"
-    #     text_pattern = r"(Here\ is\ a\ nested\ \[(?V1)\]\ group\ )([srch[aeiou]--[iou]]+)(?x)(!)"
-    #     pattern = bregex.compile_search(text_pattern)
-    #     expand = bregex.compile_replace(pattern, r'\1\2\3')
-    #     result = expand(pattern.match(text))
-
-    #     self.assertEqual(result, "Here is a nested [] group search!")
-
     def test_bytes_replace(self):
         """Test that bytes regex result is a bytes string."""
 
@@ -1685,22 +1674,6 @@ class TestReplaceTemplate(unittest.TestCase):
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
-
-    # def test_incomplete_replace_narrow_unicode(self):
-    #     """Test incomplete replace of narrow Unicode."""
-
-    #     p = bregex.compile_search(r'test')
-    #     with self.assertRaises(SyntaxError) as e:
-    #         bregex.compile_replace(p, r'Replace \u fail!')
-    #     self.assertTrue(str(e), 'Format for Unicode is \\uXXXX!')
-
-    # def test_incomplete_replace_wide_unicode(self):
-    #     """Test incomplete replace wide Unicode."""
-
-    #     p = bregex.compile_search(r'test')
-    #     with self.assertRaises(SyntaxError) as e:
-    #         bregex.compile_replace(p, r'Replace \U fail!')
-    #     self.assertTrue(str(e), 'Format for wide Unicode is \\UXXXXXXXX!')
 
     def test_immutable(self):
         """Test immutable object."""

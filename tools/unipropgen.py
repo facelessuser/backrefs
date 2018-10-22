@@ -281,7 +281,7 @@ def gen_ccc(output, ascii_props=False, append=False, prefix=""):
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
             f.write(HEADER)
-        # Write out the unicode properties
+        # Write out the Unicode properties
         f.write('%s_canonical_combining_class = {\n' % prefix)
         count = len(obj) - 1
         i = 0
@@ -364,7 +364,7 @@ def gen_scripts(
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
             f.write(HEADER)
-        # Write out the unicode properties
+        # Write out the Unicode properties
         f.write('%s_%s = {\n' % (prefix, obj_name))
         count = len(obj) - 1
         i = 0
@@ -380,7 +380,7 @@ def gen_scripts(
         with codecs.open(output_ext, 'a' if append else 'w', 'utf-8') as f:
             if not append:
                 f.write(HEADER)
-            # Write out the unicode properties
+            # Write out the Unicode properties
             f.write('%s_%s = {\n' % (prefix, obj_ext_name))
             count = len(obj2) - 1
             i = 0
@@ -426,7 +426,7 @@ def gen_enum(file_name, obj_name, output, field=1, notexplicit=None, ascii_props
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
             f.write(HEADER)
-        # Write out the unicode properties
+        # Write out the Unicode properties
         f.write('%s_%s = {\n' % (prefix, obj_name))
         count = len(obj) - 1
         i = 0
@@ -476,7 +476,7 @@ def gen_age(output, ascii_props=False, append=False, prefix=""):
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
             f.write(HEADER)
-        # Write out the unicode properties
+        # Write out the Unicode properties
         f.write('%s_age = {\n' % prefix)
         count = len(obj) - 1
         i = 0
@@ -534,7 +534,7 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix=""):
         if not append:
             f.write(HEADER)
         for key, value in sorted(nf.items()):
-            # Write out the unicode properties
+            # Write out the Unicode properties
             f.write('%s_%s = {\n' % (prefix, key.replace('quickcheck', '_quick_check')))
             count = len(value) - 1
             i = 0
@@ -623,7 +623,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix=""):
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
             f.write(HEADER)
-        # Write out the unicode properties
+        # Write out the Unicode properties
         f.write('%s_binary = {\n' % prefix)
         count = len(binary) - 1
         i = 0
@@ -687,61 +687,61 @@ def gen_posix(output, is_bytes=False, append=False, prefix=""):
 
     posix_table = {}
 
-    # Alnum: [a-zA-Z0-9]
+    # `Alnum: [a-zA-Z0-9]`
     s = set([x for x in range(0x30, 0x39 + 1)])
     s |= set([x for x in range(0x41, 0x5a + 1)])
     s |= set([x for x in range(0x61, 0x7a + 1)])
     posix_table["alnum"] = list(s)
 
-    # Alpha: [a-zA-Z]
+    # `Alpha: [a-zA-Z]`
     s = set([x for x in range(0x41, 0x5a)])
     s |= set([x for x in range(0x61, 0x7a)])
     posix_table["alpha"] = list(s)
 
-    # ASCII: [\x00-\x7F]
+    # `ASCII: [\x00-\x7F]`
     s = set([x for x in range(0, 0x7F + 1)])
     posix_table["ascii"] = list(s)
 
-    # Blank: [ \t]
+    # `Blank: [ \t]`
     s = set([0x20, 0x09])
     posix_table["blank"] = list(s)
 
-    # Cntrl: [\x00-\x1F\x7F]
+    # `Cntrl: [\x00-\x1F\x7F]`
     s = set([x for x in range(0, 0x1F + 1)] + [0x7F])
     posix_table["cntrl"] = list(s)
 
-    # Digit: [0-9]
+    # `Digit: [0-9]`
     s = set([x for x in range(0x30, 0x39 + 1)])
     posix_table["digit"] = list(s)
 
-    # Graph: [\x21-\x7E]
+    # `Graph: [\x21-\x7E]`
     s = set([x for x in range(0x21, 0x7E + 1)])
     posix_table["graph"] = list(s)
 
-    # Lower: [a-z]
+    # `Lower: [a-z]`
     s = set([x for x in range(0x61, 0x7a + 1)])
     posix_table["lower"] = list(s)
 
-    # Print: [\x20-\x7E]
+    # `Print: [\x20-\x7E]`
     s = set([x for x in range(0x20, 0x7E + 1)])
     posix_table["print"] = list(s)
 
-    # Punct: [!\"\#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~]
+    # `Punct: [!\"\#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~]`
     s = set([x for x in range(0x21, 0x2f + 1)])
     s |= set([x for x in range(0x3a, 0x40 + 1)])
     s |= set([x for x in range(0x5b, 0x60 + 1)])
     s |= set([x for x in range(0x7b, 0x7e + 1)])
     posix_table["punct"] = list(s)
 
-    # Space: [ \t\r\n\v\f]
+    # `Space: [ \t\r\n\v\f]`
     s = set([x for x in range(0x09, 0x0d + 1)] + [0x20])
     posix_table["space"] = list(s)
 
-    # Upper: [A-Z]
+    # `Upper: [A-Z]`
     s = set([x for x in range(0x41, 0x5a + 1)])
     posix_table["upper"] = list(s)
 
-    # XDigit: [A-Fa-f0-9]
+    # `XDigit: [A-Fa-f0-9]`
     s = set([x for x in range(0x30, 0x39 + 1)])
     s |= set([x for x in range(0x41, 0x46 + 1)])
     s |= set([x for x in range(0x61, 0x66 + 1)])
@@ -753,7 +753,7 @@ def gen_posix(output, is_bytes=False, append=False, prefix=""):
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
             f.write(HEADER)
-        # Write out the unicode properties
+        # Write out the Unicode properties
         f.write('%s_posix_properties = {\n' % prefix)
         count = len(posix_table) - 1
         i = 0
@@ -769,31 +769,31 @@ def gen_posix(output, is_bytes=False, append=False, prefix=""):
 def gen_uposix(table, posix_table):
     """Generate the posix table and write out to file."""
 
-    # Alnum: [\p{L&}\p{Nd}]
+    # `Alnum: [\p{L&}\p{Nd}]`
     s = set(table['l']['c'] + table['n']['d'])
     posix_table["posixalnum"] = list(s)
 
-    # Alpha: [\p{L&}]
+    # `Alpha: [\p{L&}]`
     s = set(table['l']['c'])
     posix_table["posixalpha"] = list(s)
 
-    # ASCII: [\x00-\x7F]
+    # `ASCII: [\x00-\x7F]`
     s = set([x for x in range(0, 0x7F + 1)])
     posix_table["posixascii"] = list(s)
 
-    # Blank: [\p{Zs}\t]
+    # `Blank: [\p{Zs}\t]`
     s = set(table['z']['s'] + [0x09])
     posix_table["posixblank"] = list(s)
 
-    # Cntrl: [\p{Cc}]
+    # `Cntrl: [\p{Cc}]`
     s = set(table['c']['c'])
     posix_table["posixcntrl"] = list(s)
 
-    # Digit: [\p{Nd}]
+    # `Digit: [\p{Nd}]`
     s = set(table['n']['d'])
     posix_table["posixdigit"] = list(s)
 
-    # Graph: [^\p{Z}\p{C}]
+    # `Graph: [^\p{Z}\p{C}]`
     s = set()
     for table_name in ('z', 'c'):
         for sub_table_name in table[table_name]:
@@ -801,11 +801,11 @@ def gen_uposix(table, posix_table):
                 s |= set(table[table_name][sub_table_name])
     posix_table["^posixgraph"] = list(s)
 
-    # Lower: [\p{Ll}]
+    # `Lower: [\p{Ll}]`
     s = set(table['l']['l'])
     posix_table["posixlower"] = list(s)
 
-    # Print: [\P{C}]
+    # `Print: [\P{C}]`
     s = set()
     for table_name in ('c',):
         for sub_table_name in table[table_name]:
@@ -813,7 +813,7 @@ def gen_uposix(table, posix_table):
                 s |= set(table[table_name][sub_table_name])
     posix_table["^posixprint"] = list(s)
 
-    # Punct: [\p{P}\p{S}]
+    # `Punct: [\p{P}\p{S}]`
     s = set()
     for table_name in ('p', 's'):
         for sub_table_name in table[table_name]:
@@ -821,7 +821,7 @@ def gen_uposix(table, posix_table):
                 s |= set(table[table_name][sub_table_name])
     posix_table["posixpunct"] = list(s)
 
-    # Space: [\p{Z}\t\r\n\v\f]
+    # `Space: [\p{Z}\t\r\n\v\f]`
     s = set()
     for table_name in ('z',):
         for sub_table_name in table[table_name]:
@@ -830,11 +830,11 @@ def gen_uposix(table, posix_table):
     s |= set([x for x in range(0x09, 0x0e)])
     posix_table["posixspace"] = list(s)
 
-    # Upper: [\p{Lu}]
+    # `Upper: [\p{Lu}]`
     s = set(table['l']['u'])
     posix_table["posixupper"] = list(s)
 
-    # XDigit: [A-Fa-f0-9]
+    # `XDigit: [A-Fa-f0-9]`
     s = set([x for x in range(0x30, 0x39 + 1)])
     s |= set([x for x in range(0x41, 0x46 + 1)])
     s |= set([x for x in range(0x61, 0x66 + 1)])
@@ -1015,8 +1015,8 @@ def gen_properties(output, ascii_props=False, append=False):
 
     prefix = "ascii" if ascii_props else 'unicode'
 
-    # L& or Lc won't be found in the table,
-    # so intialize 'c' at the start. & will have to be converted to 'c'
+    # `L&` or `Lc` won't be found in the table,
+    # so initialize 'c' at the start. `&` will have to be converted to 'c'
     # before sending it through.
     categories = [
         'generalcategory', 'script', 'block',
@@ -1222,7 +1222,7 @@ def gen_properties(output, ascii_props=False, append=False):
     with codecs.open(files['gc'], 'a' if append else 'w', 'utf-8') as f:
         if not append:
             f.write(HEADER)
-        # Write out the unicode properties
+        # Write out the Unicode properties
         f.write('%s_properties = {\n' % prefix)
         count = len(table) - 1
         i = 0

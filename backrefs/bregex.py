@@ -30,7 +30,7 @@ __all__ = (
 )
 
 # Expose some common re flags and methods to
-# save having to import re and backrefs libs
+# save having to import re and backrefs libraries
 D = _regex.D
 DEBUG = _regex.DEBUG
 A = _regex.A
