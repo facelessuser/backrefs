@@ -13,17 +13,11 @@ PY3 = (3, 0) <= sys.version_info < (4, 0)
 def get_version():
     """Get version and version_info without importing the entire module."""
 
-    devstatus = {
-        'alpha': '3 - Alpha',
-        'beta': '4 - Beta',
-        'candidate': '4 - Beta',
-        'final': '5 - Production/Stable'
-    }
     path = os.path.join(os.path.dirname(__file__), 'backrefs')
-    fp, pathname, desc = imp.find_module('__init__', [path])
+    fp, pathname, desc = imp.find_module('__meta__', [path])
     try:
-        v = imp.load_module('__init__', fp, pathname, desc)
-        return v.version, devstatus[v.version_info[3]]
+        vi = imp.load_module('__meta__', fp, pathname, desc).__version_info__
+        return vi._get_canonical(), vi._get_dev_status()
     except Exception:
         print(traceback.format_exc())
     finally:

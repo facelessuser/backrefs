@@ -1,7 +1,9 @@
 [run]
 omit=
     backrefs/uniprops/unidata/*
+    backrefs/pep562.py
 
 [report]
 omit=
     backrefs/uniprops/unidata/*
+    backrefs/pep562.py
