@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test bre lib."""
+"""Test `bre` lib."""
 from __future__ import unicode_literals
 import unittest
 from backrefs import bre
