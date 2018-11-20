@@ -471,4 +471,4 @@ The Unicode variants of the POSIX properties are also available via the `\p{...}
 `upper`    | `Upper`     | `[A-Z]`                                           | `[\p{Lu}]`
 `xdigit`   | `XDigit`    | `[A-Fa-f0-9]`                                     | `[A-Fa-f0-9]`
 
---8<-- "links.md"
+--8<-- "links.txt"

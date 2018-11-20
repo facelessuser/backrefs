@@ -751,7 +751,7 @@ class TestReplaceTemplate(unittest.TestCase):
             pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
             expand = bregex.compile_replace(pattern, r'\u005cg')
             results = expand(pattern.match('some test pattern!'))
-            self.assertEqual('\g', results)
+            self.assertEqual(r'\g', results)
 
     def test_unexpected_end(self):
         """Test cases where there is an unexpected end to the replace string."""
@@ -1170,7 +1170,7 @@ class TestReplaceTemplate(unittest.TestCase):
         results2 = pattern.sub(repl_pattern, text)
 
         self.assertEqual(results2, results)
-        self.assertEqual('\e \\e \\\e \\\\e \\\\\e', results)
+        self.assertEqual('\\e \\e \\\\e \\\\e \\\\\\e', results)
 
     def test_bytes_normal_escaping(self):
         """Test bytes normal escaped slash."""
@@ -1184,7 +1184,7 @@ class TestReplaceTemplate(unittest.TestCase):
         results2 = pattern.sub(repl_pattern, text)
 
         self.assertEqual(results2, results)
-        self.assertEqual(b'\e \\e \\\e \\\\e \\\\\e', results)
+        self.assertEqual(b'\\e \\e \\\\e \\\\e \\\\\\e', results)
 
     def test_escaped_slash_at_eol(self):
         """Test escaped slash at end of line."""
