@@ -15,6 +15,7 @@ MkDocs
 NONINFRINGEMENT
 Posix
 PyMdown
+PyPI
 Regex
 Regex's
 Sep

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test bre lib."""
+"""Test `bre` lib."""
 from __future__ import unicode_literals
 import unittest
 from backrefs import bre
@@ -1160,7 +1160,7 @@ class TestReplaceTemplate(unittest.TestCase):
             pattern = re.compile(r"(some)(.+?)(pattern)(!)")
             expand = bre.compile_replace(pattern, r'\u005cg')
             results = expand(pattern.match('some test pattern!'))
-            self.assertEqual('\g', results)
+            self.assertEqual(r'\g', results)
 
     def test_unexpected_end(self):
         """Test cases where there is an unexpected end to the replace string."""
