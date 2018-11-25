@@ -1,39 +1,37 @@
 """Backrefs package."""
+from pep562 import Pep562
+from .__meta__ import __version__, __version_info__
+import sys
+import warnings
 
-#   (major, minor, micro, release type, pre-release build, post-release build)
-version_info = (3, 5, 2, 'final', 0, 0)
+__all__ = ("__version__", "__version_info__")
+__deprecated__ = {
+    "version": ("__version__", __version__),
+    "version_info": ("__version_info__", __version_info__)
+}
 
-
-def _version():
-    """
-    Get the version (PEP 440).
-
-    Version structure
-      (major, minor, micro, release type, pre-release build, post-release build)
-    Release names are named is such a way they are sortable and comparable with ease.
-      (alpha | beta | candidate | final)
-
-    - "final" should never have a pre-release build number
-    - pre-releases should have a pre-release build number greater than 0
-    - post-release is only applied if post-release build is greater than 0
-    """
-
-    releases = {"alpha": 'a', "beta": 'b', "candidate": 'rc', "final": ''}
-    # Version info should be proper length
-    assert len(version_info) == 6
-    # Should be a valid release
-    assert version_info[3] in releases
-    # Pre-release releases should have a pre-release value
-    assert version_info[3] == 'final' or version_info[4] > 0
-    # Final should not have a pre-release value
-    assert version_info[3] != 'final' or version_info[4] == 0
-
-    main = '.'.join(str(x)for x in (version_info[0:2] if version_info[2] == 0 else version_info[0:3]))
-    prerel = releases[version_info[3]]
-    prerel += str(version_info[4]) if prerel else ''
-    postrel = '.post%d' % version_info[5] if version_info[5] > 0 else ''
-
-    return ''.join((main, prerel, postrel))
+PY37 = (3, 7) <= sys.version_info
 
 
-version = _version()
+def __getattr__(name):  # noqa: N807
+    """Get attribute."""
+
+    deprecated = __deprecated__.get(name)
+    if deprecated:
+        warnings.warn(
+            "'{}' is deprecated. Use '{}' instead.".format(name, deprecated[0]),
+            category=DeprecationWarning,
+            stacklevel=(3 if PY37 else 4)
+        )
+        return deprecated[1]
+    raise AttributeError("module '{}' has no attribute '{}'".format(__name__, name))
+
+
+def __dir__():  # noqa: N807
+    """Module directory."""
+
+    return sorted(list(__all__) + list(__deprecated__.keys()))
+
+
+if not PY37:
+    Pep562(__name__)
