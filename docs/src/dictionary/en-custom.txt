@@ -1,4 +1,6 @@
 API
+Accessors
+Backport
 Backrefs
 Bre
 Bregex
@@ -20,8 +22,10 @@ Regex
 Regex's
 Sep
 Tox
+accessor
 boolean
 decrement
+deprecations
 emoji
 grapheme
 hashable
@@ -34,9 +38,12 @@ pre
 preprocess
 preprocessing
 preprocessor
+prerelease
+prereleases
 refactored
 reinstalling
 requesters
 sublicense
+tuple
 uncompiled
 unescaped
