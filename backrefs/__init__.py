@@ -4,7 +4,9 @@ from .__meta__ import __version__, __version_info__
 import sys
 import warnings
 
-__all__ = ("__version__", "__version_info__")
+# Nothing to import with all
+__all__ = tuple()
+
 __deprecated__ = {
     "version": ("__version__", __version__),
     "version_info": ("__version_info__", __version_info__)
@@ -25,12 +27,6 @@ def __getattr__(name):  # noqa: N807
         )
         return deprecated[1]
     raise AttributeError("module '{}' has no attribute '{}'".format(__name__, name))
-
-
-def __dir__():  # noqa: N807
-    """Module directory."""
-
-    return sorted(list(__all__) + list(__deprecated__.keys()))
 
 
 if not PY37:

@@ -125,14 +125,3 @@ class TestVersionDeprecations(unittest.TestCase):
             self.assertTrue(len(w) == 1)
             self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
             self.assertEqual(version_info, backrefs.__version_info__)
-
-    def test_deprecation_wrapper_dir(self):
-        """Tests the `__dir__` attribute of the class as it replaces the module's."""
-
-        import backrefs
-
-        dir_attr = dir(backrefs)
-        self.assertTrue('version' in dir_attr)
-        self.assertTrue('__version__' in dir_attr)
-        self.assertTrue('version_info' in dir_attr)
-        self.assertTrue('__version_info__' in dir_attr)
