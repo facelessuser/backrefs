@@ -3,18 +3,13 @@ from __future__ import unicode_literals
 import sys
 import os
 import zipfile
+from urllib.request import urlopen
 
 __version__ = '2.2.0'
 
-PY3 = sys.version_info >= (3, 0) and sys.version_info[0:2] < (4, 0)
 PY34 = sys.version_info >= (3, 4)
 PY35 = sys.version_info >= (3, 5)
 PY37 = sys.version_info >= (3, 7)
-
-if PY3:
-    from urllib.request import urlopen
-else:
-    from urllib2 import urlopen
 
 HOME = os.path.dirname(os.path.abspath(__file__))
 
@@ -75,13 +70,12 @@ def download_unicodedata(version, output=HOME, no_zip=False):
         'extracted/DerivedCombiningClass.txt'
     ]
 
-    if PY3:
-        files.append('ScriptExtensions.txt')
-        if PY35:
-            files.append('IndicPositionalCategory.txt')
-        else:
-            files.append('IndicMatraCategory.txt')
-        files.append('IndicSyllabicCategory.txt')
+    files.append('ScriptExtensions.txt')
+    if PY35:
+        files.append('IndicPositionalCategory.txt')
+    else:
+        files.append('IndicMatraCategory.txt')
+    files.append('IndicSyllabicCategory.txt')
 
     if PY34:
         files.append('BidiBrackets.txt')

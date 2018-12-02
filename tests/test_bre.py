@@ -11,17 +11,9 @@ import random
 from backrefs import _bre_parse
 import copy
 
-PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY34_PLUS = (3, 4) <= sys.version_info
 PY36_PLUS = (3, 6) <= sys.version_info
 PY37_PLUS = (3, 7) <= sys.version_info
-
-if PY3:
-    bytes_type = bytes  # noqa
-    string_type = str  # noqa
-else:
-    bytes_type = str  # noqa
-    string_type = unicode  # noqa
 
 
 class TestSearchTemplate(unittest.TestCase):
@@ -204,7 +196,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(bre._get_cache_size(), 0)
         self.assertEqual(bre._get_cache_size(True), 0)
         for x in range(1000):
-            value = string_type(random.randint(1, 10000))
+            value = str(random.randint(1, 10000))
             p = bre.compile(value)
             p.sub('', value)
             self.assertTrue(bre._get_cache_size() > 0)
@@ -219,9 +211,8 @@ class TestSearchTemplate(unittest.TestCase):
     def test_infinite_loop_catch(self):
         """Test infinite loop catch."""
 
-        if PY3:
-            with pytest.raises(_bre_parse.LoopException):
-                bre.compile_search(r'((?a)(?u))')
+        with pytest.raises(_bre_parse.LoopException):
+            bre.compile_search(r'((?a)(?u))')
         if PY36_PLUS:
             with pytest.raises(_bre_parse.LoopException):
                 bre.compile_search(r'(?-x:(?x))', re.VERBOSE)
@@ -463,12 +454,9 @@ class TestSearchTemplate(unittest.TestCase):
 
     def test_posix_in_group_ascii(self):
         """Test posix in a group for ASCII."""
-        if PY3:
-            pattern = bre.compile_search(r'Test [[:graph:]]', re.ASCII)
-            pattern2 = bre.compile_search('Test [!-\\~]', re.ASCII)
-        else:
-            pattern = bre.compile_search(r'Test [[:graph:]]')
-            pattern2 = bre.compile_search(r'Test [!-\~]')
+
+        pattern = bre.compile_search(r'Test [[:graph:]]', re.ASCII)
+        pattern2 = bre.compile_search('Test [!-\\~]', re.ASCII)
         self.assertEqual(pattern.pattern, pattern2.pattern)
 
     def test_not_posix_at_start_group(self):
@@ -691,7 +679,7 @@ class TestSearchTemplate(unittest.TestCase):
     def test_unicode_shorthand_ascii_only(self):
         """Ensure that when the Unicode flag is not used, only ASCII properties are used."""
 
-        flags = bre.ASCII if PY3 else 0
+        flags = bre.ASCII
         pattern = bre.compile_search(r'ex\lmple', flags)
         m = pattern.match('exámple')
         self.assertTrue(m is None)
@@ -906,62 +894,37 @@ class TestSearchTemplate(unittest.TestCase):
     def test_unicode_string_flag(self):
         """Test finding Unicode/ASCII string flag."""
 
-        if PY3:
-            template = _bre_parse._SearchParser(r'Testing for (?ia) ASCII flag.', False, None)
-            template.parse()
-            self.assertFalse(template.unicode)
-        else:
-            template = _bre_parse._SearchParser(r'Testing for (?iu) Unicode flag.', False, None)
-            template.parse()
-            self.assertTrue(template.unicode)
+        template = _bre_parse._SearchParser(r'Testing for (?ia) ASCII flag.', False, None)
+        template.parse()
+        self.assertFalse(template.unicode)
 
     def test_unicode_string_flag_in_group(self):
         """Test ignoring Unicode/ASCII string flag in group."""
 
-        if PY3:
-            template = _bre_parse._SearchParser(r'Testing for [(?ia)] ASCII flag.', False, None)
-            template.parse()
-            self.assertTrue(template.unicode)
-        else:
-            template = _bre_parse._SearchParser(r'Testing for [(?iu)] Unicode flag.', False, None)
-            template.parse()
-            self.assertFalse(template.unicode)
+        template = _bre_parse._SearchParser(r'Testing for [(?ia)] ASCII flag.', False, None)
+        template.parse()
+        self.assertTrue(template.unicode)
 
     def test_unicode_string_flag_escaped(self):
         """Test ignoring Unicode/ASCII string flag in group."""
 
-        if PY3:
-            template = _bre_parse._SearchParser(r'Testing for \(?ia) ASCII flag.', False, None)
-            template.parse()
-            self.assertTrue(template.unicode)
-        else:
-            template = _bre_parse._SearchParser(r'Testing for \(?iu) Unicode flag.', False, None)
-            template.parse()
-            self.assertFalse(template.unicode)
+        template = _bre_parse._SearchParser(r'Testing for \(?ia) ASCII flag.', False, None)
+        template.parse()
+        self.assertTrue(template.unicode)
 
     def test_unicode_string_flag_unescaped(self):
         """Test unescaped Unicode string flag."""
 
-        if PY3:
-            template = _bre_parse._SearchParser(r'Testing for \\(?ia) ASCII flag.', False, None)
-            template.parse()
-            self.assertFalse(template.unicode)
-        else:
-            template = _bre_parse._SearchParser(r'Testing for \\(?iu) Unicode flag.', False, None)
-            template.parse()
-            self.assertTrue(template.unicode)
+        template = _bre_parse._SearchParser(r'Testing for \\(?ia) ASCII flag.', False, None)
+        template.parse()
+        self.assertFalse(template.unicode)
 
     def test_unicode_string_flag_escaped_deep(self):
         """Test deep escaped Unicode flag."""
 
-        if PY3:
-            template = _bre_parse._SearchParser(r'Testing for \\\(?ia) ASCII flag.', False, None)
-            template.parse()
-            self.assertTrue(template.unicode)
-        else:
-            template = _bre_parse._SearchParser(r'Testing for \\\(?iu) Unicode flag.', False, None)
-            template.parse()
-            self.assertFalse(template.unicode)
+        template = _bre_parse._SearchParser(r'Testing for \\\(?ia) ASCII flag.', False, None)
+        template.parse()
+        self.assertTrue(template.unicode)
 
     def test_verbose_comment_no_nl(self):
         """Test verbose comment with no newline."""
@@ -1078,18 +1041,16 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test string format conversion paths."""
 
         self.assertTrue(bre.subf('test', r'{0.index}', 'test').startswith('<built-in method'))
-        self.assertEqual(bre.subf('test', r'{0.__class__.__name__}', 'test'), ('str' if PY3 else 'unicode'))
+        self.assertEqual(bre.subf('test', r'{0.__class__.__name__}', 'test'), 'str')
         self.assertTrue(bre.subf('test', r'{0.index!s}', 'test').startswith('<built-in method'))
-        self.assertEqual(bre.subf('test', r'{0.__class__.__name__!s}', 'test'), ('str' if PY3 else 'unicode'))
-        if PY3:
-            self.assertTrue(bre.subf('test', r'{0.index!a}', 'test').startswith('<built-in method'))
+        self.assertEqual(bre.subf('test', r'{0.__class__.__name__!s}', 'test'), 'str')
+        self.assertTrue(bre.subf('test', r'{0.index!a}', 'test').startswith('<built-in method'))
 
         self.assertTrue(bre.subf(b'test', br'{0.index}', b'test').startswith(b'<built-in method'))
-        self.assertEqual(bre.subf(b'test', br'{0.__class__.__name__}', b'test'), (b'bytes' if PY3 else b'str'))
+        self.assertEqual(bre.subf(b'test', br'{0.__class__.__name__}', b'test'), b'bytes')
         self.assertTrue(bre.subf(b'test', br'{0.index!s}', b'test').startswith(b'<built-in method'))
-        self.assertEqual(bre.subf(b'test', br'{0.__class__.__name__!s}', b'test'), (b'bytes' if PY3 else b'str'))
-        if PY3:
-            self.assertTrue(bre.subf('test', r'{0.index!a}', 'test').startswith('<built-in method'))
+        self.assertEqual(bre.subf(b'test', br'{0.__class__.__name__!s}', b'test'), b'bytes')
+        self.assertTrue(bre.subf('test', r'{0.index!a}', 'test').startswith('<built-in method'))
 
     def test_incompatible_strings(self):
         """Test incompatible string types."""
@@ -1153,14 +1114,10 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_unicode_narrow_value(self):
         """Test Unicode narrow value."""
 
-        # Python 3 does not apply Unicode syntax in raw string,
-        # but Python 2 does.  So Python 2 will turn the following
-        # into a group and fail. There isn't really a workaround for this.
-        if PY3:
-            pattern = re.compile(r"(some)(.+?)(pattern)(!)")
-            expand = bre.compile_replace(pattern, r'\u005cg')
-            results = expand(pattern.match('some test pattern!'))
-            self.assertEqual(r'\g', results)
+        pattern = re.compile(r"(some)(.+?)(pattern)(!)")
+        expand = bre.compile_replace(pattern, r'\u005cg')
+        results = expand(pattern.match('some test pattern!'))
+        self.assertEqual(r'\g', results)
 
     def test_unexpected_end(self):
         """Test cases where there is an unexpected end to the replace string."""
@@ -1715,7 +1672,7 @@ class TestReplaceTemplate(unittest.TestCase):
         m = pattern.match(text)
         result = expand(m)
         self.assertEqual(result, b"SOME BYTES TEXT")
-        self.assertTrue(isinstance(result, bytes_type))
+        self.assertTrue(isinstance(result, bytes))
 
     def test_template_replace(self):
         """Test replace by passing in replace function."""
@@ -1888,10 +1845,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
         results = expand(pattern.match(text))
-        self.assertEqual(
-            (b'989898' if PY3 else b'bbb'),
-            results
-        )
+        self.assertEqual(b'989898', results)
 
     def test_format_escapes(self):
         """Test format escapes."""
@@ -1962,7 +1916,7 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test format features."""
 
         pattern = bre.compile(r'(Te)(st)(?P<group>ing)')
-        self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'), ('str' if PY3 else 'unicode'))
+        self.assertEqual(pattern.subf(r'{.__class__.__name__}', 'Testing'), 'str')
         self.assertEqual(pattern.subf(r'{1:<30}', 'Testing'), 'Te                            ')
         self.assertEqual(pattern.subf(r'{1:30}', 'Testing'), 'Te                            ')
         self.assertEqual(pattern.subf(r'{1:>30}', 'Testing'), '                            Te')
@@ -1973,7 +1927,7 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(pattern.subf(r'{1:1^30}', 'Testing'), '11111111111111Te11111111111111')
         self.assertEqual(pattern.subf(r'{1:<30s}', 'Testing'), 'Te                            ')
         self.assertEqual(pattern.subf(r'{1:s}', 'Testing'), 'Te')
-        self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'" if PY3 else "u'st'")
+        self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'")
 
         with pytest.raises(SyntaxError):
             pattern.subf(r'{2!x}', 'Testing')
@@ -1994,7 +1948,7 @@ class TestReplaceTemplate(unittest.TestCase):
             pattern.subf(r'{:030}', 'Testing')
 
         pattern = bre.compile(br'(Te)(st)(?P<group>ing)')
-        self.assertEqual(pattern.subf(br'{.__class__.__name__}', b'Testing'), (b'bytes' if PY3 else b'str'))
+        self.assertEqual(pattern.subf(br'{.__class__.__name__}', b'Testing'), b'bytes')
         self.assertEqual(pattern.subf(br'{1:<30}', b'Testing'), b'Te                            ')
         self.assertEqual(pattern.subf(br'{1:30}', b'Testing'), b'Te                            ')
         self.assertEqual(pattern.subf(br'{1:>30}', b'Testing'), b'                            Te')
@@ -2005,7 +1959,7 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(pattern.subf(br'{1:1^30}', b'Testing'), b'11111111111111Te11111111111111')
         self.assertEqual(pattern.subf(br'{1:<30s}', b'Testing'), b'Te                            ')
         self.assertEqual(pattern.subf(br'{1:s}', b'Testing'), b'Te')
-        self.assertEqual(pattern.subf(br'{2!r}', b'Testing'), b"b'st'" if PY3 else b"'st'")
+        self.assertEqual(pattern.subf(br'{2!r}', b'Testing'), b"b'st'")
 
         with pytest.raises(SyntaxError):
             pattern.subf(br'{2!x}', b'Testing')

@@ -4,16 +4,9 @@ import unittest
 import sys
 from backrefs import uniprops
 
-PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY34 = (3, 4) <= sys.version_info
 PY35 = (3, 5) <= sys.version_info
 PY37 = (3, 7) <= sys.version_info
-PY2 = (2, 0) <= sys.version_info < (3, 0)
-
-if PY3:
-    bytes_type = bytes  # noqa
-else:
-    bytes_type = str  # noqa
 
 
 class TestUniprops(unittest.TestCase):
@@ -58,26 +51,14 @@ class TestUniprops(unittest.TestCase):
     def test_script_extensions(self):
         """Test `script extensions` Category."""
 
-        if PY2:
-            with self.assertRaises(ValueError) as e:
-                uniprops.get_unicode_property('kana', 'scx')
-
-            self.assertTrue(str(e), 'Invalid Unicode property!')
-        else:
-            result = uniprops.get_unicode_property('kana', 'scx')
-            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['katakana'])
+        result = uniprops.get_unicode_property('kana', 'scx')
+        self.assertEqual(result, uniprops.unidata.unicode_script_extensions['katakana'])
 
     def test_inverse_script_extensions(self):
         """Test inverse `script extensions` Category."""
 
-        if PY2:
-            with self.assertRaises(ValueError) as e:
-                uniprops.get_unicode_property('^kana', 'scx')
-
-            self.assertTrue(str(e), 'Invalid Unicode property!')
-        else:
-            result = uniprops.get_unicode_property('^kana', 'scx')
-            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^katakana'])
+        result = uniprops.get_unicode_property('^kana', 'scx')
+        self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^katakana'])
 
     def test_bidi(self):
         """Test `bidi class` Category."""
@@ -154,58 +135,34 @@ class TestUniprops(unittest.TestCase):
     def test_indicpositionalcategory(self):
         """Test `indic positional/matra category` Category."""
 
-        if PY3:
-            if PY35:
-                result = uniprops.get_unicode_property('top', 'inpc')
-                self.assertEqual(result, uniprops.unidata.unicode_indic_positional_category['top'])
-            else:
-                result = uniprops.get_unicode_property('top', 'inmc')
-                self.assertEqual(result, uniprops.unidata.unicode_indic_matra_category['top'])
+        if PY35:
+            result = uniprops.get_unicode_property('top', 'inpc')
+            self.assertEqual(result, uniprops.unidata.unicode_indic_positional_category['top'])
         else:
-            with self.assertRaises(ValueError) as e:
-                uniprops.get_unicode_property('top', 'inpc')
-
-            self.assertTrue(str(e), 'Invalid Unicode property!')
+            result = uniprops.get_unicode_property('top', 'inmc')
+            self.assertEqual(result, uniprops.unidata.unicode_indic_matra_category['top'])
 
     def test_inverse_indicpositionalcategory(self):
         """Test inverse `indic positional/matra category` Category."""
 
-        if PY3:
-            if PY35:
-                result = uniprops.get_unicode_property('^top', 'inpc')
-                self.assertEqual(result, uniprops.unidata.unicode_indic_positional_category['^top'])
-            else:
-                result = uniprops.get_unicode_property('^top', 'inmc')
-                self.assertEqual(result, uniprops.unidata.unicode_indic_matra_category['^top'])
+        if PY35:
+            result = uniprops.get_unicode_property('^top', 'inpc')
+            self.assertEqual(result, uniprops.unidata.unicode_indic_positional_category['^top'])
         else:
-            with self.assertRaises(ValueError) as e:
-                uniprops.get_unicode_property('^top', 'inpc')
-
-            self.assertTrue(str(e), 'Invalid Unicode property!')
+            result = uniprops.get_unicode_property('^top', 'inmc')
+            self.assertEqual(result, uniprops.unidata.unicode_indic_matra_category['^top'])
 
     def test_indicsylabiccategory(self):
         """Test `indic syllabic category` Category."""
 
-        if PY3:
-            result = uniprops.get_unicode_property('bindu', 'insc')
-            self.assertEqual(result, uniprops.unidata.unicode_indic_syllabic_category['bindu'])
-        else:
-            with self.assertRaises(ValueError) as e:
-                uniprops.get_unicode_property('bindu', 'insc')
-
-            self.assertTrue(str(e), 'Invalid Unicode property!')
+        result = uniprops.get_unicode_property('bindu', 'insc')
+        self.assertEqual(result, uniprops.unidata.unicode_indic_syllabic_category['bindu'])
 
     def test_inverse_indicsyllabiccategory(self):
         """Test inverse `indic syllabic category` Category."""
 
-        if PY3:
-            result = uniprops.get_unicode_property('^bindu', 'insc')
-            self.assertEqual(result, uniprops.unidata.unicode_indic_syllabic_category['^bindu'])
-        else:
-            with self.assertRaises(ValueError) as e:
-                uniprops.get_unicode_property('^bindu', 'insc')
-
-            self.assertTrue(str(e), 'Invalid Unicode property!')
+        result = uniprops.get_unicode_property('^bindu', 'insc')
+        self.assertEqual(result, uniprops.unidata.unicode_indic_syllabic_category['^bindu'])
 
     def test_hangulsyllabletype(self):
         """Test `hangul syllable type` Category."""
@@ -415,19 +372,13 @@ class TestUniprops(unittest.TestCase):
         """Test `isscript` Category."""
 
         result = uniprops.get_unicode_property('islatin')
-        if PY3:
-            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['latin'])
-        else:
-            self.assertEqual(result, uniprops.unidata.unicode_scripts['latin'])
+        self.assertEqual(result, uniprops.unidata.unicode_script_extensions['latin'])
 
     def test_inverse_is_script(self):
         """Test inverse `isscript` Category."""
 
         result = uniprops.get_unicode_property('^islatin')
-        if PY3:
-            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^latin'])
-        else:
-            self.assertEqual(result, uniprops.unidata.unicode_scripts['^latin'])
+        self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^latin'])
 
     def test_is_binary(self):
         """Test `isbinary` Category."""
@@ -445,19 +396,13 @@ class TestUniprops(unittest.TestCase):
         """Test script simple Category."""
 
         result = uniprops.get_unicode_property('latin')
-        if PY3:
-            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['latin'])
-        else:
-            self.assertEqual(result, uniprops.unidata.unicode_scripts['latin'])
+        self.assertEqual(result, uniprops.unidata.unicode_script_extensions['latin'])
 
     def test_inverse_script_simple(self):
         """Test inverse script simple Category."""
 
         result = uniprops.get_unicode_property('^latin')
-        if PY3:
-            self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^latin'])
-        else:
-            self.assertEqual(result, uniprops.unidata.unicode_scripts['^latin'])
+        self.assertEqual(result, uniprops.unidata.unicode_script_extensions['^latin'])
 
     def test_in_block(self):
         """Test `inblock` Category."""

@@ -3,19 +3,10 @@ from __future__ import unicode_literals
 from . import unidata
 import sys
 
-NARROW = sys.maxunicode == 0xFFFF
-if NARROW:
-    UNICODE_RANGE = '\u0000-\uffff'
-else:
-    UNICODE_RANGE = '\u0000-\U0010ffff'
+UNICODE_RANGE = '\u0000-\U0010ffff'
 
-PY3 = sys.version_info >= (3, 0) and sys.version_info[0:2] < (4, 0)
 PY35 = sys.version_info >= (3, 5)
 PY37 = sys.version_info >= (3, 7)
-if PY3:
-    bytes_type = bytes  # noqa
-else:
-    bytes_type = str  # noqa
 
 POSIX = 0
 POSIX_BYTES = 1
@@ -446,10 +437,7 @@ def get_is_property(value, is_bytes=False):
     if prefix != 'is':
         raise ValueError("Does not start with 'is'!")
 
-    if PY3:
-        script_obj = unidata.ascii_script_extensions if is_bytes else unidata.unicode_script_extensions
-    else:
-        script_obj = unidata.ascii_scripts if is_bytes else unidata.unicode_scripts
+    script_obj = unidata.ascii_script_extensions if is_bytes else unidata.unicode_script_extensions
     bin_obj = unidata.ascii_binary if is_bytes else unidata.unicode_binary
 
     value = negate + unidata.unicode_alias['script'].get(temp, temp)
@@ -500,7 +488,7 @@ def get_unicode_property(value, prop=None, is_bytes=False):
                 return get_gc_property(value, is_bytes)
             elif prop == 'script':
                 return get_script_property(value, is_bytes)
-            elif PY3 and prop == 'scriptextensions':
+            elif prop == 'scriptextensions':
                 return get_script_extension_property(value, is_bytes)
             elif prop == 'block':
                 return get_block_property(value, is_bytes)
@@ -516,9 +504,9 @@ def get_unicode_property(value, prop=None, is_bytes=False):
                 return get_east_asian_width_property(value, is_bytes)
             elif PY35 and prop == 'indicpositionalcategory':
                 return get_indic_positional_category_property(value, is_bytes)
-            elif PY3 and not PY35 and prop == 'indicmatracategory':
+            elif not PY35 and prop == 'indicmatracategory':
                 return get_indic_positional_category_property(value, is_bytes)
-            elif PY3 and prop == 'indicsyllabiccategory':
+            elif prop == 'indicsyllabiccategory':
                 return get_indic_syllabic_category_property(value, is_bytes)
             elif prop == 'hangulsyllabletype':
                 return get_hangul_syllable_type_property(value, is_bytes)
@@ -563,10 +551,7 @@ def get_unicode_property(value, prop=None, is_bytes=False):
         pass
 
     try:
-        if PY3:
-            return get_script_extension_property(value, is_bytes)
-        else:
-            return get_script_property(value, is_bytes)
+        return get_script_extension_property(value, is_bytes)
     except Exception:
         pass
 

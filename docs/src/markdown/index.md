@@ -178,8 +178,6 @@ Backrefs implements format string replacements in a way that is similar to Regex
     format_spec       ::=  <described in the next section>
     ```
 
-    Conversion `a` is not supported in Python 2.
-
     ```
     format_spec ::=  [[fill]align][0][width][type]
     fill        ::=  <any character>
@@ -395,9 +393,6 @@ General Category, Script, Blocks, and Binary all can be specified by their value
 4. Binary
 
 Script and Binary properties can also be defined in the format `IsValue`.  For instance, if we wanted to match characters in the `Latin` script, we could use the syntax `\p{IsLatin}`, which would be the same as `\p{Latin}` or `\p{scx: Latin}`.  For Binary properties, `\p{IsAlphabetic}` is the same as `\p{Alphabetic: Y}` or `\p{Alphabetic}`.
-
-!!! note
-    If you use the form `\p{Latin}` or `\p{IsLatin}` for Script, you will get `Scripts` on Python 2 and `Scripts_Extensions` on Python 3. This is because Python 2 uses Unicode version 5.2.0 which does not define `Scripts_Extensions`.
 
 Block properties have a similar short form as Script and Binary properties.  For Blocks you can use `InValue` to specify a block. If we wanted to match characters in the `Basic_Latin` block, we could use the syntax `\p{InBasic_Latin}`. This would be the same as `\p{Block: Basic_Latin}` or `\p{Basic_Latin}`.
 
