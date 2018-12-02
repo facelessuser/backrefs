@@ -5,10 +5,7 @@ Licensed under MIT
 Copyright (c) 2015 - 2018 Isaac Muse <isaacmuse@gmail.com>
 """
 import sys
-import struct
 
-PY2 = (2, 0) <= sys.version_info < (3, 0)
-PY3 = (3, 0) <= sys.version_info < (4, 0)
 PY34 = (3, 4) <= sys.version_info
 PY36 = (3, 6) <= sys.version_info
 PY37 = (3, 7) <= sys.version_info
@@ -18,24 +15,6 @@ FMT_INDEX = 1
 FMT_ATTR = 2
 FMT_CONV = 3
 FMT_SPEC = 4
-
-if PY3:
-    from functools import lru_cache  # noqa F401
-    import copyreg  # noqa F401
-
-    string_type = str
-    bytes_type = bytes
-    unichar = chr
-    iter_range = range  # noqa F821
-
-else:
-    from backports.functools_lru_cache import lru_cache  # noqa F401
-    import copy_reg as copyreg  # noqa F401
-
-    string_type = unicode  # noqa F821
-    bytes_type = str  # noqa F821
-    unichar = unichr  # noqa F821
-    iter_range = xrange  # noqa F821
 
 
 class StringIter(object):
@@ -82,38 +61,14 @@ class StringIter(object):
 
         return char
 
-    # Python 2 iterator compatible next.
-    next = __next__  # noqa A002
-
-
-def uchr(i):
-    """Allow getting Unicode character on narrow python builds."""
-
-    try:
-        return unichar(i)
-    except ValueError:
-        return struct.pack('i', i).decode('utf-32')
-
-
-def uord(c):
-    """Get Unicode ordinal."""
-
-    if len(c) == 2:
-        high, low = [ord(p) for p in c]
-        ordinal = (high - 0xD800) * 0x400 + low - 0xDC00 + 0x10000
-    else:
-        ordinal = ord(c)
-
-    return ordinal
-
 
 def _to_bstr(l):
     """Convert to byte string."""
 
-    if isinstance(l, string_type):
+    if isinstance(l, str):
         l = l.encode('ascii', 'backslashreplace')
-    elif not isinstance(l, bytes_type):
-        l = string_type(l).encode('ascii', 'backslashreplace')
+    elif not isinstance(l, bytes):
+        l = str(l).encode('ascii', 'backslashreplace')
     return l
 
 
@@ -143,7 +98,7 @@ def format_string(m, l, capture, is_bytes):
                     l = repr(l)
                 elif value == 's':
                     # If the object is not string or byte string already
-                    l = string_type(l)
+                    l = str(l)
         elif fmt_type == FMT_SPEC:
             # Integers and floats don't have an explicit 's' format type.
             if value[3] and value[3] == 's':
@@ -153,7 +108,7 @@ def format_string(m, l, capture, is_bytes):
                     raise ValueError("Unknown format code 's' for object of type 'float'")
 
             # Ensure object is a byte string
-            l = _to_bstr(l) if is_bytes else string_type(l)
+            l = _to_bstr(l) if is_bytes else str(l)
 
             spec_type = value[1]
             if spec_type == '^':
@@ -164,7 +119,7 @@ def format_string(m, l, capture, is_bytes):
                 l = l.ljust(value[2], value[0])
 
     # Make sure the final object is a byte string
-    return _to_bstr(l) if is_bytes else string_type(l)
+    return _to_bstr(l) if is_bytes else str(l)
 
 
 class Immutable(object):

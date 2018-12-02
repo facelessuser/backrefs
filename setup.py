@@ -93,6 +93,7 @@ generate_unicode_table()
 setup(
     name='backrefs',
     version=VER,
+    python_requires=">=3.4",
     keywords='regex re',
     description='A wrapper around re and regex that adds additional back references.',
     long_description=get_description(),
@@ -111,8 +112,6 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
