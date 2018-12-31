@@ -34,13 +34,14 @@ label_list = {
     'support': (SUPPORT, "Support request."),
 
     # Category
-    'bre': (CATEGORY, "Related to the re wrapper."),
-    'bregex': (CATEGORY, "Related to the regex wrapper."),
-    'unicode-properties': (CATEGORY, "Related to Unicode properties"),
-    ('Maintenance', 'integration'): (CATEGORY, "Related to packaging and/or testing."),
-    ('Documentation', 'docs'): (CATEGORY, "Related to documentation."),
+    'core': (CATEGORY, "Related to the core code."),
+    'integration': (CATEGORY, "Related to packaging and/or testing."),
+    'docs': (CATEGORY, "Related to documentation."),
 
     # Sub categories
+    'bre': (SUBCATEGORY, "Related to the re wrapper."),
+    'bregex': (SUBCATEGORY, "Related to the regex wrapper."),
+    'unicode-properties': (SUBCATEGORY, "Related to Unicode properties"),
 
     # Issue status
     'more-info-needed': (PENDING, "More information is required."),
