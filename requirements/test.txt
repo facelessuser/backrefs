@@ -1,4 +1,4 @@
 pytest
 pytest-cov
 mock
-regex
+regex<=2018.11.22

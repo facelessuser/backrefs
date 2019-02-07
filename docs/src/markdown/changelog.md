@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.1
+
+- **FIX**: Ensure that when generating the Unicode property tables, that the property files are read in with `UTF-8` encoding.
+
 ## 4.0.0
 
 - **NEW**: Drop support for new features in Python 2. Python 2 support is limited to the 3.X.X series and will only receive bug fixes up to 2020. All new features moving forward will be on the 4.X.X series and will be for Python 3+ only.
