@@ -119,15 +119,15 @@ def _is_replace(obj):
 
 
 def _apply_replace_backrefs(m, repl=None, flags=0):
-        """Expand with either the `ReplaceTemplate` or compile on the fly, or return None."""
+    """Expand with either the `ReplaceTemplate` or compile on the fly, or return None."""
 
-        if m is None:
-            raise ValueError("Match is None!")
-        else:
-            if isinstance(repl, ReplaceTemplate):
-                return repl.expand(m)
-            elif isinstance(repl, (str, bytes)):
-                return _bregex_parse._ReplaceParser().parse(m.re, repl, bool(flags & FORMAT)).expand(m)
+    if m is None:
+        raise ValueError("Match is None!")
+    else:
+        if isinstance(repl, ReplaceTemplate):
+            return repl.expand(m)
+        elif isinstance(repl, (str, bytes)):
+            return _bregex_parse._ReplaceParser().parse(m.re, repl, bool(flags & FORMAT)).expand(m)
 
 
 def _apply_search_backrefs(pattern, flags=0):

@@ -169,7 +169,7 @@ def gen_blocks(output, ascii_props=False, append=False, prefix=""):
         max_range = MAXASCII if ascii_props else MAXUNICODE
         formatter = bytesformat if ascii_props else uniformat
 
-        with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'Blocks.txt'), 'r') as uf:
+        with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'Blocks.txt'), 'r', 'utf-8') as uf:
             for line in uf:
                 if not line.startswith('#'):
                     data = line.split(';')
@@ -221,7 +221,7 @@ def gen_ccc(output, ascii_props=False, append=False, prefix=""):
     """Generate `canonical combining class` property."""
 
     obj = {}
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedCombiningClass.txt'), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedCombiningClass.txt'), 'r', 'utf-8') as uf:
         for line in uf:
             if not line.startswith('#'):
                 data = line.split('#')[0].split(';')
@@ -275,13 +275,13 @@ def gen_scripts(
     obj = {}
     obj2 = {}
     aliases = {}
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'PropertyValueAliases.txt'), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'PropertyValueAliases.txt'), 'r', 'utf-8') as uf:
         for line in uf:
             if line.startswith('sc ;'):
                 values = line.split(';')
                 aliases[format_name(values[1].strip())] = format_name(values[2].strip())
 
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, file_name_ext), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, file_name_ext), 'r', 'utf-8') as uf:
         for line in uf:
             if not line.startswith('#'):
                 data = line.split('#')[0].split(';')
@@ -297,7 +297,7 @@ def gen_scripts(
 
                     obj2[ext].extend(span)
 
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, file_name), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, file_name), 'r', 'utf-8') as uf:
         for line in uf:
             if not line.startswith('#'):
                 data = line.split('#')[0].split(';')
@@ -367,7 +367,7 @@ def gen_enum(file_name, obj_name, output, field=1, notexplicit=None, ascii_props
     """Generate generic enum."""
 
     obj = {}
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, file_name), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, file_name), 'r', 'utf-8') as uf:
         for line in uf:
             if not line.startswith('#'):
                 data = line.split('#')[0].split(';')
@@ -414,7 +414,7 @@ def gen_age(output, ascii_props=False, append=False, prefix=""):
 
     obj = {}
     all_chars = ALL_ASCII if ascii_props else ALL_CHARS
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedAge.txt'), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedAge.txt'), 'r', 'utf-8') as uf:
         for line in uf:
             if not line.startswith('#'):
                 data = line.split('#')[0].split(';')
@@ -465,7 +465,8 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix=""):
     categories = []
     nf = {}
     all_chars = ALL_ASCII if ascii_props else ALL_CHARS
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedNormalizationProps.txt'), 'r') as uf:
+    file_name = os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedNormalizationProps.txt')
+    with codecs.open(file_name, 'r', 'utf-8') as uf:
         for line in uf:
             if not line.startswith('#'):
                 data = line.split('#')[0].split(';')
@@ -530,7 +531,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix=""):
     )
     binary = {}
     for filename, include in binary_props:
-        with open(os.path.join(HOME, 'unicodedata', UNIVERSION, filename), 'r') as uf:
+        with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, filename), 'r', 'utf-8') as uf:
             for line in uf:
                 if not line.startswith('#'):
                     data = line.split('#')[0].split(';')
@@ -548,7 +549,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix=""):
                         continue
                     binary[name].extend(span)
 
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'CompositionExclusions.txt'), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'CompositionExclusions.txt'), 'r', 'utf-8') as uf:
         name = 'compositionexclusion'
         for line in uf:
             if not line.startswith('#'):
@@ -565,7 +566,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix=""):
                 binary[name].extend(span)
                 binary['full' + name].extend(span)
 
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'UnicodeData.txt'), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'UnicodeData.txt'), 'r', 'utf-8') as uf:
         name = 'bidimirrored'
         for line in uf:
             data = line.strip().split(';')
@@ -613,7 +614,7 @@ def gen_bidi(output, ascii_props=False, append=False, prefix=""):
 
     bidi_class = {}
     max_range = MAXASCII if ascii_props else MAXUNICODE
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'UnicodeData.txt'), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'UnicodeData.txt'), 'r', 'utf-8') as uf:
         for line in uf:
             data = line.strip().split(';')
             if data:
@@ -828,7 +829,7 @@ def gen_alias(enum, binary, output, ascii_props=False, append=False, prefix=""):
         'catalog', 'enumerated', 'numeric', 'miscellaneous'
     )
 
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'PropertyAliases.txt'), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'PropertyAliases.txt'), 'r', 'utf-8') as uf:
         div = False
         capture = False
         name = None
@@ -867,7 +868,7 @@ def gen_alias(enum, binary, output, ascii_props=False, append=False, prefix=""):
                     for d in data[1:]:
                         alias[name][d] = data[0]
 
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'PropertyValueAliases.txt'), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'PropertyValueAliases.txt'), 'r', 'utf-8') as uf:
         for line in uf:
             m = alias_re.match(line)
             if m:
@@ -1014,7 +1015,7 @@ def gen_properties(output, ascii_props=False, append=False):
     all_chars = ALL_ASCII if ascii_props else ALL_CHARS
     table = {'l': {'c': []}}
     itable = {'l': {}}
-    with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'UnicodeData.txt'), 'r') as uf:
+    with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'UnicodeData.txt'), 'r', 'utf-8') as uf:
         for line in uf:
             data = line.strip().split(';')
             if data:
