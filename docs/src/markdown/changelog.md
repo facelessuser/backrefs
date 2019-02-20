@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.2
+
+- **FIX**: Fix compatibility issues with latest Regex versions.
+
 ## 4.0.1
 
 - **FIX**: Ensure that when generating the Unicode property tables, that the property files are read in with `UTF-8` encoding.

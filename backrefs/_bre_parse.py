@@ -2,7 +2,7 @@
 Backrefs Re parser.
 
 Licensed under MIT
-Copyright (c) 2011 - 2018 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2011 - 2019 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import unicode_literals
 import re as _re

@@ -23,7 +23,7 @@ Add the ability to use the following backrefs with re:
  - `\X`                                                          - Simplified grapheme clusters (search)
 
 Licensed under MIT
-Copyright (c) 2011 - 2018 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2011 - 2019 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import unicode_literals
 import sys as _sys
