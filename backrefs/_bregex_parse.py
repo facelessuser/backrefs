@@ -2,7 +2,7 @@
 Backrefs Regex parser.
 
 Licensed under MIT
-Copyright (c) 2011 - 2018 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2011 - 2019 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import unicode_literals
 import unicodedata as _unicodedata
@@ -10,7 +10,17 @@ import copyreg as _copyreg
 from . import util as _util
 import regex as _regex
 
-_REGEX_COMMENT_FIX = tuple([int(x) for x in _regex.__version__.split('.')]) > (2, 4, 136)
+try:  # pragma: no cover
+    from regex import __version__ as _regex_version
+except ImportError:  # pragma: no cover
+    from regex.regex import __version__ as _regex_version
+
+try:  # pragma: no cover
+    from regex import _compile_replacement_helper
+except ImportError:  # pragma: no cover
+    from regex.regex import _compile_replacement_helper
+
+_REGEX_COMMENT_FIX = tuple([int(x) for x in _regex_version.split('.')]) > (2, 4, 136)
 
 _ASCII_LETTERS = frozenset(
     (
@@ -979,7 +989,7 @@ class _ReplaceParser(object):
 
         groups = []
         literals = []
-        replacements = _regex._compile_replacement_helper(pattern, template)
+        replacements = _compile_replacement_helper(pattern, template)
         count = 0
         for part in replacements:
             if isinstance(part, int):

@@ -6,9 +6,12 @@ from backrefs import bregex
 from backrefs import _bregex_parse
 import regex
 import pytest
-import _regex_core
 import random
 import copy
+try:
+    import _regex_core
+except ImportError:
+    from regex import _regex_core
 
 
 class TestSearchTemplate(unittest.TestCase):
@@ -101,6 +104,11 @@ class TestSearchTemplate(unittest.TestCase):
     def test_cache(self):
         """Test cache."""
 
+        try:
+            from regex import _cache
+        except ImportError:
+            from regex.regex import _cache
+
         bregex.purge()
         self.assertEqual(bregex._get_cache_size(), 0)
         self.assertEqual(bregex._get_cache_size(True), 0)
@@ -115,7 +123,7 @@ class TestSearchTemplate(unittest.TestCase):
         bregex.purge()
         self.assertEqual(bregex._get_cache_size(), 0)
         self.assertEqual(bregex._get_cache_size(True), 0)
-        self.assertEqual(len(regex._cache), 0)
+        self.assertEqual(len(_cache), 0)
 
     def test_infinite_loop_catch(self):
         """Test infinite loop catch."""
