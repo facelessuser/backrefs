@@ -8,7 +8,17 @@ import re
 
 __version__ = '4.2.0'
 
-UNIVERSION = unicodedata.unidata_version
+UNICODE_MAP = {
+    '2.7': '5.2.0',
+    '3.4': '6.3.0',
+    '3.5': '8.0.0',
+    '3.6': '9.0.0',
+    '3.7': '11.0.0',
+    '3.8': '11.0.0'
+}
+
+PY_VERSION = '.'.join(['{:d}'.format(x) for x in sys.version_info[0:2]])
+UNIVERSION = UNICODE_MAP.get(PY_VERSION, unicodedata.unidata_version)
 UNIVERSION_INFO = tuple([int(x) for x in UNIVERSION.split('.')])
 HOME = os.path.dirname(os.path.abspath(__file__))
 MAXUNICODE = sys.maxunicode

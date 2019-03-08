@@ -7,6 +7,16 @@ from urllib.request import urlopen
 
 __version__ = '2.2.0'
 
+UNICODE_MAP = {
+    '2.7': '5.2.0',
+    '3.4': '6.3.0',
+    '3.5': '8.0.0',
+    '3.6': '9.0.0',
+    '3.7': '11.0.0',
+    '3.8': '11.0.0'
+}
+
+PY_VERSION = '.'.join(['{:d}'.format(x) for x in sys.version_info[0:2]])
 PY34 = sys.version_info >= (3, 4)
 PY35 = sys.version_info >= (3, 5)
 PY37 = sys.version_info >= (3, 7)
@@ -148,7 +158,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.unicode_version is None:
-        version = unicodedata.unidata_version
+        version = UNICODE_MAP.get(PY_VERSION, unicodedata.unidata_version)
     else:
         version = args.unicode_version
 
