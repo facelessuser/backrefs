@@ -41,11 +41,12 @@ def get_unicodedata():
     import unicodedata
 
     fail = False
+    uver = unicodedata.unidata_version
     path = os.path.join(os.path.dirname(__file__), 'tools')
     fp, pathname, desc = imp.find_module('unidatadownload', [path])
     try:
         unidatadownload = imp.load_module('unidatadownload', fp, pathname, desc)
-        unidatadownload.get_unicodedata(unicodedata.unidata_version, no_zip=True)
+        unidatadownload.get_unicodedata(uver, no_zip=True)
     except Exception:
         print(traceback.format_exc())
         fail = True
@@ -53,11 +54,13 @@ def get_unicodedata():
         fp.close()
 
     assert not fail, "Failed to obtain unicodedata!"
+    return uver
 
 
 def generate_unicode_table():
     """Generate the Unicode table for the given Python version."""
 
+    uver = get_unicodedata()
     fail = False
     path = os.path.join(os.path.dirname(__file__), 'tools')
     fp, pathname, desc = imp.find_module('unipropgen', [path])
@@ -67,7 +70,8 @@ def generate_unicode_table():
             os.path.join(
                 os.path.dirname(__file__),
                 'backrefs', 'uniprops', 'unidata'
-            )
+            ),
+            uver
         )
     except Exception:
         print(traceback.format_exc())
@@ -87,7 +91,6 @@ def get_description():
 
 
 VER, DEVSTATUS = get_version()
-get_unicodedata()
 generate_unicode_table()
 
 setup(
@@ -117,6 +120,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ]
 )

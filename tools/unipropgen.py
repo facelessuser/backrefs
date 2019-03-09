@@ -8,18 +8,8 @@ import re
 
 __version__ = '4.2.0'
 
-UNICODE_MAP = {
-    '2.7': '5.2.0',
-    '3.4': '6.3.0',
-    '3.5': '8.0.0',
-    '3.6': '9.0.0',
-    '3.7': '11.0.0',
-    '3.8': '11.0.0'
-}
-
-PY_VERSION = '.'.join(['{:d}'.format(x) for x in sys.version_info[0:2]])
-UNIVERSION = UNICODE_MAP.get(PY_VERSION, unicodedata.unidata_version)
-UNIVERSION_INFO = tuple([int(x) for x in UNIVERSION.split('.')])
+UNIVERSION = None
+UNIVERSION_INFO = None
 HOME = os.path.dirname(os.path.abspath(__file__))
 MAXUNICODE = sys.maxunicode
 MAXASCII = 0xFF
@@ -1238,11 +1228,25 @@ def build_ascii_property_table(output):
     gen_properties(output, ascii_props=True, append=True)
 
 
-def build_tables(output):
+def build_tables(output, version=None):
     """Build output tables."""
 
+    set_version(version)
     build_unicode_property_table(output)
     build_ascii_property_table(output)
+
+
+def set_version(version):
+    """Set version."""
+
+    global UNIVERSION
+    global UNIVERSION_INFO
+
+    if version is None:
+        version = unicodedata.unidata_version
+
+    UNIVERSION = version
+    UNIVERSION_INFO = tuple([int(x) for x in UNIVERSION.split('.')])
 
 
 if __name__ == '__main__':
@@ -1250,7 +1254,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(prog='unipropgen', description='Generate a unicode property table.')
     parser.add_argument('--version', action='version', version="%(prog)s " + __version__)
+    parser.add_argument('--unicode-version', default=None, help='Force a specific Unicode version.')
     parser.add_argument('output', default=None, help='Output file.')
     args = parser.parse_args()
 
-    build_tables(args.output)
+    build_tables(args.output, args.unicode_version)
