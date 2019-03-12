@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.1.0
+
+- **NEW**: Add official support for Python 3.8.
+- **NEW**: Vendor the `Pep562` library instead of requiring as a dependency.
+
 ## 4.0.2
 
 - **FIX**: Fix compatibility issues with latest Regex versions.
