@@ -8,6 +8,7 @@ import regex
 import pytest
 import random
 import copy
+import time
 try:
     import _regex_core
 except ImportError:
@@ -1913,6 +1914,28 @@ class TestExceptions(unittest.TestCase):
             bregex.compile_replace(pattern, br'\c\666')
 
         assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
+
+    def test_timeout(self):
+        """Test timeout."""
+
+        def fast_replace(m):
+            """Fast replace."""
+            return 'X'
+
+        def slow_replace(m):
+            start = time.time()
+            while True:
+                elapsed = time.time() - start
+                if elapsed >= 0.5:
+                    break
+            return 'X'
+
+        self.assertEqual(regex.sub(r'[a-z]', fast_replace, 'abcdef', timeout=2), 'XXXXXX')
+
+        with pytest.raises(TimeoutError) as excinfo:
+            regex.sub(r'[a-z]', slow_replace, 'abcdef', timeout=2)
+
+        assert "regex timed out" in str(excinfo.value)
 
 
 class TestConvenienceFunctions(unittest.TestCase):

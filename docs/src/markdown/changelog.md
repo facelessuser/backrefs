@@ -4,6 +4,8 @@
 
 - **NEW**: Add official support for Python 3.8.
 - **NEW**: Vendor the `Pep562` library instead of requiring as a dependency.
+- **NEW**: Input parameters accept `*args` and `**kwargs` instead of specify every parameter in order to allow Backrefs
+to work even when the Re or Regex API changes. Change was made to support new Regex `timeout` parameter.
 
 ## 4.0.2
 
