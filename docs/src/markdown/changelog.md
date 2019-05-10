@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1.1
+
+- **FIX**: Later pre-release versions of Python 3.8 will support Unicode 12.1.0.
+
 ## 4.1.0
 
 - **NEW**: Add official support for Python 3.8.
