@@ -271,10 +271,10 @@ Each supported regular expression engine's supported search features vary, so fe
 Back\ References      | Description
 --------------------- |------------
 `\e`                  | Escape character `\x1b`.
-`\c`                  | Shortcut for the uppercase [POSIX character class](#posix-style-properties) `[[:upper:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
-`\l`                  | Shortcut for the lowercase [POSIX character class](#posix-style-properties) `[[:lower:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
-`\C`                  | Shortcut for the inverse uppercase [POSIX character class](#posix-style-properties) `[[:^upper:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
-`\L`                  | Shortcut for the inverse lowercase [POSIX character class](#posix-style-properties) `[[:^lower:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
+`\c`                  | **Deprecated**: Shortcut for the uppercase [POSIX character class](#posix-style-properties) `[[:upper:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
+`\l`                  | **Deprecated**: Shortcut for the lowercase [POSIX character class](#posix-style-properties) `[[:lower:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
+`\C`                  | **Deprecated**: Shortcut for the inverse uppercase [POSIX character class](#posix-style-properties) `[[:^upper:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
+`\L`                  | **Deprecated**: Shortcut for the inverse lowercase [POSIX character class](#posix-style-properties) `[[:^lower:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\Q...\E`             | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
 `\p{UnicodeProperty}` | Unicode property character class. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
 `\pX`                 | Unicode property character class where `X` is the uppercase letter that represents the General Category property.  For instance, `\pL` would be equivalent to `\p{L}` or `\p{Letter}`.
@@ -287,12 +287,13 @@ Back\ References      | Description
 `\R`                  | Generic line breaks. This will use the pattern `(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])` which is roughly equivalent the to atomic group form that other engines use: `(?>\r\n|[\n\v\f\r\x85\u2028\u2029])`. When applied to byte strings, the pattern `(?:\r\n|(?!\r\n)[\n\v\f\r\x85])` will be used.
 `\X`                  | Grapheme clusters. This will use the pattern `(?:\PM\pM*(?!\pM))` which is roughly equivalent to the atomic group form that other engines use:  `(?>\PM\pM*)`. This does not implement [full, proper grapheme clusters][grapheme-boundaries] like the 3rd party Regex module does as this would require changes to the Re core engine. Instead it provides a simplified solution that has been seen in regular expression engines in the past.
 
+!!! warning "Deprecated 4.2.0"
+    `\l`, `\L`, `\c`, and `\C` search back references have been deprecated in 4.2.0 and will be removed at some future time. It is recommended to use `[[:lower:]]`, `[[:^lower:]]`, `[[:upper:]]`, and `[[:^upper:]]` respectively.
+
 ### Regex
 
 !!! note
     Regex already natively supports `\p{...}`, `\P{...}`, `\pX`, `\PX`, `\N{...}`, `\X`, `\m`, and `\M` so Backrefs does not attempt to add this to search patterns.
-
-    Backrefs **only** implements `\c`, `\l`, `L` and `L` in Re search patterns, not in Regex search patterns. Regex already defines some these references for different purposes. These references are just shortcuts for the related POSIX properties, so when using Regex, it is suggested to just use the POSIX properties.
 
 Back\ References | Description
 ---------------- | -----------

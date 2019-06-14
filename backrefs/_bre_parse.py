@@ -11,6 +11,7 @@ from . import util as _util
 import sre_parse as _sre_parse
 import unicodedata as _unicodedata
 from . import uniprops as _uniprops
+from . import util
 
 __all__ = ("ReplaceTemplate",)
 
@@ -55,6 +56,11 @@ _BACK_SLASH_TRANSLATION = {
 }
 
 _FMT_CONV_TYPE = ('a', 'r', 's')
+
+_MSG_DEPRECATE_CASE = (
+    "The search back reference '{}' at position {} has been deprecated, please use the posix '{}'. "
+    "In the future, support for this reference will be removed."
+)
 
 
 class LoopException(Exception):
@@ -257,15 +263,19 @@ class _SearchParser(object):
         elif t == "l":
             current.extend(self.letter_case_props(_LOWER, in_group))
             self.found_property = True
+            util.warn_deprecated(_MSG_DEPRECATE_CASE.format('\\l', i.index - 2, "'[:lower:]'"))
         elif t == "L":
             current.extend(self.letter_case_props(_LOWER, in_group, negate=True))
             self.found_property = True
+            util.warn_deprecated(_MSG_DEPRECATE_CASE.format('\\L', i.index - 2, "'[:^lower:]'"))
         elif t == "c":
             current.extend(self.letter_case_props(_UPPER, in_group))
             self.found_property = True
+            util.warn_deprecated(_MSG_DEPRECATE_CASE.format('\\l', i.index - 2, "'[:upper:]'"))
         elif t == "C":
             current.extend(self.letter_case_props(_UPPER, in_group, negate=True))
             self.found_property = True
+            util.warn_deprecated(_MSG_DEPRECATE_CASE.format('\\l', i.index - 2, "'[:^upper:]'"))
         elif t == 'p':
             prop = self.get_unicode_property(i)
             current.extend(self.unicode_props(prop[0], prop[1], in_group=in_group))
