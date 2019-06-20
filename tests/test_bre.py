@@ -10,6 +10,7 @@ import sre_constants
 import random
 from backrefs import _bre_parse
 import copy
+import warnings
 
 PY34_PLUS = (3, 4) <= sys.version_info
 PY36_PLUS = (3, 6) <= sys.version_info
@@ -2569,3 +2570,51 @@ class TestConvenienceFunctions(unittest.TestCase):
                 p.sub(r'\ltest', 'tests')
         else:
             self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')
+
+
+class TestDeprecated(unittest.TestCase):
+    """Test deprecated."""
+
+    def test_lowercase(self):
+        """Test deprecated lower."""
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+
+            bre.compile(r'\l')
+            self.assertTrue(len(w) == 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+
+    def test_inverse_lowercase(self):
+        """Test inverse deprecated lower."""
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+
+            bre.compile(r'\L')
+            self.assertTrue(len(w) == 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+
+    def test_uppercase(self):
+        """Test deprecated upper."""
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+
+            bre.compile(r'\c')
+            self.assertTrue(len(w) == 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
+
+    def test_inverse_uppercase(self):
+        """Test inverse deprecated upper."""
+
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+
+            bre.compile(r'\C')
+            self.assertTrue(len(w) == 1)
+            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
