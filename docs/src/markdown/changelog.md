@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.2.0
+
+- **NEW**: Deprecate the **search** references `\l`, `\L`, `\c`, and `\C`. The POSIX alternatives (which these were shortcuts for) should be used instead: `[[:lower:]]`, `[[:^lower:]]`, `[:upper:]]`, and `[[:^upper:]]` respectively.
+
 ## 4.1.1
 
 - **FIX**: Later pre-release versions of Python 3.8 will support Unicode 12.1.0.
