@@ -96,7 +96,7 @@ generate_unicode_table()
 setup(
     name='backrefs',
     version=VER,
-    python_requires=">=3.4",
+    python_requires=">=3.5",
     keywords='regex re',
     description='A wrapper around re and regex that adds additional back references.',
     long_description=get_description(),
@@ -106,7 +106,6 @@ setup(
     url='https://github.com/facelessuser/backrefs',
     packages=find_packages(exclude=['tools', 'tests']),
     install_requires=get_requirements(),
-    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
     zip_safe=False,
     package_data={},
     license='MIT License',

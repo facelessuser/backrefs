@@ -7,7 +7,6 @@ Copyright (c) 2015 - 2019 Isaac Muse <isaacmuse@gmail.com>
 import sys
 import warnings
 
-PY35 = (3, 5) <= sys.version_info
 PY36 = (3, 6) <= sys.version_info
 PY37 = (3, 7) <= sys.version_info
 

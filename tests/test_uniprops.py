@@ -4,7 +4,6 @@ import unittest
 import sys
 from backrefs import uniprops
 
-PY35 = (3, 5) <= sys.version_info
 PY37 = (3, 7) <= sys.version_info
 
 
@@ -74,26 +73,14 @@ class TestUniprops(unittest.TestCase):
     def test_bidi_paired_bracket_type(self):
         """Test `bidi paired bracket type` Category."""
 
-        if PY35:
-            result = uniprops.get_unicode_property('o', 'bpt')
-            self.assertEqual(result, uniprops.unidata.unicode_bidi_paired_bracket_type['o'])
-        else:
-            with self.assertRaises(ValueError) as e:
-                uniprops.get_unicode_property('o', 'bpt')
-
-            self.assertTrue(str(e), 'Invalid Unicode property!')
+        result = uniprops.get_unicode_property('o', 'bpt')
+        self.assertEqual(result, uniprops.unidata.unicode_bidi_paired_bracket_type['o'])
 
     def test_inverse_bidi_paired_bracket_type(self):
         """Test inverse `bidi paired bracket type` Category."""
 
-        if PY35:
-            result = uniprops.get_unicode_property('^o', 'bpt')
-            self.assertEqual(result, uniprops.unidata.unicode_bidi_paired_bracket_type['^o'])
-        else:
-            with self.assertRaises(ValueError) as e:
-                uniprops.get_unicode_property('^o', 'bpt')
-
-            self.assertTrue(str(e), 'Invalid Unicode property!')
+        result = uniprops.get_unicode_property('^o', 'bpt')
+        self.assertEqual(result, uniprops.unidata.unicode_bidi_paired_bracket_type['^o'])
 
     def test_decompostion(self):
         """Test `decomposition type` Category."""
@@ -134,22 +121,14 @@ class TestUniprops(unittest.TestCase):
     def test_indicpositionalcategory(self):
         """Test `indic positional/matra category` Category."""
 
-        if PY35:
-            result = uniprops.get_unicode_property('top', 'inpc')
-            self.assertEqual(result, uniprops.unidata.unicode_indic_positional_category['top'])
-        else:
-            result = uniprops.get_unicode_property('top', 'inmc')
-            self.assertEqual(result, uniprops.unidata.unicode_indic_matra_category['top'])
+        result = uniprops.get_unicode_property('top', 'inpc')
+        self.assertEqual(result, uniprops.unidata.unicode_indic_positional_category['top'])
 
     def test_inverse_indicpositionalcategory(self):
         """Test inverse `indic positional/matra category` Category."""
 
-        if PY35:
-            result = uniprops.get_unicode_property('^top', 'inpc')
-            self.assertEqual(result, uniprops.unidata.unicode_indic_positional_category['^top'])
-        else:
-            result = uniprops.get_unicode_property('^top', 'inmc')
-            self.assertEqual(result, uniprops.unidata.unicode_indic_matra_category['^top'])
+        result = uniprops.get_unicode_property('^top', 'inpc')
+        self.assertEqual(result, uniprops.unidata.unicode_indic_positional_category['^top'])
 
     def test_indicsylabiccategory(self):
         """Test `indic syllabic category` Category."""

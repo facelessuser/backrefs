@@ -35,10 +35,10 @@ from ._bre_parse import ReplaceTemplate
 
 __all__ = (
     "expand", "expandf", "search", "match", "fullmatch", "split", "findall", "finditer", "sub", "subf",
-    "subn", "subfn", "purge", "escape", "DEBUG", "I", "IGNORECASE", "L", "LOCALE", "M", "MULTILINE",
+    "subn", "subfn", "purge", "escape", "fullmatch", "DEBUG", "I", "IGNORECASE", "L", "LOCALE", "M", "MULTILINE",
     "S", "DOTALL", "U", "UNICODE", "X", "VERBOSE", "compile", "compile_search", "compile_replace", "Bre",
     "ReplaceTemplate", "A", "ASCII"
-) + (("fullmatch",) if _util.PY35 else tuple())
+)
 
 # Expose some common re flags and methods to
 # save having to import re and backrefs libraries
@@ -265,11 +265,10 @@ class Bre(_util.Immutable):
 
         return self._pattern.match(string, *args, **kwargs)
 
-    if _util.PY35:
-        def fullmatch(self, string, *args, **kwargs):
-            """Apply `fullmatch`."""
+    def fullmatch(self, string, *args, **kwargs):
+        """Apply `fullmatch`."""
 
-            return self._pattern.fullmatch(string, *args, **kwargs)
+        return self._pattern.fullmatch(string, *args, **kwargs)
 
     def split(self, string, *args, **kwargs):
         """Apply `split`."""
@@ -387,12 +386,11 @@ def match(pattern, string, *args, **kwargs):
     return _re.match(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
 
 
-if _util.PY35:
-    def fullmatch(pattern, string, *args, **kwargs):
-        """Apply `fullmatch` after applying backrefs."""
+def fullmatch(pattern, string, *args, **kwargs):
+    """Apply `fullmatch` after applying backrefs."""
 
-        flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
-        return _re.fullmatch(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
+    return _re.fullmatch(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
 
 
 def split(pattern, string, *args, **kwargs):
