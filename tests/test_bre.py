@@ -1179,7 +1179,7 @@ class TestReplaceTemplate(unittest.TestCase):
             bre.findall(r"\X{3}", "a\xE0a\u0300e\xE9e\u0301"),
             ['a\xe0a\u0300', 'e\xe9e\u0301']
         )
-        # self.assertEqual(regex.findall(r"\X", "\r\r\n\u0301A\u0301"), ['\r', '\r\n', '\u0301', 'A\u0301'])
+        # `self.assertEqual(regex.findall(r"\X", "\r\r\n\u0301A\u0301"), ['\r', '\r\n', '\u0301', 'A\u0301'])`
         self.assertEqual(bre.search(r'\X$', 'ab\u2103').group(), '\u2103')
 
     def test_replace_unicode_name_ascii_range(self):
