@@ -8,7 +8,6 @@ from urllib.request import urlopen
 __version__ = '2.2.0'
 
 
-PY34 = sys.version_info >= (3, 4)
 PY35 = sys.version_info >= (3, 5)
 PY37 = sys.version_info >= (3, 7)
 
@@ -78,7 +77,7 @@ def download_unicodedata(version, output=HOME, no_zip=False):
         files.append('IndicMatraCategory.txt')
     files.append('IndicSyllabicCategory.txt')
 
-    if PY34:
+    if PY35:
         files.append('BidiBrackets.txt')
 
     if PY37:

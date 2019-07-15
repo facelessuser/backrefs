@@ -12,7 +12,7 @@ from backrefs import _bre_parse
 import copy
 import warnings
 
-PY34_PLUS = (3, 4) <= sys.version_info
+PY35_PLUS = (3, 4) <= sys.version_info
 PY36_PLUS = (3, 6) <= sys.version_info
 PY37_PLUS = (3, 7) <= sys.version_info
 
@@ -2380,7 +2380,7 @@ class TestConvenienceFunctions(unittest.TestCase):
     def test_fullmatch(self):
         """Test that `fullmatch` works."""
 
-        if PY34_PLUS:
+        if PY35_PLUS:
             m = bre.fullmatch(r'This is a test for match!', "This is a test for match!")
             self.assertTrue(m is not None)
 

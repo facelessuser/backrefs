@@ -38,7 +38,7 @@ __all__ = (
     "subn", "subfn", "purge", "escape", "DEBUG", "I", "IGNORECASE", "L", "LOCALE", "M", "MULTILINE",
     "S", "DOTALL", "U", "UNICODE", "X", "VERBOSE", "compile", "compile_search", "compile_replace", "Bre",
     "ReplaceTemplate", "A", "ASCII"
-) + (("fullmatch",) if _util.PY34 else tuple())
+) + (("fullmatch",) if _util.PY35 else tuple())
 
 # Expose some common re flags and methods to
 # save having to import re and backrefs libraries
@@ -265,7 +265,7 @@ class Bre(_util.Immutable):
 
         return self._pattern.match(string, *args, **kwargs)
 
-    if _util.PY34:
+    if _util.PY35:
         def fullmatch(self, string, *args, **kwargs):
             """Apply `fullmatch`."""
 
@@ -387,7 +387,7 @@ def match(pattern, string, *args, **kwargs):
     return _re.match(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
 
 
-if _util.PY34:
+if _util.PY35:
     def fullmatch(pattern, string, *args, **kwargs):
         """Apply `fullmatch` after applying backrefs."""
 

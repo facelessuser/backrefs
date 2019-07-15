@@ -16,7 +16,6 @@ MAXASCII = 0xFF
 GROUP_ESCAPES = frozenset([ord(x) for x in '-&[\\]^|~'])
 
 # Compatibility
-PY34 = sys.version_info >= (3, 4)
 PY35 = sys.version_info >= (3, 5)
 PY37 = sys.version_info >= (3, 7)
 
@@ -974,9 +973,8 @@ def gen_properties(output, ascii_props=False, append=False):
 
     files['scx'] = os.path.join(output, 'scriptextensions.py')
     files['insc'] = os.path.join(output, 'indicsyllabiccategory.py')
-    if PY34:
-        files['bpt'] = os.path.join(output, 'bidipairedbrackettype.py')
     if PY35:
+        files['bpt'] = os.path.join(output, 'bidipairedbrackettype.py')
         files['inpc'] = os.path.join(output, 'indicpositionalcategory.py')
     else:
         files['inmc'] = os.path.join(output, 'indicmatracategory.py')
@@ -998,9 +996,8 @@ def gen_properties(output, ascii_props=False, append=False):
     ]
     categories.append('scriptextensions')
     categories.append('indicsyllabiccategory')
-    if PY34:
-        categories.append('bidipairedbrackettype')
     if PY35:
+        categories.append('bidipairedbrackettype')
         categories.append('indicpositionalcategory')
     else:
         categories.append('indicmatracategory')
@@ -1056,7 +1053,7 @@ def gen_properties(output, ascii_props=False, append=False):
     print('Building: Bidi Classes')
     gen_bidi(files['bc'], ascii_props, append, prefix)
 
-    if PY34:
+    if PY35:
         print('Building: Bidi Paired Bracket Type')
         gen_enum(
             'BidiBrackets.txt', 'bidi_paired_bracket_type', files['bpt'], notexplicit='n',
