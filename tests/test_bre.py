@@ -12,7 +12,6 @@ from backrefs import _bre_parse
 import copy
 import warnings
 
-PY34_PLUS = (3, 4) <= sys.version_info
 PY36_PLUS = (3, 6) <= sys.version_info
 PY37_PLUS = (3, 7) <= sys.version_info
 
@@ -1180,7 +1179,7 @@ class TestReplaceTemplate(unittest.TestCase):
             bre.findall(r"\X{3}", "a\xE0a\u0300e\xE9e\u0301"),
             ['a\xe0a\u0300', 'e\xe9e\u0301']
         )
-        # self.assertEqual(regex.findall(r"\X", "\r\r\n\u0301A\u0301"), ['\r', '\r\n', '\u0301', 'A\u0301'])
+        # `self.assertEqual(regex.findall(r"\X", "\r\r\n\u0301A\u0301"), ['\r', '\r\n', '\u0301', 'A\u0301'])`
         self.assertEqual(bre.search(r'\X$', 'ab\u2103').group(), '\u2103')
 
     def test_replace_unicode_name_ascii_range(self):
@@ -2380,13 +2379,12 @@ class TestConvenienceFunctions(unittest.TestCase):
     def test_fullmatch(self):
         """Test that `fullmatch` works."""
 
-        if PY34_PLUS:
-            m = bre.fullmatch(r'This is a test for match!', "This is a test for match!")
-            self.assertTrue(m is not None)
+        m = bre.fullmatch(r'This is a test for match!', "This is a test for match!")
+        self.assertTrue(m is not None)
 
-            p = bre.compile(r'This is a test for match!')
-            m = p.fullmatch("This is a test for match!")
-            self.assertTrue(m is not None)
+        p = bre.compile(r'This is a test for match!')
+        m = p.fullmatch("This is a test for match!")
+        self.assertTrue(m is not None)
 
     def test_search(self):
         """Test that `search` works."""

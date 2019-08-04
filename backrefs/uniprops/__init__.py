@@ -5,7 +5,6 @@ import sys
 
 UNICODE_RANGE = '\u0000-\U0010ffff'
 
-PY35 = sys.version_info >= (3, 5)
 PY37 = sys.version_info >= (3, 7)
 
 POSIX = 0
@@ -168,12 +167,8 @@ def get_hangul_syllable_type_property(value, is_bytes=False):
 def get_indic_positional_category_property(value, is_bytes=False):
     """Get `INDIC POSITIONAL/MATRA CATEGORY` property."""
 
-    if PY35:
-        obj = unidata.ascii_indic_positional_category if is_bytes else unidata.unicode_indic_positional_category
-        alias_key = 'indicpositionalcategory'
-    else:
-        obj = unidata.ascii_indic_matra_category if is_bytes else unidata.unicode_indic_matra_category
-        alias_key = 'indicmatracategory'
+    obj = unidata.ascii_indic_positional_category if is_bytes else unidata.unicode_indic_positional_category
+    alias_key = 'indicpositionalcategory'
 
     if value.startswith('^'):
         negated = value[1:]
@@ -502,9 +497,7 @@ def get_unicode_property(value, prop=None, is_bytes=False):
                 return get_age_property(value, is_bytes)
             elif prop == 'eastasianwidth':
                 return get_east_asian_width_property(value, is_bytes)
-            elif PY35 and prop == 'indicpositionalcategory':
-                return get_indic_positional_category_property(value, is_bytes)
-            elif not PY35 and prop == 'indicmatracategory':
+            elif prop == 'indicpositionalcategory':
                 return get_indic_positional_category_property(value, is_bytes)
             elif prop == 'indicsyllabiccategory':
                 return get_indic_syllabic_category_property(value, is_bytes)

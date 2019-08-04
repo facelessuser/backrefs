@@ -8,8 +8,6 @@ from urllib.request import urlopen
 __version__ = '2.2.0'
 
 
-PY34 = sys.version_info >= (3, 4)
-PY35 = sys.version_info >= (3, 5)
 PY37 = sys.version_info >= (3, 7)
 
 HOME = os.path.dirname(os.path.abspath(__file__))
@@ -72,14 +70,9 @@ def download_unicodedata(version, output=HOME, no_zip=False):
     ]
 
     files.append('ScriptExtensions.txt')
-    if PY35:
-        files.append('IndicPositionalCategory.txt')
-    else:
-        files.append('IndicMatraCategory.txt')
+    files.append('IndicPositionalCategory.txt')
     files.append('IndicSyllabicCategory.txt')
-
-    if PY34:
-        files.append('BidiBrackets.txt')
+    files.append('BidiBrackets.txt')
 
     if PY37:
         files.append('VerticalOrientation.txt')

@@ -3,6 +3,7 @@
 ## 4.2.0
 
 - **NEW**: Deprecate the **search** references `\l`, `\L`, `\c`, and `\C`. The POSIX alternatives (which these were shortcuts for) should be used instead: `[[:lower:]]`, `[[:^lower:]]`, `[:upper:]]`, and `[[:^upper:]]` respectively.
+- **NEW**: Formally drop support for Python 3.4.
 
 ## 4.1.1
 

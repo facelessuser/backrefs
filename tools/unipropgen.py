@@ -16,8 +16,6 @@ MAXASCII = 0xFF
 GROUP_ESCAPES = frozenset([ord(x) for x in '-&[\\]^|~'])
 
 # Compatibility
-PY34 = sys.version_info >= (3, 4)
-PY35 = sys.version_info >= (3, 5)
 PY37 = sys.version_info >= (3, 7)
 
 UNICODE_RANGE = (0x0000, 0x10FFFF)
@@ -974,12 +972,9 @@ def gen_properties(output, ascii_props=False, append=False):
 
     files['scx'] = os.path.join(output, 'scriptextensions.py')
     files['insc'] = os.path.join(output, 'indicsyllabiccategory.py')
-    if PY34:
-        files['bpt'] = os.path.join(output, 'bidipairedbrackettype.py')
-    if PY35:
-        files['inpc'] = os.path.join(output, 'indicpositionalcategory.py')
-    else:
-        files['inmc'] = os.path.join(output, 'indicmatracategory.py')
+    files['bpt'] = os.path.join(output, 'bidipairedbrackettype.py')
+    files['inpc'] = os.path.join(output, 'indicpositionalcategory.py')
+
     if PY37:
         files['vo'] = os.path.join(output, 'verticalorientation.py')
 
@@ -998,12 +993,9 @@ def gen_properties(output, ascii_props=False, append=False):
     ]
     categories.append('scriptextensions')
     categories.append('indicsyllabiccategory')
-    if PY34:
-        categories.append('bidipairedbrackettype')
-    if PY35:
-        categories.append('indicpositionalcategory')
-    else:
-        categories.append('indicmatracategory')
+    categories.append('bidipairedbrackettype')
+    categories.append('indicpositionalcategory')
+
     if PY37:
         categories.append('verticalorientation')
     if ascii_props:
@@ -1055,13 +1047,11 @@ def gen_properties(output, ascii_props=False, append=False):
     # Generate Unicode bidi classes
     print('Building: Bidi Classes')
     gen_bidi(files['bc'], ascii_props, append, prefix)
-
-    if PY34:
-        print('Building: Bidi Paired Bracket Type')
-        gen_enum(
-            'BidiBrackets.txt', 'bidi_paired_bracket_type', files['bpt'], notexplicit='n',
-            field=2, ascii_props=ascii_props, append=append, prefix=prefix
-        )
+    print('Building: Bidi Paired Bracket Type')
+    gen_enum(
+        'BidiBrackets.txt', 'bidi_paired_bracket_type', files['bpt'], notexplicit='n',
+        field=2, ascii_props=ascii_props, append=append, prefix=prefix
+    )
 
     # Generate Unicode binary
     print('Building: Binary')
@@ -1104,18 +1094,12 @@ def gen_properties(output, ascii_props=False, append=False):
         ascii_props=ascii_props, append=append, prefix=prefix
     )
 
-    if PY35:
-        print('Building: Indic Positional Category')
-        gen_enum(
-            'IndicPositionalCategory.txt', 'indic_positional_category', files['inpc'], notexplicit='na',
-            ascii_props=ascii_props, append=append, prefix=prefix
-        )
-    else:
-        print('Building: Indic Matra Category')
-        gen_enum(
-            'IndicMatraCategory.txt', 'indic_matra_category', files['inmc'], notexplicit='na',
-            ascii_props=ascii_props, append=append, prefix=prefix
-        )
+    print('Building: Indic Positional Category')
+    gen_enum(
+        'IndicPositionalCategory.txt', 'indic_positional_category', files['inpc'], notexplicit='na',
+        ascii_props=ascii_props, append=append, prefix=prefix
+    )
+
     print('Building: Indic Syllabic Category')
     gen_enum(
         'IndicSyllabicCategory.txt', 'indic_syllabic_category', files['insc'], notexplicit='other',
