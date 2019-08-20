@@ -104,7 +104,7 @@ class _SearchParser(object):
         current = []
         quoted = []
         i = _util.StringIter(text)
-        iter(i)
+
         for t in i:
             if not escaped and t == "\\":
                 escaped = True
@@ -457,7 +457,6 @@ class _SearchParser(object):
         text = self.process_quotes(self.search.decode('latin-1') if self.is_bytes else self.search)
 
         i = _util.StringIter(text)
-        iter(i)
 
         retry = True
         while retry:
@@ -1004,7 +1003,7 @@ class _ReplaceParser(object):
         """Parse template."""
 
         i = _util.StringIter((self._original.decode('latin-1') if self.is_bytes else self._original))
-        iter(i)
+
         self.result = [""]
 
         while True:
