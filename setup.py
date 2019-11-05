@@ -5,7 +5,6 @@ from setuptools import setup, find_packages
 import sys
 import os
 import importlib.util
-import traceback
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
 
@@ -35,51 +34,33 @@ def get_requirements():
 def get_unicodedata():
     """Download the `unicodedata` version for the given Python version."""
 
-    import imp
     import unicodedata
 
-    fail = False
     uver = unicodedata.unidata_version
-    path = os.path.join(os.path.dirname(__file__), 'tools')
-    fp, pathname, desc = imp.find_module('unidatadownload', [path])
-    try:
-        unidatadownload = imp.load_module('unidatadownload', fp, pathname, desc)
-        unidatadownload.get_unicodedata(uver, no_zip=True)
-    except Exception:
-        print(traceback.format_exc())
-        fail = True
-    finally:
-        fp.close()
-
-    assert not fail, "Failed to obtain unicodedata!"
+    path = os.path.join(os.path.dirname(__file__), 'tools', 'unidatadownload.py')
+    spec = importlib.util.spec_from_file_location("unidatadownload", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.get_unicodedata(uver, no_zip=True)
     return uver
 
 
 def generate_unicode_table():
     """Generate the Unicode table for the given Python version."""
 
-    import imp
-
     uver = get_unicodedata()
-    fail = False
-    path = os.path.join(os.path.dirname(__file__), 'tools')
-    fp, pathname, desc = imp.find_module('unipropgen', [path])
-    try:
-        unipropgen = imp.load_module('unipropgen', fp, pathname, desc)
-        unipropgen.build_tables(
-            os.path.join(
-                os.path.dirname(__file__),
-                'backrefs', 'uniprops', 'unidata'
-            ),
-            uver
-        )
-    except Exception:
-        print(traceback.format_exc())
-        fail = True
-    finally:
-        fp.close()
+    path = os.path.join(os.path.dirname(__file__), 'tools', 'unipropgen.py')
+    spec = importlib.util.spec_from_file_location("unipropgen", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
 
-    assert not fail, "Failed uniprops.py generation!"
+    module.build_tables(
+        os.path.join(
+            os.path.dirname(__file__),
+            'backrefs', 'uniprops', 'unidata'
+        ),
+        uver
+    )
 
 
 def get_description():
