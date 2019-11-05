@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 import sys
 import os
-import imp
+import importlib.util
 import traceback
 
 PY3 = (3, 0) <= sys.version_info < (4, 0)
@@ -13,15 +13,12 @@ PY3 = (3, 0) <= sys.version_info < (4, 0)
 def get_version():
     """Get version and version_info without importing the entire module."""
 
-    path = os.path.join(os.path.dirname(__file__), 'backrefs')
-    fp, pathname, desc = imp.find_module('__meta__', [path])
-    try:
-        vi = imp.load_module('__meta__', fp, pathname, desc).__version_info__
-        return vi._get_canonical(), vi._get_dev_status()
-    except Exception:
-        print(traceback.format_exc())
-    finally:
-        fp.close()
+    path = os.path.join(os.path.dirname(__file__), 'backrefs', '__meta__.py')
+    spec = importlib.util.spec_from_file_location("__meta__", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    vi = module.__version_info__
+    return vi._get_canonical(), vi._get_dev_status()
 
 
 def get_requirements():
@@ -38,6 +35,7 @@ def get_requirements():
 def get_unicodedata():
     """Download the `unicodedata` version for the given Python version."""
 
+    import imp
     import unicodedata
 
     fail = False
@@ -59,6 +57,8 @@ def get_unicodedata():
 
 def generate_unicode_table():
     """Generate the Unicode table for the given Python version."""
+
+    import imp
 
     uver = get_unicodedata()
     fail = False
