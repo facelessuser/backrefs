@@ -18,40 +18,26 @@ rules:
   - labels: [docs]
     patterns: ['docs/**|*.md']
 
-  - labels: [glob]
-    patterns: ['**/?(test_)glob*|-docs/**']
+  - labels: [bre]
+    patterns: ['**/*bre.py']
 
-  - labels: [fnmatch]
-    patterns: ['**/?(test_)fnmatch*|-docs/**']
+  - labels: [bregex]
+    patterns: ['**/*bregex.py']
 
-  - labels: [wcmatch]
-    patterns: ['**/?(test_)wcmatch*|-docs/**']
-
-  - labels: [pathlib]
-    patterns: ['**/?(test_)pathlib*|-docs/**']
-
-  - labels: [pattern-parser]
-    patterns: ['**/?(test_|_)wcparse*|-docs/**']
+  - labels: [unicode]
+    patterns: ['**/uniprops/**|tests/uniprops.py']
 
 # Label management
 
 labels:
-- name: glob
+- name: bre
   color: subcategory
-  description: Glob library.
+  description: Related to backrefs in re library.
 
-- name: fnmatch
+- name: bregex
   color: subcategory
-  description: Fnmatch library.
+  description: Related to backrefs in regex library.
 
-- name: wcmatch
+- name: unicode
   color: subcategory
-  description: Wcmatch library.
-
-- name: pathlib
-  color: subcategory
-  description: Pathlib library.
-
-- name: pattern-parser
-  color: subcategory
-  description: Related to pattern parsing.
+  description: Related to Unicode handling.
