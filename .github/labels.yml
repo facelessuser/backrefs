@@ -1,0 +1,57 @@
+template: 'facelessuser:master-labels:labels.yml:master'
+
+# Wildcard labels
+
+brace_expansion: true
+extended_glob: true
+
+rules:
+  - labels: [infrastructure]
+    patterns: ['*|{tools,requirements,.github}/**|-*.md']
+
+  - labels: [source]
+    patterns: ['wcmatch/**']
+
+  - labels: [tests]
+    patterns: ['tests/**']
+
+  - labels: [docs]
+    patterns: ['docs/**|*.md']
+
+  - labels: [glob]
+    patterns: ['**/?(test_)glob*|-docs/**']
+
+  - labels: [fnmatch]
+    patterns: ['**/?(test_)fnmatch*|-docs/**']
+
+  - labels: [wcmatch]
+    patterns: ['**/?(test_)wcmatch*|-docs/**']
+
+  - labels: [pathlib]
+    patterns: ['**/?(test_)pathlib*|-docs/**']
+
+  - labels: [pattern-parser]
+    patterns: ['**/?(test_|_)wcparse*|-docs/**']
+
+# Label management
+
+labels:
+- name: glob
+  color: subcategory
+  description: Glob library.
+
+- name: fnmatch
+  color: subcategory
+  description: Fnmatch library.
+
+- name: wcmatch
+  color: subcategory
+  description: Wcmatch library.
+
+- name: pathlib
+  color: subcategory
+  description: Pathlib library.
+
+- name: pattern-parser
+  color: subcategory
+  description: Related to pattern parsing.
