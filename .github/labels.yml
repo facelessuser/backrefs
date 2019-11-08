@@ -6,38 +6,41 @@ brace_expansion: true
 extended_glob: true
 
 rules:
-  - labels: [infrastructure]
+  - labels: ['C: infrastructure']
     patterns: ['*|{tools,requirements,.github}/**|-*.md']
 
-  - labels: [source]
+  - labels: ['C: source']
     patterns: ['wcmatch/**']
 
-  - labels: [tests]
+  - labels: ['C: tests']
     patterns: ['tests/**']
 
-  - labels: [docs]
+  - labels: ['C: docs']
     patterns: ['docs/**|*.md']
 
-  - labels: [bre]
+  - labels: ['C: bre']
     patterns: ['**/*bre.py']
 
-  - labels: [bregex]
+  - labels: ['C: bregex']
     patterns: ['**/*bregex.py']
 
-  - labels: [unicode]
+  - labels: ['C: unicode']
     patterns: ['**/uniprops/**|tests/uniprops.py']
 
 # Label management
 
 labels:
-- name: bre
+- name: 'C: bre'
+  renamed: bre
   color: subcategory
   description: Related to backrefs in re library.
 
-- name: bregex
+- name: 'C: bregex'
+  renamed: bregex
   color: subcategory
   description: Related to backrefs in regex library.
 
-- name: unicode
+- name: 'C: unicode'
+  renamed: unicode
   color: subcategory
   description: Related to Unicode handling.
