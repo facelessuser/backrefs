@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.2.1
+
+- **FIX**: Fix Python 3.8 installation issue due to Unicode bundle having an incorrect encoding in some files.
+
 ## 4.2.0
 
 - **NEW**: Deprecate the **search** references `\l`, `\L`, `\c`, and `\C`. The POSIX alternatives (which these were shortcuts for) should be used instead: `[[:lower:]]`, `[[:^lower:]]`, `[:upper:]]`, and `[[:^upper:]]` respectively.
