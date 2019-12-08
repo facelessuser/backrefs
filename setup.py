@@ -20,11 +20,11 @@ def get_version():
     return vi._get_canonical(), vi._get_dev_status()
 
 
-def get_requirements():
+def get_requirements(req):
     """Load list of dependencies."""
 
     install_requires = []
-    with open("requirements/project.txt") as f:
+    with open(req) as f:
         for line in f:
             if not line.startswith("#"):
                 install_requires.append(line.strip())
@@ -86,7 +86,10 @@ setup(
     author_email='Isaac.Muse@gmail.com',
     url='https://github.com/facelessuser/backrefs',
     packages=find_packages(exclude=['tools', 'tests']),
-    install_requires=get_requirements(),
+    install_requires=get_requirements("requirements/project.txt"),
+    extras_require={
+        'extras': get_requirements("requirements/extras.txt")
+    },
     zip_safe=False,
     package_data={},
     license='MIT License',
