@@ -5,7 +5,8 @@ edit_uri: tree/master/docs/src/markdown
 site_description: A library to add additional back references to regular expressions.
 copyright: |
   Copyright &copy; 2015 - 2019 <a href="https://github.com/facelessuser">Isaac Muse</a>
-  <br><span class="md-footer-custom-text">emoji provided free by </span><a href="http://www.emojione.com">EmojiOne</a>
+  <br><span class="md-footer-custom-text">emoji provided free by </span>
+  <a href="https://github.com/twitter/twemoji">Twemoji</a>
 
 docs_dir: docs/src/markdown
 theme:
@@ -19,8 +20,6 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-  feature:
-    tabs: true
 
 nav:
   - User Guide: index.md
@@ -65,6 +64,7 @@ markdown_extensions:
   - pymdownx.caret:
   - pymdownx.smartsymbols:
   - pymdownx.emoji:
+      emoji_index: !!python/name:pymdownx.emoji.twemoji
       emoji_generator: !!python/name:pymdownx.emoji.to_png
   - pymdownx.escapeall:
       hardbreak: True
@@ -85,6 +85,6 @@ extra:
     - type: github
       link: https://github.com/facelessuser
 extra_css:
-  - extra-83f68d2c59.css
+  - extra-174a536342.css
 extra_javascript:
-  - extra-0b9b22dd13.js
+  - extra-0d9305e748.js
