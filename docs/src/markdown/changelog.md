@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.3.0
+
+- **NEW**: Install Regex library along Backrefs via `pip install backrefs[extras]`.
+
 ## 4.2.1
 
 - **FIX**: Fix Python 3.8 installation issue due to Unicode bundle having an incorrect encoding in some files.
