@@ -9,6 +9,7 @@ EmojiOne
 Feb
 Formatter
 GitHub
+Gitter
 Jan
 Jun
 MERCHANTABILITY
