@@ -1,5 +1,4 @@
 """Test `uniprops`."""
-from __future__ import unicode_literals
 import unittest
 import sys
 from backrefs import uniprops
