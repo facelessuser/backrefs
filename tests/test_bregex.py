@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Test bregex lib."""
-from __future__ import unicode_literals
 import unittest
 from backrefs import bregex
 from backrefs import _bregex_parse

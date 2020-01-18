@@ -4,7 +4,6 @@ Backrefs Regex parser.
 Licensed under MIT
 Copyright (c) 2011 - 2019 Isaac Muse <isaacmuse@gmail.com>
 """
-from __future__ import unicode_literals
 import unicodedata as _unicodedata
 import copyreg as _copyreg
 from . import util as _util

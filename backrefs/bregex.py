@@ -14,7 +14,6 @@ Add the ability to use the following backrefs with re:
 Licensed under MIT
 Copyright (c) 2015 - 2019 Isaac Muse <isaacmuse@gmail.com>
 """
-from __future__ import unicode_literals
 import regex as _regex
 import copyreg as _copyreg
 from functools import lru_cache as _lru_cache
