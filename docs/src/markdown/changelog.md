@@ -3,6 +3,7 @@
 ## 4.3.0
 
 - **NEW**: Install Regex library along Backrefs via `pip install backrefs[extras]`.
+- **NEW**: Remove `version` and `__version__` and remove associated deprecation code.
 
 ## 4.2.1
 
