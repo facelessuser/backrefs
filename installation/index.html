@@ -36,7 +36,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
@@ -44,7 +44,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="../assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -55,12 +55,12 @@
       
     
     
-      <script src="../assets/javascripts/modernizr.74668098.js"></script>
+      <script src="../assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -382,22 +382,43 @@
                 
                 <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link"></a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link"></a></h2>
-<p>Backrefs doesn't have any required external dependencies.  If desired, you can install the optional <a href="https://pypi.python.org/pypi/regex">Regex</a> module and use Backrefs with either Python's Re module or the Regex module.</p>
+<p>Backrefs doesn't have any required external dependencies.  If desired, you can install the optional <a href="https://pypi.python.org/pypi/regex">Regex</a>
+module and use Backrefs with either Python's Re module or the Regex module. Instructions to install with and without
+optional dependencies is found below.</p>
 <h2 id="installation_1">Installation<a class="headerlink" href="#installation_1" title="Permanent link"></a></h2>
-<p>There are a couple of recommended ways to install Backrefs.  If you would like to install in a virtual machine, you can do that as well.</p>
+<p>There are a couple of recommended ways to install Backrefs.  If you would like to install in a virtual machine, you can
+do that as well.</p>
 <ol>
 <li>
-<p><code class="codehilite">pip install backrefs</code></p>
+<p>Install with pip:</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> pip install backrefs
+</pre></div>
+
 </li>
 <li>
-<p>Install locally from source via <code class="codehilite">python setup.py build</code> and <code class="codehilite">python setup.py install</code>.</p>
+<p>Install with optional requirement <code>regex</code>:</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> pip install backrefs<span class="o">[</span>extras<span class="o">]</span>
+</pre></div>
+
 </li>
 <li>
-<p>If developing Backrefs, you can install via <code class="codehilite">pip install --editable .</code>.  This method will allow you to instantly see your changes without reinstalling which is great for developing.</p>
+<p>Install locally from source via:</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> python setup.py build
+<span class="gp">$</span> python setup.py install
+</pre></div>
+
+</li>
+<li>
+<p>If developing Backrefs, you can install via:</p>
+<div class="codehilite"><pre><span></span><span class="gp">$</span> pip install --editable .
+</pre></div>
+
+<p>This method will allow you to instantly see your changes without reinstalling which is great for developing.</p>
 </li>
 </ol>
                 
                   
+                
                 
               
               
@@ -453,7 +474,7 @@
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright &copy; 2015 - 2019 <a href="https://github.com/facelessuser">Isaac Muse</a>
+            Copyright &copy; 2015 - 2020 <a href="https://github.com/facelessuser">Isaac Muse</a>
 <br><span class="md-footer-custom-text">emoji provided free by </span>
 <a href="https://github.com/twitter/twemoji">Twemoji</a>
 
@@ -479,7 +500,7 @@
       
     </div>
     
-      <script src="../assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="../assets/javascripts/application.808e90bb.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:".."}})</script>
       

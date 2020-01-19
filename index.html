@@ -36,7 +36,7 @@
         <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.4.3">
+      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
     
     
       
@@ -44,7 +44,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/application.30686662.css">
+      <link rel="stylesheet" href="assets/stylesheets/application.1b62728e.css">
       
         <link rel="stylesheet" href="assets/stylesheets/application-palette.a8b3c06d.css">
       
@@ -55,12 +55,12 @@
       
     
     
-      <script src="assets/javascripts/modernizr.74668098.js"></script>
+      <script src="assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700|Roboto+Mono&display=fallback">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
@@ -621,8 +621,8 @@
 
 <h2 id="using-backrefs">Using Backrefs<a class="headerlink" href="#using-backrefs" title="Permanent link"></a></h2>
 <p>Depending on which regular expression engine you are using (Re or Regex), you can import the appropriate module.</p>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">backrefs</span> <span class="k">import</span> <span class="n">bre</span>
-<span class="kn">from</span> <span class="nn">backrefs</span> <span class="k">import</span> <span class="n">bregex</span>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">backrefs</span> <span class="kn">import</span> <span class="n">bre</span>
+<span class="kn">from</span> <span class="nn">backrefs</span> <span class="kn">import</span> <span class="n">bregex</span>
 </pre></div>
 
 <p>Backrefs can be applied to search patterns and/or replace patterns. You can control whether you want to use search augmentation, replace augmentation, or both.</p>
@@ -706,7 +706,7 @@
 <p>Backrefs implements format string replacements in a way that is similar to Regex's that works for both Re and Regex.  While it is similar to Regex's implementation, there are some differences.</p>
 <ol>
 <li>
-<p>Though you can use normal strings with Backrefs' format templates, it is recommended to use raw strings for format replacements as back slashes are handled special to implement lower casing and upper casing via the replace back references. In Backrefs a template would look like <code class="codehilite"><span class="sa">r</span><span class="s1">&#39;\L{1}{2}\E&#39;</span></code>, and if you used a normal string it would look like <code class="codehilite"><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">L{1}{2}</span><span class="se">\\</span><span class="s1">E&#39;</span></code>.  Because Backrefs more or less requires raw strings for sane replace template creation, you can also use normal string and Unicode escapes in the format replace templates, so it should feel like a normal string.</p>
+<p>Though you can use normal strings with Backrefs' format templates, it is recommended to use raw strings for format replacements as back slashes are handled special to implement lower casing and upper casing via the replace back references. In Backrefs a template would look like <code class="codehilite"><span class="sa">r</span><span class="s1">&#39;\L</span><span class="si">{1}{2}</span><span class="s1">\E&#39;</span></code>, and if you used a normal string it would look like <code class="codehilite"><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">L</span><span class="si">{1}{2}</span><span class="se">\\</span><span class="s1">E&#39;</span></code>.  Because Backrefs more or less requires raw strings for sane replace template creation, you can also use normal string and Unicode escapes in the format replace templates, so it should feel like a normal string.</p>
 <div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(test)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;{0:\n^8}&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">)</span>
 <span class="go">&#39;\n\ntest\n\n&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(test)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\C{0:\u007c^8}\E&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">)</span>
@@ -1375,6 +1375,7 @@ type        ::=  &quot;s&quot;
                 
                   
                 
+                
               
               
                 
@@ -1415,7 +1416,7 @@ type        ::=  &quot;s&quot;
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright &copy; 2015 - 2019 <a href="https://github.com/facelessuser">Isaac Muse</a>
+            Copyright &copy; 2015 - 2020 <a href="https://github.com/facelessuser">Isaac Muse</a>
 <br><span class="md-footer-custom-text">emoji provided free by </span>
 <a href="https://github.com/twitter/twemoji">Twemoji</a>
 
@@ -1441,7 +1442,7 @@ type        ::=  &quot;s&quot;
       
     </div>
     
-      <script src="assets/javascripts/application.ac79c3b0.js"></script>
+      <script src="assets/javascripts/application.808e90bb.js"></script>
       
       <script>app.initialize({version:"1.0.4",url:{base:"."}})</script>
       
