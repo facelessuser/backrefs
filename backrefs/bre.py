@@ -3,8 +3,8 @@ Backrefs re.
 
 Add the ability to use the following backrefs with re:
 
- - `\l`                                                          - Lowercase character class (search)
- - `\c`                                                          - Uppercase character class (search)
+ - `\l`                                                          - Lowercase character class (search deprecated)
+ - `\c`                                                          - Uppercase character class (search deprecated)
  - `\L`                                                          - Inverse of lowercase character class (search)
  - `\C`                                                          - Inverse of uppercase character class (search)
  - `\Q` and `\Q...\E`                                            - Escape/quote chars (search)
@@ -20,7 +20,7 @@ Add the ability to use the following backrefs with re:
  - `\m`                                                          - Starting word boundary (search)
  - `\M`                                                          - Ending word boundary (search)
  - `\R`                                                          - Generic line breaks (search)
- - `\X`                                                          - Simplified grapheme clusters (search)
+ - `\X`                                                          - Simplified grapheme clusters (search deprecated)
 
 Licensed under MIT
 Copyright (c) 2011 - 2019 Isaac Muse <isaacmuse@gmail.com>

@@ -61,6 +61,12 @@ _MSG_DEPRECATE_CASE = (
     "In the future, support for this reference will be removed."
 )
 
+_MSG_DEPRECATE_GC = (
+    "The search back reference '{}' at position {} has been deprecated, please use the bregex module to take advantage "
+    "of proper grapheme cluster logic, or you can manually specify '(?:\\PM\\pM*(?!\\pM))' to use the legacy logic. "
+    "In the future, support for this reference will be removed."
+)
+
 
 class LoopException(Exception):
     """Loop exception."""
@@ -257,6 +263,7 @@ class _SearchParser(object):
             no_mark = self.unicode_props("^m", None, in_group=False)[0]
             mark = self.unicode_props("m", None, in_group=False)[0]
             current.extend(self._grapheme_cluster % (no_mark, mark, mark))
+            util.warn_deprecated(_MSG_DEPRECATE_GC.format('\\X', i.index - 2))
         elif t == "e":
             current.append(self._re_escape)
         elif t == "l":
