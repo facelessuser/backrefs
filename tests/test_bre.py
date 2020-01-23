@@ -2575,6 +2575,7 @@ class TestDeprecated(unittest.TestCase):
     def test_lowercase(self):
         """Test deprecated lower."""
 
+        bre.purge()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
@@ -2586,6 +2587,7 @@ class TestDeprecated(unittest.TestCase):
     def test_inverse_lowercase(self):
         """Test deprecated inverse lower."""
 
+        bre.purge()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
@@ -2597,6 +2599,7 @@ class TestDeprecated(unittest.TestCase):
     def test_uppercase(self):
         """Test deprecated upper."""
 
+        bre.purge()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
@@ -2608,6 +2611,7 @@ class TestDeprecated(unittest.TestCase):
     def test_inverse_uppercase(self):
         """Test deprecated inverse upper."""
 
+        bre.purge()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
@@ -2619,10 +2623,11 @@ class TestDeprecated(unittest.TestCase):
     def test_grapheme_cluster(self):
         """Test deprecated grapheme cluster."""
 
+        bre.purge()
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
 
-            p = bre.compile(r'\X')
+            bre.compile(r'\X')
             self.assertTrue(len(w) == 1)
             self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
