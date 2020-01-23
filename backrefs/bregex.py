@@ -12,7 +12,7 @@ Add the ability to use the following backrefs with re:
  - `\e`                                                         - Escape character (search)
 
 Licensed under MIT
-Copyright (c) 2015 - 2019 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2015 - 2020 Isaac Muse <isaacmuse@gmail.com>
 """
 import regex as _regex
 import copyreg as _copyreg

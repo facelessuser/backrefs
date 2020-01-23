@@ -2,7 +2,7 @@
 Backrefs Re parser.
 
 Licensed under MIT
-Copyright (c) 2011 - 2019 Isaac Muse <isaacmuse@gmail.com>
+Copyright (c) 2011 - 2020 Isaac Muse <isaacmuse@gmail.com>
 """
 import re as _re
 import copyreg as _copyreg
