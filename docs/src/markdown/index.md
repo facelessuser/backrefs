@@ -27,7 +27,7 @@ re.compile('test [\ud800\udb7f-\udb80\udbff-\udc00\udfff]')
 
 Replace templates are a little different than searches and require a bit more control to accomplish some of the replace
 features. Backrefs, like with searches, processes the string before passing it through the regular expression engine.
-Once Backrefs has parsed and altered the string as needed, it is then passed the regular expression engine to extract
+Once Backrefs has parsed and altered the string as needed, it is then passed to the regular expression engine to extract
 string literals and the group mapping (search groups to replace group placeholders). Backrefs will then return a replace
 object that should be used to apply the replace. The object will handle applying casing (upper or lower) to the returned
 captured groups, and assemble the desired string output. For these reasons, Backrefs requires you to compile your
@@ -37,6 +37,23 @@ replaces and use the returned replace object if you want to take advantage of re
 >>> pattern = bre.compile_search(r'(\p{Letter}+)')
 >>> replace = bre.compile_replace(pattern, r'\C\1\E')
 >>> text = pattern.sub(replace, 'sometext')
+'SOMETEXT'
+```
+
+You are not required to compile search and replace separately. Search and replace compilation can be used automatically
+by compiling an object that uses Backrefs' search *and* replace functionality by default. Compiling separately simply
+gives you the control as to whether you use the search features and/or the replace features.
+
+```pycon3
+>>> pattern = bre.compile(r'(\p{Letter}+)')
+>>> pattern.sub(r'(\p{Letter}+)', r'\C\1\E', 'sometext')
+'SOMETEXT'
+```
+
+or
+
+```pycon3
+>>> bre.sub(r'(\p{Letter}+)', r'\C\1\E', 'sometext')
 'SOMETEXT'
 ```
 
@@ -552,7 +569,7 @@ The Unicode variants of the POSIX properties are also available via the `\p{...}
 with existing Unicode properties like `punct` which exists as both a name for a Unicode property and a slightly
 different POSIX property. To access the POSIX property, you should prefix the name with `posix`: `\p{PosixPunct}`. It
 should be noted that you can use the `posix` prefix to access any of the POSIX properties, even if there is no name
-collision. The POSIX properties are treated as [binary Unicode properties](#binary).
+collision. The POSIX properties are treated as binary Unicode properties.
 
 \[:posix:] | \\p\{Posix} | ASCII                                             | Unicode
 ---------- | ----------- | ------------------------------------------------- | -------
