@@ -1,14 +1,12 @@
 
 
 
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
-      <meta http-equiv="x-ua-compatible" content="ie=edge">
       
         <meta name="description" content="A library to add additional back references to regular expressions.">
       
@@ -16,27 +14,8 @@
         <link rel="canonical" href="https://facelessuser.github.io/backrefs/">
       
       
-      
-        <meta name="lang:clipboard.copy" content="Copy to clipboard">
-      
-        <meta name="lang:clipboard.copied" content="Copied to clipboard">
-      
-        <meta name="lang:search.language" content="en">
-      
-        <meta name="lang:search.pipeline.stopwords" content="True">
-      
-        <meta name="lang:search.pipeline.trimmer" content="True">
-      
-        <meta name="lang:search.result.none" content="No matching documents">
-      
-        <meta name="lang:search.result.one" content="1 matching document">
-      
-        <meta name="lang:search.result.other" content="# matching documents">
-      
-        <meta name="lang:search.tokenizer" content="[\s\-]+">
-      
       <link rel="shortcut icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.0.4, mkdocs-material-4.6.0">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-5.0.0rc2">
     
     
       
@@ -44,18 +23,16 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/application.1b62728e.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.97c3fac0.min.css">
       
-        <link rel="stylesheet" href="assets/stylesheets/application-palette.a8b3c06d.css">
+        <link rel="stylesheet" href="assets/stylesheets/palette.31180ff2.min.css">
       
       
         
         
-        <meta name="theme-color" content="#2196f3">
+        <meta name="theme-color" content="">
       
     
-    
-      <script src="assets/javascripts/modernizr.268332fc.js"></script>
     
     
       
@@ -64,10 +41,9 @@
         <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
       
     
-    <link rel="stylesheet" href="assets/fonts/material-icons.css">
     
     
-      <link rel="stylesheet" href="extra-174a536342.css">
+      <link rel="stylesheet" href="assets/pymdownx-extras/extra-b27c7e6cd8.css">
     
     
       
@@ -75,71 +51,68 @@
     
   </head>
   
-    
-    
-    <body dir="ltr" data-md-color-primary="blue" data-md-color-accent="blue">
   
-    <svg class="md-svg">
-      <defs>
-        
-        
-          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
-        
-      </defs>
-    </svg>
+    
+    
+    <body dir="ltr" data-md-color-primary="drac-purple" data-md-color-accent="drac-purple">
+  
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    <label class="md-overlay" for="__drawer"></label>
     
-      <a href="#user-guide" tabindex="1" class="md-skip">
+      
+      <a href="#user-guide" class="md-skip" data-md-component="skip">
         Skip to content
       </a>
     
     
+    
       <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
-    <div class="md-flex">
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="https://facelessuser.github.io/backrefs" title="Backrefs Documentation" class="md-header-nav__button md-logo">
-          
-            <i class="md-icon">description</i>
-          
-        </a>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
-      </div>
-      <div class="md-flex__cell md-flex__cell--stretch">
-        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
-          
-            <span class="md-header-nav__topic">
-              Backrefs Documentation
-            </span>
-            <span class="md-header-nav__topic">
-              
-                User Guide
-              
-            </span>
-          
-        </div>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
+    <a href="https://facelessuser.github.io/backrefs" title="Backrefs Documentation" aria-label="Backrefs Documentation" class="md-header-nav__button md-logo">
+      
         
-          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
-          
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+      
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      <div class="md-header-nav__ellipsis md-ellipsis">
+        
+          <span class="md-header-nav__topic">
+            Backrefs Documentation
+          </span>
+          <span class="md-header-nav__topic">
+            
+              User Guide
+            
+          </span>
+        
+      </div>
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+      </label>
+      
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
-      <label class="md-icon md-search__icon" for="__search"></label>
-      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
-        &#xE5CD;
+      <input type="text" class="md-search__input" name="query" aria-label="search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="reset" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
       </button>
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="result">
+        <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Type to start searching
           </div>
@@ -149,52 +122,44 @@
     </div>
   </div>
 </div>
+    
+    
+      <div class="md-header-nav__source">
         
-      </div>
-      
-        <div class="md-flex__cell md-flex__cell--shrink">
-          <div class="md-header-nav__source">
-            
-
-
-  
-
-<a href="https://github.com/facelessuser/backrefs/" title="Go to repository" class="md-source" data-md-source="github">
-  
-    <div class="md-source__icon">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
+<a href="https://github.com/facelessuser/backrefs/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
   <div class="md-source__repository">
     GitHub
   </div>
 </a>
-          </div>
-        </div>
-      
-    </div>
+      </div>
+    
   </nav>
 </header>
     
-    <div class="md-container">
+    <div class="md-container" data-md-component="container">
       
         
       
       
-      <main class="md-main" role="main">
-        <div class="md-main__inner md-grid" data-md-component="container">
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
           
             
               <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" data-md-level="0">
-  <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="https://facelessuser.github.io/backrefs" title="Backrefs Documentation" class="md-nav__button md-logo">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://facelessuser.github.io/backrefs" title="Backrefs Documentation" aria-label="Backrefs Documentation" class="md-nav__button md-logo">
       
-        <i class="md-icon">description</i>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
       
     </a>
     Backrefs Documentation
@@ -202,18 +167,11 @@
   
     <div class="md-nav__source">
       
-
-
-  
-
-<a href="https://github.com/facelessuser/backrefs/" title="Go to repository" class="md-source" data-md-source="github">
-  
-    <div class="md-source__icon">
-      <svg viewBox="0 0 24 24" width="24" height="24">
-        <use xlink:href="#__github" width="24" height="24"></use>
-      </svg>
-    </div>
-  
+<a href="https://github.com/facelessuser/backrefs/" title="Go to repository" class="md-source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
   <div class="md-source__repository">
     GitHub
   </div>
@@ -231,13 +189,16 @@
 
   <li class="md-nav__item md-nav__item--active">
     
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
       
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
         User Guide
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,9H17V7H3V9M3,13H17V11H3V13M3,17H17V15H3V17M19,17H21V15H19V17M19,7V9H21V7H19M19,13H21V11H19V13Z" /></svg>
+        </span>
       </label>
     
     <a href="." title="User Guide" class="md-nav__link md-nav__link--active">
@@ -251,7 +212,12 @@
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -376,10 +342,6 @@
     </nav>
   
 </li>
-      
-      
-      
-      
       
     </ul>
   
@@ -453,7 +415,12 @@
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -579,10 +546,6 @@
   
 </li>
       
-      
-      
-      
-      
     </ul>
   
 </nav>
@@ -595,11 +558,16 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/facelessuser/backrefs/tree/master/docs/src/markdown/index.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/facelessuser/backrefs/tree/master/docs/src/markdown/index.md" title="Edit this page" class="md-content__button md-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" /></svg>
+                  </a>
                 
                 
-                <h1 id="user-guide">User Guide<a class="headerlink" href="#user-guide" title="Permanent link"></a></h1>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link"></a></h2>
+                  
+                
+                
+                <h1 id="user-guide">User Guide<a class="headerlink" href="#user-guide" title="Permanent link"></a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link"></a></h2>
 <p>Backrefs is a wrapper around Python's built-in <a href="https://docs.python.org/3/library/re.html">Re</a> and the 3<sup>rd</sup> party <a href="https://pypi.python.org/pypi/regex">Regex</a> library.  Backrefs adds various
 additional back references (and a couple other features) that are known to some regular expression engines, but not to
 Python's Re and/or Regex.  The supported back references actually vary depending on the regular expression engine being
@@ -608,48 +576,61 @@ used as the engine may already have support for some, or things that prevent imp
 essentially a string processor that looks for certain symbols in a regular expression search or replace string, and
 alters the pattern before sending it to the regular expression engine.</p>
 <p>For instance, if we used <code>\m</code> in our regular expression, it would be transformed into <code>\b(?=\w)</code>.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;test \m&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;test \m&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span>
 <span class="go">re.compile(&#39;test \\b(?=\\w)&#39;)</span>
-</pre></div>
+</code></pre></div>
 
 <p>Or if we used a Unicode property, it would be transformed into a character group:</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;test \p</span><span class="si">{Cs}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;test \p</span><span class="si">{Cs}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pattern</span>
 <span class="go">re.compile(&#39;test [\ud800\udb7f-\udb80\udbff-\udc00\udfff]&#39;)</span>
-</pre></div>
+</code></pre></div>
 
 <p>Replace templates are a little different than searches and require a bit more control to accomplish some of the replace
 features. Backrefs, like with searches, processes the string before passing it through the regular expression engine.
-Once Backrefs has parsed and altered the string as needed, it is then passed the regular expression engine to extract
+Once Backrefs has parsed and altered the string as needed, it is then passed to the regular expression engine to extract
 string literals and the group mapping (search groups to replace group placeholders). Backrefs will then return a replace
 object that should be used to apply the replace. The object will handle applying casing (upper or lower) to the returned
 captured groups, and assemble the desired string output. For these reasons, Backrefs requires you to compile your
 replaces and use the returned replace object if you want to take advantage of replace features.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_replace</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">replace</span><span class="p">,</span> <span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
 <span class="go">&#39;SOMETEXT&#39;</span>
-</pre></div>
+</code></pre></div>
 
-<h2 id="using-backrefs">Using Backrefs<a class="headerlink" href="#using-backrefs" title="Permanent link"></a></h2>
+<p>You are not required to compile search and replace separately. Search and replace compilation can be used automatically
+by compiling an object that uses Backrefs' search <em>and</em> replace functionality by default. Compiling separately simply
+gives you the control as to whether you use the search features and/or the replace features.</p>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">,</span> <span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
+<span class="go">&#39;SOMETEXT&#39;</span>
+</code></pre></div>
+
+<p>or</p>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">,</span> <span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
+<span class="go">&#39;SOMETEXT&#39;</span>
+</code></pre></div>
+
+<h2 id="using-backrefs">Using Backrefs<a class="headerlink" href="#using-backrefs" title="Permanent link"></a></h2>
 <p>Depending on which regular expression engine you are using (Re or Regex), you can import the appropriate module.</p>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">backrefs</span> <span class="kn">import</span> <span class="n">bre</span>
-<span class="kn">from</span> <span class="nn">backrefs</span> <span class="kn">import</span> <span class="n">bregex</span>
-</pre></div>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">backrefs</span> <span class="k">import</span> <span class="n">bre</span>
+<span class="kn">from</span> <span class="nn">backrefs</span> <span class="k">import</span> <span class="n">bregex</span>
+</code></pre></div>
 
 <p>Backrefs can be applied to search patterns and/or replace patterns. You can control whether you want to use search
 augmentation, replace augmentation, or both.</p>
-<h3 id="search-patterns">Search Patterns<a class="headerlink" href="#search-patterns" title="Permanent link"></a></h3>
+<h3 id="search-patterns">Search Patterns<a class="headerlink" href="#search-patterns" title="Permanent link"></a></h3>
 <p>To augment the search pattern of Re or Regex to utilize search back references, you can use Backrefs to compile the
 search. This will apply a preprocessor to the pattern and replace the back references (or other special syntax) with the
 appropriate content to construct a valid regular expression for Re or Regex. It will then return a valid compiled
 pattern for the respective regular expression engine. Since the return is a valid compiled pattern, you can use it as
 expected.</p>
-<div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\p</span><span class="si">{Letter}</span><span class="s1">+&#39;</span><span class="p">,</span> <span class="n">bre</span><span class="o">.</span><span class="n">UNICODE</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\p</span><span class="si">{Letter}</span><span class="s1">+&#39;</span><span class="p">,</span> <span class="n">bre</span><span class="o">.</span><span class="n">UNICODE</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;whatever&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 <span class="kc">True</span>
-</pre></div>
+</code></pre></div>
 
-<h3 id="replace-templates">Replace Templates<a class="headerlink" href="#replace-templates" title="Permanent link"></a></h3>
+<h3 id="replace-templates">Replace Templates<a class="headerlink" href="#replace-templates" title="Permanent link"></a></h3>
 <p>Backrefs also provides special back references for replace templates as well. In order to utilize these back references,
 the template string must be run through a compiler as well. The replace compiler will run a preprocessor on the replace
 template that will strip out the back references and augment the template accordingly creating a valid replace template.
@@ -658,54 +639,54 @@ object will properly apply all the replace back references to your returned stri
 template.  These replace objects can be passed into <code>sub</code>, <code>subn</code> etc.</p>
 <p>Search templates must be run through the compiler with an associated compiled search pattern so that it can properly map
 to the groups in your search pattern.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_replace</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">text</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">replace</span><span class="p">,</span> <span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
 <span class="go">&#39;SOMETEXT&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>Since compiled replaces are not template strings, but functions, you wont be able to apply compiled replaces via
-<code class="codehilite"><span class="n">m</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">replace</span><span class="p">)</span></code>. Instead, you can use the compiled replace directly.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
+<code class="highlight"><span class="n">m</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">replace</span><span class="p">)</span></code>. Instead, you can use the compiled replace directly.</p>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_replace</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 <span class="go">&#39;SOMETEXT&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>If you have a one time expand, and don't feel like pre-compiling, you can use Backrefs <code>expand</code> method (it can also take
 pre-compiled patterns as well).</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">)</span>
 <span class="go">&#39;SOMETEXT&#39;</span>
-</pre></div>
+</code></pre></div>
 
-<h3 id="search--replace-together">Search &amp; Replace Together<a class="headerlink" href="#search--replace-together" title="Permanent link"></a></h3>
+<h3 id="search--replace-together">Search &amp; Replace Together<a class="headerlink" href="#search--replace-together" title="Permanent link"></a></h3>
 <p>If you plan on using both the search and replace features, using <code>compile_search</code> and <code>compile_replace</code> can be a little
 awkward. If you wish to use something a bit more familiar, you can use the <code>compile</code> function to create a pattern object
 that mimics Re and Regex's pattern object. Once created, it will work very similar to how Re and Regex pattern objects
 work.  It will also auto compile replace patterns for you:</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">,</span> <span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
 <span class="go">&#39;SOMETEXT&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>If needed, you can use the object's <code>compile</code> function to pre-compile the replace patterns:</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">replace</span><span class="p">,</span> <span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
 <span class="go">&#39;SOMETEXT&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>If you want to disable the patterns use of replace back references, you can disable the pre-compile of replace
 templates:</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">,</span> <span class="n">auto_compile</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">,</span> <span class="n">auto_compile</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">,</span> <span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
 <span class="go">&#39;\\Csometext\\E&#39;</span>
-</pre></div>
+</code></pre></div>
 
-<h3 id="other-functions">Other Functions<a class="headerlink" href="#other-functions" title="Permanent link"></a></h3>
+<h3 id="other-functions">Other Functions<a class="headerlink" href="#other-functions" title="Permanent link"></a></h3>
 <p>Backrefs exposes most of the usual functions which Backrefs is wrapped around.  For instance, Backrefs wraps around
 <code>purge</code> so that it can purge its cache along with the regular expression engine's cache.</p>
 <p>Backrefs also wraps around the global matching functions. So if you have a one time <code>finditer</code>, <code>match</code>, <code>sub</code>,
@@ -713,34 +694,34 @@ templates:</p>
 and replace patterns for you on the fly, but they will also accept and pass pre-compiled patterns through as well. They
 should take all the flags and options your chosen regular expression engine normally accepts with the same names and
 positions.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">,</span> <span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\C\1\E&#39;</span><span class="p">,</span> <span class="s1">&#39;sometext&#39;</span><span class="p">)</span>
 <span class="go">SOMETEXT</span>
-</pre></div>
+</code></pre></div>
 
 <p>In general, all options and flags for any of the compile, search, or replace wrappers should be the same as your actual
 regular expression engine.  They are mirrored in the <code>bre</code> and <code>bregex</code> library to save you from having to import the
 original <code>re</code> and <code>regex</code> respectively, but you could just as easily use the original flags if desired.</p>
 <p>In order to escape patterns formulated for Backrefs, you can simply use your regular expressions built-in escape method
 or the one mirrored in Backrefs; they are the same.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="n">bre</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">))</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="n">bre</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="s1">&#39;found it!&#39;</span><span class="p">,</span> <span class="s1">&#39;(</span><span class="se">\\</span><span class="s1">p</span><span class="si">{Letter}</span><span class="s1">+)&#39;</span><span class="p">)</span>
 <span class="go">&#39;found it!&#39;</span>
-</pre></div>
+</code></pre></div>
 
-<h3 id="format-replacements">Format Replacements<a class="headerlink" href="#format-replacements" title="Permanent link"></a></h3>
+<h3 id="format-replacements">Format Replacements<a class="headerlink" href="#format-replacements" title="Permanent link"></a></h3>
 <p>The Regex library has a feature where you can use format strings to implement replacements. This is useful for Regex as
 it provides a way to access different captures when multiple are captured by a single group. Most likely it was born
 from the need to provide an easy way to access multiple captures as Regex stores all captures while Re stores only the
 last.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">regex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">regex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;foo bar =&gt; bar foo&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">regex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?P&lt;word1&gt;\w+) (?P&lt;word2&gt;\w+)&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{word2}</span><span class="s2"> </span><span class="si">{word1}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;bar foo&#39;</span>
-</pre></div>
+</code></pre></div>
 
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">regex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w)+ (\w+)&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1[0]}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">regex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w)+ (\w+)&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1[0]}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;foo bar =&gt; bar f&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>Backrefs implements format string replacements in a way that is similar to Regex's that works for both Re and Regex.
 While it is similar to Regex's implementation, there are some differences.</p>
@@ -748,15 +729,15 @@ While it is similar to Regex's implementation, there are some differences.</p>
 <li>
 <p>Though you can use normal strings with Backrefs' format templates, it is recommended to use raw strings for format
   replacements as back slashes are handled special to implement lower casing and upper casing via the replace back
-  references. In Backrefs a template would look like <code class="codehilite"><span class="sa">r</span><span class="s1">&#39;\L</span><span class="si">{1}{2}</span><span class="s1">\E&#39;</span></code>, and if you used a normal string it would look
-  like <code class="codehilite"><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">L</span><span class="si">{1}{2}</span><span class="se">\\</span><span class="s1">E&#39;</span></code>.  Because Backrefs more or less requires raw strings for sane replace template creation,
+  references. In Backrefs a template would look like <code class="highlight"><span class="sa">r</span><span class="s1">&#39;\L{1}{2}\E&#39;</span></code>, and if you used a normal string it would look
+  like <code class="highlight"><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">L{1}{2}</span><span class="se">\\</span><span class="s1">E&#39;</span></code>.  Because Backrefs more or less requires raw strings for sane replace template creation,
   you can also use normal string and Unicode escapes in the format replace templates, so it should feel like a normal
   string.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(test)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;{0:\n^8}&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(test)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;{0:\n^8}&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">)</span>
 <span class="go">&#39;\n\ntest\n\n&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(test)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\C{0:\u007c^8}\E&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">)</span>
 <span class="go">&#39;||TEST||&#39;</span>
-</pre></div>
+</code></pre></div>
 
 </li>
 <li>
@@ -764,16 +745,16 @@ While it is similar to Regex's implementation, there are some differences.</p>
   Regex's format implementation, Backrefs allows you to use negative numbers (<code>-1</code>), hex (<code>0x01</code>), octal (<code>0o001</code>), or
   even binary (<code>0b1</code>).  While it may not be practical to use some of the latter forms, they are available to have
   feature parity with Regex's implementation.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(test)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;</span><span class="si">{0[-1]}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(test)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;</span><span class="si">{0[-1]}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">)</span>
 <span class="go">&#39;test&#39;</span>
-</pre></div>
+</code></pre></div>
 
 </li>
 <li>
 <p>Backrefs implements a subset of the <a href="https://docs.python.org/3/library/string.html#formatspec">Format Specification Mini-Language</a> that allows for a few more
   additional features that Regex doesn't (<code>format_spec</code>). As regular expression replace is only dealing with strings (or
   byte strings), only string features are available with the <code>format_spec</code>.</p>
-<div class="codehilite"><pre><span></span>replacement_field ::=  &quot;{&quot; [field_name] [&quot;!&quot; conversion] [&quot;:&quot; format_spec] &quot;}&quot;
+<div class="highlight"><pre><span></span><code>replacement_field ::=  &quot;{&quot; [field_name] [&quot;!&quot; conversion] [&quot;:&quot; format_spec] &quot;}&quot;
 field_name        ::=  arg_name (&quot;.&quot; attribute_name | &quot;[&quot; element_index &quot;]&quot;)*
 arg_name          ::=  [identifier | integer]
 attribute_name    ::=  identifier
@@ -781,14 +762,14 @@ element_index     ::=  integer | index_string
 index_string      ::=  &lt;any source character except &quot;]&quot;&gt; +
 conversion        ::=  &quot;r&quot; | &quot;s&quot; | &quot;a&quot;
 format_spec       ::=  &lt;described in the next section&gt;
-</pre></div>
+</code></pre></div>
 
-<div class="codehilite"><pre><span></span>format_spec ::=  [[fill]align][0][width][type]
+<div class="highlight"><pre><span></span><code>format_spec ::=  [[fill]align][0][width][type]
 fill        ::=  &lt;any character&gt;
 align       ::=  &quot;&lt;&quot; | &quot;&gt;&quot; | &quot;^&quot;
 width       ::=  integer
 type        ::=  &quot;s&quot;
-</pre></div>
+</code></pre></div>
 
 <p>Note that in situations such as <code>{:030}</code>, where a width has a leading zero and no alignment specified, this would
 normally trigger the integer alignment <code>=</code>, but since integer features are not implemented, this would fail.</p>
@@ -801,63 +782,63 @@ normally trigger the integer alignment <code>=</code>, but since integer feature
 </li>
 </ol>
 <p>When using Backrefs' format replace, it should feel similar to Regex's format replace, except you will use raw strings:</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;foo bar =&gt; bar foo&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?P&lt;word1&gt;\w+) (?P&lt;word2&gt;\w+)&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{word2}</span><span class="s2"> </span><span class="si">{word1}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;bar foo&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>If using <code>bregex</code>, you can even index into groups that have multiple captures.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w)+ (\w+)&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1[0]}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bregex</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w)+ (\w+)&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1[0]}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;foo bar =&gt; bar f&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>Formats also work for Re as well.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; \C</span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1}</span><span class="s2">\E&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; \C</span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1}</span><span class="s2">\E&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;foo bar =&gt; BAR FOO&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?P&lt;word1&gt;\w+) (?P&lt;word2&gt;\w+)&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\c</span><span class="si">{word2}</span><span class="s2"> \c</span><span class="si">{word1}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;Bar Foo&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>You can also use <code>{} {}</code> which is the same as <code>{0} {1}</code>.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> =&gt; \C</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">\E&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> =&gt; \C</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">\E&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;foo bar =&gt; FOO BAR&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>To pre-compile a format replace template, you can use the Backrefs' <code>compile_replace</code> method with the <code>FORMAT</code> flag.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_replace</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bre</span><span class="o">.</span><span class="n">FORMAT</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 <span class="go">&#39;foo bar =&gt; bar foo&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>Or you can use Backrefs' pattern objects.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; \C</span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1}</span><span class="s2">\E&quot;</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;foo bar =&gt; BAR FOO&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>Pre-compiled pattern objects can also create a compiled format replace object.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?P&lt;word1&gt;\w+) (?P&lt;word2&gt;\w+)&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?P&lt;word1&gt;\w+) (?P&lt;word2&gt;\w+)&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">replace</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\c</span><span class="si">{word2}</span><span class="s2"> \c</span><span class="si">{word1}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bre</span><span class="o">.</span><span class="n">FORMAT</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span><span class="o">.</span><span class="n">subf</span><span class="p">(</span><span class="n">replace</span><span class="p">,</span> <span class="s2">&quot;foo bar&quot;</span><span class="p">)</span>
 <span class="go">&#39;Bar Foo&#39;</span>
-</pre></div>
+</code></pre></div>
 
 <p>Backrefs also provides an <code>expand</code> variant for format templates called <code>expandf</code>.</p>
-<div class="codehilite"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">bre</span><span class="o">.</span><span class="n">compile_search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w+) (\w+)&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;foo bar&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bre</span><span class="o">.</span><span class="n">expandf</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> =&gt; </span><span class="si">{2}</span><span class="s2"> </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="go">&#39;foo bar =&gt; bar foo&#39;</span>
-</pre></div>
+</code></pre></div>
 
-<h2 id="search-back-references">Search Back References<a class="headerlink" href="#search-back-references" title="Permanent link"></a></h2>
+<h2 id="search-back-references">Search Back References<a class="headerlink" href="#search-back-references" title="Permanent link"></a></h2>
 <p>Each supported regular expression engine's supported search features vary, so features are broken up to show what is
 specifically added for Re and for Regex.</p>
-<h3 id="re">Re<a class="headerlink" href="#re" title="Permanent link"></a></h3>
+<h3 id="re">Re<a class="headerlink" href="#re" title="Permanent link"></a></h3>
 <div class="admonition info">
-<p class="admonition-title"><code>LOCALE</code> and Character Properties</p>
+<p class="admonition-title">LOCALE and Character Properties</p>
 <p>Backrefs does not consider <code>LOCALE</code> when inserting POSIX or Unicode properties. In byte strings, Unicode properties
 will be truncated to the ASCII range of <code>\xff</code>. POSIX properties will use either Unicode categories or POSIX
 categories depending on whether the <code>UNICODE</code> flag is set. If the <code>LOCALE</code> flag is set, it is considered <strong>not</strong>
@@ -943,7 +924,7 @@ categories as either Unicode or ASCII only.</p>
 <p><code>\l</code>, <code>\L</code>, <code>\c</code>, and <code>\C</code> search back references have been deprecated in 4.2.0 and will be removed at some future
 time. It is recommended to use <code>[[:lower:]]</code>, <code>[[:^lower:]]</code>, <code>[[:upper:]]</code>, and <code>[[:^upper:]]</code> respectively.</p>
 </div>
-<h3 id="regex">Regex<a class="headerlink" href="#regex" title="Permanent link"></a></h3>
+<h3 id="regex">Regex<a class="headerlink" href="#regex" title="Permanent link"></a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Regex already natively supports <code>\p{...}</code>, <code>\P{...}</code>, <code>\pX</code>, <code>\PX</code>, <code>\N{...}</code>, <code>\X</code>, <code>\m</code>, and <code>\M</code> so Backrefs does
@@ -971,13 +952,13 @@ not attempt to add this to search patterns.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="replace-back-references">Replace Back References<a class="headerlink" href="#replace-back-references" title="Permanent link"></a></h2>
+<h2 id="replace-back-references">Replace Back References<a class="headerlink" href="#replace-back-references" title="Permanent link"></a></h2>
 <p>The replace back references below apply to both Re <strong>and</strong> Regex and are essentially non-specific to the regular
 expression engine being used.  Casing is applied to both the literal text and the replacement groups within the replace
 template.  In most cases you'd only need to wrap the groups, but it may be useful to apply casing to the literal
 portions if you are dynamically assembling replacement patterns.</p>
 <div class="admonition info">
-<p class="admonition-title"><code>LOCALE</code> and Casing</p>
+<p class="admonition-title">LOCALE and Casing</p>
 <p><code>LOCALE</code> is not considered when applying character casing. Unicode casing is applied in Unicode strings and ASCII
 casing is applied to byte strings.</p>
 </div>
@@ -1007,15 +988,15 @@ casing is applied to byte strings.</p>
 </tr>
 <tr>
 <td><code>\U</code></td>
-<td>Wide Unicode character <code>\U00000057</code>. Re doesn't translate this notation in raw strings (<code class="codehilite"><span class="sa">r</span><span class="s2">&quot;...&quot;</span></code>), and Regex doesn't in format templates in raw strings (<code class="codehilite"><span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span></code>).  This adds support for them.</td>
+<td>Wide Unicode character <code>\U00000057</code>. Re doesn't translate this notation in raw strings (<code class="highlight"><span class="sa">r</span><span class="s2">&quot;...&quot;</span></code>), and Regex doesn't in format templates in raw strings (<code class="highlight"><span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span></code>).  This adds support for them.</td>
 </tr>
 <tr>
 <td><code>\u</code></td>
-<td>Narrow Unicode character <code>\u0057</code>. Re doesn't translate this notation in raw strings (<code class="codehilite"><span class="sa">r</span><span class="s2">&quot;...&quot;</span></code>), and Regex doesn't in format templates in raw strings (<code class="codehilite"><span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span></code>).  This adds support for them.</td>
+<td>Narrow Unicode character <code>\u0057</code>. Re doesn't translate this notation in raw strings (<code class="highlight"><span class="sa">r</span><span class="s2">&quot;...&quot;</span></code>), and Regex doesn't in format templates in raw strings (<code class="highlight"><span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span></code>).  This adds support for them.</td>
 </tr>
 <tr>
 <td><code>\x</code></td>
-<td>Byte character <code>\x57</code>. Re doesn't translate this notation in raw strings (<code class="codehilite"><span class="sa">r</span><span class="s2">&quot;...&quot;</span></code>), and Regex doesn't in format templates in raw strings (<code class="codehilite"><span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span></code>).  This adds support for them.</td>
+<td>Byte character <code>\x57</code>. Re doesn't translate this notation in raw strings (<code class="highlight"><span class="sa">r</span><span class="s2">&quot;...&quot;</span></code>), and Regex doesn't in format templates in raw strings (<code class="highlight"><span class="sa">r</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span></code>).  This adds support for them.</td>
 </tr>
 <tr>
 <td><code>\N{UnicodeName}</code></td>
@@ -1032,7 +1013,7 @@ casing is applied to byte strings.</p>
 <li><code>\L\cTEST \cTEST\E</code> &rarr; <code>Test Test</code></li>
 </ul>
 </div>
-<h2 id="unicode-properties">Unicode Properties<a class="headerlink" href="#unicode-properties" title="Permanent link"></a></h2>
+<h2 id="unicode-properties">Unicode Properties<a class="headerlink" href="#unicode-properties" title="Permanent link"></a></h2>
 <p>A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own
 implementation of Unicode properties. Some properties may not be available on certain Python versions due to the
 included Unicode build.</p>
@@ -1182,7 +1163,7 @@ range <code>\x00-\xff</code>.</p>
 <p>If you are using a narrow python build, your max Unicode value will be <code>\uffff</code>.  Unicode blocks above that limit will
 not be available.  Also Unicode values above the limit will not be available in character classes either. If you are
 using a wide build, you should have access to all Unicode values.</p>
-<h3 id="syntax">Syntax<a class="headerlink" href="#syntax" title="Permanent link"></a></h3>
+<h3 id="syntax">Syntax<a class="headerlink" href="#syntax" title="Permanent link"></a></h3>
 <p>Unicode properties can be specified with the format: <code>\p{property=value}</code>, <code>\p{property:value}</code>. You can also do inverse
 properties by using the <code>^</code> character (<code>\p{^property=value}</code>) or by using a capital <code>P</code> (<code>\P{property=value}</code> or
 <code>\P{property:value}</code>).</p>
@@ -1195,7 +1176,7 @@ stripped out.  So the following are all equivalent: <code>\p{Uppercase_Letter}</
 a boolean value. True values can be <code>Yes</code>, <code>Y</code>, <code>True</code>, or <code>T</code>. False values can be <code>No</code>, <code>N</code>, <code>False</code>, or <code>F</code>. For
 example, to specify characters that are "alphabetic", we can use <code>\p{Alphabetic: Y}</code>. To specify characters that are
 <strong>not</strong> "alphabetic": <code>\p{Alphabetic: N}</code>.</p>
-<h3 id="special-syntax-exceptions">Special Syntax Exceptions<a class="headerlink" href="#special-syntax-exceptions" title="Permanent link"></a></h3>
+<h3 id="special-syntax-exceptions">Special Syntax Exceptions<a class="headerlink" href="#special-syntax-exceptions" title="Permanent link"></a></h3>
 <p>General Category, Script, Blocks, and Binary all can be specified by their value alone: <code>\p{value}</code>, but they will be
 evaluated in the following order to resolve name conflicts as some the same value that is used in Script may be used in
 Blocks etc.</p>
@@ -1377,7 +1358,7 @@ with <code>\pL</code>, but cannot specify <code>Cased_Letter</code> which has a 
 </tr>
 </tbody>
 </table>
-<h3 id="posix-style-properties">POSIX Style Properties<a class="headerlink" href="#posix-style-properties" title="Permanent link"></a></h3>
+<h3 id="posix-style-properties">POSIX Style Properties<a class="headerlink" href="#posix-style-properties" title="Permanent link"></a></h3>
 <p>A number of POSIX property names are also available in the form <code>[:posix:]</code>. Inverse properties are also available in
 the form <code>[:^posix:]</code>. These properties must only be included in a character class: <code>[[:upper:]a-z]</code>. There are two
 definitions for a given POSIX property: ASCII and Unicode. The Unicode definitions leverage Unicode properties and are
@@ -1387,7 +1368,7 @@ default is Unicode unless the <code>ASCII</code> flag is set (the <code>LOCALE</
 with existing Unicode properties like <code>punct</code> which exists as both a name for a Unicode property and a slightly
 different POSIX property. To access the POSIX property, you should prefix the name with <code>posix</code>: <code>\p{PosixPunct}</code>. It
 should be noted that you can use the <code>posix</code> prefix to access any of the POSIX properties, even if there is no name
-collision. The POSIX properties are treated as <a href="#binary">binary Unicode properties</a>.</p>
+collision. The POSIX properties are treated as binary Unicode properties.</p>
 <table>
 <thead>
 <tr>
@@ -1480,7 +1461,17 @@ collision. The POSIX properties are treated as <a href="#binary">binary Unicode 
 </table>
                 
                   
-                
+                    
+
+<hr>
+<div class="md-source-date">
+  <small>
+    
+      Last update: March 24, 2020
+    
+  </small>
+</div>
+                  
                 
               
               
@@ -1500,17 +1491,17 @@ collision. The POSIX properties are treated as <a href="#binary">binary Unicode 
       <nav class="md-footer-nav__inner md-grid">
         
         
-          <a href="installation/" title="Installation" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+          <a href="installation/" title="Installation" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
                 Installation
-              </span>
+              </div>
             </div>
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" /></svg>
             </div>
           </a>
         
@@ -1529,16 +1520,28 @@ collision. The POSIX properties are treated as <a href="#binary">binary Unicode 
           </div>
         
         powered by
-        <a href="https://www.mkdocs.org">MkDocs</a>
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">
+          MkDocs
+        </a>
         and
-        <a href="https://squidfunk.github.io/mkdocs-material/">
-          Material for MkDocs</a>
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
       </div>
       
   <div class="md-footer-social">
-    <link rel="stylesheet" href="assets/fonts/font-awesome.css">
     
-      <a href="https://github.com/facelessuser" class="md-footer-social__link fa fa-github"></a>
+      
+      
+      <a href="https://github.com/facelessuser" target="_blank" rel="noopener" title="github.com" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+      </a>
+    
+      
+      
+      <a href="https://discord.gg/MFfUFWC" target="_blank" rel="noopener" title="discord.gg" class="md-footer-social__link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M297.216 243.2c0 15.616-11.52 28.416-26.112 28.416-14.336 0-26.112-12.8-26.112-28.416s11.52-28.416 26.112-28.416c14.592 0 26.112 12.8 26.112 28.416zm-119.552-28.416c-14.592 0-26.112 12.8-26.112 28.416s11.776 28.416 26.112 28.416c14.592 0 26.112-12.8 26.112-28.416.256-15.616-11.52-28.416-26.112-28.416zM448 52.736V512c-64.494-56.994-43.868-38.128-118.784-107.776l13.568 47.36H52.48C23.552 451.584 0 428.032 0 398.848V52.736C0 23.552 23.552 0 52.48 0h343.04C424.448 0 448 23.552 448 52.736zm-72.96 242.688c0-82.432-36.864-149.248-36.864-149.248-36.864-27.648-71.936-26.88-71.936-26.88l-3.584 4.096c43.52 13.312 63.744 32.512 63.744 32.512-60.811-33.329-132.244-33.335-191.232-7.424-9.472 4.352-15.104 7.424-15.104 7.424s21.248-20.224 67.328-33.536l-2.56-3.072s-35.072-.768-71.936 26.88c0 0-36.864 66.816-36.864 149.248 0 0 21.504 37.12 78.08 38.912 0 0 9.472-11.52 17.152-21.248-32.512-9.728-44.8-30.208-44.8-30.208 3.766 2.636 9.976 6.053 10.496 6.4 43.21 24.198 104.588 32.126 159.744 8.96 8.96-3.328 18.944-8.192 29.44-15.104 0 0-12.8 20.992-46.336 30.464 7.68 9.728 16.896 20.736 16.896 20.736 56.576-1.792 78.336-38.912 78.336-38.912z"/></svg>
+      </a>
     
   </div>
 
@@ -1548,11 +1551,26 @@ collision. The POSIX properties are treated as <a href="#binary">binary Unicode 
       
     </div>
     
-      <script src="assets/javascripts/application.808e90bb.js"></script>
+      <script>var __config={}</script>
+    
+    
+      <script src="assets/javascripts/vendor.b0b43276.min.js"></script>
+      <script src="assets/javascripts/bundle.65293e7c.min.js"></script><script id="__lang" type="application/json">
+        {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}
+      </script>
+      <script>
+        __material = initialize(Object.assign({
+          url: {
+            base: ".",
+            worker: {
+              search: "assets/javascripts/worker/search.784c5235.min.js"
+            }
+          },
+          features: []
+        }, typeof __config !== "undefined" ? __config : {}))
+      </script>
       
-      <script>app.initialize({version:"1.0.4",url:{base:"."}})</script>
-      
-        <script src="extra-0d9305e748.js"></script>
+        <script src="assets/pymdownx-extras/extra-cd7772167d.js"></script>
       
     
   </body>
