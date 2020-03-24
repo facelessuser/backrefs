@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.4.0
+
+- Added the following binary properties for Unicode 13.0 support (Python 3.9): `emoji`, `emojicomponent`,
+  `emojimodifier`, `emojimodifierbase`, and `emojipresentation`. Associated aliases are also included: `ecomp`, `emod`,
+  `ebase`, and `epres`.
+
 ## 4.3.0
 
 - **NEW**: Install Regex library along Backrefs via `pip install backrefs[extras]`.

@@ -15,9 +15,6 @@ MAXUNICODE = sys.maxunicode
 MAXASCII = 0xFF
 GROUP_ESCAPES = frozenset([ord(x) for x in '-&[\\]^|~'])
 
-# Compatibility
-PY37 = sys.version_info >= (3, 7)
-
 UNICODE_RANGE = (0x0000, 0x10FFFF)
 ASCII_RANGE = (0x00, 0xFF)
 
@@ -522,11 +519,15 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix=""):
     """Generate binary properties."""
 
     categories = []
-    binary_props = (
+    binary_props = [
         ('DerivedCoreProperties.txt', None),
         ('PropList.txt', None),
         ('DerivedNormalizationProps.txt', ('Changes_When_NFKC_Casefolded', 'Full_Composition_Exclusion'))
-    )
+    ]
+
+    if UNIVERSION_INFO >= (13, 0, 0):
+        binary_props.append(('emoji-data.txt', None))
+
     binary = {}
     for filename, include in binary_props:
         with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, filename), 'r', 'utf-8') as uf:
@@ -975,7 +976,7 @@ def gen_properties(output, ascii_props=False, append=False):
     files['bpt'] = os.path.join(output, 'bidipairedbrackettype.py')
     files['inpc'] = os.path.join(output, 'indicpositionalcategory.py')
 
-    if PY37:
+    if UNIVERSION_INFO >= (11, 0, 0):
         files['vo'] = os.path.join(output, 'verticalorientation.py')
 
     prefix = "ascii" if ascii_props else 'unicode'
@@ -996,7 +997,7 @@ def gen_properties(output, ascii_props=False, append=False):
     categories.append('bidipairedbrackettype')
     categories.append('indicpositionalcategory')
 
-    if PY37:
+    if UNIVERSION_INFO >= (11, 0, 0):
         categories.append('verticalorientation')
     if ascii_props:
         print('=========Ascii Tables=========')
@@ -1148,7 +1149,7 @@ def gen_properties(output, ascii_props=False, append=False):
     print('Building: NF* Quick Check')
     categories.extend(gen_nf_quick_check(files['qc'], ascii_props, append, prefix))
 
-    if PY37:
+    if UNIVERSION_INFO >= (11, 0, 0):
         print('Building: Vertical Orientation')
         gen_enum(
             'VerticalOrientation.txt', 'vertical_orientation', files['vo'], notexplicit='R',
