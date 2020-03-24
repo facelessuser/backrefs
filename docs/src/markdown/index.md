@@ -337,7 +337,7 @@ specifically added for Re and for Regex.
 
 ### Re
 
-!!! info "`LOCALE` and Character Properties"
+!!! info "LOCALE and Character Properties"
     Backrefs does not consider `LOCALE` when inserting POSIX or Unicode properties. In byte strings, Unicode properties
     will be truncated to the ASCII range of `\xff`. POSIX properties will use either Unicode categories or POSIX
     categories depending on whether the `UNICODE` flag is set. If the `LOCALE` flag is set, it is considered **not**
@@ -386,7 +386,7 @@ expression engine being used.  Casing is applied to both the literal text and th
 template.  In most cases you'd only need to wrap the groups, but it may be useful to apply casing to the literal
 portions if you are dynamically assembling replacement patterns.
 
-!!! info "`LOCALE` and Casing"
+!!! info "LOCALE and Casing"
     `LOCALE` is not considered when applying character casing. Unicode casing is applied in Unicode strings and ASCII
     casing is applied to byte strings.
 
