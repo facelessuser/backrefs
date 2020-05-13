@@ -1,8 +1,8 @@
 language: python
 dist: xenial
-sudo: true
+os: linux
 
-matrix:
+jobs:
   include:
     - python: 3.9-dev
       env: TOXENV=py39
