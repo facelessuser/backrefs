@@ -1,15 +1,11 @@
 """Download `Unicodedata` files."""
 from __future__ import unicode_literals
-import sys
 import os
 import zipfile
 import codecs
 from urllib.request import urlopen
 
 __version__ = '2.2.0'
-
-
-PY37 = sys.version_info >= (3, 7)
 
 HOME = os.path.dirname(os.path.abspath(__file__))
 
@@ -45,6 +41,9 @@ def unzip_unicode(output, version):
 
 def download_unicodedata(version, output=HOME, no_zip=False):
     """Download Unicode data scripts and blocks."""
+
+    ver = tuple([int(x) for x in version.split('.')])
+
     files = [
         'UnicodeData.txt',
         'Scripts.txt',
@@ -67,7 +66,8 @@ def download_unicodedata(version, output=HOME, no_zip=False):
         'extracted/DerivedNumericValues.txt',
         'extracted/DerivedJoiningType.txt',
         'extracted/DerivedJoiningGroup.txt',
-        'extracted/DerivedCombiningClass.txt'
+        'extracted/DerivedCombiningClass.txt',
+        'emoji/emoji-data.txt'
     ]
 
     files.append('ScriptExtensions.txt')
@@ -75,7 +75,7 @@ def download_unicodedata(version, output=HOME, no_zip=False):
     files.append('IndicSyllabicCategory.txt')
     files.append('BidiBrackets.txt')
 
-    if PY37:
+    if ver >= (11, 0, 0):
         files.append('VerticalOrientation.txt')
 
     http_url = 'http://www.unicode.org/Public/%s/ucd/' % version

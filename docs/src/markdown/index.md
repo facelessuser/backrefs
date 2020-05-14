@@ -459,6 +459,11 @@ Supported\ Properties                       | Aliases
     The Binary property is not actually a property, but a group of different properties with binary characteristics. The
     available binary properties may differ from Unicode version to Unicode version.
 
+!!! new "New 4.4.0"
+    Python 3.9 now uses Unicode 13, and with that comes various new binary properties: `emoji`, `emojicomponent`,
+    `emojimodifier`, `emojimodifierbase`, and `emojipresentation`. Associated aliases are also included: `ecomp`,
+    `emod`, `ebase`, and `epres`.
+
 Exhaustive documentation on all these properties and their values is not currently provided. In general, we'll cover the
 syntax rules, and [special exceptions](#special-syntax-exceptions) to those rules for specific properties. Though we
 will outline all the values for General Category, we will not outline all of the valid values for the other properties.
