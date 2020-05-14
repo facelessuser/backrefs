@@ -13,6 +13,7 @@ import warnings
 
 PY36_PLUS = (3, 6) <= sys.version_info
 PY37_PLUS = (3, 7) <= sys.version_info
+PY39_PLUS = (3, 9) <= sys.version_info
 
 
 class TestSearchTemplate(unittest.TestCase):
@@ -962,6 +963,12 @@ class TestSearchTemplate(unittest.TestCase):
         pattern2 = bre.compile_search(pattern1)
         m = pattern2.match('test')
         self.assertTrue(m is not None)
+
+    @unittest.skipUnless(PY39_PLUS, "Python 3.9 required")
+    def test_emoji_property(self):
+        """Test new emoji properties."""
+
+        self.assertEqual(len(bre.findall(r'\p{emoji}', '\U0001F600 test \U0001F600')), 2)
 
 
 class TestReplaceTemplate(unittest.TestCase):
