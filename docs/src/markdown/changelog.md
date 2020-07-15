@@ -1,8 +1,13 @@
 # Changelog
 
+## 4.5.0
+
+- **NEW**: Added new back reference `\h` to Re. To get similar functionality in Regex, users must update to the latest
+  Regex release.
+
 ## 4.4.0
 
-- Added the following binary properties for Unicode 13.0 support (Python 3.9): `emoji`, `emojicomponent`,
+- **NEW**: Added the following binary properties for Unicode 13.0 support (Python 3.9): `emoji`, `emojicomponent`,
   `emojimodifier`, `emojimodifierbase`, and `emojipresentation`. Associated aliases are also included: `ecomp`, `emod`,
   `ebase`, and `epres`.
 

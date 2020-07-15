@@ -20,6 +20,7 @@ Add the ability to use the following backrefs with re:
  - `\m`                                                          - Starting word boundary (search)
  - `\M`                                                          - Ending word boundary (search)
  - `\R`                                                          - Generic line breaks (search)
+ - `\h`                                                          - Horizontal whitespace (search)
  - `\X`                                                          - Simplified grapheme clusters (search)
 
 Licensed under MIT
