@@ -2,7 +2,7 @@
 
 ## 4.5.0
 
-- **NEW**: Added new back reference `\h` to Re. To get similar functionality in Regex, users must update to the latest
+- **NEW**: Added new back reference `\h` to Re. To get similar functionality with Regex, users must update to the latest
   Regex release.
 
 ## 4.4.0

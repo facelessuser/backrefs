@@ -49,3 +49,4 @@ sublicense
 tuple
 uncompiled
 unescaped
+whitespace
