@@ -73,7 +73,7 @@ class GlobalRetryException(Exception):
 class _SearchParser(object):
     """Search Template."""
 
-    _new_refs = ("e", "l", "L", "c", "C", "p", "P", "N", "Q", "E", "m", "M", "R", "X")
+    _new_refs = ("c", "C", "e", "E", "h", "l", "L", "m", "M", "N", "p", "P", "Q", "R", "X")
     _re_escape = r"\x1b"
     _re_start_wb = r"\b(?=\w)"
     _re_end_wb = r"\b(?<=\w)"
@@ -259,6 +259,9 @@ class _SearchParser(object):
             current.extend(self._grapheme_cluster % (no_mark, mark, mark))
         elif t == "e":
             current.append(self._re_escape)
+        elif t == "h":
+            current.extend(self.horizontal_ws_prop(in_group))
+            self.found_property = True
         elif t == "l":
             current.extend(self.letter_case_props(_LOWER, in_group))
             self.found_property = True
@@ -616,6 +619,14 @@ class _SearchParser(object):
         properties = [v]
 
         return properties
+
+    def horizontal_ws_prop(self, in_group):
+        """Horizontal white space is treated as `[[:blank:]]`."""
+
+        v = self.posix_props("blank", in_group=in_group)
+        if not in_group:
+            v[0] = "[%s]" % v[0]
+        return v
 
     def letter_case_props(self, case, in_group, negate=False):
         """Insert letter (ASCII or Unicode) case properties."""

@@ -1166,6 +1166,38 @@ class TestReplaceTemplate(unittest.TestCase):
                 'line\r\nline\nline\r'
             )
 
+    def test_horizontal_ws(self):
+        """Test horizontal whitespace."""
+
+        self.assertEqual(
+            bre.sub(r'\h*', '', '    \t\ttest    \t'),
+            'test'
+        )
+
+    def test_horizontal_ws_in_group(self):
+        """Test horizontal whitespace."""
+
+        self.assertEqual(
+            bre.sub(r'[\ht]*', '', '    \t\ttest    \t'),
+            'es'
+        )
+
+    def test_horizontal_ws_in_inverse_group(self):
+        """Test horizontal whitespace."""
+
+        self.assertEqual(
+            bre.sub(r'[^\ht]*', '', '    \t\ttest    \t'),
+            '    \t\ttt    \t'
+        )
+
+    def test_horizontal_ws_bytes(self):
+        """Test horizontal whitespace as byte string."""
+
+        self.assertEqual(
+            bre.sub(br'\h*', b'', b'    \t\ttest    \t'),
+            b'test'
+        )
+
     def test_grapheme_cluster(self):
         """Test simple grapheme cluster."""
 
