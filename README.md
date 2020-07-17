@@ -44,8 +44,8 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-[github-ci-image]: https://github.com/facelessuser/backrefs/workflows/build/badge.svg
-[github-ci-link]: https://github.com/facelessuser/backrefs/actions?workflow=build
+[github-ci-image]: https://github.com/facelessuser/backrefs/workflows/build/badge.svg?branch=master&event=push
+[github-ci-link]: https://github.com/facelessuser/backrefs/actions?query=workflow%3Abuild+branch%3Amaster
 [discord-image]: https://img.shields.io/discord/678289859768745989?logo=discord&logoColor=aaaaaa&color=mediumpurple&labelColor=333333
 [discord-link]:https://discord.gg/MFfUFWC
 [codecov-image]: https://img.shields.io/codecov/c/github/facelessuser/backrefs/master.svg?logo=codecov&logoColor=aaaaaa&labelColor=333333
