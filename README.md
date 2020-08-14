@@ -1,7 +1,6 @@
 [![Donate via PayPal][donate-image]][donate-link]
 [![Discord][discord-image]][discord-link]
 [![Build][github-ci-image]][github-ci-link]
-[![Travis][travis-image]][travis-link]
 [![Coverage Status][codecov-image]][codecov-link]
 [![PyPI Version][pypi-image]][pypi-link]
 [![PyPI - Python Version][python-image]][pypi-link]
@@ -47,11 +46,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 [github-ci-image]: https://github.com/facelessuser/backrefs/workflows/build/badge.svg?branch=master&event=push
 [github-ci-link]: https://github.com/facelessuser/backrefs/actions?query=workflow%3Abuild+branch%3Amaster
 [discord-image]: https://img.shields.io/discord/678289859768745989?logo=discord&logoColor=aaaaaa&color=mediumpurple&labelColor=333333
-[discord-link]:https://discord.gg/MFfUFWC
+[discord-link]:https://discord.gg/TWs8Tgr
 [codecov-image]: https://img.shields.io/codecov/c/github/facelessuser/backrefs/master.svg?logo=codecov&logoColor=aaaaaa&labelColor=333333
 [codecov-link]: https://codecov.io/github/facelessuser/backrefs
-[travis-image]: https://img.shields.io/travis/facelessuser/backrefs/master.svg?label=travis&logo=travis%20ci&logoColor=aaaaaa&labelColor=333333
-[travis-link]: https://travis-ci.org/facelessuser/backrefs
 [pypi-image]: https://img.shields.io/pypi/v/backrefs.svg?logo=pypi&logoColor=aaaaaa&labelColor=333333
 [pypi-link]: https://pypi.python.org/pypi/backrefs
 [python-image]: https://img.shields.io/pypi/pyversions/backrefs?logo=python&logoColor=aaaaaa&labelColor=333333

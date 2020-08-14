@@ -9,6 +9,7 @@ copyright: |
 docs_dir: docs/src/markdown
 theme:
   name: material
+  custom_dir: docs/theme
   icon:
     logo: material/book-open-page-variant
   palette:
@@ -17,13 +18,16 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
+  features:
+    - tabs
 
 nav:
   - User Guide: index.md
   - Installation: installation.md
-  - Contributing &amp; Support: contributing.md
-  - Changelog: changelog.md
-  - License: license.md
+  - About:
+    - Contributing &amp; Support: about/contributing.md
+    - Changelog: about/changelog.md
+    - License: about/license.md
 
 markdown_extensions:
   - markdown.extensions.toc:
@@ -76,13 +80,14 @@ markdown_extensions:
       separator: "\uff0b"
   - pymdownx.details:
   - pymdownx.tabbed:
+  - pymdownx.saneheaders:
 
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/facelessuser
     - icon: fontawesome/brands/discord
-      link: https://discord.gg/MFfUFWC
+      link: https://discord.gg/TWs8Tgr
 
 plugins:
   - search
