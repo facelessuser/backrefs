@@ -69,10 +69,10 @@ _RE_TYPE = type(_re.compile('', 0))
 
 
 @_lru_cache(maxsize=_MAXCACHE)
-def _cached_search_compile(pattern, re_verbose, re_version, pattern_type):
+def _cached_search_compile(pattern, re_verbose, re_unicode, pattern_type):
     """Cached search compile."""
 
-    return _bre_parse._SearchParser(pattern, re_verbose, re_version).parse()
+    return _bre_parse._SearchParser(pattern, re_verbose, re_unicode).parse()
 
 
 @_lru_cache(maxsize=_MAXCACHE)
