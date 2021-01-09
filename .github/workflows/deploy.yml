@@ -39,7 +39,24 @@ jobs:
   pypi:
     strategy:
       matrix:
-        distribution: [sdist]
+        distribution: [sdist, bdist_wheel]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        include:
+          - python-version: 3.6
+            wheel-tag: py36
+          - python-version: 3.7
+            wheel-tag: py37
+          - python-version: 3.8
+            wheel-tag: py38
+          - python-version: 3.9
+            wheel-tag: py39
+        exclude:
+          - platform: sdist
+            python-version: 3.6
+          - platform: sdist
+            python-version: 3.7
+          - platform: sdist
+            python-version: 3.8
 
     runs-on: ubuntu-latest
 
@@ -47,11 +64,17 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
         with:
-          python-version: 3.9
-      - name: Package
+          python-version: ${[ matrix.python-version }}
+      - name: Package sdist
+        if: matrix.platform == 'sdist'
         run: |
           pip install --upgrade setuptools wheel
           python setup.py ${{ matrix.distribution }}
+      - name: Package bdist_wheel
+        if: matrix.platform == 'bdist_wheel'
+        run: |
+          pip install --upgrade setuptools wheel
+          python setup.py ${{ matrix.distribution }} --python-tag ${{ matrix.wheel-tag}}
       - name: Publish
         uses: pypa/gh-action-pypi-publish@v1.0.0a0
         with:
