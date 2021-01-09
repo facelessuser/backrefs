@@ -39,32 +39,20 @@ jobs:
   pypi:
     strategy:
       matrix:
-        distribution: [sdist, bdist_wheel]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        distribution: [bdist_wheel]
+        python-3-version: [6, 7, 8, 9]
         include:
-          - python-version: 3.6
-            wheel-tag: py36
-          - python-version: 3.7
-            wheel-tag: py37
-          - python-version: 3.8
-            wheel-tag: py38
-          - python-version: 3.9
-            wheel-tag: py39
-        exclude:
           - distribution: sdist
-            python-version: 3.6
-          - distribution: sdist
-            python-version: 3.7
-          - distribution: sdist
-            python-version: 3.8
+            python-3-version: 9
 
+    name: Build Python 3.${{ matrix.python-version }} ${{ matrix.distribution }}
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.${{ matrix.python-version }}
       - name: Package sdist
         if: matrix.distribution == 'sdist'
         run: |
@@ -74,9 +62,26 @@ jobs:
         if: matrix.distribution == 'bdist_wheel'
         run: |
           pip install --upgrade setuptools wheel
-          python setup.py ${{ matrix.distribution }} --python-tag ${{ matrix.wheel-tag}}
-      - name: Publish
-        uses: pypa/gh-action-pypi-publish@v1.0.0a0
+          python setup.py ${{ matrix.distribution }} --python-tag 3${{ matrix.python-3-version}}
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_PWD }}
+          path: dist/*
+          
+  upload_all:
+    name: Upload files to PyPI
+    needs: [pypi]
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: artifact
+        path: dist
+        
+    - name: Publish
+      uses: pypa/gh-action-pypi-publish@v1.4.1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_PWD }}
