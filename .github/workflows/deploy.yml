@@ -51,11 +51,11 @@ jobs:
           - python-version: 3.9
             wheel-tag: py39
         exclude:
-          - platform: sdist
+          - distribution: sdist
             python-version: 3.6
-          - platform: sdist
+          - distribution: sdist
             python-version: 3.7
-          - platform: sdist
+          - distribution: sdist
             python-version: 3.8
 
     runs-on: ubuntu-latest
