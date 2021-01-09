@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.6.0
+
+- **NEW**: Provide wheels for all official supported versions of Python.
+
 ## 4.5.0
 
 - **NEW**: Added new back reference `\h` to Re. To get similar functionality with Regex, users must update to the latest
