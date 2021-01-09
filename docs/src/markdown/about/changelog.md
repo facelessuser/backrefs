@@ -2,7 +2,7 @@
 
 ## 4.6
 
-- **NEW**: Provide wheels for all official supported versions of Python.
+- **NEW**: Provide wheels for all officially supported versions of Python.
 
 ## 4.5
 
