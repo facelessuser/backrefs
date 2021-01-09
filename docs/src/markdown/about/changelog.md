@@ -1,21 +1,21 @@
 # Changelog
 
-## 4.6.0
+## 4.6
 
 - **NEW**: Provide wheels for all official supported versions of Python.
 
-## 4.5.0
+## 4.5
 
 - **NEW**: Added new back reference `\h` to Re. To get similar functionality with Regex, users must update to the latest
   Regex release.
 
-## 4.4.0
+## 4.4
 
 - **NEW**: Added the following binary properties for Unicode 13.0 support (Python 3.9): `emoji`, `emojicomponent`,
   `emojimodifier`, `emojimodifierbase`, and `emojipresentation`. Associated aliases are also included: `ecomp`, `emod`,
   `ebase`, and `epres`.
 
-## 4.3.0
+## 4.3
 
 - **NEW**: Install Regex library along Backrefs via `pip install backrefs[extras]`.
 - **NEW**: Remove `version` and `__version__` and remove associated deprecation code.
@@ -34,7 +34,7 @@
 
 - **FIX**: Later pre-release versions of Python 3.8 will support Unicode 12.1.0.
 
-## 4.1.0
+## 4.1
 
 - **NEW**: Add official support for Python 3.8.
 - **NEW**: Vendor the `Pep562` library instead of requiring as a dependency.
@@ -50,13 +50,13 @@ to work even when the Re or Regex API changes. Change was made to support new Re
 - **FIX**: Ensure that when generating the Unicode property tables, that the property files are read in with `UTF-8`
   encoding.
 
-## 4.0.0
+## 4.0
 
 - **NEW**: Drop support for new features in Python 2. Python 2 support is limited to the 3.X.X series and will only
   receive bug fixes up to 2020. All new features moving forward will be on the 4.X.X series and will be for Python 3+
   only.
 
-## 3.6.0
+## 3.6
 
 - **NEW**: Make version available via the new, and more standard, `__version__` attribute and add the `__version_info__`
   attribute as well. Deprecate the old `version` and `version_info` attribute for future removal.
@@ -71,7 +71,7 @@ to work even when the Re or Regex API changes. Change was made to support new Re
 - **FIX**: Replace string casing logic properly follows other implementations like Boost etc. `\L`, `\C`, and `\E`
   should all terminate `\L`, and `\C`. `\l` and `\c` will be ignored if followed by `\C` or `\L`.
 
-## 3.5.0
+## 3.5
 
 - **NEW**: Use a more advanced format string implementation that implements all string features, included those found in
   `format_spec`.
@@ -79,14 +79,14 @@ to work even when the Re or Regex API changes. Change was made to support new Re
 - **FIX**: Caching issues where byte string patterns were confused with Unicode patterns.
 - **FIX**: More protection against using conflicting string type combinations with search and replace.
 
-## 3.4.0
+## 3.4
 
 - **NEW**: Add support for generic line breaks (`\R`) to Re.
 - **NEW**: Add support for an overly simplified form of grapheme clusters (`\X`) to Re. Roughly equivalent to
   `(?>\PM\pM*)`.
 - **NEW**: Add support for `Vertical_Orientation` property for Unicode 10.0.0 on Python 3.7.
 
-## 3.3.0
+## 3.3
 
 - **NEW**: Add support for `Indic_Positional_Category`\\`Indic_Matra_Category` and `Indic_Syllabic_Category` properties.
 
@@ -95,7 +95,7 @@ to work even when the Re or Regex API changes. Change was made to support new Re
 - **FIX**: `Bidi_Paired_Bracket_type` property's `None` value should be equivalent to all characters that are not `open`
   or `close` characters.
 
-## 3.2.0
+## 3.2
 
 - **NEW**: Add support for `Script_Extensions` Unicode properties (Python 3 only as Python 2, Unicode 5.2.0 does not
   define these). Can be accessed via `\p{scripts_extensions: kana}` or `\p{scx: kana}`.
@@ -113,7 +113,7 @@ to work even when the Re or Regex API changes. Change was made to support new Re
 
 - **FIX**: `bregex.compile` now supports additional keyword arguments for named lists like `bregex.compile_search` does.
 
-## 3.1.0
+## 3.1
 
 - **NEW**: Start and end word boundary back references are now specified with `\m` and `\M` like Regex does.  `\<` and
   `\>` have been removed from Regex.
@@ -147,7 +147,7 @@ to work even when the Re or Regex API changes. Change was made to support new Re
 - **FIX**: Match behavior in `\g<group>` parsing better.
 - **FIX**: Raise some exceptions in a few places we weren't.
 
-## 3.0.0
+## 3.0
 
 - **NEW**: Added new `compile` function that returns a pattern object that feels like Re's and Regex's pattern object.
 - **NEW**: Add some caching of search and replace patterns.
@@ -166,14 +166,14 @@ to work even when the Re or Regex API changes. Change was made to support new Re
   character groups or comments.
 - **FIX**: Flag related parsing issues in Regex and Re Python 3.6+.
 
-## 2.2.0
+## 2.2
 
 - **NEW**: Proper support for `\N{Unicode Name}`.
 - **FIX**: Incomplete escapes will not be passed through, but will instead throw an error. For instance `\p` should only
   be passed through if it is complete `\p{category}`.  Python 3.7 will error on this if we pass it through, and Python
   3.6 will generate warnings.  We should just consistently fail on it for all Python versions.
 
-## 2.1.0
+## 2.1
 
 - **NEW**: Handle Unicode and byte notation in Re replace templates.
 - **NEW**: Rework algorithm to handle replace casing back references in Python 3.7 development builds in preparation for
@@ -187,7 +187,7 @@ to work even when the Re or Regex API changes. Change was made to support new Re
 - **FIX**: Fix octal/group logic in Regex and Re.
 - **FIX**: Fix issue dealing with trailing backslashes in replace templates.
 
-## 2.0.0
+## 2.0
 
 - **NEW**: First attempt at bringing Python 3.7 support, fixing back reference logic, and adding new back reference.
   Released and then removed due to very poor behavior.
@@ -200,6 +200,6 @@ to work even when the Re or Regex API changes. Change was made to support new Re
 
 - **FIX**: Fixes for Python 3.6.
 
-## 1.0.0
+## 1.0
 
 - **NEW**: Initial release.
