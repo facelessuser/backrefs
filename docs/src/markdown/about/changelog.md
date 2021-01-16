@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.6.1
+
+- **FIX**: Fix certain Unicode properties which had their alias relations backwards.
+- **FIX**: Fix issue with Unicode characters not explicitly specified in the Vertical Orientation property not getting
+  set to the right group due to case sensitivity.
+
 ## 4.6
 
 - **NEW**: Provide wheels for all officially supported versions of Python.

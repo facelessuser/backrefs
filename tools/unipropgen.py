@@ -74,6 +74,7 @@ def create_span(unirange, is_bytes=False):
 def not_explicitly_defined(table, name, is_bytes=False):
     """Compose a table with the specified entry name of values not explicitly defined."""
 
+    name = name.lower()
     all_chars = ALL_ASCII if is_bytes else ALL_CHARS
     s = set()
     for k, v in table.items():
@@ -877,7 +878,7 @@ def gen_alias(enum, binary, output, ascii_props=False, append=False, prefix=""):
                 line_re = re.compile(r'%s\s*;' % m.group(2), re.I)
             if gather and line_re.match(line):
                 data = [format_name(x) for x in line.split('#')[0].split(';')]
-                if current_category in ('sc', 'blk', 'dt', 'jg', 'sb', 'wb', 'lb', 'gcb', 'nt', 'inpc', 'inmc', 'insc'):
+                if current_category in ('sc', 'blk', 'dt', 'sb', 'wb', 'gcb', 'nt', 'inpc', 'inmc', 'insc'):
                     data[1], data[2] = data[2], data[1]
                 elif current_category == 'age' and UNIVERSION_INFO < (6, 1, 0):
                     if data[2] == 'unassigned':
@@ -1152,7 +1153,7 @@ def gen_properties(output, ascii_props=False, append=False):
     if UNIVERSION_INFO >= (11, 0, 0):
         print('Building: Vertical Orientation')
         gen_enum(
-            'VerticalOrientation.txt', 'vertical_orientation', files['vo'], notexplicit='R',
+            'VerticalOrientation.txt', 'vertical_orientation', files['vo'], notexplicit='r',
             ascii_props=ascii_props, append=append, prefix=prefix
         )
 
