@@ -209,7 +209,7 @@ def discover_categories():
     if UNIVERSION_INFO >= (11, 0, 0):
         categories.append('verticalorientation')
 
-    binary_categories = ['compositionexclusion', 'bidimirrored']
+    binary_categories = ['fullcompositionexclusion', 'compositionexclusion', 'bidimirrored']
 
     # NF Quick Check categories
     file_name = os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedNormalizationProps.txt')
@@ -687,7 +687,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
         name = 'compositionexclusion'
         for line in uf:
             if not line.startswith('#'):
-                data = [x.strip() for x in line.split('#')[0] if x.strip()]
+                data = [x.strip() for x in line.split('#') if x.strip()]
                 if not data:
                     continue
                 span = create_span([int(data[0], 16)], is_bytes=ascii_props)
@@ -697,7 +697,24 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
                 if name not in binary:
                     binary[name] = []
                 binary[name].extend(span)
-                binary['full' + name].extend(span)
+
+    file_name = os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedNormalizationProps.txt')
+    with codecs.open(file_name, 'r', 'utf-8') as uf:
+        name = "fullcompositionexclusion"
+        for line in uf:
+            if not line.startswith('#'):
+                data = line.split('#')[0].split(';')
+                if len(data) < 2:
+                    continue
+                if not data[1].strip().lower() == 'Full_Composition_Exclusion':
+                    continue
+                span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=False)
+                if span is None:
+                    continue
+
+                if name not in binary:
+                    binary[name] = []
+                binary[name].extend(span)
 
     with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'UnicodeData.txt'), 'r', 'utf-8') as uf:
         name = 'bidimirrored'

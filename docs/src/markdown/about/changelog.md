@@ -8,6 +8,7 @@
 - **FIX**: Fix issue where General Category `Cn`/`Unassigned` was missing.
 - **FIX**: Fix issue where some property values, which had no characters, were missing. They should still be included
   even if there are no characters.
+- **FIX**: Fix for `full_composition_exclusion` and `composition_exclusion` Unicode property.
 
 ## 4.6
 
