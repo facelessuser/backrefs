@@ -504,3 +504,12 @@ class TestUniprops(unittest.TestCase):
 
         result = uniprops.get_posix_property('^punct', uniprops.POSIX_UNICODE)
         self.assertEqual(result, uniprops.unidata.unicode_binary['^posixpunct'])
+
+    def test_aliases(self):
+        """Test aliases."""
+
+        for a, b in [(k, v) for k, v in uniprops.unidata.alias.unicode_alias['_'].items()]:
+            for k, v in uniprops.unidata.alias.unicode_alias[b].items():
+                result1 = uniprops.get_unicode_property(k, a)
+                result2 = uniprops.get_unicode_property(v, b)
+                self.assertEqual(result1, result2)

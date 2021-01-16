@@ -5,6 +5,9 @@
 - **FIX**: Fix certain Unicode properties which had their alias relations backwards.
 - **FIX**: Fix issue with Unicode characters not explicitly specified in the Vertical Orientation property not getting
   set to the right group due to case sensitivity.
+- **FIX**: Fix issue where General Category `Cn`/`Unassigned` was missing.
+- **FIX**: Fix issue where some property values, which had no characters, were missing. They should still be included
+  even if there are no characters.
 
 ## 4.6
 
