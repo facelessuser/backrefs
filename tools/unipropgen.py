@@ -1,5 +1,4 @@
 """Generate a Unicode prop table for Python builds."""
-from __future__ import unicode_literals
 import sys
 import unicodedata
 import codecs

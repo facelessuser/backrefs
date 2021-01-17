@@ -578,32 +578,23 @@ class _SearchParser(object):
         else:
             return ['\\%03o' % value if value <= 0xFF else chr(value)]
 
-    def unicode_props(self, props, value, in_group=False, negate=False):
+    def unicode_props(self, props, prop_value, in_group=False, negate=False):
         """
         Insert Unicode properties.
 
         Unicode properties are very forgiving.
-        Case doesn't matter and `[ -_]` will be stripped out.
+        Case doesn't matter and `[ -_]` will be stripped ouaqst.
         """
 
-        # `'GC = Some_Unpredictable-Category Name' -> 'gc=someunpredictablecategoryname'`
-        category = None
-
-        # `\p{^negated}` Strip off the caret after evaluation.
         if props.startswith("^"):
-            negate = not negate
-        if props.startswith("^"):
-            props = props[1:]
+            if negate:
+                props = props[1:]
+        elif negate:
+            props = '^' + props
+        if not prop_value and prop_value is not None:
+            prop_value = None
 
-        # Get the property and value.
-        # If a property is present and not block,
-        # we can assume `GC` as that is all we support.
-        # If we are wrong it will fail.
-        if value:
-            category = props
-            props = value
-
-        v = _uniprops.get_unicode_property(("^" if negate else "") + props, category, self.is_bytes)
+        v = _uniprops.get_unicode_property(props, prop_value, self.is_bytes)
         if not in_group:
             if not v:
                 v = '^%s' % (_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE)

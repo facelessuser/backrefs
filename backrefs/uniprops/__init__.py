@@ -8,7 +8,7 @@ ASCII_RANGE = '\x00-\xff'
 PY37 = sys.version_info >= (3, 7)
 
 POSIX = 0
-POSIX_ASCII = POSIX_BYTES = 1
+POSIX_ASCII = 1
 POSIX_UNICODE = 2
 
 
@@ -473,24 +473,26 @@ def _is_binary(name):
     return name in unidata.unicode_binary or name in unidata.unicode_alias['binary']
 
 
-def get_unicode_property(value, prop=None, limit_ascii=False):
+def get_unicode_property(prop, value=None, limit_ascii=False):
     """Retrieve the Unicode category from the table."""
 
-    if prop is not None:
+    if value is not None:
 
         # Normalize binary true/false input so we can handle it properly
         if _is_binary(prop):
-            negate = value.startswith('^')
+            negate = prop.startswith('^')
             if negate:
-                value = value[1:]
+                prop = prop[1:]
 
             if value in ('n', 'no', 'f', 'false'):
                 negate = not negate
             elif value not in ('y', 'yes', 't', 'true'):
                 raise ValueError('Invalid Unicode property!')
 
-            value = '^' + prop if negate else prop
-            prop = 'binary'
+            return get_binary_property('^' + prop if negate else prop, limit_ascii)
+        elif prop.startswith('^'):
+            value = '^' + value
+            prop = prop[1:]
 
         prop = unidata.unicode_alias['_'].get(prop, prop)
         try:
@@ -502,8 +504,6 @@ def get_unicode_property(value, prop=None, limit_ascii=False):
                 return get_script_extension_property(value, limit_ascii)
             elif prop == 'block':
                 return get_block_property(value, limit_ascii)
-            elif prop == 'binary':
-                return get_binary_property(value, limit_ascii)
             elif prop == 'bidiclass':
                 return get_bidi_property(value, limit_ascii)
             elif prop == 'bidipairedbrackettype':
@@ -554,32 +554,32 @@ def get_unicode_property(value, prop=None, limit_ascii=False):
             raise ValueError('Invalid Unicode property!')
 
     try:
-        return get_gc_property(value, limit_ascii)
+        return get_gc_property(prop, limit_ascii)
     except Exception:
         pass
 
     try:
-        return get_script_extension_property(value, limit_ascii)
+        return get_binary_property(prop, limit_ascii)
     except Exception:
         pass
 
     try:
-        return get_block_property(value, limit_ascii)
+        return get_script_extension_property(prop, limit_ascii)
     except Exception:
         pass
 
     try:
-        return get_binary_property(value, limit_ascii)
+        return get_block_property(prop, limit_ascii)
     except Exception:
         pass
 
     try:
-        return get_is_property(value, limit_ascii)
+        return get_is_property(prop, limit_ascii)
     except Exception:
         pass
 
     try:
-        return get_in_property(value, limit_ascii)
+        return get_in_property(prop, limit_ascii)
     except Exception:
         pass
 
