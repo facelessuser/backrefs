@@ -14,8 +14,6 @@ from . import util
 
 __all__ = ("ReplaceTemplate",)
 
-_SCOPED_FLAG_SUPPORT = _util.PY36
-
 _ASCII_LETTERS = frozenset(
     (
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -169,19 +167,19 @@ class _SearchParser(object):
         global_retry = False
         if ('a' in text or 'L' in text) and self.unicode:
             self.unicode = False
-            if not _SCOPED_FLAG_SUPPORT or not scoped:
+            if not scoped:
                 self.temp_global_flag_swap["unicode"] = True
                 global_retry = True
         elif 'u' in text and not self.unicode and not self.is_bytes:
             self.unicode = True
-            if not _SCOPED_FLAG_SUPPORT or not scoped:
+            if not scoped:
                 self.temp_global_flag_swap["unicode"] = True
                 global_retry = True
-        if _SCOPED_FLAG_SUPPORT and '-x' in text and self.verbose:
+        if '-x' in text and self.verbose:
             self.verbose = False
         elif 'x' in text and not self.verbose:
             self.verbose = True
-            if not _SCOPED_FLAG_SUPPORT or not scoped:
+            if not scoped:
                 self.temp_global_flag_swap["verbose"] = True
                 global_retry = True
         if global_retry:
@@ -330,9 +328,6 @@ class _SearchParser(object):
 
     def get_flags(self, i, scoped=False):
         """Get flags."""
-
-        if scoped and not _SCOPED_FLAG_SUPPORT:
-            return None
 
         index = i.index
         value = ['(']
@@ -578,7 +573,7 @@ class _SearchParser(object):
         else:
             return ['\\%03o' % value if value <= 0xFF else chr(value)]
 
-    def unicode_props(self, props, value, in_group=False, negate=False):
+    def unicode_props(self, props, prop_value, in_group=False, negate=False):
         """
         Insert Unicode properties.
 
@@ -586,24 +581,15 @@ class _SearchParser(object):
         Case doesn't matter and `[ -_]` will be stripped out.
         """
 
-        # `'GC = Some_Unpredictable-Category Name' -> 'gc=someunpredictablecategoryname'`
-        category = None
-
-        # `\p{^negated}` Strip off the caret after evaluation.
         if props.startswith("^"):
-            negate = not negate
-        if props.startswith("^"):
-            props = props[1:]
+            if negate:
+                props = props[1:]
+        elif negate:
+            props = '^' + props
+        if not prop_value and prop_value is not None:
+            prop_value = None
 
-        # Get the property and value.
-        # If a property is present and not block,
-        # we can assume `GC` as that is all we support.
-        # If we are wrong it will fail.
-        if value:
-            category = props
-            props = value
-
-        v = _uniprops.get_unicode_property(("^" if negate else "") + props, category, self.is_bytes)
+        v = _uniprops.get_unicode_property(props, prop_value, self.is_bytes)
         if not in_group:
             if not v:
                 v = '^%s' % (_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE)
