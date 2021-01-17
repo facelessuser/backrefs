@@ -513,9 +513,9 @@ class _SearchParser(object):
             if value == '[]':
                 # We specified some properties, but they are all
                 # out of reach.  Therefore we can match nothing.
-                current = ['[^%s]' % ('\x00-\xff' if self.is_bytes else _uniprops.UNICODE_RANGE)]
+                current = ['[^%s]' % (_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE)]
             elif value == '[^]':
-                current = ['[%s]' % ('\x00-\xff' if self.is_bytes else _uniprops.UNICODE_RANGE)]
+                current = ['[%s]' % (_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE)]
             else:
                 current = [value]
 
@@ -554,14 +554,14 @@ class _SearchParser(object):
         try:
             if self.is_bytes or not self.unicode:
                 pattern = _uniprops.get_posix_property(
-                    prop, (_uniprops.POSIX_BYTES if self.is_bytes else _uniprops.POSIX)
+                    prop, (_uniprops.POSIX_ASCII if self.is_bytes else _uniprops.POSIX)
                 )
             else:
                 pattern = _uniprops.get_posix_property(prop, _uniprops.POSIX_UNICODE)
         except Exception:
             raise ValueError('Invalid POSIX property!')
         if not in_group and not pattern:  # pragma: no cover
-            pattern = '^%s' % ('\x00-\xff' if self.is_bytes else _uniprops.UNICODE_RANGE)
+            pattern = '^%s' % (_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE)
 
         return [pattern]
 
@@ -572,7 +572,7 @@ class _SearchParser(object):
         if (self.is_bytes and value > 0xFF):
             value = ""
         if not in_group and value == "":
-            return '[^%s]' % ('\x00-\xff' if self.is_bytes else _uniprops.UNICODE_RANGE)
+            return '[^%s]' % (_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE)
         elif value == "":
             return value
         else:
@@ -606,7 +606,7 @@ class _SearchParser(object):
         v = _uniprops.get_unicode_property(("^" if negate else "") + props, category, self.is_bytes)
         if not in_group:
             if not v:
-                v = '^%s' % ('\x00-\xff' if self.is_bytes else _uniprops.UNICODE_RANGE)
+                v = '^%s' % (_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE)
             v = "[%s]" % v
         properties = [v]
 
