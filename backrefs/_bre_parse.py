@@ -14,8 +14,6 @@ from . import util
 
 __all__ = ("ReplaceTemplate",)
 
-_SCOPED_FLAG_SUPPORT = _util.PY36
-
 _ASCII_LETTERS = frozenset(
     (
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -169,19 +167,19 @@ class _SearchParser(object):
         global_retry = False
         if ('a' in text or 'L' in text) and self.unicode:
             self.unicode = False
-            if not _SCOPED_FLAG_SUPPORT or not scoped:
+            if not scoped:
                 self.temp_global_flag_swap["unicode"] = True
                 global_retry = True
         elif 'u' in text and not self.unicode and not self.is_bytes:
             self.unicode = True
-            if not _SCOPED_FLAG_SUPPORT or not scoped:
+            if not scoped:
                 self.temp_global_flag_swap["unicode"] = True
                 global_retry = True
-        if _SCOPED_FLAG_SUPPORT and '-x' in text and self.verbose:
+        if '-x' in text and self.verbose:
             self.verbose = False
         elif 'x' in text and not self.verbose:
             self.verbose = True
-            if not _SCOPED_FLAG_SUPPORT or not scoped:
+            if not scoped:
                 self.temp_global_flag_swap["verbose"] = True
                 global_retry = True
         if global_retry:
@@ -330,9 +328,6 @@ class _SearchParser(object):
 
     def get_flags(self, i, scoped=False):
         """Get flags."""
-
-        if scoped and not _SCOPED_FLAG_SUPPORT:
-            return None
 
         index = i.index
         value = ['(']
