@@ -429,7 +429,7 @@ Supported\ Properties                       | Aliases
 ------------------------------------------- | -------
 `Age`                                       | &nbsp;
 `Bidi_Class`                                | `bc`
-`Bidi_Paired_Bracket_Type`\ (Python\ 3+)    | `bpt`
+`Bidi_Paired_Bracket_Type`                  | `bpt`
 `Binary`                                    | &nbsp;
 `Block`                                     | `blk`
 `Canonical_Combining_Class`                 | `ccc`
@@ -438,9 +438,8 @@ Supported\ Properties                       | Aliases
 `General_Category`                          | `gc`
 `Grapheme_Cluster_Break`                    | `gcb`
 `Hangul_Syllable_Type`                      | `hst`
-`Indic_Positional_Category`\ (Python\ 3.5+) | `inpc`
-`Indic_Matra_Category`\ (Python\ ==\ 3.4)   | `inmc`
-`Indic_Syllabic_Category`\ (Python\ 3+)     | `insc`
+`Indic_Positional_Category`                 | `inpc`
+`Indic_Syllabic_Category`                   | `insc`
 `Joining_Group`                             | `jg`
 `Joining_Type`                              | `jt`
 `Line_Break`                                | `lb`
@@ -451,7 +450,7 @@ Supported\ Properties                       | Aliases
 `Numeric_Type`                              | `nt`
 `Numeric_Value`                             | `nv`
 `Script`                                    | `sc`
-`Script_Extensions`\ (Python\ 3+)           | `scx`
+`Script_Extensions`                         | `scx`
 `Sentence_Break`                            | `sb`
 `Vertical_Orientation`\ (Python\ 3.7+)      | `vt`
 `Word_Break`                                | `wb`
@@ -587,7 +586,7 @@ collision. The POSIX properties are treated as binary Unicode properties.
 `digit`    | `Digit`     | `[0-9]`                                           | `[\p{Nd}]`
 `graph`    | `Graph`     | `[\x21-\x7E]`                                     | `[^\p{Z}\p{C}]`
 `lower`    | `Lower`     | `[a-z]`                                           | `[\p{Ll}]`
-`print`    | `Print`     | `[\x20-\x7E]`                                     | `[\P{C}]`
+`print`    | `Print`     | `[\x20-\x7E]`                                     | `[^\p{C}]`
 `punct`    | `Punct`     | ``[!\"\#$%&'()*+,\-./:;&lt;=&gt;?@\[\\\]^_`{}~]`` | `[\p{P}\p{S}]`
 `space`    | `Space`     | `[ \t\r\n\v\f]`                                   | `[\p{Z}\t\r\n\v\f]`
 `upper`    | `Upper`     | `[A-Z]`                                           | `[\p{Lu}]`
