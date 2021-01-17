@@ -467,16 +467,31 @@ def get_in_property(value, is_bytes=False):
     return obj[value]
 
 
-def is_enum(name):
+def _is_binary(name):
     """Check if name is an enum (not a binary) property."""
 
-    return name in unidata.enum_names
+    return name in unidata.unicode_binary or name in unidata.unicode_alias['binary']
 
 
 def get_unicode_property(value, prop=None, is_bytes=False):
     """Retrieve the Unicode category from the table."""
 
     if prop is not None:
+
+        # Normalize binary true/false input so we can handle it properly
+        if _is_binary(prop):
+            negate = value.startswith('^')
+            if negate:
+                value = value[1:]
+
+            if value in ('n', 'no', 'f', 'false'):
+                negate = not negate
+            elif value not in ('y', 'yes', 't', 'true'):
+                raise ValueError('Invalid Unicode property!')
+
+            value = '^' + prop if negate else prop
+            prop = 'binary'
+
         prop = unidata.unicode_alias['_'].get(prop, prop)
         try:
             if prop == 'generalcategory':

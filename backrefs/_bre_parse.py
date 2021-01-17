@@ -600,16 +600,8 @@ class _SearchParser(object):
         # we can assume `GC` as that is all we support.
         # If we are wrong it will fail.
         if value:
-            if _uniprops.is_enum(props):
-                category = props
-                props = value
-            elif value in ('y', 'yes', 't', 'true'):
-                category = 'binary'
-            elif value in ('n', 'no', 'f', 'false'):
-                category = 'binary'
-                negate = not negate
-            else:
-                raise ValueError('Invalid Unicode property!')
+            category = props
+            props = value
 
         v = _uniprops.get_unicode_property(("^" if negate else "") + props, category, self.is_bytes)
         if not in_group:

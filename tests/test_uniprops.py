@@ -411,11 +411,41 @@ class TestUniprops(unittest.TestCase):
         result = uniprops.get_unicode_property('alphabetic', 'binary')
         self.assertEqual(result, uniprops.unidata.unicode_binary['alphabetic'])
 
+    def test_binary_value(self):
+        """Test binary Category with a value."""
+
+        result = uniprops.get_unicode_property('true', 'alphabetic')
+        self.assertEqual(result, uniprops.unidata.unicode_binary['alphabetic'])
+
+    def test_binary_value_inverted(self):
+        """Test binary Category with an inverted value."""
+
+        result = uniprops.get_unicode_property('^true', 'alphabetic')
+        self.assertEqual(result, uniprops.unidata.unicode_binary['^alphabetic'])
+
     def test_inverse_binary(self):
         """Test inverse binary Category."""
 
         result = uniprops.get_unicode_property('^alphabetic', 'binary')
         self.assertEqual(result, uniprops.unidata.unicode_binary['^alphabetic'])
+
+    def test_inverse_binary_value(self):
+        """Test inverse binary Category with a value."""
+
+        result = uniprops.get_unicode_property('false', 'alphabetic')
+        self.assertEqual(result, uniprops.unidata.unicode_binary['^alphabetic'])
+
+    def test_inverse_binary_value_inverted(self):
+        """Test inverse binary Category with inverted value."""
+
+        result = uniprops.get_unicode_property('^false', 'alphabetic')
+        self.assertEqual(result, uniprops.unidata.unicode_binary['alphabetic'])
+
+    def test_bad_binary(self):
+        """Test binary property with bad value."""
+
+        with self.assertRaises(ValueError):
+            uniprops.get_unicode_property('bad', 'alphabetic')
 
     def test_binary_simple(self):
         """Test binary simple Category."""
