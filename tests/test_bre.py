@@ -772,6 +772,15 @@ class TestSearchTemplate(unittest.TestCase):
         m = pattern.match(r'P')
         self.assertTrue(m is not None)
 
+    def test_unicode_properties_inverse_value_inverse(self):
+        """Exercising inverse Unicode properties that are using inverse values."""
+
+        pattern = bre.compile_search(r'\P{^Po}', re.UNICODE)
+        m = pattern.match(r'·')
+        self.assertTrue(m is not None)
+        m = pattern.match(r'P')
+        self.assertTrue(m is None)
+
     def test_negated_unicode_properties_inverse(self):
         """Exercising negated inverse Unicode properties."""
 
