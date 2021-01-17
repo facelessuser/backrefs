@@ -583,7 +583,7 @@ class _SearchParser(object):
         Insert Unicode properties.
 
         Unicode properties are very forgiving.
-        Case doesn't matter and `[ -_]` will be stripped ouaqst.
+        Case doesn't matter and `[ -_]` will be stripped out.
         """
 
         if props.startswith("^"):
