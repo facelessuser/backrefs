@@ -483,7 +483,7 @@ def gen_scripts(
 def gen_enum(
     file_name, obj_name, output, field=1, notexplicit=None, ascii_props=False, append=False, prefix="", aliases=None
 ):
-    """Generate generic enum."""
+    """Generate generic enum properties, or properties very much like enum properties."""
 
     obj = {}
 
@@ -970,13 +970,13 @@ def gen_uposix(table, posix_table):
     posix_table["posixxdigit"] = list(s)
 
 
-def gen_alias(enum, binary, output):
+def gen_alias(nonbinary, binary, output):
     """Generate alias."""
 
     prefix = "unicode"
     alias_re = re.compile(r'^#\s+(\w+)\s+\((\w+)\)\s*$')
 
-    categories = enum + binary
+    categories = nonbinary + binary
     alias = {}
     gather = False
     current_category = None
@@ -1056,7 +1056,7 @@ def gen_alias(enum, binary, output):
                     if a not in alias[data[0]] and a != data[1]:
                         alias[data[0]][a] = data[1]
 
-    for x in enum:
+    for x in nonbinary:
         if x not in alias:
             alias[x] = {}
 
@@ -1087,20 +1087,6 @@ def gen_alias(enum, binary, output):
                 f.write(',\n')
             i += 1
 
-        cat = set(enum)
-        for k in alias['_'].keys():
-            cat.add(k)
-
-        f.write('enum_names = {\n')
-        count = len(cat) - 1
-        i = 0
-        for name in sorted(cat):
-            f.write('    "%s"' % name)
-            if i == count:
-                f.write('\n}\n')
-            else:
-                f.write(',\n')
-            i += 1
     return alias
 
 
@@ -1332,13 +1318,13 @@ def build_tables(output, version=None):
     set_version(version)
 
     files = get_files(output)
-    enum, binary = discover_categories()
+    nonbinary, binary = discover_categories()
 
     if not os.path.exists(output):
         os.mkdir(output)
 
     print('Building: Aliases')
-    aliases = gen_alias(enum, binary, files['alias'])
+    aliases = gen_alias(nonbinary, binary, files['alias'])
 
     build_unicode_property_table(output, files, aliases)
     build_ascii_property_table(output, files, aliases)
