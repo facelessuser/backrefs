@@ -9,6 +9,8 @@
 - **FIX**: Fix issue where some property values, which had no characters, were missing. They should still be included
   even if there are no characters.
 - **FIX**: Fix for `full_composition_exclusion` and `composition_exclusion` Unicode property.
+- **FIX**: Fix issue where `Is<script>` properties weren't getting the `script` property instead of the
+  `scripts_extensions`.
 
 ## 4.6
 
