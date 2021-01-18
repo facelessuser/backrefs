@@ -31,38 +31,6 @@ def get_requirements(req):
     return install_requires
 
 
-def get_unicodedata():
-    """Download the `unicodedata` version for the given Python version."""
-
-    import unicodedata
-
-    uver = unicodedata.unidata_version
-    path = os.path.join(os.path.dirname(__file__), 'tools', 'unidatadownload.py')
-    spec = importlib.util.spec_from_file_location("unidatadownload", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    module.get_unicodedata(uver, no_zip=True)
-    return uver
-
-
-def generate_unicode_table():
-    """Generate the Unicode table for the given Python version."""
-
-    uver = get_unicodedata()
-    path = os.path.join(os.path.dirname(__file__), 'tools', 'unipropgen.py')
-    spec = importlib.util.spec_from_file_location("unipropgen", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-
-    module.build_tables(
-        os.path.join(
-            os.path.dirname(__file__),
-            'backrefs', 'uniprops', 'unidata'
-        ),
-        uver
-    )
-
-
 def get_description():
     """Get long description."""
 
@@ -72,7 +40,6 @@ def get_description():
 
 
 VER, DEVSTATUS = get_version()
-generate_unicode_table()
 
 setup(
     name='backrefs',

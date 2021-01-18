@@ -1,7 +1,6 @@
 recursive-include backrefs *.py
 prune backrefs/uniprops/unidata
 recursive-include tests *.py
-recursive-include tools *.py *.zip LICENSE
 recursive-include docs/src/dictionary *.txt
 recursive-include docs/src/markdown *.md *.png *.gif *.html
 recursive-include docs/theme *.js *.css *.html

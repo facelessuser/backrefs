@@ -1,16 +1,17 @@
 # Changelog
 
-## 4.6.1
+## 4.7
 
-- **FIX**: Fix certain Unicode properties which had their alias relations backwards.
-- **FIX**: Fix issue with Unicode characters not explicitly specified in the Vertical Orientation property not getting
-  set to the right group due to case sensitivity.
-- **FIX**: Fix issue where General Category `Cn`/`Unassigned` was missing.
-- **FIX**: Fix issue where some property values, which had no characters, were missing. They should still be included
-  even if there are no characters.
-- **FIX**: Fix for `full_composition_exclusion` and `composition_exclusion` Unicode property.
-- **FIX**: Fix issue where `Is<script>` properties weren't getting the `script` property instead of the
-  `scripts_extensions`.
+- **NEW**: Unicode logic has been moved to a separate project: [`uniprops`](https://pypi.org/project/uniprops/).
+  Backrefs now relies on this dependency for Unicode logic. The dependency includes brings a number of fixes:
+
+    - Fix certain Unicode properties which had their alias relations backwards.
+    - Fix issue with Vertical Orientation property.
+    - Fix issue with General Category `Cn`/`Unassigned`.
+    - Fix issue where some empty property values where were missing. They should still be included even if there are no
+      characters.
+    - Fix for `full_composition_exclusion` and `composition_exclusion` Unicode property.
+    - Fix issue where `Is<script>` properties were getting the `script` property instead of `scripts_extensions`.
 
 ## 4.6
 

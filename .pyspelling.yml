@@ -53,7 +53,7 @@ matrix:
 - name: python
   sources:
   - setup.py
-  - "{backrefs,tests,tools}/**/*.py|!backrefs/uniprops/unidata/*"
+  - "{backrefs,tests,tools}/**/*.py"
   hunspell:
     d: docs/src/dictionary/hunspell/en_US
   aspell:

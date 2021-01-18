@@ -9,7 +9,7 @@ import copyreg as _copyreg
 from . import util as _util
 import sre_parse as _sre_parse
 import unicodedata as _unicodedata
-from . import uniprops as _uniprops
+import uniprops as _uniprops
 from . import util
 
 __all__ = ("ReplaceTemplate",)
