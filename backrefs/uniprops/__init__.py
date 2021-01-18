@@ -435,7 +435,7 @@ def get_is_property(value, limit_ascii=False):
     script_obj = unidata.ascii_script_extensions if limit_ascii else unidata.unicode_script_extensions
     bin_obj = unidata.ascii_binary if limit_ascii else unidata.unicode_binary
 
-    value = negate + unidata.unicode_alias['script'].get(temp, temp)
+    value = negate + unidata.unicode_alias['scriptextensions'].get(temp, temp)
 
     if value not in script_obj:
         value = negate + unidata.unicode_alias['binary'].get(temp, temp)
@@ -559,17 +559,17 @@ def get_unicode_property(prop, value=None, limit_ascii=False):
         pass
 
     try:
-        return get_binary_property(prop, limit_ascii)
-    except Exception:
-        pass
-
-    try:
         return get_script_extension_property(prop, limit_ascii)
     except Exception:
         pass
 
     try:
         return get_block_property(prop, limit_ascii)
+    except Exception:
+        pass
+
+    try:
+        return get_binary_property(prop, limit_ascii)
     except Exception:
         pass
 

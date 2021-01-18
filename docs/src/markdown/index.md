@@ -498,17 +498,17 @@ example, to specify characters that are "alphabetic", we can use `\p{Alphabetic:
 
 ### Special Syntax Exceptions
 
-General Category, Script, Blocks, and Binary all can be specified by their value alone: `\p{value}`, but they will be
-evaluated in the following order to resolve name conflicts as some the same value that is used in Script may be used in
-Blocks etc.
+General Category, Script Extensions, Blocks, and Binary all can be specified by their value alone: `\p{value}`, but they
+will be evaluated in the following order to resolve name conflicts as some the same value that is used in Script may be
+used in Blocks etc.
 
 1. General Category
-2. Script (with Script Extensions on Python 3+)
+2. Script Extensions
 3. Blocks
 4. Binary
 
-Script and Binary properties can also be defined in the format `IsValue`.  For instance, if we wanted to match
-characters in the `Latin` script, we could use the syntax `\p{IsLatin}`, which would be the same as `\p{Latin}` or
+Script Extensions and Binary properties can also be defined in the format `IsValue`.  For instance, if we wanted to
+match characters in the `Latin` script, we could use the syntax `\p{IsLatin}`, which would be the same as `\p{Latin}` or
 `\p{scx: Latin}`.  For Binary properties, `\p{IsAlphabetic}` is the same as `\p{Alphabetic: Y}` or `\p{Alphabetic}`.
 
 Block properties have a similar short form as Script and Binary properties.  For Blocks you can use `InValue` to specify
