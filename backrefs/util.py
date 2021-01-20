@@ -7,7 +7,6 @@ Copyright (c) 2015 - 2020 Isaac Muse <isaacmuse@gmail.com>
 import sys
 import warnings
 
-PY36 = (3, 6) <= sys.version_info
 PY37 = (3, 7) <= sys.version_info
 
 FMT_FIELD = 0
