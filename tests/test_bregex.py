@@ -14,7 +14,6 @@ try:
 except ImportError:
     from regex import _regex_core
 
-PY36_PLUS = (3, 6) <= sys.version_info
 PY39_PLUS = (3, 9) <= sys.version_info
 
 
@@ -1924,7 +1923,6 @@ class TestExceptions(unittest.TestCase):
 
         assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
 
-    @unittest.skipUnless(PY36_PLUS, "Ignore in PY 3.5")
     def test_timeout(self):
         """Test timeout."""
 

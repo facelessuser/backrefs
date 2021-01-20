@@ -388,6 +388,7 @@ def gen_scripts(
     if aliases:
         for v in aliases.get('script', {}).values():
             obj[v] = []
+            obj2[v] = []
 
     alias = {}
     with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'PropertyValueAliases.txt'), 'r', 'utf-8') as uf:
@@ -603,8 +604,6 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix="", alias
                 if not data[1].strip().lower().endswith('_qc'):
                     continue
                 span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=ascii_props)
-                if span is None:
-                    continue
                 name = format_name(data[1][:-3] + 'quickcheck')
                 subvalue = format_name(data[2])
 
@@ -617,6 +616,9 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix="", alias
 
                 if subvalue not in nf[name]:
                     nf[name][subvalue] = []
+                if span is None:
+                    continue
+
                 nf[name][subvalue].extend(span)
 
     for k1, v1 in nf.items():
@@ -810,7 +812,7 @@ def gen_bidi(output, ascii_props=False, append=False, prefix="", aliases=None):
 
 
 def gen_posix(output, is_bytes=False, append=False, prefix=""):
-    """Generate the bytes posix table and write out to file."""
+    """Generate the bytes POSIX table and write out to file."""
 
     posix_table = {}
 
@@ -894,7 +896,7 @@ def gen_posix(output, is_bytes=False, append=False, prefix=""):
 
 
 def gen_uposix(table, posix_table):
-    """Generate the posix table and write out to file."""
+    """Generate the POSIX table and write out to file."""
 
     # `Alnum: [\p{L&}\p{Nd}]`
     s = set(table['l']['c'] + table['n']['d'])
@@ -1111,14 +1113,14 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
             data = line.strip().split(';')
             if data:
                 i = int(data[0], 16)
-                if i > max_range[1]:
-                    continue
                 p = data[2].lower()
                 if p[0] not in table:
                     table[p[0]] = {}
                     itable[p[0]] = {}
                 if p[1] not in table[p[0]]:
                     table[p[0]][p[1]] = []
+                if i > max_range[1]:
+                    continue
                 table[p[0]][p[1]].append(i)
                 # Add LC which is a combo of Ll, Lu, and Lt
                 if p[0] == 'l' and p[1] in ('l', 'u', 't'):
@@ -1153,7 +1155,7 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
     print('Building: Binary')
     gen_binary(table, files['binary'], ascii_props, append, prefix, aliases=aliases)
 
-    # Generate posix table and write out to file.
+    # Generate POSIX table and write out to file.
     print('Building: Posix')
     gen_posix(files['posix'], is_bytes=ascii_props, append=append, prefix=prefix)
 
@@ -1174,7 +1176,7 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
 
     print('Building: Line Break')
     gen_enum(
-        'LineBreak.txt', 'line_break', files['lb'], notexplicit='unknown',
+        'LineBreak.txt', 'line_break', files['lb'], notexplicit='xx',
         ascii_props=ascii_props, append=append, prefix=prefix, aliases=aliases
     )
 

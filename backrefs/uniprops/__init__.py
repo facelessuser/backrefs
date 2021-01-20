@@ -13,16 +13,19 @@ POSIX_UNICODE = 2
 
 
 def get_posix_property(value, mode=POSIX):
-    """Retrieve the posix category."""
+    """Retrieve the POSIX category."""
 
-    if mode == POSIX_ASCII:
-        return unidata.ascii_posix_properties[value]
-    elif mode == POSIX_UNICODE:
-        return unidata.unicode_binary[
-            ('^posix' + value[1:]) if value.startswith('^') else ('posix' + value)
-        ]
-    else:
-        return unidata.unicode_posix_properties[value]
+    try:
+        if mode == POSIX_ASCII:
+            return unidata.ascii_posix_properties[value]
+        elif mode == POSIX_UNICODE:
+            return unidata.unicode_binary[
+                ('^posix' + value[1:]) if value.startswith('^') else ('posix' + value)
+            ]
+        else:
+            return unidata.unicode_posix_properties[value]
+    except Exception:
+        raise ValueError("'{} is not a valid posix property".format(value))
 
 
 def get_gc_property(value, limit_ascii=False):
@@ -38,7 +41,13 @@ def get_gc_property(value, limit_ascii=False):
 
     value = unidata.unicode_alias['generalcategory'].get(value, value)
 
-    assert 1 <= len(value) <= 2, 'Invalid property!'
+    length = len(value)
+    if length < 1 or length > 2:
+        raise ValueError('Invalid property')
+    elif length == 1 and value not in obj:
+        raise ValueError('Invalid property')
+    elif length == 2 and (value[0] not in obj or value[1] not in obj[value[0]]):
+        raise ValueError('Invalid property')
 
     if not negate:
         p1, p2 = (value[0], value[1]) if len(value) > 1 else (value[0], None)
@@ -48,7 +57,6 @@ def get_gc_property(value, limit_ascii=False):
     else:
         p1, p2 = (value[0], value[1]) if len(value) > 1 else (value[0], '')
         value = obj.get(p1, {}).get('^' + p2, '')
-    assert value, 'Invalid property!'
     return value
 
 
@@ -435,7 +443,7 @@ def get_is_property(value, limit_ascii=False):
     script_obj = unidata.ascii_script_extensions if limit_ascii else unidata.unicode_script_extensions
     bin_obj = unidata.ascii_binary if limit_ascii else unidata.unicode_binary
 
-    value = negate + unidata.unicode_alias['scriptextensions'].get(temp, temp)
+    value = negate + unidata.unicode_alias['script'].get(temp, temp)
 
     if value not in script_obj:
         value = negate + unidata.unicode_alias['binary'].get(temp, temp)
@@ -478,80 +486,83 @@ def get_unicode_property(prop, value=None, limit_ascii=False):
 
     if value is not None:
 
+        negate = prop.startswith('^')
+
         # Normalize binary true/false input so we can handle it properly
         if _is_binary(prop):
-            negate = prop.startswith('^')
-            if negate:
-                prop = prop[1:]
+            name = prop[1:] if negate else prop
 
             if value in ('n', 'no', 'f', 'false'):
                 negate = not negate
             elif value not in ('y', 'yes', 't', 'true'):
-                raise ValueError('Invalid Unicode property!')
+                raise ValueError("'{}' is not a valid value for the binary property '{}'".format(value, prop))
 
-            return get_binary_property('^' + prop if negate else prop, limit_ascii)
-        elif prop.startswith('^'):
-            value = '^' + value
-            prop = prop[1:]
+            return get_binary_property('^' + name if negate else name, limit_ascii)
+        else:
+            if negate:
+                value = '^' + value
+                name = prop[1:]
+            else:
+                name = prop
 
-        prop = unidata.unicode_alias['_'].get(prop, prop)
+        name = unidata.unicode_alias['_'].get(name, name)
         try:
-            if prop == 'generalcategory':
+            if name == 'generalcategory':
                 return get_gc_property(value, limit_ascii)
-            elif prop == 'script':
+            elif name == 'script':
                 return get_script_property(value, limit_ascii)
-            elif prop == 'scriptextensions':
+            elif name == 'scriptextensions':
                 return get_script_extension_property(value, limit_ascii)
-            elif prop == 'block':
+            elif name == 'block':
                 return get_block_property(value, limit_ascii)
-            elif prop == 'bidiclass':
+            elif name == 'bidiclass':
                 return get_bidi_property(value, limit_ascii)
-            elif prop == 'bidipairedbrackettype':
+            elif name == 'bidipairedbrackettype':
                 return get_bidi_paired_bracket_type_property(value, limit_ascii)
-            elif prop == 'age':
+            elif name == 'age':
                 return get_age_property(value, limit_ascii)
-            elif prop == 'eastasianwidth':
+            elif name == 'eastasianwidth':
                 return get_east_asian_width_property(value, limit_ascii)
-            elif prop == 'indicpositionalcategory':
+            elif name == 'indicpositionalcategory':
                 return get_indic_positional_category_property(value, limit_ascii)
-            elif prop == 'indicsyllabiccategory':
+            elif name == 'indicsyllabiccategory':
                 return get_indic_syllabic_category_property(value, limit_ascii)
-            elif prop == 'hangulsyllabletype':
+            elif name == 'hangulsyllabletype':
                 return get_hangul_syllable_type_property(value, limit_ascii)
-            elif prop == 'decompositiontype':
+            elif name == 'decompositiontype':
                 return get_decomposition_type_property(value, limit_ascii)
-            elif prop == 'canonicalcombiningclass':
+            elif name == 'canonicalcombiningclass':
                 return get_canonical_combining_class_property(value, limit_ascii)
-            elif prop == 'numerictype':
+            elif name == 'numerictype':
                 return get_numeric_type_property(value, limit_ascii)
-            elif prop == 'numericvalue':
+            elif name == 'numericvalue':
                 return get_numeric_value_property(value, limit_ascii)
-            elif prop == 'joiningtype':
+            elif name == 'joiningtype':
                 return get_joining_type_property(value, limit_ascii)
-            elif prop == 'joininggroup':
+            elif name == 'joininggroup':
                 return get_joining_group_property(value, limit_ascii)
-            elif prop == 'graphemeclusterbreak':
+            elif name == 'graphemeclusterbreak':
                 return get_grapheme_cluster_break_property(value, limit_ascii)
-            elif prop == 'linebreak':
+            elif name == 'linebreak':
                 return get_line_break_property(value, limit_ascii)
-            elif prop == 'sentencebreak':
+            elif name == 'sentencebreak':
                 return get_sentence_break_property(value, limit_ascii)
-            elif prop == 'wordbreak':
+            elif name == 'wordbreak':
                 return get_word_break_property(value, limit_ascii)
-            elif prop == 'nfcquickcheck':
+            elif name == 'nfcquickcheck':
                 return get_nfc_quick_check_property(value, limit_ascii)
-            elif prop == 'nfdquickcheck':
+            elif name == 'nfdquickcheck':
                 return get_nfd_quick_check_property(value, limit_ascii)
-            elif prop == 'nfkcquickcheck':
+            elif name == 'nfkcquickcheck':
                 return get_nfkc_quick_check_property(value, limit_ascii)
-            elif prop == 'nfkdquickcheck':
+            elif name == 'nfkdquickcheck':
                 return get_nfkd_quick_check_property(value, limit_ascii)
-            elif PY37 and prop == 'verticalorientation':
+            elif PY37 and name == 'verticalorientation':
                 return get_vertical_orientation_property(value, limit_ascii)
             else:
-                raise ValueError('Invalid Unicode property!')
+                raise ValueError("'{}={}' does not have a valid property name".format(prop, value))
         except Exception:
-            raise ValueError('Invalid Unicode property!')
+            raise ValueError("'{}={}' does not appear to be a valid property".format(prop, value))
 
     try:
         return get_gc_property(prop, limit_ascii)
@@ -583,4 +594,4 @@ def get_unicode_property(prop, value=None, limit_ascii=False):
     except Exception:
         pass
 
-    raise ValueError('Invalid Unicode property!')
+    raise ValueError("'{}' does not appear to be a valid property".format(prop))

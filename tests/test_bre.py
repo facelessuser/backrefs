@@ -11,7 +11,6 @@ from backrefs import _bre_parse
 import copy
 import warnings
 
-PY36_PLUS = (3, 6) <= sys.version_info
 PY37_PLUS = (3, 7) <= sys.version_info
 PY39_PLUS = (3, 9) <= sys.version_info
 
@@ -100,13 +99,12 @@ class TestSearchTemplate(unittest.TestCase):
     def test_not_flags(self):
         """Test invalid flags."""
 
-        if PY36_PLUS:
-            with pytest.raises(sre_constants.error):
-                bre.compile(r'(?-q:test)')
+        with pytest.raises(sre_constants.error):
+            bre.compile(r'(?-q:test)')
 
-            if not PY37_PLUS:
-                with pytest.raises(sre_constants.error):
-                    bre.compile(r'(?a:test)')
+        if not PY37_PLUS:
+            with pytest.raises(sre_constants.error):
+                bre.compile(r'(?a:test)')
 
     def test_comment_failures(self):
         """Test comment failures."""
@@ -179,15 +177,8 @@ class TestSearchTemplate(unittest.TestCase):
             r"test\b(?<=\w)"
         )
 
-        if PY36_PLUS:
-            with pytest.raises(sre_constants.error):
-                bre.compile_search(r'[\m]test')
-        else:
-            pattern = bre.compile_search(r'[\m]test')
-            self.assertEqual(
-                pattern.pattern,
-                r"[\m]test"
-            )
+        with pytest.raises(sre_constants.error):
+            bre.compile_search(r'[\m]test')
 
     def test_cache(self):
         """Test cache."""
@@ -213,9 +204,9 @@ class TestSearchTemplate(unittest.TestCase):
 
         with pytest.raises(_bre_parse.LoopException):
             bre.compile_search(r'((?a)(?u))')
-        if PY36_PLUS:
-            with pytest.raises(_bre_parse.LoopException):
-                bre.compile_search(r'(?-x:(?x))', re.VERBOSE)
+
+        with pytest.raises(_bre_parse.LoopException):
+            bre.compile_search(r'(?-x:(?x))', re.VERBOSE)
 
     def test_unicode_ascii_swap(self):
         """Test Unicode ASCII swapping."""
@@ -229,25 +220,24 @@ class TestSearchTemplate(unittest.TestCase):
     def test_comments_with_scoped_verbose(self):
         """Test scoped verbose with comments (Python 3.6+)."""
 
-        if PY36_PLUS:
-            pattern = bre.compile_search(
-                r'''(?u)Test # \e(?#\e)(?x:
-                Test #\e(?#\e)
-                (Test # \e
-                )Test #\e
-                )Test # \e'''
-            )
+        pattern = bre.compile_search(
+            r'''(?u)Test # \e(?#\e)(?x:
+            Test #\e(?#\e)
+            (Test # \e
+            )Test #\e
+            )Test # \e'''
+        )
 
-            self.assertEqual(
-                pattern.pattern,
-                r'''(?u)Test # \x1b(?#\e)(?x:
-                Test #\\e(?#\\e)
-                (Test # \\e
-                )Test #\\e
-                )Test # \x1b'''
-            )
+        self.assertEqual(
+            pattern.pattern,
+            r'''(?u)Test # \x1b(?#\e)(?x:
+            Test #\\e(?#\\e)
+            (Test # \\e
+            )Test #\\e
+            )Test # \x1b'''
+        )
 
-            self.assertTrue(pattern.match('Test # \x1bTestTestTestTest # \x1b') is not None)
+        self.assertTrue(pattern.match('Test # \x1bTestTestTestTest # \x1b') is not None)
 
     def test_byte_string_named_chars(self):
         """Test byte string named char."""
@@ -1007,7 +997,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_format_failures(self):
         """Test format parsing failures."""
 
-        with pytest.raises(sre_constants.error if PY36_PLUS else IndexError):
+        with pytest.raises(sre_constants.error):
             bre.subf('test', r'{1.}', 'test', bre.FORMAT)
 
         with pytest.raises(IndexError):
@@ -1028,7 +1018,7 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(SyntaxError):
             bre.subf('test', r'test { test', 'test', bre.FORMAT)
 
-        with pytest.raises(sre_constants.error if PY36_PLUS else IndexError):
+        with pytest.raises(sre_constants.error):
             bre.subf(b'test', br'{1.}', b'test', bre.FORMAT)
 
         with pytest.raises(IndexError):
@@ -1166,14 +1156,8 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_line_break_in_group(self):
         """Test that line break in group matches a normal R."""
 
-        if PY36_PLUS:
-            with pytest.raises(sre_constants.error):
-                bre.sub(r"[\R]", 'l', 'Rine\r\nRine\nRine\r')
-        else:
-            self.assertEqual(
-                bre.sub(r"[\R]", 'l', 'Rine\r\nRine\nRine\r'),
-                'line\r\nline\nline\r'
-            )
+        with pytest.raises(sre_constants.error):
+            bre.sub(r"[\R]", 'l', 'Rine\r\nRine\nRine\r')
 
     def test_horizontal_ws(self):
         """Test horizontal whitespace."""
@@ -2151,31 +2135,23 @@ class TestExceptions(unittest.TestCase):
     def test_bad_bytes(self):
         """Test bad bytes."""
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError):
             bre.compile_search(r'\p{bad_bytes:n}', re.UNICODE)
 
-        self.assertEqual(str(e.value), 'Invalid Unicode property!')
-
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError):
             bre.compile_search(r'\p{bad_bytes:y}', re.UNICODE)
-
-        self.assertEqual(str(e.value), 'Invalid Unicode property!')
 
     def test_bad_category(self):
         """Test bad category."""
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError):
             bre.compile_search(r'\p{alphanumeric: bad}', re.UNICODE)
-
-        self.assertEqual(str(e.value), 'Invalid Unicode property!')
 
     def test_bad_short_category(self):
         """Test bad category."""
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError):
             bre.compile_search(r'\pQ', re.UNICODE)
-
-        self.assertEqual(str(e.value), 'Invalid Unicode property!')
 
     def test_switch_from_format_auto(self):
         """Test a switch from auto to manual format."""
