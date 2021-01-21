@@ -298,7 +298,7 @@ class TestSearchTemplate(unittest.TestCase):
             r'''(?xu)
             Test # \p{XDigit}
             (Test (?#\p{XDigit}))
-            Test \p{XDigit}
+            Test \p{PosixXDigit}
             '''
         )
 

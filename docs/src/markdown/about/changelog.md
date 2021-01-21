@@ -1,7 +1,9 @@
 # Changelog
 
-## 4.6.1
+## 5.0.0
 
+- **NEW**: POSIX properties now follow the [Unicode specification for POSIX compatibility][unicode-posix].
+  Read the [documentation](../index.md#posix-style-properties) to learn more.
 - **FIX**: Fix certain Unicode properties which had their alias relations backwards.
 - **FIX**: Fix issue with Unicode characters not explicitly specified in the Vertical Orientation property not getting
   set to the right group due to case sensitivity.
@@ -214,3 +216,5 @@ to work even when the Re or Regex API changes. Change was made to support new Re
 ## 1.0
 
 - **NEW**: Initial release.
+
+--8<-- "links.txt"

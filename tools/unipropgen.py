@@ -17,8 +17,8 @@ GROUP_ESCAPES = frozenset([ord(x) for x in '-&[\\]^|~'])
 UNICODE_RANGE = (0x0000, 0x10FFFF)
 ASCII_RANGE = (0x00, 0xFF)
 
-ALL_CHARS = set([x for x in range(UNICODE_RANGE[0], UNICODE_RANGE[1] + 1)])
-ALL_ASCII = set([x for x in range(ASCII_RANGE[0], ASCII_RANGE[1] + 1)])
+ALL_CHARS = frozenset([x for x in range(UNICODE_RANGE[0], UNICODE_RANGE[1] + 1)])
+ALL_ASCII = frozenset([x for x in range(ASCII_RANGE[0], ASCII_RANGE[1] + 1)])
 HEADER = '''\
 """Unicode Properties from Unicode version {} (autogen)."""
 
@@ -735,7 +735,17 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
         s = set(binary[name])
         binary[name] = sorted(s)
 
-    gen_uposix(table, binary)
+    gen_uposix(table, binary, ascii_props)
+
+    # One off Unicode property found under https://unicode.org/reports/tr18/#Compatibility_Properties
+    # `Word: [\p{alnum}\p{M}\p{Pc}\p{JoinControl}]`
+    s = set(binary["alnum"])
+    s |= set(table['m']['c'])
+    s |= set(table['m']['e'])
+    s |= set(table['m']['n'])
+    s |= set(table["p"]["c"])
+    s |= set(binary["joincontrol"])
+    binary["word"] = list(s)
 
     if aliases:
         for v in aliases.get('binary', {}).values():
@@ -895,79 +905,66 @@ def gen_posix(output, is_bytes=False, append=False, prefix=""):
             i += 1
 
 
-def gen_uposix(table, posix_table):
+def gen_uposix(table, posix_table, ascii_props):
     """Generate the POSIX table and write out to file."""
 
-    # `Alnum: [\p{L&}\p{Nd}]`
-    s = set(table['l']['c'] + table['n']['d'])
-    posix_table["posixalnum"] = list(s)
-
-    # `Alpha: [\p{L&}]`
-    s = set(table['l']['c'])
-    posix_table["posixalpha"] = list(s)
-
-    # `ASCII: [\x00-\x7F]`
-    s = set([x for x in range(0, 0x7F + 1)])
-    posix_table["posixascii"] = list(s)
-
-    # `Blank: [\p{Zs}\t]`
-    s = set(table['z']['s'] + [0x09])
-    posix_table["posixblank"] = list(s)
-
-    # `Cntrl: [\p{Cc}]`
-    s = set(table['c']['c'])
-    posix_table["posixcntrl"] = list(s)
-
-    # `Digit: [\p{Nd}]`
-    s = set(table['n']['d'])
-    posix_table["posixdigit"] = list(s)
-
-    # `Graph: [^\p{Z}\p{C}]`
-    s = set()
-    for table_name in ('z', 'c'):
-        for sub_table_name in table[table_name]:
-            if not sub_table_name.startswith('^'):
-                s |= set(table[table_name][sub_table_name])
-    posix_table["^posixgraph"] = list(s)
-
-    # `Lower: [\p{Ll}]`
-    s = set(table['l']['l'])
-    posix_table["posixlower"] = list(s)
-
-    # `Print: [\P{C}]`
-    s = set()
-    for table_name in ('c',):
-        for sub_table_name in table[table_name]:
-            if not sub_table_name.startswith('^'):
-                s |= set(table[table_name][sub_table_name])
-    posix_table["^posixprint"] = list(s)
-
-    # `Punct: [\p{P}\p{S}]`
+    # `Punct: [[\p{P}\p{S}]--[\p{Alphabetic}]]`
     s = set()
     for table_name in ('p', 's'):
         for sub_table_name in table[table_name]:
             if not sub_table_name.startswith('^'):
                 s |= set(table[table_name][sub_table_name])
+    s -= set(posix_table['alphabetic'])
     posix_table["posixpunct"] = list(s)
 
-    # `Space: [\p{Z}\t\r\n\v\f]`
-    s = set()
-    for table_name in ('z',):
-        for sub_table_name in table[table_name]:
-            if not sub_table_name.startswith('^'):
-                s |= set(table[table_name][sub_table_name])
-    s |= set([x for x in range(0x09, 0x0e)])
-    posix_table["posixspace"] = list(s)
+    # `Digit: [0-9]`
+    s = set([x for x in range(0x30, 0x39 + 1)])
+    posix_table["posixdigit"] = list(s)
 
-    # `Upper: [\p{Lu}]`
-    s = set(table['l']['u'])
-    posix_table["posixupper"] = list(s)
+    # `XDigit: [\p{Nd}\p{HexDigit}]`
+    s = set(table['n']['d']) | set(posix_table["hexdigit"])
+    posix_table["xdigit"] = list(s)
 
     # `XDigit: [A-Fa-f0-9]`
     s = set([x for x in range(0x30, 0x39 + 1)])
     s |= set([x for x in range(0x41, 0x46 + 1)])
     s |= set([x for x in range(0x61, 0x66 + 1)])
     posix_table["posixxdigit"] = list(s)
+
+    # `Alnum: [\p{PosixAlpha}\p{PosixDigit}]`
+    s = set(posix_table['alphabetic']) | set(posix_table["posixdigit"])
+    posix_table["posixalnum"] = list(s)
+
+    # `Alnum: [\p{PosixAlpha}\p{Nd}]`
+    s = set(posix_table['alphabetic']) | set(table['n']['d'])
+    posix_table["alnum"] = list(s)
+
+    # `Blank: [\p{Zs}\t]`
+    s = set(table['z']['s'] + [0x09])
+    posix_table["posixblank"] = list(s)
+
+    # `Graph: [^\p{PosixSpace}\p{Cc}\p{Cn}\p{Cs}]`
+    s = (ALL_ASCII if ascii_props else ALL_CHARS) - (
+        set(posix_table["whitespace"]) |
+        set(table['c']['c']) |
+        set(table['c']['n']) |
+        set(table['c']['s'])
+    )
+    posix_table["posixgraph"] = list(s)
+
+    # `Cntrl: [\p{Cc}]`
+    s = set(table['c']['c'])
+    posix_table["posixcntrl"] = list(s)
+
+    # `Print: [\p{PosixGraph}\p{PosixBlank}--\p{PosixCntrl}]`
+    s = set(posix_table["posixgraph"])
+    s |= set(posix_table["posixblank"])
+    s -= set(posix_table["posixcntrl"])
+    posix_table["posixprint"] = list(s)
+
+    # `ASCII: [\x00-\x7F]`
+    s = set([x for x in range(0, 0x7F + 1)])
+    posix_table["posixascii"] = list(s)
 
 
 def gen_alias(nonbinary, binary, output):
@@ -983,7 +980,15 @@ def gen_alias(nonbinary, binary, output):
     line_re = None
     alias_header_re = re.compile(r'^#\s+(\w+)\s+Properties\s*$')
     divider_re = re.compile(r'#\s*=+\s*$')
-    posix_props = ('alnum', 'blank', 'graph', 'print', 'xdigit')
+    posix_props = {
+        'posixalpha': 'alphabetic',
+        'posixlower': 'lowercase',
+        'posixupper': 'uppercase',
+        'posixspace': 'whitespace',
+        'blank': 'posixblank',
+        'graph': 'posixgraph',
+        'print': 'posixprint'
+    }
     toplevel = (
         'catalog', 'enumerated', 'numeric', 'miscellaneous'
     )
@@ -1060,8 +1065,9 @@ def gen_alias(nonbinary, binary, output):
         if x not in alias:
             alias[x] = {}
 
-    for prop in posix_props:
-        alias['binary'][prop] = 'posix' + prop
+    for k, v in posix_props.items():
+        if k not in alias['binary']:
+            alias['binary'][k] = v
 
     with codecs.open(output, 'w', 'utf-8') as f:
         f.write(HEADER.format(UNIVERSION))

@@ -565,31 +565,66 @@ Verbose\ Property\ Form            | Terse\ Property\ Form
 ### POSIX Style Properties
 
 A number of POSIX property names are also available in the form `[:posix:]`. Inverse properties are also available in
-the form `[:^posix:]`. These properties must only be included in a character class: `[[:upper:]a-z]`. There are two
-definitions for a given POSIX property: ASCII and Unicode. The Unicode definitions leverage Unicode properties and are
-only used if the pattern is a Unicode string **and** the regular expression's `UNICODE` flag is set.  In Python 3, the
-default is Unicode unless the `ASCII` flag is set (the `LOCALE` flag is the equivalent of not having `UNICODE` set).
+the form `[:^posix:]`. These properties must only be included in a character class: `[[:upper:]a-z]`.
 
-The Unicode variants of the POSIX properties are also available via the `\p{...}` form.  There are some name collisions
-with existing Unicode properties like `punct` which exists as both a name for a Unicode property and a slightly
-different POSIX property. To access the POSIX property, you should prefix the name with `posix`: `\p{PosixPunct}`. It
-should be noted that you can use the `posix` prefix to access any of the POSIX properties, even if there is no name
-collision. The POSIX properties are treated as binary Unicode properties.
+These properties behave different depending on the regular expression mode. If the `ASCII` flag (or `LOCAL`) is enabled,
+the POSIX patterns will use the ASCII definition in the table below. If in Unicode mode (the default for Python 3),
+the POSIX properties will be defined as they are in the [Unicode specification for POSIX compatibility][unicode-posix].
+The Unicode patterns can be found in the table below.
 
-\[:posix:] | \\p\{Posix} | ASCII                                             | Unicode
----------- | ----------- | ------------------------------------------------- | -------
-`alnum`    | `Alnum`     | `[a-zA-Z0-9]`                                     | `[\p{L&}\p{Nd}]`
-`alpha`    | `Alpha`     | `[a-zA-Z]`                                        | `[\p{L&}]`
-`ascii`    | `ASCII`     | `[\x00-\x7F]`                                     | `[\x00-\x7F]`
-`blank`    | `Blank`     | `[ \t]`                                           | `[\p{Zs}\t]`
-`cntrl`    | `Cntrl`     | `[\x00-\x1F\x7F]`                                 | `[\p{Cc}]`
-`digit`    | `Digit`     | `[0-9]`                                           | `[\p{Nd}]`
-`graph`    | `Graph`     | `[\x21-\x7E]`                                     | `[^\p{Z}\p{C}]`
-`lower`    | `Lower`     | `[a-z]`                                           | `[\p{Ll}]`
-`print`    | `Print`     | `[\x20-\x7E]`                                     | `[^\p{C}]`
-`punct`    | `Punct`     | ``[!\"\#$%&'()*+,\-./:;&lt;=&gt;?@\[\\\]^_`{}~]`` | `[\p{P}\p{S}]`
-`space`    | `Space`     | `[ \t\r\n\v\f]`                                   | `[\p{Z}\t\r\n\v\f]`
-`upper`    | `Upper`     | `[A-Z]`                                           | `[\p{Lu}]`
-`xdigit`   | `XDigit`    | `[A-Fa-f0-9]`                                     | `[A-Fa-f0-9]`
+POSIX properties can also be accessed in the form `\p{Name}` or `\p{PosixName}`, but there are a few exceptions.  The
+[Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties) defines
+patterns for all the names used in the POSIX properties, but `punct`, `alnum`, `digit`, and `xdigit` have a Unicode
+standard and a POSIX compatibility variant. If you wish to get the POSIX compatible variant, you must use
+`\p{PosixName}`.
+
+!!! tip
+    If you want to get a POSIX definition, it is generally recommended to use `\p{PosixName}` or `[[:posix:]]` as you
+    are guaranteed to get what you think you're getting without having to remember which POSIX property name conflicts
+    with which Unicode property name.
+
+In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
+
+\[:posix:] | \\p\{Posix}   | ASCII                                             | Unicode
+---------- | ------------- | ------------------------------------------------- | -------
+`alpha`    | `Alpha`       | `[a-zA-Z]`                                        | `\p{Alphabetic}`
+`alnum`    | `PosixAlnum`  | `[[:alpha:][:digit:]]`                            | `[[:alpha:][:digit:]]`
+`ascii`    | `Ascii`       | `[\x00-\x7F]`                                     | `\p{blk=BasicLatin}`
+`blank`    | `Blank`       | `[ \t]`                                           | `[\p{Zs}\t]`
+`cntrl`    | `Cntrl`       | `[\x00-\x1F\x7F]`                                 | `\p{Cc}`
+`digit`    | `PosixDigit`  | `[0-9]`                                           | `[0-9]`
+`graph`    | `Graph`       | `[^ [:cntrl:]]`                                   | `[^[:space:][:cntrl:]\p{Cn}\p{Cs}]`
+`lower`    | `Lower`       | `[a-z]`                                           | `[\p{Lowercase}]`
+`print`    | `Print`       | `[[:graph:] ]`                                    | `[[\p{P}\p{S}]--[\p{alpha}]]`
+`punct`    | `PosixPunct`  | ``[!\"\#$%&'()*+,\-./:;&lt;=&gt;?@\[\\\]^_`{}~]`` | `[[[:graph:][:blank:]]--[[:cntrl:]]]`
+`space`    | `Space`       | `[ \t\r\n\v\f]`                                   | `[\p{Whitespace}]`
+`upper`    | `Upper`       | `[A-Z]`                                           | `[\p{Uppercase}]`
+`xdigit`   | `PosixXDigit` | `[A-Fa-f0-9]`                                     | `[A-Fa-f0-9]`
+
+!!! note
+    `ascii` is not actually a POSIX property but is added for convenience as some regular expression engines use it.
+
+## Compatibility Properties
+
+[Unicode specification for POSIX compatibility][unicode-posix] defines a number of properties, many of which double as
+[Posix properties](#posix-style-properties). These properties are accessed via `\p{name}`.
+
+In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
+
+\\p\{Posix}   | Unicode
+------------- | -------
+`Alpha`       | `\p{Alphabetic}`
+`PosixAlnum`  | `[\p{Alpha}\p{Digit}]`
+`Blank`       | `[\p{Zs}\t]`
+`Cntrl`       | `\p{Cc}`
+`PosixDigit`  | `\p{Nd}`
+`Graph`       | `[^\p{Space}\p{Cntrl}\p{Cn}\p{Cs}]`
+`Lower`       | `\p{Lowercase}`
+`Print`       | `[[\p{P}\p{S}]--[\p{Alpha}]]`
+`PosixPunct`  | `[\p{Graph}\p{Blank}]--[\p{Cntrl}]`
+`Space`       | `\p{Whitespace}`
+`Upper`       | `\p{Uppercase}`
+`Word`        | `[\p{Alnum}\p{M}\p{Pc}\p{JoinControl}]`
+`xdigit`      | `[\p{Nd}\p{HexDigit}]`
 
 --8<-- "links.txt"
