@@ -339,7 +339,8 @@ specifically added for Re and for Regex.
 
 !!! info "LOCALE and Character Properties"
     Backrefs does not consider `LOCALE` when inserting POSIX or Unicode properties. In byte strings, Unicode properties
-    will be truncated to the ASCII range of `\xff`. POSIX properties will use either Unicode categories or POSIX
+    will be truncated to the ASCII range of `\x7f`. Inverse of properties or properties collecting unknown/unassigned
+    can extend up to `\xff`. POSIX properties will use either Unicode categories or POSIX
     categories depending on whether the `UNICODE` flag is set. If the `LOCALE` flag is set, it is considered **not**
     Unicode. Keep in mind that Backrefs doesn't stop `LOCALE` from being applied, only that Backrefs inserts its
     categories as either Unicode or ASCII only.
@@ -572,16 +573,21 @@ the POSIX patterns will use the ASCII definition in the table below. If in Unico
 the POSIX properties will be defined as they are in the [Unicode specification for POSIX compatibility][unicode-posix].
 The Unicode patterns can be found in the table below.
 
-POSIX properties can also be accessed in the form `\p{Name}` or `\p{PosixName}`, but there are a few exceptions.  The
+POSIX properties can also be accessed in the form `\p{Name}` or `\p{PosixName}` and will always be in the Unicode form,
+but if using the form `\p{Name}`, there are some cases where you won't get the POSIX form.  The
 [Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties) defines
 patterns for all the names used in the POSIX properties, but `punct`, `alnum`, `digit`, and `xdigit` have a Unicode
-standard and a POSIX compatibility variant. If you wish to get the POSIX compatible variant, you must use
-`\p{PosixName}`.
+standard and a POSIX compatibility variant. The main reason for this is that POSIX limits the number of actual number
+characters, so the POSIX properties limit number from `\p{Nd}` to `[0-9]`. `punct`, on the other hand, is just
+different. If you wish to get the POSIX compatible variant, you must use `\p{PosixName}`.
 
 !!! tip
     If you want to get a POSIX definition, it is generally recommended to use `\p{PosixName}` or `[[:posix:]]` as you
     are guaranteed to get what you think you're getting without having to remember which POSIX property name conflicts
     with which Unicode property name.
+
+    If you prefer the Unicode standard variants, see [Compatibility Properties](#compatibility-properties). Those can
+    only be used in the form of `\p{name}`, but can also be used inside and outside character classes.
 
 In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
 
@@ -614,17 +620,17 @@ In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
 \\p\{Posix}   | Unicode
 ------------- | -------
 `Alpha`       | `\p{Alphabetic}`
-`PosixAlnum`  | `[\p{Alpha}\p{Digit}]`
+`Alnum`       | `[\p{Alpha}\p{Digit}]`
 `Blank`       | `[\p{Zs}\t]`
 `Cntrl`       | `\p{Cc}`
-`PosixDigit`  | `\p{Nd}`
+`Digit`       | `\p{Nd}`
 `Graph`       | `[^\p{Space}\p{Cntrl}\p{Cn}\p{Cs}]`
 `Lower`       | `\p{Lowercase}`
 `Print`       | `[[\p{P}\p{S}]--[\p{Alpha}]]`
-`PosixPunct`  | `[\p{Graph}\p{Blank}]--[\p{Cntrl}]`
+`Punct`       | `\p{P}`
 `Space`       | `\p{Whitespace}`
 `Upper`       | `\p{Uppercase}`
 `Word`        | `[\p{Alnum}\p{M}\p{Pc}\p{JoinControl}]`
-`xdigit`      | `[\p{Nd}\p{HexDigit}]`
+`XDigit`      | `[\p{Nd}\p{HexDigit}]`
 
 --8<-- "links.txt"
