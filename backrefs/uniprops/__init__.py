@@ -445,9 +445,6 @@ def get_is_property(value, limit_ascii=False):
 
     if value not in script_obj:
         value = negate + unidata.unicode_alias['binary'].get(temp, temp)
-        print('----alias----')
-        print(temp)
-        print(value)
         obj = bin_obj
     else:
         obj = script_obj
