@@ -12,12 +12,15 @@ UNIVERSION_INFO = None
 HOME = os.path.dirname(os.path.abspath(__file__))
 MAXUNICODE = sys.maxunicode
 MAXASCII = 0xFF
+MAXVALIDASCII = 0x7F
 GROUP_ESCAPES = frozenset([ord(x) for x in '-&[\\]^|~'])
 
 UNICODE_RANGE = (0x0000, 0x10FFFF)
 ASCII_RANGE = (0x00, 0xFF)
+ASCII_LIMIT = (0x00, 0x7F)
 
 ALL_CHARS = frozenset([x for x in range(UNICODE_RANGE[0], UNICODE_RANGE[1] + 1)])
+ASCII_UNUSED = frozenset([x for x in range(0x80, ASCII_RANGE[1] + 1)])
 ALL_ASCII = frozenset([x for x in range(ASCII_RANGE[0], ASCII_RANGE[1] + 1)])
 HEADER = '''\
 """Unicode Properties from Unicode version {} (autogen)."""
@@ -62,10 +65,10 @@ def create_span(unirange, is_bytes=False):
     if len(unirange) < 2:
         unirange.append(unirange[0])
     if is_bytes:
-        if unirange[0] > MAXASCII:
+        if unirange[0] > MAXVALIDASCII:
             return None
-        if unirange[1] > MAXASCII:
-            unirange[1] = MAXASCII
+        if unirange[1] > MAXVALIDASCII:
+            unirange[1] = MAXVALIDASCII
     return [x for x in range(unirange[0], unirange[1] + 1)]
 
 
@@ -263,6 +266,7 @@ def gen_blocks(output, ascii_props=False, append=False, prefix="", aliases=None)
         last = -1
         found = set(['noblock'])
 
+        max_limit = MAXVALIDASCII if ascii_props else MAXUNICODE
         max_range = MAXASCII if ascii_props else MAXUNICODE
         formatter = bytesformat if ascii_props else uniformat
 
@@ -274,14 +278,14 @@ def gen_blocks(output, ascii_props=False, append=False, prefix="", aliases=None)
                         continue
                     block = [int(i, 16) for i in data[0].strip().split('..')]
                     if block[0] > last + 1:
-                        if (last + 1) <= max_range:
-                            endval = block[0] - 1 if (block[0] - 1) < max_range else max_range
+                        if (last + 1) <= max_limit:
+                            endval = block[0] - 1 if (block[0] - 1) < max_limit else max_limit
                             no_block.append((last + 1, endval))
                     last = block[1]
                     name = format_name(data[1])
                     found.add(name)
                     inverse_range = []
-                    if block[0] > max_range:
+                    if block[0] > max_limit:
                         if ascii_props:
                             f.write('\n    "%s": "",' % name)
                             f.write('\n    "^%s": "%s-%s",' % (name, formatter(0), formatter(max_range)))
@@ -543,7 +547,7 @@ def gen_age(output, ascii_props=False, append=False, prefix="", aliases=None):
         for v in aliases.get('age', {}).values():
             obj[v] = []
 
-    all_chars = ALL_ASCII if ascii_props else ALL_CHARS
+    all_chars = (ALL_ASCII - ASCII_UNUSED) if ascii_props else ALL_CHARS
     with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedAge.txt'), 'r', 'utf-8') as uf:
         for line in uf:
             if not line.startswith('#'):
@@ -593,7 +597,7 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix="", alias
     """Generate quick check properties."""
 
     nf = {}
-    all_chars = ALL_ASCII if ascii_props else ALL_CHARS
+    all_chars = (ALL_ASCII - ASCII_UNUSED) if ascii_props else ALL_CHARS
     file_name = os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedNormalizationProps.txt')
     with codecs.open(file_name, 'r', 'utf-8') as uf:
         for line in uf:
@@ -781,7 +785,7 @@ def gen_bidi(output, ascii_props=False, append=False, prefix="", aliases=None):
         for v in aliases.get('bidiclasses', {}).values():
             bidi_class[v] = []
 
-    max_range = MAXASCII if ascii_props else MAXUNICODE
+    max_range = MAXVALIDASCII if ascii_props else MAXUNICODE
     with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'UnicodeData.txt'), 'r', 'utf-8') as uf:
         for line in uf:
             data = line.strip().split(';')
@@ -833,8 +837,8 @@ def gen_posix(output, is_bytes=False, append=False, prefix=""):
     posix_table["alnum"] = list(s)
 
     # `Alpha: [a-zA-Z]`
-    s = set([x for x in range(0x41, 0x5a)])
-    s |= set([x for x in range(0x61, 0x7a)])
+    s = set([x for x in range(0x41, 0x5a + 1)])
+    s |= set([x for x in range(0x61, 0x7a + 1)])
     posix_table["alpha"] = list(s)
 
     # `ASCII: [\x00-\x7F]`
@@ -944,7 +948,7 @@ def gen_uposix(table, posix_table, ascii_props):
     posix_table["posixblank"] = list(s)
 
     # `Graph: [^\p{PosixSpace}\p{Cc}\p{Cn}\p{Cs}]`
-    s = (ALL_ASCII if ascii_props else ALL_CHARS) - (
+    s = ((ALL_ASCII - ASCII_UNUSED) if ascii_props else ALL_CHARS) - (
         set(posix_table["whitespace"]) |
         set(table['c']['c']) |
         set(table['c']['n']) |
@@ -1106,7 +1110,7 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
     else:
         print('========Unicode Tables========')
     print('Building: General Category')
-    max_range = ASCII_RANGE if ascii_props else UNICODE_RANGE
+    max_range = ASCII_LIMIT if ascii_props else UNICODE_RANGE
     all_chars = ALL_ASCII if ascii_props else ALL_CHARS
 
     # `L&` or `Lc` won't be found in the table,

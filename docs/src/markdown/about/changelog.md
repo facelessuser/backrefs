@@ -12,6 +12,8 @@
   even if there are no characters.
 - **FIX**: Fix some missing Unicode property values.
 - **FIX**: Fix for `full_composition_exclusion` and `composition_exclusion` Unicode property.
+- **FIX**: When truncating Unicode properties in ASCII mode, properties should be be in the range `0x00-0x7f` not
+  `0x00-0xff`, though properties tracking unknown or inverses of properties can extend to `0xff`.
 
 ## 4.6
 

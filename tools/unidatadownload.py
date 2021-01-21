@@ -65,8 +65,7 @@ def download_unicodedata(version, output=HOME, no_zip=False):
         'extracted/DerivedNumericValues.txt',
         'extracted/DerivedJoiningType.txt',
         'extracted/DerivedJoiningGroup.txt',
-        'extracted/DerivedCombiningClass.txt',
-        'emoji/emoji-data.txt'
+        'extracted/DerivedCombiningClass.txt'
     ]
 
     files.append('ScriptExtensions.txt')
@@ -76,6 +75,9 @@ def download_unicodedata(version, output=HOME, no_zip=False):
 
     if ver >= (11, 0, 0):
         files.append('VerticalOrientation.txt')
+
+    if ver >= (13, 0, 0):
+        files.append('emoji/emoji-data.txt')
 
     http_url = 'http://www.unicode.org/Public/%s/ucd/' % version
     ftp_url = 'ftp://ftp.unicode.org/Public/%s/ucd/' % version
