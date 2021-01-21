@@ -19,9 +19,7 @@ def get_posix_property(value, mode=POSIX):
         if mode == POSIX_ASCII:
             return unidata.ascii_posix_properties[value]
         elif mode == POSIX_UNICODE:
-            return unidata.unicode_binary[
-                ('^posix' + value[1:]) if value.startswith('^') else ('posix' + value)
-            ]
+            return get_unicode_property('^posix' + value[1:] if value.startswith('^') else 'posix' + value)
         else:
             return unidata.unicode_posix_properties[value]
     except Exception:
@@ -447,6 +445,9 @@ def get_is_property(value, limit_ascii=False):
 
     if value not in script_obj:
         value = negate + unidata.unicode_alias['binary'].get(temp, temp)
+        print('----alias----')
+        print(temp)
+        print(value)
         obj = bin_obj
     else:
         obj = script_obj

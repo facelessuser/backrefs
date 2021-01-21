@@ -44,13 +44,28 @@ class TestPosix(unittest.TestCase):
     def test_posix_unicode(self):
         """Test `POSIX` Unicode properties."""
 
-        for k in uniprops.unidata.ascii_posix_properties.keys():
+        for k in uniprops.unidata.unicode_posix_properties.keys():
             result = uniprops.get_posix_property(k, mode=uniprops.POSIX_UNICODE)
-            if k.startswith('^'):
-                k = '^posix' + k[1:]
+            result2 = uniprops.get_unicode_property('^posix' + k[1:] if k.startswith('^') else 'posix' + k)
+            self.assertEqual(result, result2)
+
+    def test_posix_unicode_no_prefix(self):
+        """
+        Test Unicode `POSIX` properties with no prefix.
+
+        Some should be the Unicode definition which differs from the POSIX.
+        """
+
+        for k in uniprops.unidata.unicode_posix_properties.keys():
+            result = uniprops.get_posix_property(k, mode=uniprops.POSIX_UNICODE)
+            result2 = uniprops.get_unicode_property(k)
+            name = k[1:] if k.startswith('^') else k
+            print('=--------what')
+            print(name)
+            if name in ('xdigit', 'punct', 'digit', 'alnum'):
+                self.assertNotEqual(result, result2)
             else:
-                k = 'posix' + k
-            self.assertEqual(result, uniprops.unidata.unicode_binary[k])
+                self.assertEqual(result, result2)
 
     def test_bad_script(self):
         """Test `POSIX` property with bad value."""

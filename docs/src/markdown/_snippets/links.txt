@@ -7,3 +7,4 @@
 [re]: https://docs.python.org/3/library/re.html
 [regex]: https://pypi.python.org/pypi/regex
 [tox]: https://pypi.python.org/pypi/tox
+[unicode-posix]: https://unicode.org/reports/tr18/#Compatibility_Properties
