@@ -1,346 +1,17 @@
-# User Guide
-
-## Overview
-
-Backrefs is a wrapper around Python's built-in [Re][re] and the 3rd party [Regex][regex] library.  Backrefs adds various
-additional back references (and a couple other features) that are known to some regular expression engines, but not to
-Python's Re and/or Regex.  The supported back references actually vary depending on the regular expression engine being
-used as the engine may already have support for some, or things that prevent implementation of a feature.
-
-It is important to note that Backrefs doesn't alter the regular expression engine that it wraps around, it is
-essentially a string processor that looks for certain symbols in a regular expression search or replace string, and
-alters the pattern before sending it to the regular expression engine.
-
-For instance, if we used `\m` in our regular expression, it would be transformed into `\b(?=\w)`.
-
-```pycon3
->>> bre.compile(r'test \m').pattern
-re.compile('test \\b(?=\\w)')
-```
-
-Or if we used a Unicode property, it would be transformed into a character group:
-
-```pycon3
->>> bre.compile(r'test \p{Cs}').pattern
-re.compile('test [\ud800\udb7f-\udb80\udbff-\udc00\udfff]')
-```
-
-Replace templates are a little different than searches and require a bit more control to accomplish some of the replace
-features. Backrefs, like with searches, processes the string before passing it through the regular expression engine.
-Once Backrefs has parsed and altered the string as needed, it is then passed to the regular expression engine to extract
-string literals and the group mapping (search groups to replace group placeholders). Backrefs will then return a replace
-object that should be used to apply the replace. The object will handle applying casing (upper or lower) to the returned
-captured groups, and assemble the desired string output. For these reasons, Backrefs requires you to compile your
-replaces and use the returned replace object if you want to take advantage of replace features.
-
-```pycon3
->>> pattern = bre.compile_search(r'(\p{Letter}+)')
->>> replace = bre.compile_replace(pattern, r'\C\1\E')
->>> text = pattern.sub(replace, 'sometext')
-'SOMETEXT'
-```
-
-You are not required to compile search and replace separately. Search and replace compilation can be used automatically
-by compiling an object that uses Backrefs' search *and* replace functionality by default. Compiling separately simply
-gives you the control as to whether you use the search features and/or the replace features.
-
-```pycon3
->>> pattern = bre.compile(r'(\p{Letter}+)')
->>> pattern.sub(r'(\p{Letter}+)', r'\C\1\E', 'sometext')
-'SOMETEXT'
-```
-
-or
-
-```pycon3
->>> bre.sub(r'(\p{Letter}+)', r'\C\1\E', 'sometext')
-'SOMETEXT'
-```
-
-## Using Backrefs
-
-Depending on which regular expression engine you are using (Re or Regex), you can import the appropriate module.
-
-```py3
-from backrefs import bre
-from backrefs import bregex
-```
-
-Backrefs can be applied to search patterns and/or replace patterns. You can control whether you want to use search
-augmentation, replace augmentation, or both.
-
-### Search Patterns
-
-To augment the search pattern of Re or Regex to utilize search back references, you can use Backrefs to compile the
-search. This will apply a preprocessor to the pattern and replace the back references (or other special syntax) with the
-appropriate content to construct a valid regular expression for Re or Regex. It will then return a valid compiled
-pattern for the respective regular expression engine. Since the return is a valid compiled pattern, you can use it as
-expected.
-
-```py3
->>> pattern = bre.compile_search(r'\p{Letter}+', bre.UNICODE)
->>> pattern.match('whatever') is not None
-True
-```
-
-### Replace Templates
-
-Backrefs also provides special back references for replace templates as well. In order to utilize these back references,
-the template string must be run through a compiler as well. The replace compiler will run a preprocessor on the replace
-template that will strip out the back references and augment the template accordingly creating a valid replace template.
-Then it will return a replace object that can be used in place of your replace string. When used as your replace, the
-object will properly apply all the replace back references to your returned string and insert matched groups into the
-template.  These replace objects can be passed into `sub`, `subn` etc.
-
-Search templates must be run through the compiler with an associated compiled search pattern so that it can properly map
-to the groups in your search pattern.
-
-```pycon3
->>> pattern = bre.compile_search(r'(\p{Letter}+)')
->>> replace = bre.compile_replace(pattern, r'\C\1\E')
->>> text = pattern.sub(replace, 'sometext')
-'SOMETEXT'
-```
-
-Since compiled replaces are not template strings, but functions, you wont be able to apply compiled replaces via
-`#!py m.expand(replace)`. Instead, you can use the compiled replace directly.
-
-```pycon3
->>> pattern = bre.compile_search(r'(\p{Letter}+)')
->>> replace = bre.compile_replace(pattern, r'\C\1\E')
->>> m = pattern.match('sometext')
->>> replace(m)
-'SOMETEXT'
-```
-
-If you have a one time expand, and don't feel like pre-compiling, you can use Backrefs `expand` method (it can also take
-pre-compiled patterns as well).
-
-```pycon3
->>> pattern = bre.compile_search(r'(\p{Letter}+)')
->>> m = pattern.match('sometext')
->>> bre.expand(m, r'\C\1\E')
-'SOMETEXT'
-```
-
-### Search & Replace Together
-
-If you plan on using both the search and replace features, using `compile_search` and `compile_replace` can be a little
-awkward. If you wish to use something a bit more familiar, you can use the `compile` function to create a pattern object
-that mimics Re and Regex's pattern object. Once created, it will work very similar to how Re and Regex pattern objects
-work.  It will also auto compile replace patterns for you:
-
-```pycon3
->>> pattern = bre.compile(r'(\p{Letter}+)')
->>> pattern.sub(r'\C\1\E', 'sometext')
-'SOMETEXT'
-```
-
-If needed, you can use the object's `compile` function to pre-compile the replace patterns:
-
-```pycon3
->>> pattern = bre.compile(r'(\p{Letter}+)')
->>> replace = pattern.compile(r'\C\1\E')
->>> pattern.sub(replace, 'sometext')
-'SOMETEXT'
-```
-
-If you want to disable the patterns use of replace back references, you can disable the pre-compile of replace
-templates:
-
-```pycon3
->>> pattern = bre.compile(r'(\p{Letter}+)', auto_compile=False)
->>> pattern.sub(r'\C\1\E', 'sometext')
-'\\Csometext\\E'
-```
-
-### Other Functions
-
-Backrefs exposes most of the usual functions which Backrefs is wrapped around.  For instance, Backrefs wraps around
-`purge` so that it can purge its cache along with the regular expression engine's cache.
-
-Backrefs also wraps around the global matching functions. So if you have a one time `finditer`, `match`, `sub`,
-`search`, or other operation, Backrefs provides wrappers for these methods too.  The wrappers will compile the search
-and replace patterns for you on the fly, but they will also accept and pass pre-compiled patterns through as well. They
-should take all the flags and options your chosen regular expression engine normally accepts with the same names and
-positions.
-
-```pycon3
->>> bre.sub(r'(\p{Letter}+)', r'\C\1\E', 'sometext')
-SOMETEXT
-```
-
-In general, all options and flags for any of the compile, search, or replace wrappers should be the same as your actual
-regular expression engine.  They are mirrored in the `bre` and `bregex` library to save you from having to import the
-original `re` and `regex` respectively, but you could just as easily use the original flags if desired.
-
-In order to escape patterns formulated for Backrefs, you can simply use your regular expressions built-in escape method
-or the one mirrored in Backrefs; they are the same.
-
-```pycon3
->>> pattern = bre.compile_search(bre.escape(r'(\p{Letter}+)'))
->>> bre.sub(pattern, 'found it!', '(\\p{Letter}+)')
-'found it!'
-```
-
-### Format Replacements
-
-The Regex library has a feature where you can use format strings to implement replacements. This is useful for Regex as
-it provides a way to access different captures when multiple are captured by a single group. Most likely it was born
-from the need to provide an easy way to access multiple captures as Regex stores all captures while Re stores only the
-last.
-
-```pycon3
->>> regex.subf(r"(\w+) (\w+)", "{0} => {2} {1}", "foo bar")
-'foo bar => bar foo'
->>> regex.subf(r"(?P<word1>\w+) (?P<word2>\w+)", "{word2} {word1}", "foo bar")
-'bar foo'
-```
-
-```pycon3
->>> regex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
-'foo bar => bar f'
-```
-
-Backrefs implements format string replacements in a way that is similar to Regex's that works for both Re and Regex.
-While it is similar to Regex's implementation, there are some differences.
-
-1. Though you can use normal strings with Backrefs' format templates, it is recommended to use raw strings for format
-  replacements as back slashes are handled special to implement lower casing and upper casing via the replace back
-  references. In Backrefs a template would look like `#!py r'\L{1}{2}\E'`, and if you used a normal string it would look
-  like `#!py '\\L{1}{2}\\E'`.  Because Backrefs more or less requires raw strings for sane replace template creation,
-  you can also use normal string and Unicode escapes in the format replace templates, so it should feel like a normal
-  string.
-
-    ```pycon3
-    >>> bregex.subf(r'(test)', r'{0:\n^8}', 'test')
-    '\n\ntest\n\n'
-    >>> bregex.subf(r'(test)', r'\C{0:\u007c^8}\E', 'test')
-    '||TEST||'
-    ```
-
-2. Normally format strings don't allow you to index with negative integers as they are recognized as strings, but like
-  Regex's format implementation, Backrefs allows you to use negative numbers (`-1`), hex (`0x01`), octal (`0o001`), or
-  even binary (`0b1`).  While it may not be practical to use some of the latter forms, they are available to have
-  feature parity with Regex's implementation.
-
-
-    ```pycon3
-    >>> bregex.subf(r'(test)', r'{0[-1]}', 'test')
-    'test'
-    ```
-
-3. Backrefs implements a subset of the [Format Specification Mini-Language][format-spec] that allows for a few more
-  additional features that Regex doesn't (`format_spec`). As regular expression replace is only dealing with strings (or
-  byte strings), only string features are available with the `format_spec`.
-
-    ```
-    replacement_field ::=  "{" [field_name] ["!" conversion] [":" format_spec] "}"
-    field_name        ::=  arg_name ("." attribute_name | "[" element_index "]")*
-    arg_name          ::=  [identifier | integer]
-    attribute_name    ::=  identifier
-    element_index     ::=  integer | index_string
-    index_string      ::=  <any source character except "]"> +
-    conversion        ::=  "r" | "s" | "a"
-    format_spec       ::=  <described in the next section>
-    ```
-
-    ```
-    format_spec ::=  [[fill]align][0][width][type]
-    fill        ::=  <any character>
-    align       ::=  "<" | ">" | "^"
-    width       ::=  integer
-    type        ::=  "s"
-    ```
-
-    Note that in situations such as `{:030}`, where a width has a leading zero and no alignment specified, this would
-    normally trigger the integer alignment `=`, but since integer features are not implemented, this would fail.
-
-4. Backrefs allows format strings to work for byte strings as well. In almost all instances, using conversion types
-  won't make sense in a regular expression replace as the objects will already be strings in the needed format, but if
-  you were to use a conversion, ASCII would be assumed, and the object or Unicode string would be encoded with
-  `backslashreplace`.
-
-When using Backrefs' format replace, it should feel similar to Regex's format replace, except you will use raw strings:
-
-```pycon3
->>> bregex.subf(r"(\w+) (\w+)", r"{0} => {2} {1}", "foo bar")
-'foo bar => bar foo'
->>> bregex.subf(r"(?P<word1>\w+) (?P<word2>\w+)", r"{word2} {word1}", "foo bar")
-'bar foo'
-```
-
-If using `bregex`, you can even index into groups that have multiple captures.
-
-```pycon3
->>> bregex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
-'foo bar => bar f'
-```
-
-Formats also work for Re as well.
-
-
-```pycon3
->>> bre.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
-'foo bar => BAR FOO'
->>> bre.subf(r"(?P<word1>\w+) (?P<word2>\w+)", r"\c{word2} \c{word1}", "foo bar")
-'Bar Foo'
-```
-
-You can also use `{} {}` which is the same as `{0} {1}`.
-
-```pycon3
->>> bre.subf(r"(\w+) (\w+)", r"{} => \C{} {}\E", "foo bar")
-'foo bar => FOO BAR'
-```
-
-To pre-compile a format replace template, you can use the Backrefs' `compile_replace` method with the `FORMAT` flag.
-
-```pycon3
->>> pattern = bre.compile_search(r"(\w+) (\w+)")
->>> replace = bre.compile_replace(pattern, r"{0} => {2} {1}", bre.FORMAT)
->>> m = pattern.match("foo bar")
->>> replace(m)
-'foo bar => bar foo'
-```
-
-Or you can use Backrefs' pattern objects.
-
-```pycon3
->>> pattern = bre.compile(r"(\w+) (\w+)")
->>> pattern.subf(r"{0} => \C{2} {1}\E", "foo bar")
-'foo bar => BAR FOO'
-```
-
-Pre-compiled pattern objects can also create a compiled format replace object.
-
-```pycon3
->>> pattern = bre.compile(r"(?P<word1>\w+) (?P<word2>\w+)")
->>> replace = pattern.compile(r"\c{word2} \c{word1}", bre.FORMAT)
->>> pattern.subf(replace, "foo bar")
-'Bar Foo'
-```
-
-Backrefs also provides an `expand` variant for format templates called `expandf`.
-
-```pycon3
->>> pattern = bre.compile_search(r"(\w+) (\w+)")
->>> m = pattern.match('foo bar')
->>> bre.expandf(m, r"{0} => {2} {1}")
-'foo bar => bar foo'
-```
+# Supported References
 
 ## Search Back References
 
-Each supported regular expression engine's supported search features vary, so features are broken up to show what is
-specifically added for Re and for Regex.
+Re and Regex out of the box have very different feature sets. Backrefs tailors the supported features for each regular
+expression engine. For instance, Regex already supports Unicode properties, so Backrefs does not attempt to provide such
+support.
 
 ### Re
 
 !!! info "LOCALE and Character Properties"
-    Backrefs does not consider `LOCALE` when inserting POSIX or Unicode properties. When either the `ASCII` flag or
-    `LOCALE` flag is enabled, Unicode properties are restricted to the ASCII range. In byte strings, Unicode properties
-    will also be restricted to the ASCII range.
+    Backrefs does not consider `LOCALE` when inserting POSIX or Unicode properties. When forced int ASCII mode, either
+    by  the `ASCII` (or `LOCALE`) flag or when operating on a byte string, Unicode properties are restricted to the
+    ASCII range.
 
 Back\ References      | Description
 --------------------- |------------
@@ -356,7 +27,7 @@ Back\ References      | Description
 `\M`                  | End word boundary. Translates to `\b(?<=\w)`.
 `\h`                  | Horizontal whitespace. Equivalent to using `[[:blank:]]` or `[\t\p{Zs}]`.
 `\R`                  | Generic line breaks. This will use the pattern `(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])` which is roughly equivalent the to atomic group form that other engines use: `(?>\r\n|[\n\v\f\r\x85\u2028\u2029])`. When applied to byte strings, the pattern `(?:\r\n|(?!\r\n)[\n\v\f\r\x85])` will be used.
-`\X`                  | Grapheme clusters. This will use the pattern `(?:\PM\pM*(?!\pM))` which is roughly equivalent to the atomic group form that other engines use:  `(?>\PM\pM*)`. This does not implement [full, proper grapheme clusters][grapheme-boundaries] like the 3rd party Regex module does as this would require changes to the Re core engine. Instead it provides a simplified solution that has been seen in regular expression engines in the past.
+`\X`                  | Grapheme clusters. This will use the pattern `(?:\PM\pM*(?!\pM))` which is roughly equivalent to the atomic group form that other engines have used in the past:  `(?>\PM\pM*)`. This does not implement [full, proper grapheme clusters][grapheme-boundaries] like the 3rd party Regex module does as this would require changes to the Re core engine.
 
 ### Regex
 
@@ -417,7 +88,7 @@ as efficient or fast as using Regex's Unicode properties, but it is very useful 
 Also, keep in mind that there are most likely some differences between Regex's Unicode Properties and Backrefs' Unicode
 properties. One notable difference is Regex does not currently implement `script_extensions` while Backrefs' does and
 uses them as the default when specifying them in the form `\p{IsScriptValue}`  or `\p{ScriptValue}` just like Perl does.
-See [Special Syntax Exceptions](#special-syntax-exceptions) for more info.
+See [Property Short Names](#property-short-names) for more info.
 
 Supported\ Properties                       | Aliases
 ------------------------------------------- | -------
@@ -459,10 +130,10 @@ Supported\ Properties                       | Aliases
     `emod`, `ebase`, and `epres`.
 
 Exhaustive documentation on all these properties and their values is not currently provided. In general, we'll cover the
-syntax rules, and [special exceptions](#special-syntax-exceptions) to those rules for specific properties. Though we
-will outline all the values for General Category, we will not outline all of the valid values for the other properties.
-You can look at [Perl's Unicode property documentation][perl-uniprops] to get an idea of what values are appropriate for
-a given property, but keep in mind, syntax may vary from Perl's syntax.
+syntax rules, and [special short name handling](#property-short-names) to those rules for specific properties.
+Though we will outline all the values for General Category, we will not outline all of the valid values for the other
+properties. You can look at [Perl's Unicode property documentation][perl-uniprops] to get an idea of what values are
+appropriate for a given property, but keep in mind, syntax may vary from Perl's syntax.
 
 Unicode properties are specific to search patterns and can be used to specify a request to match all the characters in a
 specific Unicode property. Unicode properties can be used in byte strings, but the patterns will be restricted to the
@@ -489,7 +160,7 @@ a boolean value. True values can be `Yes`, `Y`, `True`, or `T`. False values can
 example, to specify characters that are "alphabetic", we can use `\p{Alphabetic: Y}`. To specify characters that are
 **not** "alphabetic": `\p{Alphabetic: N}`.
 
-### Special Syntax Exceptions
+### Property Short Names
 
 General Category, Script Extensions, Blocks, and Binary all can be specified in a short form using just their name or
 alias: `\p{value}`, but they will be evaluated in the following order to resolve name conflicts as some the same value
@@ -614,7 +285,7 @@ In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
 `upper`    | `Upper`       | `[A-Z]`                                           | `[\p{Uppercase}]`
 `xdigit`   | `PosixXDigit` | `[A-Fa-f0-9]`                                     | `[A-Fa-f0-9]`
 
-## Compatibility Properties
+### Compatibility Properties
 
 !!! new "New in 5.0"
     While many of the properties were available before 5.0, `word` is newly available. And all the properties now

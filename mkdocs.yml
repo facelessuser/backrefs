@@ -20,10 +20,13 @@ theme:
     code: Roboto Mono
   features:
     - navigation.tabs
+    - navigation.sections
 
 nav:
-  - User Guide: index.md
-  - Installation: installation.md
+  - Getting Started:
+    - Installation: installation.md
+    - Usage: usage.md
+    - Supported References: refs.md
   - About:
     - Contributing &amp; Support: about/contributing.md
     - Changelog: about/changelog.md

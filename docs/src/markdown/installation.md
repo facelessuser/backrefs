@@ -2,14 +2,16 @@
 
 ## Overview
 
-Backrefs doesn't have any required external dependencies.  If desired, you can install the optional [Regex][regex]
-module and use Backrefs with either Python's Re module or the Regex module. Instructions to install with and without
-optional dependencies is found below.
+Backrefs is a wrapper around Python's built-in [Re][re] and the 3rd party [Regex][regex] library.  Backrefs adds various
+additional back references (and a couple other features) that are known to some regular expression engines, but not to
+Python's Re and/or Regex.  The supported references actually vary depending on the regular expression engine being
+used as the engine may already have support for some, or things that prevent implementation of a feature.
+
+Backrefs comes in two flavors: `bre` (a Re wrapper) and `bregex` (a Regex wrapper).
 
 ## Installation
 
-There are a couple of recommended ways to install Backrefs.  If you would like to install in a virtual machine, you can
-do that as well.
+There are a couple of recommended ways to install Backrefs.
 
 1. Install with pip:
 
