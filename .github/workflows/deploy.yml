@@ -45,14 +45,14 @@ jobs:
           - distribution: sdist
             python-3-version: 9
 
-    name: Build Python 3.${{ matrix.python-version }} ${{ matrix.distribution }}
+    name: Build Python 3.${{ matrix.python-3-version }} ${{ matrix.distribution }}
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
         with:
-          python-version: 3.${{ matrix.python-version }}
+          python-version: 3.${{ matrix.python-3-version }}
       - name: Package sdist
         if: matrix.distribution == 'sdist'
         run: |
@@ -63,12 +63,12 @@ jobs:
         run: |
           pip install --upgrade setuptools wheel
           python setup.py ${{ matrix.distribution }} --python-tag 3${{ matrix.python-3-version}}
-          
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           path: dist/*
-          
+
   upload_all:
     name: Upload files to PyPI
     needs: [pypi]
@@ -79,7 +79,7 @@ jobs:
       with:
         name: artifact
         path: dist
-        
+
     - name: Publish
       uses: pypa/gh-action-pypi-publish@v1.4.1
       with:
