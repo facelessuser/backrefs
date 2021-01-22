@@ -569,12 +569,12 @@ def get_unicode_property(prop, value=None, mode=MODE_UNICODE):
         pass
 
     try:
-        return get_block_property(prop, mode)
+        return get_binary_property(prop, mode)
     except Exception:
         pass
 
     try:
-        return get_binary_property(prop, mode)
+        return get_block_property(prop, mode)
     except Exception:
         pass
 

@@ -11,6 +11,8 @@
   to the ASCII range even in Unicode strings.
 - **NEW**: Removed the old deprecated search references: `\l`, `\L`, `\c`, and `\C`. These are available in various
   other forms: `[[:lower:]]`, `\p{lower}`, etc.
+- **NEW**: To reduce conflicts of naming, Binary properties are evaluated before Block properties when using short
+  names. Block has conflicts with some other properties of various types, using short names for blocks is discouraged.
 - **FIX**: Numerous fixes to existing Unicode properties: missing values, incorrect values, etc.
 
 ## 4.6

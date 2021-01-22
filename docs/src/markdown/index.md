@@ -491,14 +491,14 @@ example, to specify characters that are "alphabetic", we can use `\p{Alphabetic:
 
 ### Special Syntax Exceptions
 
-General Category, Script Extensions, Blocks, and Binary all can be specified by their value alone: `\p{value}`, but they
-will be evaluated in the following order to resolve name conflicts as some the same value that is used in Script may be
-used in Blocks etc.
+General Category, Script Extensions, Blocks, and Binary all can be specified in a short form using just their name or
+alias: `\p{value}`, but they will be evaluated in the following order to resolve name conflicts as some the same value
+that is used in Script may be used in Blocks etc.
 
 1. General Category
 2. Script Extensions
-3. Blocks
 4. Binary
+3. Blocks
 
 Script Extensions and Binary properties can also be defined in the format `IsValue`.  For instance, if we wanted to
 match characters in the `Latin` script, we could use the syntax `\p{IsLatin}`, which would be the same as `\p{Latin}` or
@@ -507,6 +507,18 @@ match characters in the `Latin` script, we could use the syntax `\p{IsLatin}`, w
 Block properties have a similar short form as Script and Binary properties.  For Blocks you can use `InValue` to specify
 a block. If we wanted to match characters in the `Basic_Latin` block, we could use the syntax `\p{InBasic_Latin}`. This
 would be the same as `\p{Block: Basic_Latin}` or `\p{Basic_Latin}`.
+
+!!! warn "Short Name Conflicts"
+    When it comes to short names, each new Unicode version, there is a risk that new properties could cause conflicts
+    with existing names and/or aliases. Currently, most of the conflicts involve the Block properties. To reduce
+    friction, they are evaluated last.
+
+    Generally, it is discouraged to use short names for Block properties. But the option is still supported, but Block 
+    properties will be evaluated last. There are currently no known conflicts with `In*` properties, but in future
+    Unicode versions there could.
+
+    As for short names for scripts, Binary, or General Categories, there is always the possibility that these could
+    break in the future as well. Generally, more explicit is better and probably safer.
 
 Lastly, you can specify general category properties in the form `\pX` where `X` is the single letter terse property
 form. In this form, you can only use the single character values. So you could specify `Letter`, whose terse form is `L`
