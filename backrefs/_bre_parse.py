@@ -275,8 +275,9 @@ class _SearchParser(object):
         elif t == "e":
             current.append(self._re_escape)
         elif t == "h":
-            current.extend(self.horizontal_ws_prop(in_group))
-            self.found_property = True
+            current.extend(self.unicode_props('blank', None, in_group=in_group))
+            if in_group:
+                self.found_property = True
         elif t == 'p':
             prop = self.get_unicode_property(i)
             current.extend(self.unicode_props(prop[0], prop[1], in_group=in_group))
@@ -560,14 +561,6 @@ class _SearchParser(object):
         properties = [v]
 
         return properties
-
-    def horizontal_ws_prop(self, in_group):
-        """Horizontal white space is treated as `[[:blank:]]`."""
-
-        v = self.unicode_props('blank', None, in_group=in_group)
-        if not in_group:
-            v[0] = "[%s]" % v[0]
-        return v
 
     def main_group(self, i):
         """The main group: group 0."""
