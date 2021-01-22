@@ -38,8 +38,15 @@ class TestWordBreak(unittest.TestCase):
         """Test `Word Break` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_word_break.items():
-            result = uniprops.get_unicode_property('wordbreak', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('wordbreak', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_wordbreak_binary(self):
+        """Test `Word Break` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_word_break.items():
+            result = uniprops.get_unicode_property('wordbreak', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_wordbreak(self):
         """Test `Word Break` property with bad value."""

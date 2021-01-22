@@ -38,8 +38,15 @@ class TestBinary(unittest.TestCase):
         """Test `Binary` properties."""
 
         for k, v in uniprops.unidata.ascii_binary.items():
-            result = uniprops.get_unicode_property(k, limit_ascii=True)
+            result = uniprops.get_unicode_property(k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_binary_binary(self):
+        """Test `Binary` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_binary.items():
+            result = uniprops.get_unicode_property(k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_binary_true(self):
         """Test binary Category with a value."""

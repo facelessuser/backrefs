@@ -38,8 +38,15 @@ class TestAge(unittest.TestCase):
         """Test `Age` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_age.items():
-            result = uniprops.get_unicode_property('age', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('age', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_age_binary(self):
+        """Test `Age` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_age.items():
+            result = uniprops.get_unicode_property('age', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_age(self):
         """Test age property with bad value."""

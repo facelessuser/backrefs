@@ -20,7 +20,7 @@ ASCII_RANGE = (0x00, 0xFF)
 ASCII_LIMIT = (0x00, 0x7F)
 
 ALL_CHARS = frozenset([x for x in range(UNICODE_RANGE[0], UNICODE_RANGE[1] + 1)])
-ASCII_UNUSED = frozenset([x for x in range(0x80, ASCII_RANGE[1] + 1)])
+ASCII_UNUSED = frozenset([x for x in range(0x80, UNICODE_RANGE[1] + 1)])
 ALL_ASCII = frozenset([x for x in range(ASCII_RANGE[0], ASCII_RANGE[1] + 1)])
 HEADER = '''\
 """Unicode Properties from Unicode version {} (autogen)."""
@@ -48,17 +48,6 @@ def format_name(text):
     return text.strip().lower().replace(' ', '').replace('-', '').replace('_', '')
 
 
-def bytesformat(value):
-    """Convert a bytes value."""
-
-    if value in GROUP_ESCAPES:
-        # Escape characters that are (or will be in the future) problematic
-        c = "\\x%02x\\x%02x" % (0x5c, value)
-    else:
-        c = "\\x%02x" % value
-    return c
-
-
 def create_span(unirange, is_bytes=False):
     """Clamp the Unicode range."""
 
@@ -76,7 +65,7 @@ def not_explicitly_defined(table, name, is_bytes=False):
     """Compose a table with the specified entry name of values not explicitly defined."""
 
     name = name.lower()
-    all_chars = ALL_ASCII if is_bytes else ALL_CHARS
+    all_chars = ALL_CHARS
     s = set()
     for k, v in table.items():
         s.update(v)
@@ -89,8 +78,8 @@ def not_explicitly_defined(table, name, is_bytes=False):
 def char2range(d, is_bytes=False, invert=True):
     """Convert the characters in the dict to a range in string form."""
 
-    fmt = bytesformat if is_bytes else uniformat
-    maxrange = MAXASCII if is_bytes else MAXUNICODE
+    fmt = uniformat
+    maxrange = MAXUNICODE
 
     for k1 in sorted(d.keys()):
         v1 = d[k1]
@@ -162,7 +151,6 @@ def get_files(output):
         'sc': os.path.join(output, 'script.py'),
         'bc': os.path.join(output, 'bidiclass.py'),
         'binary': os.path.join(output, 'binary.py'),
-        'posix': os.path.join(output, 'posix.py'),
         'age': os.path.join(output, 'age.py'),
         'ea': os.path.join(output, 'eastasianwidth.py'),
         'gcb': os.path.join(output, 'graphemeclusterbreak.py'),
@@ -267,8 +255,8 @@ def gen_blocks(output, ascii_props=False, append=False, prefix="", aliases=None)
         found = set(['noblock'])
 
         max_limit = MAXVALIDASCII if ascii_props else MAXUNICODE
-        max_range = MAXASCII if ascii_props else MAXUNICODE
-        formatter = bytesformat if ascii_props else uniformat
+        max_range = MAXUNICODE
+        formatter = uniformat
 
         with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'Blocks.txt'), 'r', 'utf-8') as uf:
             for line in uf:
@@ -547,7 +535,7 @@ def gen_age(output, ascii_props=False, append=False, prefix="", aliases=None):
         for v in aliases.get('age', {}).values():
             obj[v] = []
 
-    all_chars = (ALL_ASCII - ASCII_UNUSED) if ascii_props else ALL_CHARS
+    all_chars = (ALL_CHARS - ASCII_UNUSED) if ascii_props else ALL_CHARS
     with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedAge.txt'), 'r', 'utf-8') as uf:
         for line in uf:
             if not line.startswith('#'):
@@ -597,7 +585,7 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix="", alias
     """Generate quick check properties."""
 
     nf = {}
-    all_chars = (ALL_ASCII - ASCII_UNUSED) if ascii_props else ALL_CHARS
+    all_chars = (ALL_CHARS - ASCII_UNUSED) if ascii_props else ALL_CHARS
     file_name = os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedNormalizationProps.txt')
     with codecs.open(file_name, 'r', 'utf-8') as uf:
         for line in uf:
@@ -825,90 +813,6 @@ def gen_bidi(output, ascii_props=False, append=False, prefix="", aliases=None):
             i += 1
 
 
-def gen_posix(output, is_bytes=False, append=False, prefix=""):
-    """Generate the bytes POSIX table and write out to file."""
-
-    posix_table = {}
-
-    # `Alnum: [a-zA-Z0-9]`
-    s = set([x for x in range(0x30, 0x39 + 1)])
-    s |= set([x for x in range(0x41, 0x5a + 1)])
-    s |= set([x for x in range(0x61, 0x7a + 1)])
-    posix_table["alnum"] = list(s)
-
-    # `Alpha: [a-zA-Z]`
-    s = set([x for x in range(0x41, 0x5a + 1)])
-    s |= set([x for x in range(0x61, 0x7a + 1)])
-    posix_table["alpha"] = list(s)
-
-    # `ASCII: [\x00-\x7F]`
-    s = set([x for x in range(0, 0x7F + 1)])
-    posix_table["ascii"] = list(s)
-
-    # `Blank: [ \t]`
-    s = set([0x20, 0x09])
-    posix_table["blank"] = list(s)
-
-    # `Cntrl: [\x00-\x1F\x7F]`
-    s = set([x for x in range(0, 0x1F + 1)] + [0x7F])
-    posix_table["cntrl"] = list(s)
-
-    # `Digit: [0-9]`
-    s = set([x for x in range(0x30, 0x39 + 1)])
-    posix_table["digit"] = list(s)
-
-    # `Graph: [\x21-\x7E]`
-    s = set([x for x in range(0x21, 0x7E + 1)])
-    posix_table["graph"] = list(s)
-
-    # `Lower: [a-z]`
-    s = set([x for x in range(0x61, 0x7a + 1)])
-    posix_table["lower"] = list(s)
-
-    # `Print: [\x20-\x7E]`
-    s = set([x for x in range(0x20, 0x7E + 1)])
-    posix_table["print"] = list(s)
-
-    # `Punct: [!\"\#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~]`
-    s = set([x for x in range(0x21, 0x2f + 1)])
-    s |= set([x for x in range(0x3a, 0x40 + 1)])
-    s |= set([x for x in range(0x5b, 0x60 + 1)])
-    s |= set([x for x in range(0x7b, 0x7e + 1)])
-    posix_table["punct"] = list(s)
-
-    # `Space: [ \t\r\n\v\f]`
-    s = set([x for x in range(0x09, 0x0d + 1)] + [0x20])
-    posix_table["space"] = list(s)
-
-    # `Upper: [A-Z]`
-    s = set([x for x in range(0x41, 0x5a + 1)])
-    posix_table["upper"] = list(s)
-
-    # `XDigit: [A-Fa-f0-9]`
-    s = set([x for x in range(0x30, 0x39 + 1)])
-    s |= set([x for x in range(0x41, 0x46 + 1)])
-    s |= set([x for x in range(0x61, 0x66 + 1)])
-    posix_table["xdigit"] = list(s)
-
-    # Convert characters values to ranges
-    char2range(posix_table, is_bytes=is_bytes)
-
-    with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
-        if not append:
-            f.write(HEADER.format(UNIVERSION))
-        # Write out the Unicode properties
-        f.write('%s_posix_properties = {\n' % prefix)
-        count = len(posix_table) - 1
-        i = 0
-        for k1, v1 in sorted(posix_table.items()):
-            f.write('    "%s": "%s"' % (k1, v1))
-            if i == count:
-                f.write('\n}\n')
-            else:
-                f.write(',\n')
-            i += 1
-
-
 def gen_uposix(table, posix_table, ascii_props):
     """Generate the POSIX table and write out to file."""
 
@@ -948,7 +852,7 @@ def gen_uposix(table, posix_table, ascii_props):
     posix_table["posixblank"] = list(s)
 
     # `Graph: [^\p{PosixSpace}\p{Cc}\p{Cn}\p{Cs}]`
-    s = ((ALL_ASCII - ASCII_UNUSED) if ascii_props else ALL_CHARS) - (
+    s = ((ALL_CHARS - ASCII_UNUSED) if ascii_props else ALL_CHARS) - (
         set(posix_table["whitespace"]) |
         set(table['c']['c']) |
         set(table['c']['n']) |
@@ -1111,7 +1015,7 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
         print('========Unicode Tables========')
     print('Building: General Category')
     max_range = ASCII_LIMIT if ascii_props else UNICODE_RANGE
-    all_chars = ALL_ASCII if ascii_props else ALL_CHARS
+    all_chars = ALL_CHARS
 
     # `L&` or `Lc` won't be found in the table,
     # so initialize 'c' at the start. `&` will have to be converted to 'c'
@@ -1164,10 +1068,6 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
     # Generate Unicode binary
     print('Building: Binary')
     gen_binary(table, files['binary'], ascii_props, append, prefix, aliases=aliases)
-
-    # Generate POSIX table and write out to file.
-    print('Building: Posix')
-    gen_posix(files['posix'], is_bytes=ascii_props, append=append, prefix=prefix)
 
     print('Building: Age')
     gen_age(files['age'], ascii_props, append, prefix, aliases)

@@ -72,7 +72,7 @@ class TestGeneralCategory(unittest.TestCase):
                 prop = prefix + "generalcategory"
                 category = k1 + subcategory
 
-                result = uniprops.get_unicode_property(prop, category, limit_ascii=True)
+                result = uniprops.get_unicode_property(prop, category, mode=uniprops.MODE_NORMAL)
                 self.assertEqual(result, v2)
 
     def test_gc_just_category(self):
@@ -104,8 +104,24 @@ class TestGeneralCategory(unittest.TestCase):
                     subcategory = k2
                 category = prefix + k1 + subcategory
 
-                result = uniprops.get_unicode_property(category, limit_ascii=True)
+                result = uniprops.get_unicode_property(category, mode=uniprops.MODE_NORMAL)
                 self.assertEqual(result, v2)
+
+    def test_gc_just_category_binary(self):
+        """Test `General Category` ASCII properties."""
+
+        for k1, v1 in uniprops.unidata.ascii_properties.items():
+            for k2, v2 in v1.items():
+                if k2.startswith('^'):
+                    prefix = '^'
+                    subcategory = k2[1:]
+                else:
+                    prefix = ''
+                    subcategory = k2
+                category = prefix + k1 + subcategory
+
+                result = uniprops.get_unicode_property(category, mode=uniprops.MODE_ASCII)
+                self.assertEqual(result, uniprops.fmt_string(v2, True))
 
     def test_bad_single_subcategory(self):
         """Test `Joining Group` property with bad value."""

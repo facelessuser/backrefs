@@ -38,8 +38,15 @@ class TestJoiningType(unittest.TestCase):
         """Test `Joining Type` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_joining_type.items():
-            result = uniprops.get_unicode_property('joiningtype', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('joiningtype', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_joiningtype_binary(self):
+        """Test `Age` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_joining_type.items():
+            result = uniprops.get_unicode_property('joiningtype', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_joiningtype(self):
         """Test `Joining Type` property with bad value."""

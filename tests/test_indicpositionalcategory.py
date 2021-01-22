@@ -38,8 +38,15 @@ class TestIndicPositionalCategory(unittest.TestCase):
         """Test `Indic Positional Category` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_indic_positional_category.items():
-            result = uniprops.get_unicode_property('indicpositionalcategory', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('indicpositionalcategory', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_indicpositionalcategory_binary(self):
+        """Test `Indic Positional Category` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_indic_positional_category.items():
+            result = uniprops.get_unicode_property('indicpositionalcategory', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_indicpositionalcategory(self):
         """Test `Indic Positional Category` property with bad value."""

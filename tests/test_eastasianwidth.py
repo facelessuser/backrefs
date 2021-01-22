@@ -38,8 +38,15 @@ class TestEastAsianWidth(unittest.TestCase):
         """Test `East Asian Width` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_east_asian_width.items():
-            result = uniprops.get_unicode_property('eastasianwidth', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('eastasianwidth', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_eastasianwidth_binary(self):
+        """Test `East Asian Width` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_east_asian_width.items():
+            result = uniprops.get_unicode_property('eastasianwidth', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_eastasianwidth(self):
         """Test `East Asian Width` property with bad value."""

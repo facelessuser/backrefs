@@ -2,18 +2,16 @@
 
 ## 5.0.0
 
+- **NEW**: Significant improvements to Unicode handling. A lot of testing was implemented to catch existing bugs and to
+  improve result.
+- **NEW**: POSIX style properties now handle all existing Unicode properties.
 - **NEW**: POSIX properties now follow the [Unicode specification for POSIX compatibility][unicode-posix].
   Read the [documentation](../index.md#posix-style-properties) to learn more.
-- **FIX**: Fix certain Unicode properties which had their alias relations backwards.
-- **FIX**: Fix issue with Unicode characters not explicitly specified in the Vertical Orientation property not getting
-  set to the right group due to case sensitivity.
-- **FIX**: Fix issue where General Category `Cn`/`Unassigned` was missing.
-- **FIX**: Fix issue where some property values, which had no characters, were missing. They should still be included
-  even if there are no characters.
-- **FIX**: Fix some missing Unicode property values.
-- **FIX**: Fix for `full_composition_exclusion` and `composition_exclusion` Unicode property.
-- **FIX**: When truncating Unicode properties in ASCII mode, properties should be be in the range `0x00-0x7f` not
-  `0x00-0xff`, though properties tracking unknown or inverses of properties can extend to `0xff`.
+- **NEW**: Unicode properties are now sensitive to the `ASCII` flag and will properly restrict the range of properties
+  to the ASCII range even in Unicode strings.
+- **NEW**: Removed the old deprecated search references: `\l`, `\L`, `\c`, and `\C`. These are available in various
+  other forms: `[[:lower:]]`, `\p{lower}`, etc.
+- **FIX**: Numerous fixes to existing Unicode properties: missing values, incorrect values, etc.
 
 ## 4.6
 

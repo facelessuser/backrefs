@@ -10,7 +10,6 @@ from . import util as _util
 import sre_parse as _sre_parse
 import unicodedata as _unicodedata
 from . import uniprops as _uniprops
-from . import util
 
 __all__ = ("ReplaceTemplate",)
 
@@ -53,11 +52,6 @@ _BACK_SLASH_TRANSLATION = {
 }
 
 _FMT_CONV_TYPE = ('a', 'r', 's')
-
-_MSG_DEPRECATE_CASE = (
-    "The search back reference '{}' at position {} has been deprecated, please use the posix '{}'. "
-    "In the future, support for this reference will be removed."
-)
 
 
 class LoopException(Exception):
@@ -185,7 +179,7 @@ class _SearchParser(object):
         if global_retry:
             raise GlobalRetryException('Global Retry')
 
-    def get_unicode_property(self, i):
+    def get_unicode_property(self, i, brackets=False):
         """Get Unicode property."""
 
         index = i.index
@@ -195,31 +189,54 @@ class _SearchParser(object):
             c = next(i)
             if c.upper() in _ASCII_LETTERS:
                 prop.append(c)
-            elif c != '{':
+            elif not brackets and c != '{' or brackets and c != ':':
                 raise SyntaxError("Unicode property missing '{' at %d!" % (i.index - 1))
             else:
                 c = next(i)
                 if c == '^':
                     prop.append(c)
                     c = next(i)
+
                 while c not in (':', '=', '}'):
                     if c not in _PROPERTY:
                         raise SyntaxError('Invalid Unicode property character at %d!' % (i.index - 1))
                     if c not in _PROPERTY_STRIP:
                         prop.append(c)
                     c = next(i)
+
                 if c in (':', '='):
-                    c = next(i)
-                    while c != '}':
-                        if c not in _PROPERTY:
-                            raise SyntaxError('Invalid Unicode property character at %d!' % (i.index - 1))
-                        if c not in _PROPERTY_STRIP:
-                            value.append(c)
+                    skip = False
+                    if brackets:
+                        is_colon = c == ':'
                         c = next(i)
-                    if not value:
-                        raise SyntaxError('Invalid Unicode property!')
+                        if is_colon and c == ']':
+                            # That's the end of the property
+                            skip = True
+                        end = ':'
+                    else:
+                        c = next(i)
+                        end = '}'
+
+                    # Get the property value
+                    if not skip:
+                        while c != end:
+                            if c not in _PROPERTY:
+                                raise SyntaxError('Invalid Unicode property character at %d!' % (i.index - 1))
+                            if c not in _PROPERTY_STRIP:
+                                value.append(c)
+                            c = next(i)
+                        if brackets and c == ':':
+                            c = next(i)
+                            if c != ']':
+                                raise SyntaxError('Invalid Unicode property character at %d!' % (i.index - 1))
+                        if not value:
+                            raise SyntaxError('Invalid Unicode property!')
+
         except StopIteration:
-            raise SyntaxError("Missing or unmatched '{' at %d!" % index)
+            if brackets:
+                raise SyntaxError("Missing or unmatched ':]' at %d!" % index)
+            else:
+                raise SyntaxError("Missing or unmatched '{' at %d!" % index)
 
         return ''.join(prop).lower(), ''.join(value).lower()
 
@@ -260,22 +277,6 @@ class _SearchParser(object):
         elif t == "h":
             current.extend(self.horizontal_ws_prop(in_group))
             self.found_property = True
-        elif t == "l":
-            current.extend(self.letter_case_props(_LOWER, in_group))
-            self.found_property = True
-            util.warn_deprecated(_MSG_DEPRECATE_CASE.format('\\l', i.index - 2, "'[:lower:]'"))
-        elif t == "L":
-            current.extend(self.letter_case_props(_LOWER, in_group, negate=True))
-            self.found_property = True
-            util.warn_deprecated(_MSG_DEPRECATE_CASE.format('\\L', i.index - 2, "'[:^lower:]'"))
-        elif t == "c":
-            current.extend(self.letter_case_props(_UPPER, in_group))
-            self.found_property = True
-            util.warn_deprecated(_MSG_DEPRECATE_CASE.format('\\l', i.index - 2, "'[:upper:]'"))
-        elif t == "C":
-            current.extend(self.letter_case_props(_UPPER, in_group, negate=True))
-            self.found_property = True
-            util.warn_deprecated(_MSG_DEPRECATE_CASE.format('\\l', i.index - 2, "'[:^upper:]'"))
         elif t == 'p':
             prop = self.get_unicode_property(i)
             current.extend(self.unicode_props(prop[0], prop[1], in_group=in_group))
@@ -405,33 +406,6 @@ class _SearchParser(object):
             current.append(t)
         return current
 
-    def get_posix(self, i):
-        """Get POSIX."""
-
-        index = i.index
-        value = []
-        try:
-            c = next(i)
-            if c != ':':
-                raise ValueError('Not a valid property!')
-            else:
-                c = next(i)
-                if c == '^':
-                    value.append(c)
-                    c = next(i)
-                while c != ':':
-                    if c not in _PROPERTY:
-                        raise ValueError('Not a valid property!')
-                    if c not in _PROPERTY_STRIP:
-                        value.append(c)
-                    c = next(i)
-                if next(i) != ']' or not value:
-                    raise ValueError('Not a valid property!')
-        except Exception:
-            i.rewind(i.index - index)
-            value = []
-        return ''.join(value).lower() if value else None
-
     def char_groups(self, t, i):
         """Handle character groups."""
 
@@ -472,12 +446,17 @@ class _SearchParser(object):
                     first = pos
                     current.append(t)
                 elif t == "[":
-                    posix = self.get_posix(i)
-                    if posix:
-                        # Prevent POSIX class from being part of a range.
+                    index = i.index
+                    try:
+                        prop = self.get_unicode_property(i, True)
+                    except Exception:
+                        prop = None
+                        i.rewind(i.index - index)
+                    if prop is not None:
+                        value = self.unicode_props(prop[0], prop[1], in_group=True)
                         if current[-1] == '-':
                             current[-1] = _re.escape('-')
-                        current.extend(self.posix_props(posix, in_group=True))
+                        current.extend(value)
                         found_property = True
                         pos = i.index - 2
                     else:
@@ -537,29 +516,6 @@ class _SearchParser(object):
             current.append(t)
         return current
 
-    def posix_props(self, prop, in_group=False):
-        """
-        Insert POSIX properties.
-
-        Posix style properties are not as forgiving
-        as Unicode properties.  Case does matter,
-        and whitespace and '-' and '_' will not be tolerated.
-        """
-
-        try:
-            if self.is_bytes or not self.unicode:
-                pattern = _uniprops.get_posix_property(
-                    prop, (_uniprops.POSIX_ASCII if self.is_bytes else _uniprops.POSIX)
-                )
-            else:
-                pattern = _uniprops.get_posix_property(prop, _uniprops.POSIX_UNICODE)
-        except Exception:
-            raise ValueError('Invalid POSIX property!')
-        if not in_group and not pattern:  # pragma: no cover
-            pattern = '^%s' % (_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE)
-
-        return [pattern]
-
     def unicode_name(self, name, in_group=False):
         """Insert Unicode value by its name."""
 
@@ -589,7 +545,14 @@ class _SearchParser(object):
         if not prop_value and prop_value is not None:
             prop_value = None
 
-        v = _uniprops.get_unicode_property(props, prop_value, self.is_bytes)
+        if self.is_bytes:
+            mode = _uniprops.MODE_ASCII
+        elif not self.unicode:
+            mode = _uniprops.MODE_NORMAL
+        else:
+            mode = _uniprops.MODE_UNICODE
+
+        v = _uniprops.get_unicode_property(props, prop_value, mode)
         if not in_group:
             if not v:
                 v = '^%s' % (_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE)
@@ -601,22 +564,9 @@ class _SearchParser(object):
     def horizontal_ws_prop(self, in_group):
         """Horizontal white space is treated as `[[:blank:]]`."""
 
-        v = self.posix_props("blank", in_group=in_group)
+        v = self.unicode_props('blank', None, in_group=in_group)
         if not in_group:
             v[0] = "[%s]" % v[0]
-        return v
-
-    def letter_case_props(self, case, in_group, negate=False):
-        """Insert letter (ASCII or Unicode) case properties."""
-
-        # Use traditional ASCII upper/lower case unless:
-        #    1. The strings fed in are not bytes
-        #    2. And the the Unicode flag was used
-        if not in_group:
-            v = self.posix_props(("^" if negate else "") + ("upper" if case == _UPPER else "lower"), in_group=in_group)
-            v[0] = "[%s]" % v[0]
-        else:
-            v = self.posix_props(("^" if negate else "") + ("upper" if case == _UPPER else "lower"), in_group=in_group)
         return v
 
     def main_group(self, i):

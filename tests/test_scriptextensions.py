@@ -38,8 +38,15 @@ class TestScriptExtensions(unittest.TestCase):
         """Test `Script Extensions` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_script_extensions.items():
-            result = uniprops.get_unicode_property('scriptextensions', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('scriptextensions', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_scriptextensions_binary(self):
+        """Test `Script Extensions` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_script_extensions.items():
+            result = uniprops.get_unicode_property('scriptextensions', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_scriptextensions(self):
         """Test `Script Extensions` property with bad value."""

@@ -38,8 +38,15 @@ class TestNumericValue(unittest.TestCase):
         """Test `Numeric Value` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_numeric_values.items():
-            result = uniprops.get_unicode_property('numericvalue', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('numericvalue', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_numericvalue_binary(self):
+        """Test `Numeric Value` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_numeric_values.items():
+            result = uniprops.get_unicode_property('numericvalue', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_numericvalue(self):
         """Test `Numeric Value` property with bad value."""

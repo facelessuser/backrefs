@@ -38,8 +38,15 @@ class TestDecompositionType(unittest.TestCase):
         """Test `Decomposition Type` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_decomposition_type.items():
-            result = uniprops.get_unicode_property('decompositiontype', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('decompositiontype', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_decompositiontype_binary(self):
+        """Test `Decomposition Type` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_decomposition_type.items():
+            result = uniprops.get_unicode_property('decompositiontype', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_decompositiontype(self):
         """Test `Decomposition Type` property with bad value."""

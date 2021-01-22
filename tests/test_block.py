@@ -38,8 +38,15 @@ class TestBlock(unittest.TestCase):
         """Test `Block` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_blocks.items():
-            result = uniprops.get_unicode_property('block', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('block', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_block_binary(self):
+        """Test `Block` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_blocks.items():
+            result = uniprops.get_unicode_property('block', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_block(self):
         """Test `Block` property with bad value."""

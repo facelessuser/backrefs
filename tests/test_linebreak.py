@@ -39,8 +39,15 @@ class TestLineBreak(unittest.TestCase):
         """Test `Line Break` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_line_break.items():
-            result = uniprops.get_unicode_property('linebreak', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('linebreak', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_linebreak_binary(self):
+        """Test `Line Break` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_line_break.items():
+            result = uniprops.get_unicode_property('linebreak', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_linebreak(self):
         """Test `Line Break` property with bad value."""

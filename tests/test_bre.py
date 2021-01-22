@@ -9,7 +9,6 @@ import sre_constants
 import random
 from backrefs import _bre_parse
 import copy
-import warnings
 
 PY37_PLUS = (3, 7) <= sys.version_info
 PY39_PLUS = (3, 9) <= sys.version_info
@@ -46,10 +45,14 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(bre.match(r'[\p{digit}-Z]', '-') is not None)
         self.assertTrue(bre.match(r'[\p{digit}-Z]', '5') is not None)
 
-        self.assertTrue(bre.match(r'[0-\c]', '-') is not None)
-        self.assertTrue(bre.match(r'[0-\c]', '0') is not None)
-        self.assertTrue(bre.match(r'[0-\c]', 'A') is not None)
-        self.assertTrue(bre.match(r'[0-\c]', 'D') is not None)
+        self.assertTrue(bre.match(r'[0-\p{upper}]', '-') is not None)
+        self.assertTrue(bre.match(r'[0-\p{upper}]', '0') is not None)
+        self.assertTrue(bre.match(r'[0-\p{upper}]', 'A') is not None)
+        self.assertTrue(bre.match(r'[0-\p{upper}]', 'D') is not None)
+
+        self.assertTrue(bre.match(r'[\h-Z]', 'Z') is not None)
+        self.assertTrue(bre.match(r'[\h-Z]', '\x20') is not None)
+        self.assertTrue(bre.match(r'[\h-Z]', '-') is not None)
 
     def test_non_raw_string_unicode(self):
         """Test non raw string Unicode notation."""
@@ -455,90 +458,6 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bre.compile_search(r'Test [:graph:]]')
         self.assertEqual(pattern.pattern, r'Test [:graph:]]')
 
-    def test_ascii_upper_props(self):
-        """Test ASCII uppercase properties."""
-
-        pattern = bre.compile_search(br'EX\c+LE')
-        m = pattern.match(br'EXAMPLE')
-        self.assertTrue(m is not None)
-
-    def test_ascii_upper_props_group(self):
-        """Test ASCII uppercase properties in a character group."""
-
-        pattern = bre.compile_search(br'EX[\c]+LE')
-        m = pattern.match(br'EXAMPLE')
-        self.assertTrue(m is not None)
-
-    def test_ascii_lower_props(self):
-        """Test ASCII lowercase properties."""
-
-        pattern = bre.compile_search(br'EX\l+LE')
-        m = pattern.match(br'EXampLE')
-        self.assertTrue(m is not None)
-
-    def test_ascii_lower_props_group(self):
-        """Test ASCII uppercase properties in a char group."""
-
-        pattern = bre.compile_search(br'EX[\l]+LE')
-        m = pattern.match(br'EXampLE')
-        self.assertTrue(m is not None)
-
-    def test_ascii_props_mixed_group(self):
-        """Test mixed ASCII properties in group."""
-
-        pattern = bre.compile_search(br'EX[\l\c]+LE')
-        m = pattern.match(br'EXaMpLE')
-        self.assertTrue(m is not None)
-
-    def test_ascii_props_mixed(self):
-        """Test mixed ASCII properties."""
-
-        pattern = bre.compile_search(br'EX\l\c\lLE')
-        m = pattern.match(br'EXaMpLE')
-        self.assertTrue(m is not None)
-
-    def test_reverse_ascii_lower_props(self):
-        """Test reverse ASCII lowercase properties."""
-
-        pattern = bre.compile_search(br'EX\L+LE')
-        m = pattern.match(br'EXAMPLE')
-        self.assertTrue(m is not None)
-
-    def test_reverse_ascii_lower_props_group(self):
-        """Test reverse ASCII lowercase properties in a group."""
-
-        pattern = bre.compile_search(br'EX[\L]+LE')
-        m = pattern.match(br'EXAMPLE')
-        self.assertTrue(m is not None)
-
-    def test_reverse_ascii_upper_props(self):
-        """Test reverse ASCII uppercase properties."""
-
-        pattern = bre.compile_search(br'EX\C+LE')
-        m = pattern.match(br'EXampLE')
-        self.assertTrue(m is not None)
-
-    def test_reverse_ascii_upper_props_group(self):
-        """Test reverse ASCII uppercase properties in a group."""
-
-        pattern = bre.compile_search(br'EX[\C]+LE')
-        m = pattern.match(br'EXampLE')
-        self.assertTrue(m is not None)
-
-    def test_reverse_ascii_props_mixed_group(self):
-        """Test reverse mixed ASCII properties in a group."""
-
-        pattern = bre.compile_search(br'EX[\C\L]+LE')
-        m = pattern.match(br'EXaMpLE')
-        self.assertTrue(m is not None)
-
-    def test_reverse_ascii_props_mixed(self):
-        """Test reverse ASCII properties."""
-
-        pattern = bre.compile_search(br'EX\C\L\CLE')
-        m = pattern.match(br'EXaMpLE')
-        self.assertTrue(m is not None)
-
     def test_unrecognized_backrefs(self):
         """Test unrecognized backrefs."""
 
@@ -624,57 +543,6 @@ class TestSearchTemplate(unittest.TestCase):
 
         result = _bre_parse._SearchParser(r'\y \\y \\\y \\\\y \\\\\y').parse()
         self.assertEqual(r'\y \\y \\\y \\\\y \\\\\y', result)
-
-    def test_unicode_shorthand_properties_capital(self):
-        """
-        Exercising that Unicode properties are built correctly by testing shorthand lower and upper.
-
-        We want to test uppercase and make sure things make sense,
-        and then test lower case later.  Not extensive, just making sure its generally working.
-        """
-
-        pattern = bre.compile_search(r'EX\cMPLE', re.UNICODE)
-        m = pattern.match(r'EXÁMPLE')
-        self.assertTrue(m is not None)
-        m = pattern.match(r'exámple')
-        self.assertTrue(m is None)
-
-    def test_unicode_shorthand_properties_lower(self):
-        """Exercise the Unicode shorthand properties for lower case."""
-
-        pattern = bre.compile_search(r'ex\lmple', re.UNICODE)
-        m = pattern.match('exámple')
-        self.assertTrue(m is not None)
-        m = pattern.match('EXÁMPLE')
-        self.assertTrue(m is None)
-
-    def test_unicode_shorthand_properties_in_char_group(self):
-        """Exercise the Unicode shorthand properties inside a char group."""
-
-        pattern = bre.compile_search(r'ex[\l\c]mple', re.UNICODE)
-        m = pattern.match('exámple')
-        self.assertTrue(m is not None)
-        m = pattern.match('exÁmple')
-        self.assertTrue(m is not None)
-
-    def test_unicode_shorthand_properties_with_string_flag(self):
-        """Exercise the Unicode shorthand properties with an re string flag `(?u)`."""
-
-        pattern = bre.compile_search(r'ex[\l\c]mple(?u)')
-        m = pattern.match('exámple')
-        self.assertTrue(m is not None)
-        m = pattern.match('exÁmple')
-        self.assertTrue(m is not None)
-
-    def test_unicode_shorthand_ascii_only(self):
-        """Ensure that when the Unicode flag is not used, only ASCII properties are used."""
-
-        flags = bre.ASCII
-        pattern = bre.compile_search(r'ex\lmple', flags)
-        m = pattern.match('exámple')
-        self.assertTrue(m is None)
-        m = pattern.match('example')
-        self.assertTrue(m is not None)
 
     def test_unicode_properties_capital(self):
         """
@@ -2130,7 +1998,7 @@ class TestExceptions(unittest.TestCase):
         with pytest.raises(ValueError) as e:
             bre.compile_search(r'[[:bad:]]', re.UNICODE)
 
-        self.assertEqual(str(e.value), 'Invalid POSIX property!')
+        self.assertEqual(str(e.value), "'bad' does not appear to be a valid property")
 
     def test_bad_bytes(self):
         """Test bad bytes."""
@@ -2392,12 +2260,33 @@ class TestConvenienceFunctions(unittest.TestCase):
     def test_match(self):
         """Test that `match` works."""
 
-        m = bre.match(r'This is a test for m[\l]+!', "This is a test for match!")
+        m = bre.match(r'This is a test for m[[:lower:]]+!', "This is a test for match!")
         self.assertTrue(m is not None)
 
-        p = bre.compile(r'This is a test for m[\l]+!')
+        p = bre.compile(r'This is a test for m[[:lower:]]+!')
         m = p.match("This is a test for match!")
         self.assertTrue(m is not None)
+
+    def test_posix_value(self):
+        """Test posix values."""
+
+        m = bre.match(r'This is a test for m[[:lower=t:]]+!', "This is a test for match!")
+        self.assertTrue(m is not None)
+
+        m = bre.match(r'This is a test for m[[:lower:t:]]+!', "This is a test for match!")
+        self.assertTrue(m is not None)
+
+    def test_incomplete_posix_value(self):
+        """Test incomplete POSIX value."""
+
+        with pytest.raises(re.error):
+            bre.match(r'This is a test for m[[:lower=t', "This is a test for m[[:lower=t")
+
+        with pytest.raises(re.error):
+            bre.match(r'This is a test for m[[:lower=t:', "This is a test for m[[:lower=t:")
+
+        with pytest.raises(re.error):
+            bre.match(r'This is a test for m[[:lower=t: ', "This is a test for m[[:lower=t: ")
 
     def test_fullmatch(self):
         """Test that `fullmatch` works."""
@@ -2540,7 +2429,7 @@ class TestConvenienceFunctions(unittest.TestCase):
     def test_expand(self):
         """Test that `expand` works."""
 
-        pattern = bre.compile_search(r'(This is a test for )(m[\l]+!)')
+        pattern = bre.compile_search(r'(This is a test for )(m[[:lower:]]+!)')
         m = bre.match(pattern, "This is a test for match!")
         self.assertEqual(
             bre.expand(m, r'\1\C\2\E'),
@@ -2591,55 +2480,3 @@ class TestConvenienceFunctions(unittest.TestCase):
                 p.sub(r'\ltest', 'tests')
         else:
             self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')
-
-
-class TestDeprecated(unittest.TestCase):
-    """Test deprecated."""
-
-    def test_lowercase(self):
-        """Test deprecated lower."""
-
-        bre.purge()
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-
-            bre.compile(r'\l')
-            self.assertTrue(len(w) == 1)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
-
-    def test_inverse_lowercase(self):
-        """Test inverse deprecated lower."""
-
-        bre.purge()
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-
-            bre.compile(r'\L')
-            self.assertTrue(len(w) == 1)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
-
-    def test_uppercase(self):
-        """Test deprecated upper."""
-
-        bre.purge()
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-
-            bre.compile(r'\c')
-            self.assertTrue(len(w) == 1)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
-
-    def test_inverse_uppercase(self):
-        """Test inverse deprecated upper."""
-
-        bre.purge()
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-
-            bre.compile(r'\C')
-            self.assertTrue(len(w) == 1)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))

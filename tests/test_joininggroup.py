@@ -38,8 +38,15 @@ class TestJoiningGroup(unittest.TestCase):
         """Test `Joining Group` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_joining_group.items():
-            result = uniprops.get_unicode_property('joininggroup', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('joininggroup', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_joininggroup_binary(self):
+        """Test `Joining Group` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_joining_group.items():
+            result = uniprops.get_unicode_property('joininggroup', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_joininggroup(self):
         """Test `Joining Group` property with bad value."""
