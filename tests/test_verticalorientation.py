@@ -42,8 +42,15 @@ class TestVerticalOrientation(unittest.TestCase):
         """Test `Vertical Orientation` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_vertical_orientation.items():
-            result = uniprops.get_unicode_property('verticalorientation', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('verticalorientation', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_verticalorientation_binary(self):
+        """Test `Vertical Orientation` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_vertical_orientation.items():
+            result = uniprops.get_unicode_property('verticalorientation', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_verticalorientation(self):
         """Test `Vertical Orientation` property with bad value."""

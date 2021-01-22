@@ -38,8 +38,15 @@ class TestIndicSyllabicCategory(unittest.TestCase):
         """Test `Indic Syllabic Category` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_indic_syllabic_category.items():
-            result = uniprops.get_unicode_property('indicsyllabiccategory', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('indicsyllabiccategory', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_indicsyllabiccategory_binary(self):
+        """Test `Indic Syllabic Category` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_indic_syllabic_category.items():
+            result = uniprops.get_unicode_property('indicsyllabiccategory', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_indicsyllabiccategory(self):
         """Test `Indic Syllabic Category` property with bad value."""

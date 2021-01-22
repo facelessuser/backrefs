@@ -38,8 +38,15 @@ class TestBidiClass(unittest.TestCase):
         """Test `Bidi Class` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_bidi_classes.items():
-            result = uniprops.get_unicode_property('bidiclass', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('bidiclass', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_bidiclass_binary(self):
+        """Test `Bidi Class` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_bidi_classes.items():
+            result = uniprops.get_unicode_property('bidiclass', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_bidiclass(self):
         """Test `Bidi Class` property with bad value."""

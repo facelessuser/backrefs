@@ -38,8 +38,15 @@ class TestGraphemeClusterBreak(unittest.TestCase):
         """Test `Grapheme Cluster Break` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_grapheme_cluster_break.items():
-            result = uniprops.get_unicode_property('graphemeclusterbreak', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('graphemeclusterbreak', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_graphemeclusterbreak_binary(self):
+        """Test `Grapheme Cluster Break` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_grapheme_cluster_break.items():
+            result = uniprops.get_unicode_property('graphemeclusterbreak', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_graphemeclusterbreak(self):
         """Test `Grapheme Cluster Break` property with bad value."""

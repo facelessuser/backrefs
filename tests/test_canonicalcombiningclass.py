@@ -38,8 +38,15 @@ class TestCanonicalCombiningClass(unittest.TestCase):
         """Test `Canonnical Combining Class` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_canonical_combining_class.items():
-            result = uniprops.get_unicode_property('canonicalcombiningclass', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('canonicalcombiningclass', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_canonicalcombiningclass_binary(self):
+        """Test `Canonnical Combining Class` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_canonical_combining_class.items():
+            result = uniprops.get_unicode_property('canonicalcombiningclass', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_canonicalcombiningclass(self):
         """Test `Canonnical Combining Class` property with bad value."""

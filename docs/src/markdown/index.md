@@ -338,20 +338,13 @@ specifically added for Re and for Regex.
 ### Re
 
 !!! info "LOCALE and Character Properties"
-    Backrefs does not consider `LOCALE` when inserting POSIX or Unicode properties. In byte strings, Unicode properties
-    will be truncated to the ASCII range of `\x7f`. Inverse of properties or properties collecting unknown/unassigned
-    can extend up to `\xff`. POSIX properties will use either Unicode categories or POSIX
-    categories depending on whether the `UNICODE` flag is set. If the `LOCALE` flag is set, it is considered **not**
-    Unicode. Keep in mind that Backrefs doesn't stop `LOCALE` from being applied, only that Backrefs inserts its
-    categories as either Unicode or ASCII only.
+    Backrefs does not consider `LOCALE` when inserting POSIX or Unicode properties. When either the `ASCII` flag or
+    `LOCALE` flag is enabled, Unicode properties are restricted to the ASCII range. In byte strings, Unicode properties
+    will also be restricted to the ASCII range.
 
 Back\ References      | Description
 --------------------- |------------
 `\e`                  | Escape character `\x1b`.
-`\c`                  | **Deprecated**: Shortcut for the uppercase [POSIX character class](#posix-style-properties) `[[:upper:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
-`\l`                  | **Deprecated**: Shortcut for the lowercase [POSIX character class](#posix-style-properties) `[[:lower:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
-`\C`                  | **Deprecated**: Shortcut for the inverse uppercase [POSIX character class](#posix-style-properties) `[[:^upper:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
-`\L`                  | **Deprecated**: Shortcut for the inverse lowercase [POSIX character class](#posix-style-properties) `[[:^lower:]]`.  ASCII or Unicode when re Unicode flag is used.  Can be used in character classes `[]`.
 `\Q...\E`             | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
 `\p{UnicodeProperty}` | Unicode property character class. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
 `\pX`                 | Unicode property character class where `X` is the uppercase letter that represents the General Category property.  For instance, `\pL` would be equivalent to `\p{L}` or `\p{Letter}`.
@@ -364,10 +357,6 @@ Back\ References      | Description
 `\h`                  | Horizontal whitespace. Equivalent to using `[[:blank:]]` or `[\t\p{Zs}]`.
 `\R`                  | Generic line breaks. This will use the pattern `(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])` which is roughly equivalent the to atomic group form that other engines use: `(?>\r\n|[\n\v\f\r\x85\u2028\u2029])`. When applied to byte strings, the pattern `(?:\r\n|(?!\r\n)[\n\v\f\r\x85])` will be used.
 `\X`                  | Grapheme clusters. This will use the pattern `(?:\PM\pM*(?!\pM))` which is roughly equivalent to the atomic group form that other engines use:  `(?>\PM\pM*)`. This does not implement [full, proper grapheme clusters][grapheme-boundaries] like the 3rd party Regex module does as this would require changes to the Re core engine. Instead it provides a simplified solution that has been seen in regular expression engines in the past.
-
-!!! warning "Deprecated 4.2.0"
-    `\l`, `\L`, `\c`, and `\C` search back references have been deprecated in 4.2.0 and will be removed at some future
-    time. It is recommended to use `[[:lower:]]`, `[[:^lower:]]`, `[[:upper:]]`, and `[[:^upper:]]` respectively.
 
 ### Regex
 
@@ -411,6 +400,10 @@ Back\ References     | Description
     - `\L\cTEST \cTEST\E` --> `Test Test`
 
 ## Unicode Properties
+
+!!! new "New in 5.0"
+    5.0 brings significant improvements and bug fixes to Unicode property handling. Properties are sensitive to the
+    `ASCII` flag along with more extensive testing and bug fixes.
 
 A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own
 implementation of Unicode properties. Some properties may not be available on certain Python versions due to the
@@ -457,8 +450,8 @@ Supported\ Properties                       | Aliases
 `Word_Break`                                | `wb`
 
 !!! note
-    The Binary property is not actually a property, but a group of different properties with binary characteristics. The
-    available binary properties may differ from Unicode version to Unicode version.
+    The Binary property is not actually a property, but more a type of Unicode property.  The available binary
+    properties may differ from Unicode version to Unicode version.
 
 !!! new "New 4.4.0"
     Python 3.9 now uses Unicode 13, and with that comes various new binary properties: `emoji`, `emojicomponent`,
@@ -473,11 +466,10 @@ a given property, but keep in mind, syntax may vary from Perl's syntax.
 
 Unicode properties are specific to search patterns and can be used to specify a request to match all the characters in a
 specific Unicode property. Unicode properties can be used in byte strings, but the patterns will be restricted to the
-range `\x00-\xff`.
+ASCII range.
 
-If you are using a narrow python build, your max Unicode value will be `\uffff`.  Unicode blocks above that limit will
-not be available.  Also Unicode values above the limit will not be available in character classes either. If you are
-using a wide build, you should have access to all Unicode values.
+Additionally, Unicode properties are sensitive to the `ASCII` flag and will have their range limited to ASCII if used.
+The `LOCALE` flag is treated as `ASCII` in relation to Unicode properties.
 
 ### Syntax
 
@@ -565,29 +557,33 @@ Verbose\ Property\ Form            | Terse\ Property\ Form
 
 ### POSIX Style Properties
 
-A number of POSIX property names are also available in the form `[:posix:]`. Inverse properties are also available in
-the form `[:^posix:]`. These properties must only be included in a character class: `[[:upper:]a-z]`.
+!!! new "New in 5.0"
+    5.0 brings significant improvements and bug fixes to Unicode property handling. Properties are sensitive to the
+    `ASCII` flag along with more extensive testing and bug fixes. Additionally, POSIX style properties are now just
+    an extension of normal Unicode properties. All the POSIX names are available and now conform to
+    the [Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties).
+    Read on to learn more.
 
-These properties behave different depending on the regular expression mode. If the `ASCII` flag (or `LOCAL`) is enabled,
-the POSIX patterns will use the ASCII definition in the table below. If in Unicode mode (the default for Python 3),
-the POSIX properties will be defined as they are in the [Unicode specification for POSIX compatibility][unicode-posix].
-The Unicode patterns can be found in the table below.
+Backrefs allows for POSIX style properties in the form `[:name:]`. These properties can only be used inside character
+classes and are another form for expressing Unicode properties. Any Unicode property that can be expressed via the
+`\p{name}` form can also be expressed in the `[:name:]` form. To illustrate, the following are all the same:
 
-POSIX properties can also be accessed in the form `\p{Name}` or `\p{PosixName}` and will always be in the Unicode form,
-but if using the form `\p{Name}`, there are some cases where you won't get the POSIX form.  The
-[Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties) defines
-patterns for all the names used in the POSIX properties, but `punct`, `alnum`, `digit`, and `xdigit` have a Unicode
-standard and a POSIX compatibility variant. The main reason for this is that POSIX limits the number of actual number
-characters, so the POSIX properties limit number from `\p{Nd}` to `[0-9]`. `punct`, on the other hand, is just
-different. If you wish to get the POSIX compatible variant, you must use `\p{PosixName}`.
+- `[[:upper:]]` == `[\p{upper}]`
+- `[[:^upper:]]` == `[\p{^upper}]`
+- `[[:alpha=yes:]]` == `[\p{alpha=yes}]`
 
-!!! tip
-    If you want to get a POSIX definition, it is generally recommended to use `\p{PosixName}` or `[[:posix:]]` as you
-    are guaranteed to get what you think you're getting without having to remember which POSIX property name conflicts
-    with which Unicode property name.
+A number of POSIX property names are available via compatibility properties as outlined in the
+[Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties). These
+properties will operate in the Unicode range and the ASCII range depending on the regular expression mode. These
+patterns, like all Unicode properties, are sensitive to the `ASCII` flag (or `LOCALE` which will treat them as `ASCII`).
 
-    If you prefer the Unicode standard variants, see [Compatibility Properties](#compatibility-properties). Those can
-    only be used in the form of `\p{name}`, but can also be used inside and outside character classes.
+It is important to note that whether used in the form `[[:name:]]` or `\p{name}`, each POSIX name is available both with
+and without the `posix` prefix, but it is recommended to use the `posix` prefix to get the POSIX definition of the
+pattern as number of patterns have both a POSIX and Unicode definition that differ. The
+[Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties) outlines all
+the POSIX compatible properties and the ones which have dual definitions: `punct`, `alnum`, `digit`, and `xdigit` all
+have a Unicode standard and a POSIX compatibility variant and must be accessed with the `posix` prefix to get the POSIX
+form.
 
 In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
 
@@ -595,7 +591,6 @@ In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
 ---------- | ------------- | ------------------------------------------------- | -------
 `alpha`    | `Alpha`       | `[a-zA-Z]`                                        | `\p{Alphabetic}`
 `alnum`    | `PosixAlnum`  | `[[:alpha:][:digit:]]`                            | `[[:alpha:][:digit:]]`
-`ascii`    | `Ascii`       | `[\x00-\x7F]`                                     | `\p{blk=BasicLatin}`
 `blank`    | `Blank`       | `[ \t]`                                           | `[\p{Zs}\t]`
 `cntrl`    | `Cntrl`       | `[\x00-\x1F\x7F]`                                 | `\p{Cc}`
 `digit`    | `PosixDigit`  | `[0-9]`                                           | `[0-9]`
@@ -607,13 +602,14 @@ In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
 `upper`    | `Upper`       | `[A-Z]`                                           | `[\p{Uppercase}]`
 `xdigit`   | `PosixXDigit` | `[A-Fa-f0-9]`                                     | `[A-Fa-f0-9]`
 
-!!! note
-    `ascii` is not actually a POSIX property but is added for convenience as some regular expression engines use it.
-
 ## Compatibility Properties
 
+!!! new "New in 5.0"
+    While many of the properties were available before 5.0, `word` is newly available. And all the properties now
+    conform to the [Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties).
+
 [Unicode specification for POSIX compatibility][unicode-posix] defines a number of properties, many of which double as
-[Posix properties](#posix-style-properties). These properties are accessed via `\p{name}`.
+[Posix properties](#posix-style-properties). These properties can be accessed via `\p{name}` or `[[:name:]]`.
 
 In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
 

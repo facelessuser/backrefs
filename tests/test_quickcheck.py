@@ -38,8 +38,15 @@ class TestNFCQuickCheck(unittest.TestCase):
         """Test `NFC Quick Check` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_nfc_quick_check.items():
-            result = uniprops.get_unicode_property('nfcquickcheck', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('nfcquickcheck', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_nfcquickcheck_binary(self):
+        """Test `NFC Quick Check` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_nfc_quick_check.items():
+            result = uniprops.get_unicode_property('nfcquickcheck', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_nfcquickcheck(self):
         """Test `NFC Quick Check` property with bad value."""
@@ -105,8 +112,15 @@ class TestNFKCQuickCheck(unittest.TestCase):
         """Test `NFKC Quick Check` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_nfkc_quick_check.items():
-            result = uniprops.get_unicode_property('nfkcquickcheck', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('nfkcquickcheck', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_nfkcquickcheck_binary(self):
+        """Test `NFKC Quick Check` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_nfkc_quick_check.items():
+            result = uniprops.get_unicode_property('nfkcquickcheck', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_nfkc_quick_check(self):
         """Test `NFKC Quick Check` property with bad value."""
@@ -172,8 +186,15 @@ class TestNFDQuickCheck(unittest.TestCase):
         """Test `NFD Quick Check` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_nfd_quick_check.items():
-            result = uniprops.get_unicode_property('nfdquickcheck', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('nfdquickcheck', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_nfdquickcheck_binary(self):
+        """Test `NFD Quick Check` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_nfd_quick_check.items():
+            result = uniprops.get_unicode_property('nfdquickcheck', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_nfdquickcheck(self):
         """Test `NFD Quick Check` property with bad value."""
@@ -239,8 +260,15 @@ class TestNFKDQuickCheck(unittest.TestCase):
         """Test `NFKD Quick Check` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_nfkd_quick_check.items():
-            result = uniprops.get_unicode_property('nfkdquickcheck', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('nfkdquickcheck', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
+
+    def test_nfkquickcheck_binary(self):
+        """Test `NFKD Quick Check` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_nfkd_quick_check.items():
+            result = uniprops.get_unicode_property('nfkdquickcheck', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
 
     def test_bad_nfkdquickcheck(self):
         """Test `NFKD Quick Check` property with bad value."""

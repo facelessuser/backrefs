@@ -27,21 +27,28 @@ class TestBidiPairedBracketType(unittest.TestCase):
             if not key.startswith('^'):
                 self.assertTrue('^' + key in keys1)
 
-    def test_bidiclass(self):
+    def test_bidipairedbrackettype(self):
         """Test `Bidi Paired Bracket Type` properties."""
 
         for k, v in uniprops.unidata.unicode_bidi_paired_bracket_type.items():
             result = uniprops.get_unicode_property('bidipairedbrackettype', k)
             self.assertEqual(result, v)
 
-    def test_bidiclass_ascii(self):
+    def test_bidipairedbrackettype_ascii(self):
         """Test `Bidi Paired Bracket Type` ASCII properties."""
 
         for k, v in uniprops.unidata.ascii_bidi_paired_bracket_type.items():
-            result = uniprops.get_unicode_property('bidipairedbrackettype', k, limit_ascii=True)
+            result = uniprops.get_unicode_property('bidipairedbrackettype', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
-    def test_bad_bidiclass(self):
+    def test_bidipairedbrackettype_binary(self):
+        """Test `Bidi Paired Bracket Type` ASCII properties."""
+
+        for k, v in uniprops.unidata.ascii_bidi_paired_bracket_type.items():
+            result = uniprops.get_unicode_property('bidipairedbrackettype', k, mode=uniprops.MODE_ASCII)
+            self.assertEqual(result, uniprops.fmt_string(v, True))
+
+    def test_bad_bidipairedbrackettype(self):
         """Test `Bidi Paired Bracket Type` property with bad value."""
 
         with self.assertRaises(ValueError):
