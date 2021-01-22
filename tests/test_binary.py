@@ -128,26 +128,6 @@ class TestBinary(unittest.TestCase):
 
         # Test aliases for values
         for k, v in uniprops.unidata.alias.unicode_alias['binary'].items():
-            if k in uniprops.unidata.unicode_scripts:
-                continue
-            if k in uniprops.unidata.alias.unicode_alias['script']:
-                continue
-            if k in uniprops.unidata.alias.unicode_alias['generalcategory']:
-                continue
-            if k in uniprops.unidata.unicode_blocks:
-                continue
-            if k in uniprops.unidata.alias.unicode_alias['block']:
-                continue
-            if v in uniprops.unidata.unicode_scripts:
-                continue
-            if v in uniprops.unidata.alias.unicode_alias['script']:
-                continue
-            if v in uniprops.unidata.alias.unicode_alias['generalcategory']:
-                continue
-            if v in uniprops.unidata.unicode_blocks:
-                continue
-            if v in uniprops.unidata.alias.unicode_alias['block']:
-                continue
             result1 = uniprops.get_unicode_property(k)
             result2 = uniprops.get_unicode_property(v)
             self.assertEqual(result1, result2)
