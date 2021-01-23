@@ -1,6 +1,10 @@
 # Changelog
 
-## 5.0.0
+## 5.0.1
+
+- **FIX**: Fix wheel names.
+
+## 5.0
 
 - **NEW**: Significant improvements to Unicode handling. A lot of testing was implemented to catch existing bugs and to
   improve result.

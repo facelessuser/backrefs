@@ -62,7 +62,7 @@ jobs:
         if: matrix.distribution == 'bdist_wheel'
         run: |
           pip install --upgrade setuptools wheel
-          python setup.py ${{ matrix.distribution }} --python-tag 3${{ matrix.python-3-version}}
+          python setup.py ${{ matrix.distribution }} --python-tag py3${{ matrix.python-3-version}}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
