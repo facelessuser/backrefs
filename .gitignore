@@ -68,7 +68,7 @@ site/*
 
 # Unicode temp
 tools/unicodedata/*/*.txt
-backrefs/uniprops/unidata/*
+backrefs/uniprops/unidata*/*
 *-sdist/*
 
 .~c9*

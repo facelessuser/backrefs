@@ -21,10 +21,11 @@ theme:
   features:
     - navigation.tabs
     - navigation.sections
+    - navigation.top
 
 nav:
   - Getting Started:
-    - Installation: installation.md
+    - Installation: index.md
     - Usage: usage.md
     - Supported References: refs.md
   - About:
@@ -95,6 +96,6 @@ extra:
 plugins:
   - search
   - git-revision-date-localized
-  - minify:
-      minify_html: true
+  # - minify:
+  #     minify_html: true
   - mkdocs_pymdownx_material_extras

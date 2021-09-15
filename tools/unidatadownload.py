@@ -57,6 +57,10 @@ def download_unicodedata(version, output=HOME, no_zip=False):
         'LineBreak.txt',
         'HangulSyllableType.txt',
         'DerivedAge.txt',
+        'ScriptExtensions.txt',
+        'IndicPositionalCategory.txt',
+        'IndicSyllabicCategory.txt',
+        'BidiBrackets.txt',
         'auxiliary/WordBreakProperty.txt',
         'auxiliary/SentenceBreakProperty.txt',
         'auxiliary/GraphemeBreakProperty.txt',
@@ -67,11 +71,6 @@ def download_unicodedata(version, output=HOME, no_zip=False):
         'extracted/DerivedJoiningGroup.txt',
         'extracted/DerivedCombiningClass.txt'
     ]
-
-    files.append('ScriptExtensions.txt')
-    files.append('IndicPositionalCategory.txt')
-    files.append('IndicSyllabicCategory.txt')
-    files.append('BidiBrackets.txt')
 
     if ver >= (11, 0, 0):
         files.append('VerticalOrientation.txt')
