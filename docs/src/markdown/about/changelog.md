@@ -2,7 +2,7 @@
 
 ## 5.1.0
 
-- **NEW**: Add Unicode 14.0 support for Python 3.10.
+- **NEW**: Add support for Python 3.10.
 
 ## 5.0.1
 
