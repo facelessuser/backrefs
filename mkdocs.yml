@@ -22,6 +22,7 @@ theme:
     - navigation.tabs
     - navigation.sections
     - navigation.top
+    - navigation.instant
   pymdownx:
     sponsor: "https://github.com/sponsors/facelessuser"
 
@@ -99,6 +100,6 @@ extra:
 plugins:
   - search
   - git-revision-date-localized
-  # - minify:
-  #     minify_html: true
+  - minify:
+      minify_html: true
   - mkdocs_pymdownx_material_extras
