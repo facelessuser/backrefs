@@ -759,13 +759,13 @@ class TestReplaceTemplate(unittest.TestCase):
 
         pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
         with pytest.raises(_regex_core.error):
-            _bregex_parse._ReplaceParser().parse(pattern, '\\1\\l\\')
+            _bregex_parse._ReplaceParser(pattern, '\\1\\l\\').parse()
 
         with pytest.raises(_regex_core.error):
-            _bregex_parse._ReplaceParser().parse(pattern, '\\1\\L\\')
+            _bregex_parse._ReplaceParser(pattern, '\\1\\L\\').parse()
 
         with pytest.raises(_regex_core.error):
-            _bregex_parse._ReplaceParser().parse(pattern, '\\1\\')
+            _bregex_parse._ReplaceParser(pattern, '\\1\\').parse()
 
     def test_line_break(self):
         r"""Test line break \R."""
@@ -844,8 +844,8 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test retrieval of the replace template original string."""
 
         pattern = regex.compile(r"(some)(.+?)(pattern)(!)")
-        template = _bregex_parse._ReplaceParser()
-        template.parse(pattern, r'\c\1\2\C\3\E\4')
+        template = _bregex_parse._ReplaceParser(pattern, r'\c\1\2\C\3\E\4')
+        template.parse()
 
         self.assertEqual(r'\c\1\2\C\3\E\4', template.get_base_template())
 
@@ -1285,7 +1285,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         text = "Replace with template test!"
         pattern = bregex.compile_search('(.+)')
-        repl = _bregex_parse._ReplaceParser().parse(pattern, 'Success!')
+        repl = _bregex_parse._ReplaceParser(pattern, 'Success!').parse()
         expand = bregex.compile_replace(pattern, repl)
 
         m = pattern.match(text)
@@ -1795,7 +1795,7 @@ class TestExceptions(unittest.TestCase):
         """Test when a compile occurs on a template with flags passed."""
 
         pattern = regex.compile('test')
-        template = _bregex_parse._ReplaceParser().parse(pattern, 'whatever')
+        template = _bregex_parse._ReplaceParser(pattern, 'whatever').parse()
 
         with pytest.raises(ValueError) as excinfo:
             bregex.compile_replace(pattern, template, bregex.FORMAT)

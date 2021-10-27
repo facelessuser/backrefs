@@ -24,8 +24,8 @@ ASCII_UNUSED = frozenset([x for x in range(0x80, UNICODE_RANGE[1] + 1)])
 ALL_ASCII = frozenset([x for x in range(ASCII_RANGE[0], ASCII_RANGE[1] + 1)])
 HEADER = '''\
 """Unicode Properties from Unicode version {} (autogen)."""
-
-'''
+{}'''
+TYPING = 'from typing import Dict\n\n'
 
 
 def uniformat(value):
@@ -248,8 +248,8 @@ def gen_blocks(output, ascii_props=False, append=False, prefix="", aliases=None)
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
-            f.write(HEADER.format(UNIVERSION))
-        f.write('%s_blocks = {' % prefix)
+            f.write(HEADER.format(UNIVERSION, TYPING))
+        f.write('%s_blocks: Dict[str, str] = {' % prefix)
         no_block = []
         last = -1
         found = set(['noblock'])
@@ -353,9 +353,9 @@ def gen_ccc(output, ascii_props=False, append=False, prefix="", aliases=None):
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
-            f.write(HEADER.format(UNIVERSION))
+            f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_canonical_combining_class = {\n' % prefix)
+        f.write('%s_canonical_combining_class: Dict[str, str] = {\n' % prefix)
         count = len(obj) - 1
         i = 0
         for k1, v1 in sorted(obj.items()):
@@ -442,9 +442,9 @@ def gen_scripts(
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
-            f.write(HEADER.format(UNIVERSION))
+            f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_%s = {\n' % (prefix, obj_name))
+        f.write('%s_%s: Dict[str, str] = {\n' % (prefix, obj_name))
         count = len(obj) - 1
         i = 0
         for k1, v1 in sorted(obj.items()):
@@ -457,9 +457,9 @@ def gen_scripts(
 
     with codecs.open(output_ext, 'a' if append else 'w', 'utf-8') as f:
         if not append:
-            f.write(HEADER.format(UNIVERSION))
+            f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_%s = {\n' % (prefix, obj_ext_name))
+        f.write('%s_%s: Dict[str, str] = {\n' % (prefix, obj_ext_name))
         count = len(obj2) - 1
         i = 0
         for k1, v1 in sorted(obj2.items()):
@@ -511,9 +511,9 @@ def gen_enum(
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
-            f.write(HEADER.format(UNIVERSION))
+            f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_%s = {\n' % (prefix, obj_name))
+        f.write('%s_%s: Dict[str, str] = {\n' % (prefix, obj_name))
         count = len(obj) - 1
         i = 0
         for k1, v1 in sorted(obj.items()):
@@ -567,9 +567,9 @@ def gen_age(output, ascii_props=False, append=False, prefix="", aliases=None):
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
-            f.write(HEADER)
+            f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_age = {\n' % prefix)
+        f.write('%s_age: Dict[str, str] = {\n' % prefix)
         count = len(obj) - 1
         i = 0
         for k1, v1 in sorted(obj.items()):
@@ -629,10 +629,10 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix="", alias
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
-            f.write(HEADER.format(UNIVERSION))
+            f.write(HEADER.format(UNIVERSION, TYPING))
         for key, value in sorted(nf.items()):
             # Write out the Unicode properties
-            f.write('%s_%s = {\n' % (prefix, key.replace('quickcheck', '_quick_check')))
+            f.write('%s_%s: Dict[str, str] = {\n' % (prefix, key.replace('quickcheck', '_quick_check')))
             count = len(value) - 1
             i = 0
             for k1, v1 in sorted(value.items()):
@@ -749,9 +749,9 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
-            f.write(HEADER.format(UNIVERSION))
+            f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_binary = {\n' % prefix)
+        f.write('%s_binary: Dict[str, str] = {\n' % prefix)
         count = len(binary) - 1
         i = 0
         for k1, v1 in sorted(binary.items()):
@@ -800,8 +800,8 @@ def gen_bidi(output, ascii_props=False, append=False, prefix="", aliases=None):
 
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
-            f.write(HEADER.format(UNIVERSION))
-        f.write('%s_bidi_classes = {\n' % prefix)
+            f.write(HEADER.format(UNIVERSION, TYPING))
+        f.write('%s_bidi_classes: Dict[str, str] = {\n' % prefix)
         count = len(bidi_class) - 1
         i = 0
         for k1, v1 in sorted(bidi_class.items()):
@@ -978,8 +978,8 @@ def gen_alias(nonbinary, binary, output):
             alias['binary'][k] = v
 
     with codecs.open(output, 'w', 'utf-8') as f:
-        f.write(HEADER.format(UNIVERSION))
-        f.write('%s_alias = {\n' % prefix)
+        f.write(HEADER.format(UNIVERSION, TYPING))
+        f.write('%s_alias: Dict[str, Dict[str, str]] = {\n' % prefix)
         count = len(alias) - 1
         i = 0
         for k1, v1 in sorted(alias.items()):
@@ -1181,9 +1181,9 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
 
     with codecs.open(files['gc'], 'a' if append else 'w', 'utf-8') as f:
         if not append:
-            f.write(HEADER.format(UNIVERSION))
+            f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_properties = {\n' % prefix)
+        f.write('%s_properties: Dict[str, Dict[str, str]] = {\n' % prefix)
         count = len(table) - 1
         i = 0
         for k1, v1 in sorted(table.items()):
@@ -1205,7 +1205,7 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
 
     if not append:
         with codecs.open(os.path.join(output, '__init__.py'), 'w') as f:
-            f.write(HEADER.format(UNIVERSION))
+            f.write(HEADER.format(UNIVERSION, ''))
             for x in sorted(files):
                 f.write('from .%s import *  # noqa\n' % os.path.basename(files[x])[:-3])
 

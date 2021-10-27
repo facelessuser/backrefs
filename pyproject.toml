@@ -5,3 +5,15 @@ requires = [
 ]
 
 build-backend = "setuptools.build_meta"
+
+[tool.mypy]
+files = [
+    "backrefs/*.py"
+]
+strict = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = 'backrefs.uniprops.*'
+implicit_reexport = true
+warn_unused_ignores = false
