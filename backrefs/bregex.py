@@ -163,7 +163,7 @@ def _apply_search_backrefs(
                 pattern, re_verbose, re_version, type(pattern)
             )  # type: Union[AnyStr, Pattern[AnyStr]]
         else:  # pragma: no cover
-            p = _bregex_parse._SearchParser(pattern, re_verbose, re_version).parse()
+            p = _bregex_parse._SearchParser(cast(AnyStr, pattern), re_verbose, re_version).parse()
     elif isinstance(pattern, Bregex):
         if flags:
             raise ValueError("Cannot process flags argument with a compiled pattern")
@@ -215,25 +215,25 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     def pattern(self) -> AnyStr:
         """Return pattern."""
 
-        return self._pattern.pattern
+        return cast(AnyStr, self._pattern.pattern)
 
     @property
     def flags(self) -> int:
         """Return flags."""
 
-        return self._pattern.flags
+        return cast(int, self._pattern.flags)
 
     @property
     def groupindex(self) -> Mapping[str, int]:
         """Return group index."""
 
-        return self._pattern.groupindex
+        return cast(Mapping[str, int], self._pattern.groupindex)
 
     @property
     def groups(self) -> Tuple[Optional[AnyStr], ...]:
         """Return groups."""
 
-        return self._pattern.groups
+        return cast(Tuple[Optional[AnyStr], ...], self._pattern.groups)
 
     @property
     def scanner(self) -> Any:
@@ -303,7 +303,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     def named_lists(self) -> Mapping[str, Set[Union[str, bytes]]]:
         """Returned named lists."""
 
-        return self._pattern.named_lists
+        return cast(Mapping[str, Set[Union[str, bytes]]], self._pattern.named_lists)
 
     def search(
         self,
@@ -323,7 +323,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     ) -> Optional[Match[AnyStr]]:
         """Apply `match`."""
 
-        return self._pattern.match(string, *args, **kwargs)
+        return cast(Optional[Match[AnyStr]], self._pattern.match(string, *args, **kwargs))
 
     def fullmatch(
         self,
@@ -333,7 +333,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     ) -> Optional[Match[AnyStr]]:
         """Apply `fullmatch`."""
 
-        return self._pattern.fullmatch(string, *args, **kwargs)
+        return cast(Optional[Match[AnyStr]], self._pattern.fullmatch(string, *args, **kwargs))
 
     def split(
         self,
@@ -343,7 +343,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     ) -> List[AnyStr]:
         """Apply `split`."""
 
-        return self._pattern.split(string, *args, **kwargs)
+        return cast(List[AnyStr], self._pattern.split(string, *args, **kwargs))
 
     def splititer(
         self,
@@ -353,7 +353,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     ) -> Iterator[AnyStr]:
         """Apply `splititer`."""
 
-        return self._pattern.splititer(string, *args, **kwargs)
+        return cast(Iterator[AnyStr], self._pattern.splititer(string, *args, **kwargs))
 
     def findall(
         self,
@@ -363,7 +363,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     ) -> Union[List[AnyStr], List[Tuple[AnyStr, ...]]]:
         """Apply `findall`."""
 
-        return self._pattern.findall(string, *args, **kwargs)
+        return cast(Union[List[AnyStr], List[Tuple[AnyStr, ...]]], self._pattern.findall(string, *args, **kwargs))
 
     def finditer(
         self,
@@ -373,7 +373,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     ) -> Iterator[Match[AnyStr]]:
         """Apply `finditer`."""
 
-        return self._pattern.finditer(string, *args, **kwargs)
+        return cast(Iterator[Match[AnyStr]], self._pattern.finditer(string, *args, **kwargs))
 
     def sub(
         self,
@@ -384,7 +384,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     ) -> AnyStr:
         """Apply `sub`."""
 
-        return self._pattern.sub(self._auto_compile(repl), string, *args, **kwargs)
+        return cast(AnyStr, self._pattern.sub(self._auto_compile(repl), string, *args, **kwargs))
 
     def subf(
         self,
@@ -395,7 +395,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     ) -> AnyStr:  # noqa A002
         """Apply `sub` with format style replace."""
 
-        return self._pattern.subf(self._auto_compile(repl, True), string, *args, **kwargs)
+        return cast(AnyStr, self._pattern.subf(self._auto_compile(repl, True), string, *args, **kwargs))
 
     def subn(
         self,
@@ -406,7 +406,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     ) -> Tuple[AnyStr, int]:
         """Apply `subn` with format style replace."""
 
-        return self._pattern.subn(self._auto_compile(repl), string, *args, **kwargs)
+        return cast(Tuple[AnyStr, int], self._pattern.subn(self._auto_compile(repl), string, *args, **kwargs))
 
     def subfn(
         self,
@@ -417,7 +417,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
     ) -> Tuple[AnyStr, int]:  # noqa A002
         """Apply `subn` after applying backrefs."""
 
-        return self._pattern.subfn(self._auto_compile(repl, True), string, *args, **kwargs)
+        return cast(Tuple[AnyStr, int], self._pattern.subfn(self._auto_compile(repl, True), string, *args, **kwargs))
 
 
 def compile(  # noqa A001

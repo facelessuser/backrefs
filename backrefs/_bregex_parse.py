@@ -1338,7 +1338,7 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
         if m is None:
             raise ValueError("Match is None!")
 
-        sep = m.re.pattern[:0]
+        sep = m.re.pattern[:0]  # type: AnyStr
         if isinstance(sep, bytes) != self._bytes:
             raise TypeError('Match string type does not match expander string type!')
         text = []
