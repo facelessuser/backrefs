@@ -1469,12 +1469,16 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
                     # Non format replace
                     try:
                         l = m.group(g_index)
+                        if l is None:
+                            raise TypeError("Index '{}' returned None type instead of str".format(g_index))
                     except IndexError:  # pragma: no cover
                         raise IndexError("'{}' is out of range!".format(g_index))
                 else:
                     # String format replace
                     try:
                         obj = m.group(g_index)
+                        if obj is None:
+                            raise TypeError("Index '{}' returned None type instead of str".format(g_index))
                     except IndexError:  # pragma: no cover
                         raise IndexError("'{}' is out of range!".format(g_index))
                     if isinstance(sep, bytes):

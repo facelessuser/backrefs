@@ -1359,9 +1359,9 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
                 else:
                     # String format replace
                     try:
-                        obj = cast(Optional[AnyStr], m.captures(g_index))
-                        if obj is None:
-                            raise TypeError("Index '{}' returned None type instead of str".format(g_index))
+                        obj = cast(List[AnyStr], m.captures(g_index))
+                        if not obj:
+                            raise TypeError("Index '{}' returned no captures".format(g_index))
                     except IndexError:  # pragma: no cover
                         raise IndexError("'{}' is out of range!".format(g_index))
                     if isinstance(sep, bytes):

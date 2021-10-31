@@ -1970,6 +1970,18 @@ class TestReplaceTemplate(unittest.TestCase):
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
 
+    def test_bad_group(self):
+        """Test bad group."""
+
+        with pytest.raises(TypeError):
+            bre.compile(r'(test)|(what)').sub(r'\2', 'test')
+
+    def test_bad_format_group(self):
+        """Test bad format group."""
+
+        with pytest.raises(TypeError):
+            bre.compile(r'(test)|(what)').subf(r'{2}', 'test')
+
     def test_immutable(self):
         """Test immutable object."""
 

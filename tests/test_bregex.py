@@ -20,6 +20,13 @@ PY39_PLUS = (3, 9) <= sys.version_info
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_named_lists_attribute(self):
+        """Test named list attribute."""
+
+        pattern1 = bregex.compile(r'\L<name>', name=['blue', 'green'])
+        pattern2 = regex.compile(r'\L<name>', name=['blue', 'green'])
+        self.assertEqual(pattern1.named_lists, pattern2.named_lists)
+
     def test_named_lists(self):
         """Test named lists."""
 
@@ -1675,6 +1682,18 @@ class TestReplaceTemplate(unittest.TestCase):
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
+
+    def test_bad_group(self):
+        """Test bad group."""
+
+        with pytest.raises(TypeError):
+            bregex.compile(r'(test)|(what)').sub(r'\2', 'test')
+
+    def test_bad_format_group(self):
+        """Test bad format group."""
+
+        with pytest.raises(TypeError):
+            bregex.compile(r'(test)|(what)').subf(r'{2}', 'test')
 
     def test_immutable(self):
         """Test immutable object."""
