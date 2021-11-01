@@ -8,12 +8,9 @@ import unicodedata as _unicodedata
 import copyreg as _copyreg
 from . import util as _util
 import regex as _regex  # type: ignore[import]
+from regex.regex import _compile_replacement_helper  # type: ignore[import]
 from typing import Generic, AnyStr, Tuple, Optional, Any, Dict, List, Union, cast
 from ._bregex_typing import Pattern, Match
-from regex.regex import __version__ as _regex_version  # type: ignore[import]
-from regex.regex import _compile_replacement_helper
-
-_REGEX_COMMENT_FIX = tuple([int(x) for x in _regex_version.split('.')]) > (2, 4, 136)
 
 _ASCII_LETTERS = frozenset(
     (
@@ -249,11 +246,10 @@ class _SearchParser(Generic[AnyStr]):
             value.append(c)
             c = next(i)
             while c != ')' or escaped is True:
-                if _REGEX_COMMENT_FIX:
-                    if escaped:
-                        escaped = False
-                    elif c == '\\':
-                        escaped = True
+                if escaped:
+                    escaped = False
+                elif c == '\\':
+                    escaped = True
                 value.append(c)
                 c = next(i)
             value.append(c)

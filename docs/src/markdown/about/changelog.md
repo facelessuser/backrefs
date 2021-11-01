@@ -3,6 +3,7 @@
 ## 5.1
 
 - **NEW**: Add support for Python 3.10.
+- **NEW**: Add static typing.
 
 ## 5.0.1
 
