@@ -32,6 +32,9 @@ from functools import lru_cache as _lru_cache
 from . import util as _util
 from . import _bre_parse
 from ._bre_parse import ReplaceTemplate
+from typing import (
+    AnyStr, Pattern, Match, Union, Type, Callable, Any, Optional, Generic, Mapping, Tuple, List, Iterator, cast
+)
 
 __all__ = (
     "expand", "expandf", "search", "match", "fullmatch", "split", "findall", "finditer", "sub", "subf",
@@ -69,20 +72,30 @@ _RE_TYPE = type(_re.compile('', 0))
 
 
 @_lru_cache(maxsize=_MAXCACHE)
-def _cached_search_compile(pattern, re_verbose, re_unicode, pattern_type):
+def _cached_search_compile(
+    pattern: AnyStr,
+    re_verbose: bool,
+    re_unicode: bool,
+    pattern_type: Type[AnyStr]
+) -> AnyStr:
     """Cached search compile."""
 
     return _bre_parse._SearchParser(pattern, re_verbose, re_unicode).parse()
 
 
 @_lru_cache(maxsize=_MAXCACHE)
-def _cached_replace_compile(pattern, repl, flags, pattern_type):
+def _cached_replace_compile(
+    pattern: Pattern[AnyStr],
+    repl: AnyStr,
+    flags: int,
+    pattern_type: Type[AnyStr]
+) -> ReplaceTemplate[AnyStr]:
     """Cached replace compile."""
 
-    return _bre_parse._ReplaceParser().parse(pattern, repl, bool(flags & FORMAT))
+    return _bre_parse._ReplaceParser(pattern, repl, bool(flags & FORMAT)).parse()
 
 
-def _get_cache_size(replace=False):
+def _get_cache_size(replace: bool = False) -> int:
     """Get size of cache."""
 
     if not replace:
@@ -92,32 +105,38 @@ def _get_cache_size(replace=False):
     return size
 
 
-def _purge_cache():
+def _purge_cache() -> None:
     """Purge the cache."""
 
     _cached_replace_compile.cache_clear()
     _cached_search_compile.cache_clear()
 
 
-def _is_replace(obj):
+def _is_replace(obj: Any) -> bool:
     """Check if object is a replace object."""
 
     return isinstance(obj, ReplaceTemplate)
 
 
-def _apply_replace_backrefs(m, repl=None, flags=0):
+def _apply_replace_backrefs(
+    m: Optional[Match[AnyStr]],
+    repl: Union[ReplaceTemplate[AnyStr], AnyStr],
+    flags: int = 0
+) -> AnyStr:
     """Expand with either the `ReplaceTemplate` or compile on the fly, or return None."""
 
     if m is None:
         raise ValueError("Match is None!")
-    else:
-        if isinstance(repl, ReplaceTemplate):
-            return repl.expand(m)
-        elif isinstance(repl, (str, bytes)):
-            return _bre_parse._ReplaceParser().parse(m.re, repl, bool(flags & FORMAT)).expand(m)
+
+    if isinstance(repl, ReplaceTemplate):
+        return repl.expand(m)
+    return _bre_parse._ReplaceParser(m.re, repl, bool(flags & FORMAT)).parse().expand(m)
 
 
-def _apply_search_backrefs(pattern, flags=0):
+def _apply_search_backrefs(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    flags: int = 0
+) -> Union[AnyStr, Pattern[AnyStr]]:
     """Apply the search backrefs to the search pattern."""
 
     if isinstance(pattern, (str, bytes)):
@@ -128,22 +147,25 @@ def _apply_search_backrefs(pattern, flags=0):
         elif bool(UNICODE & flags):
             re_unicode = True
         if not (flags & DEBUG):
-            pattern = _cached_search_compile(pattern, re_verbose, re_unicode, type(pattern))
+            p = _cached_search_compile(
+                pattern, re_verbose, re_unicode, type(pattern)
+            )  # type: Union[AnyStr, Pattern[AnyStr]]
         else:  # pragma: no cover
-            pattern = _bre_parse._SearchParser(pattern, re_verbose, re_unicode).parse()
+            p = _bre_parse._SearchParser(pattern, re_verbose, re_unicode).parse()
     elif isinstance(pattern, Bre):
         if flags:
             raise ValueError("Cannot process flags argument with a compiled pattern")
-        pattern = pattern._pattern
-    elif isinstance(pattern, (_RE_TYPE, Bre)):
+        p = pattern._pattern
+    elif isinstance(pattern, _RE_TYPE):
         if flags:
             raise ValueError("Cannot process flags argument with a compiled pattern!")
+        p = pattern
     else:
         raise TypeError("Not a string or compiled pattern!")
-    return pattern
+    return p
 
 
-def _assert_expandable(repl, use_format=False):
+def _assert_expandable(repl: Any, use_format: bool = False) -> None:
     """Check if replace template is expandable."""
 
     if isinstance(repl, ReplaceTemplate):
@@ -159,56 +181,60 @@ def _assert_expandable(repl, use_format=False):
 ###########################
 # API
 ##########################
-class Bre(_util.Immutable):
+class Bre(_util.Immutable, Generic[AnyStr]):
     """Bre object."""
+
+    _pattern: Pattern[AnyStr]
+    auto_compile: bool
+    _hash: int
 
     __slots__ = ("_pattern", "auto_compile", "_hash")
 
-    def __init__(self, pattern, auto_compile=True):
+    def __init__(self, pattern: Pattern[AnyStr], auto_compile: bool = True) -> None:
         """Initialization."""
 
-        super(Bre, self).__init__(
+        super().__init__(
             _pattern=pattern,
             auto_compile=auto_compile,
             _hash=hash((type(self), type(pattern), pattern, auto_compile))
         )
 
     @property
-    def pattern(self):
+    def pattern(self) -> AnyStr:
         """Return pattern."""
 
         return self._pattern.pattern
 
     @property
-    def flags(self):
+    def flags(self) -> int:
         """Return flags."""
 
         return self._pattern.flags
 
     @property
-    def groupindex(self):
+    def groupindex(self) -> Mapping[str, int]:
         """Return group index."""
 
         return self._pattern.groupindex
 
     @property
-    def groups(self):
+    def groups(self) -> Tuple[Optional[AnyStr], ...]:
         """Return groups."""
 
-        return self._pattern.groups
+        return cast(Tuple[Optional[AnyStr], ...], self._pattern.groups)
 
     @property
-    def scanner(self):
+    def scanner(self) -> Any:
         """Return scanner."""
 
-        return self._pattern.scanner
+        return self._pattern.scanner  # type: ignore[attr-defined]
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Hash."""
 
         return self._hash
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         """Equal."""
 
         return (
@@ -217,7 +243,7 @@ class Bre(_util.Immutable):
             self.auto_compile == other.auto_compile
         )
 
-    def __ne__(self, other):
+    def __ne__(self, other: Any) -> bool:
         """Equal."""
 
         return (
@@ -226,87 +252,151 @@ class Bre(_util.Immutable):
             self.auto_compile != other.auto_compile
         )
 
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
         """Representation."""
 
-        return '%s.%s(%r, auto_compile=%r)' % (
+        return '{}.{}({!r}, auto_compile={!r})'.format(
             self.__module__, self.__class__.__name__, self._pattern, self.auto_compile
         )
 
-    def _auto_compile(self, template, use_format=False):
+    def _auto_compile(
+        self,
+        template: Union[AnyStr, Callable[..., AnyStr]],
+        use_format: bool = False
+    ) -> Union[AnyStr, Callable[..., AnyStr]]:
         """Compile replacements."""
 
-        is_replace = _is_replace(template)
-        is_string = isinstance(template, (str, bytes))
-        if is_replace and use_format != template.use_format:
-            raise ValueError("Compiled replace cannot be a format object!")
-        if is_replace or (is_string and self.auto_compile):
-            return self.compile(template, (FORMAT if use_format and not is_replace else 0))
-        elif is_string and use_format:
+        if isinstance(template, ReplaceTemplate):
+            if use_format != template.use_format:
+                raise ValueError("Compiled replace cannot be a format object!")
+        elif isinstance(template, ReplaceTemplate) or (isinstance(template, (str, bytes)) and self.auto_compile):
+            return self.compile(template, (FORMAT if use_format and not isinstance(template, ReplaceTemplate) else 0))
+        elif isinstance(template, (str, bytes)) and use_format:
             # Reject an attempt to run format replace when auto-compiling
             # of template strings has been disabled and we are using a
             # template string.
             raise AttributeError('Format replaces cannot be called without compiling replace template!')
-        else:
-            return template
+        return template
 
-    def compile(self, repl, flags=0):  # noqa A001
+    def compile(  # noqa A001
+        self,
+        repl: Union[AnyStr, Callable[..., AnyStr]],
+        flags: int = 0
+    ) -> Callable[..., AnyStr]:
         """Compile replace."""
 
         return compile_replace(self._pattern, repl, flags)
 
-    def search(self, string, *args, **kwargs):
+    def search(
+        self,
+        string: AnyStr,
+        *args: Any,
+        **kwargs: Any
+    ) -> Optional[Match[AnyStr]]:
         """Apply `search`."""
 
         return self._pattern.search(string, *args, **kwargs)
 
-    def match(self, string, *args, **kwargs):
+    def match(
+        self,
+        string: AnyStr,
+        *args: Any,
+        **kwargs: Any
+    ) -> Optional[Match[AnyStr]]:
         """Apply `match`."""
 
         return self._pattern.match(string, *args, **kwargs)
 
-    def fullmatch(self, string, *args, **kwargs):
+    def fullmatch(
+        self,
+        string: AnyStr,
+        *args: Any,
+        **kwargs: Any
+    ) -> Optional[Match[AnyStr]]:
         """Apply `fullmatch`."""
 
         return self._pattern.fullmatch(string, *args, **kwargs)
 
-    def split(self, string, *args, **kwargs):
+    def split(
+        self,
+        string: AnyStr,
+        *args: Any,
+        **kwargs: Any
+    ) -> List[AnyStr]:
         """Apply `split`."""
 
         return self._pattern.split(string, *args, **kwargs)
 
-    def findall(self, string, *args, **kwargs):
+    def findall(
+        self,
+        string: AnyStr,
+        *args: Any,
+        **kwargs: Any
+    ) -> Union[List[AnyStr], List[Tuple[AnyStr, ...]]]:
         """Apply `findall`."""
 
         return self._pattern.findall(string, *args, **kwargs)
 
-    def finditer(self, string, *args, **kwargs):
+    def finditer(
+        self,
+        string: AnyStr,
+        *args: Any,
+        **kwargs: Any
+    ) -> Iterator[Match[AnyStr]]:
         """Apply `finditer`."""
 
         return self._pattern.finditer(string, *args, **kwargs)
 
-    def sub(self, repl, string, *args, **kwargs):
+    def sub(
+        self,
+        repl: Union[AnyStr, Callable[..., AnyStr]],
+        string: AnyStr,
+        *args: Any,
+        **kwargs: Any
+    ) -> AnyStr:
         """Apply `sub`."""
 
         return self._pattern.sub(self._auto_compile(repl), string, *args, **kwargs)
 
-    def subf(self, repl, string, *args, **kwargs):  # noqa A002
+    def subf(  # noqa A002
+        self,
+        repl: Union[AnyStr, Callable[..., AnyStr]],
+        string: AnyStr,
+        *args: Any,
+        **kwargs: Any
+    ) -> AnyStr:
         """Apply `sub` with format style replace."""
 
         return self._pattern.sub(self._auto_compile(repl, True), string, *args, **kwargs)
 
-    def subn(self, repl, string, *args, **kwargs):
+    def subn(
+        self,
+        repl: Union[AnyStr, Callable[..., AnyStr]],
+        string: AnyStr,
+        *args: Any,
+        **kwargs: Any
+    ) -> Tuple[AnyStr, int]:
         """Apply `subn` with format style replace."""
 
         return self._pattern.subn(self._auto_compile(repl), string, *args, **kwargs)
 
-    def subfn(self, repl, string, *args, **kwargs):  # noqa A002
+    def subfn(  # noqa A002
+        self,
+        repl: Union[AnyStr, Callable[..., AnyStr]],
+        string: AnyStr,
+        *args: Any,
+        **kwargs: Any
+    ) -> Tuple[AnyStr, int]:
         """Apply `subn` after applying backrefs."""
 
         return self._pattern.subn(self._auto_compile(repl, True), string, *args, **kwargs)
 
 
-def compile(pattern, flags=0, auto_compile=None):  # noqa A001
+def compile(  # noqa A001
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    flags: int = 0,
+    auto_compile: Optional[bool] = None
+) -> 'Bre[AnyStr]':
     """Compile both the search or search and replace into one object."""
 
     if isinstance(pattern, Bre):
@@ -322,22 +412,28 @@ def compile(pattern, flags=0, auto_compile=None):  # noqa A001
         return Bre(compile_search(pattern, flags), auto_compile)
 
 
-def compile_search(pattern, flags=0):
+def compile_search(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    flags: int = 0
+) -> Pattern[AnyStr]:
     """Compile with extended search references."""
 
     return _re.compile(_apply_search_backrefs(pattern, flags), flags)
 
 
-def compile_replace(pattern, repl, flags=0):
+def compile_replace(
+    pattern: Pattern[AnyStr],
+    repl: Union[AnyStr, Callable[..., AnyStr]],
+    flags: int = 0
+) -> Callable[..., AnyStr]:
     """Construct a method that can be used as a replace method for `sub`, `subn`, etc."""
 
-    call = None
     if pattern is not None and isinstance(pattern, _RE_TYPE):
         if isinstance(repl, (str, bytes)):
             if not (pattern.flags & DEBUG):
                 call = _cached_replace_compile(pattern, repl, flags, type(repl))
             else:  # pragma: no cover
-                call = _bre_parse._ReplaceParser().parse(pattern, repl, bool(flags & FORMAT))
+                call = _bre_parse._ReplaceParser(pattern, repl, bool(flags & FORMAT)).parse()
         elif isinstance(repl, ReplaceTemplate):
             if flags:
                 raise ValueError("Cannot process flags argument with a ReplaceTemplate!")
@@ -351,76 +447,112 @@ def compile_replace(pattern, repl, flags=0):
     return call
 
 
-def purge():
+def purge() -> None:
     """Purge caches."""
 
     _purge_cache()
     _re.purge()
 
 
-def expand(m, repl):
+def expand(m: Optional[Match[AnyStr]], repl: Union[ReplaceTemplate[AnyStr], AnyStr]) -> AnyStr:
     """Expand the string using the replace pattern or function."""
 
     _assert_expandable(repl)
     return _apply_replace_backrefs(m, repl)
 
 
-def expandf(m, format):  # noqa A002
+def expandf(m: Optional[Match[AnyStr]], repl: Union[ReplaceTemplate[AnyStr], AnyStr]) -> AnyStr:
     """Expand the string using the format replace pattern or function."""
 
-    _assert_expandable(format, True)
-    return _apply_replace_backrefs(m, format, flags=FORMAT)
+    _assert_expandable(repl, True)
+    return _apply_replace_backrefs(m, repl, flags=FORMAT)
 
 
-def search(pattern, string, *args, **kwargs):
+def search(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    string: AnyStr,
+    *args: Any,
+    **kwargs: Any
+) -> Optional[Match[AnyStr]]:
     """Apply `search` after applying backrefs."""
 
     flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return _re.search(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
 
 
-def match(pattern, string, *args, **kwargs):
+def match(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    string: AnyStr,
+    *args: Any,
+    **kwargs: Any
+) -> Optional[Match[AnyStr]]:
     """Apply `match` after applying backrefs."""
 
     flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return _re.match(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
 
 
-def fullmatch(pattern, string, *args, **kwargs):
+def fullmatch(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    string: AnyStr,
+    *args: Any,
+    **kwargs: Any
+) -> Optional[Match[AnyStr]]:
     """Apply `fullmatch` after applying backrefs."""
 
     flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return _re.fullmatch(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
 
 
-def split(pattern, string, *args, **kwargs):
+def split(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    string: AnyStr,
+    *args: Any,
+    **kwargs: Any
+) -> List[AnyStr]:
     """Apply `split` after applying backrefs."""
 
     flags = args[3] if len(args) > 3 else kwargs.get('flags', 0)
     return _re.split(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
 
 
-def findall(pattern, string, *args, **kwargs):
+def findall(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    string: AnyStr,
+    *args: Any,
+    **kwargs: Any
+) -> Union[List[AnyStr], List[Tuple[AnyStr, ...]]]:
     """Apply `findall` after applying backrefs."""
 
     flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return _re.findall(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
 
 
-def finditer(pattern, string, *args, **kwargs):
+def finditer(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    string: AnyStr,
+    *args: Any,
+    **kwargs: Any
+) -> Iterator[Match[AnyStr]]:
     """Apply `finditer` after applying backrefs."""
 
     flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return _re.finditer(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
 
 
-def sub(pattern, repl, string, *args, **kwargs):
+def sub(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    repl: Union[AnyStr, Callable[..., AnyStr]],
+    string: AnyStr,
+    *args: Any,
+    **kwargs: Any
+) -> AnyStr:
     """Apply `sub` after applying backrefs."""
 
     flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (str, bytes))
-    if is_replace and repl.use_format:
+    if is_replace and cast(ReplaceTemplate[AnyStr], repl).use_format:
         raise ValueError("Compiled replace cannot be a format object!")
 
     pattern = compile_search(pattern, flags)
@@ -429,30 +561,42 @@ def sub(pattern, repl, string, *args, **kwargs):
     )
 
 
-def subf(pattern, format, string, *args, **kwargs):  # noqa A002
+def subf(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    repl: Union[AnyStr, Callable[..., AnyStr]],
+    string: AnyStr,
+    *args: Any,
+    **kwargs: Any
+) -> AnyStr:
     """Apply `sub` with format style replace."""
 
     flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
-    is_replace = _is_replace(format)
-    is_string = isinstance(format, (str, bytes))
-    if is_replace and not format.use_format:
+    is_replace = _is_replace(repl)
+    is_string = isinstance(repl, (str, bytes))
+    if is_replace and not cast(ReplaceTemplate[AnyStr], repl).use_format:
         raise ValueError("Compiled replace is not a format object!")
 
     pattern = compile_search(pattern, flags)
     rflags = FORMAT if is_string else 0
     return _re.sub(
-        pattern, (compile_replace(pattern, format, flags=rflags) if is_replace or is_string else format), string,
+        pattern, (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl), string,
         *args, **kwargs
     )
 
 
-def subn(pattern, repl, string, *args, **kwargs):
+def subn(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    repl: Union[AnyStr, Callable[..., AnyStr]],
+    string: AnyStr,
+    *args: Any,
+    **kwargs: Any
+) -> Tuple[AnyStr, int]:
     """Apply `subn` with format style replace."""
 
     flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (str, bytes))
-    if is_replace and repl.use_format:
+    if is_replace and cast(ReplaceTemplate[AnyStr], repl).use_format:
         raise ValueError("Compiled replace cannot be a format object!")
 
     pattern = compile_search(pattern, flags)
@@ -461,24 +605,30 @@ def subn(pattern, repl, string, *args, **kwargs):
     )
 
 
-def subfn(pattern, format, string, *args, **kwargs):  # noqa A002
+def subfn(
+    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    repl: Union[AnyStr, Callable[..., AnyStr]],
+    string: AnyStr,
+    *args: Any,
+    **kwargs: Any
+) -> Tuple[AnyStr, int]:
     """Apply `subn` after applying backrefs."""
 
     flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
-    is_replace = _is_replace(format)
-    is_string = isinstance(format, (str, bytes))
-    if is_replace and not format.use_format:
+    is_replace = _is_replace(repl)
+    is_string = isinstance(repl, (str, bytes))
+    if is_replace and not cast(ReplaceTemplate[AnyStr], repl).use_format:
         raise ValueError("Compiled replace is not a format object!")
 
     pattern = compile_search(pattern, flags)
     rflags = FORMAT if is_string else 0
     return _re.subn(
-        pattern, (compile_replace(pattern, format, flags=rflags) if is_replace or is_string else format), string,
+        pattern, (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl), string,
         *args, **kwargs
     )
 
 
-def _pickle(p):
+def _pickle(p):  # type: ignore[no-untyped-def]
     return Bre, (p._pattern, p.auto_compile)
 
 

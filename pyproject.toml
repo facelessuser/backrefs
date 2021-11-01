@@ -5,3 +5,21 @@ requires = [
 ]
 
 build-backend = "setuptools.build_meta"
+
+[tool.mypy]
+files = [
+    "backrefs/*.py"
+]
+strict = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    'backrefs.uniprops.*',
+    'backrefs._bregex_typing'
+]
+warn_unused_ignores = false
+
+[[tool.mypy.overrides]]
+module = 'backrefs.uniprops.*'
+implicit_reexport = true

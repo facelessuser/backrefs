@@ -1,4 +1,4 @@
-recursive-include backrefs *.py
+recursive-include backrefs *.py py.typed
 prune backrefs/uniprops/unidata
 recursive-include tests *.py
 recursive-include tools *.py *.zip LICENSE

@@ -86,12 +86,12 @@ setup(
     author_email='Isaac.Muse@gmail.com',
     url='https://github.com/facelessuser/backrefs',
     packages=find_packages(exclude=['tools', 'tests']),
+    package_data={"backrefs": ["py.typed"]},
     install_requires=get_requirements("requirements/project.txt"),
     extras_require={
         'extras': get_requirements("requirements/extras.txt")
     },
     zip_safe=False,
-    package_data={},
     license='MIT License',
     classifiers=[
         'Development Status :: %s' % DEVSTATUS,
@@ -105,6 +105,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
-        'Topic :: Software Development :: Libraries :: Python Modules'
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Typing :: Typed'
     ]
 )

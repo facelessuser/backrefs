@@ -1,6 +1,7 @@
 """Unicode Properties."""
 from . import unidata
 import sys
+from typing import Optional
 
 UNICODE_RANGE = '\u0000-\U0010ffff'
 ASCII_RANGE = '\x00-\xff'
@@ -12,7 +13,7 @@ MODE_ASCII = 1
 MODE_UNICODE = 2
 
 
-def fmt_string(value, is_bytes):
+def fmt_string(value: str, is_bytes: bool) -> str:
     """Format for bytes string."""
 
     if is_bytes:
@@ -21,7 +22,7 @@ def fmt_string(value, is_bytes):
         return value
 
 
-def get_gc_property(value, mode=MODE_UNICODE):
+def get_gc_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `GC` property."""
 
     obj = unidata.ascii_properties if mode != MODE_UNICODE else unidata.unicode_properties
@@ -54,7 +55,7 @@ def get_gc_property(value, mode=MODE_UNICODE):
     return value
 
 
-def get_binary_property(value, mode=MODE_UNICODE):
+def get_binary_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `BINARY` property."""
 
     obj = unidata.ascii_binary if mode != MODE_UNICODE else unidata.unicode_binary
@@ -68,7 +69,7 @@ def get_binary_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_canonical_combining_class_property(value, mode=MODE_UNICODE):
+def get_canonical_combining_class_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `CANONICAL COMBINING CLASS` property."""
 
     obj = unidata.ascii_canonical_combining_class if mode != MODE_UNICODE else unidata.unicode_canonical_combining_class
@@ -82,7 +83,7 @@ def get_canonical_combining_class_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_east_asian_width_property(value, mode=MODE_UNICODE):
+def get_east_asian_width_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `EAST ASIAN WIDTH` property."""
 
     obj = unidata.ascii_east_asian_width if mode != MODE_UNICODE else unidata.unicode_east_asian_width
@@ -96,7 +97,7 @@ def get_east_asian_width_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_grapheme_cluster_break_property(value, mode=MODE_UNICODE):
+def get_grapheme_cluster_break_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `GRAPHEME CLUSTER BREAK` property."""
 
     obj = unidata.ascii_grapheme_cluster_break if mode != MODE_UNICODE else unidata.unicode_grapheme_cluster_break
@@ -110,7 +111,7 @@ def get_grapheme_cluster_break_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_line_break_property(value, mode=MODE_UNICODE):
+def get_line_break_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `LINE BREAK` property."""
 
     obj = unidata.ascii_line_break if mode != MODE_UNICODE else unidata.unicode_line_break
@@ -124,7 +125,7 @@ def get_line_break_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_sentence_break_property(value, mode=MODE_UNICODE):
+def get_sentence_break_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `SENTENCE BREAK` property."""
 
     obj = unidata.ascii_sentence_break if mode != MODE_UNICODE else unidata.unicode_sentence_break
@@ -138,7 +139,7 @@ def get_sentence_break_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_word_break_property(value, mode=MODE_UNICODE):
+def get_word_break_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `WORD BREAK` property."""
 
     obj = unidata.ascii_word_break if mode != MODE_UNICODE else unidata.unicode_word_break
@@ -152,7 +153,7 @@ def get_word_break_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_hangul_syllable_type_property(value, mode=MODE_UNICODE):
+def get_hangul_syllable_type_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `HANGUL SYLLABLE TYPE` property."""
 
     obj = unidata.ascii_hangul_syllable_type if mode != MODE_UNICODE else unidata.unicode_hangul_syllable_type
@@ -166,7 +167,7 @@ def get_hangul_syllable_type_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_indic_positional_category_property(value, mode=MODE_UNICODE):
+def get_indic_positional_category_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `INDIC POSITIONAL/MATRA CATEGORY` property."""
 
     obj = unidata.ascii_indic_positional_category if mode != MODE_UNICODE else unidata.unicode_indic_positional_category
@@ -181,7 +182,7 @@ def get_indic_positional_category_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_indic_syllabic_category_property(value, mode=MODE_UNICODE):
+def get_indic_syllabic_category_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `INDIC SYLLABIC CATEGORY` property."""
 
     obj = unidata.ascii_indic_syllabic_category if mode != MODE_UNICODE else unidata.unicode_indic_syllabic_category
@@ -195,7 +196,7 @@ def get_indic_syllabic_category_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_decomposition_type_property(value, mode=MODE_UNICODE):
+def get_decomposition_type_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `DECOMPOSITION TYPE` property."""
 
     obj = unidata.ascii_decomposition_type if mode != MODE_UNICODE else unidata.unicode_decomposition_type
@@ -209,7 +210,7 @@ def get_decomposition_type_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_nfc_quick_check_property(value, mode=MODE_UNICODE):
+def get_nfc_quick_check_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `NFC QUICK CHECK` property."""
 
     obj = unidata.ascii_nfc_quick_check if mode != MODE_UNICODE else unidata.unicode_nfc_quick_check
@@ -223,7 +224,7 @@ def get_nfc_quick_check_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_nfd_quick_check_property(value, mode=MODE_UNICODE):
+def get_nfd_quick_check_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `NFD QUICK CHECK` property."""
 
     obj = unidata.ascii_nfd_quick_check if mode != MODE_UNICODE else unidata.unicode_nfd_quick_check
@@ -237,7 +238,7 @@ def get_nfd_quick_check_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_nfkc_quick_check_property(value, mode=MODE_UNICODE):
+def get_nfkc_quick_check_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `NFKC QUICK CHECK` property."""
 
     obj = unidata.ascii_nfkc_quick_check if mode != MODE_UNICODE else unidata.unicode_nfkc_quick_check
@@ -251,7 +252,7 @@ def get_nfkc_quick_check_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_nfkd_quick_check_property(value, mode=MODE_UNICODE):
+def get_nfkd_quick_check_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `NFKD QUICK CHECK` property."""
 
     obj = unidata.ascii_nfkd_quick_check if mode != MODE_UNICODE else unidata.unicode_nfkd_quick_check
@@ -265,7 +266,7 @@ def get_nfkd_quick_check_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_numeric_type_property(value, mode=MODE_UNICODE):
+def get_numeric_type_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `NUMERIC TYPE` property."""
 
     obj = unidata.ascii_numeric_type if mode != MODE_UNICODE else unidata.unicode_numeric_type
@@ -279,7 +280,7 @@ def get_numeric_type_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_numeric_value_property(value, mode=MODE_UNICODE):
+def get_numeric_value_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `NUMERIC VALUE` property."""
 
     obj = unidata.ascii_numeric_values if mode != MODE_UNICODE else unidata.unicode_numeric_values
@@ -293,7 +294,7 @@ def get_numeric_value_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_age_property(value, mode=MODE_UNICODE):
+def get_age_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `AGE` property."""
 
     obj = unidata.ascii_age if mode != MODE_UNICODE else unidata.unicode_age
@@ -307,7 +308,7 @@ def get_age_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_joining_type_property(value, mode=MODE_UNICODE):
+def get_joining_type_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `JOINING TYPE` property."""
 
     obj = unidata.ascii_joining_type if mode != MODE_UNICODE else unidata.unicode_joining_type
@@ -321,7 +322,7 @@ def get_joining_type_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_joining_group_property(value, mode=MODE_UNICODE):
+def get_joining_group_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `JOINING GROUP` property."""
 
     obj = unidata.ascii_joining_group if mode != MODE_UNICODE else unidata.unicode_joining_group
@@ -335,7 +336,7 @@ def get_joining_group_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_script_property(value, mode=MODE_UNICODE):
+def get_script_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `SC` property."""
 
     obj = unidata.ascii_scripts if mode != MODE_UNICODE else unidata.unicode_scripts
@@ -349,7 +350,7 @@ def get_script_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_script_extension_property(value, mode=MODE_UNICODE):
+def get_script_extension_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `SCX` property."""
 
     obj = unidata.ascii_script_extensions if mode != MODE_UNICODE else unidata.unicode_script_extensions
@@ -363,7 +364,7 @@ def get_script_extension_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_block_property(value, mode=MODE_UNICODE):
+def get_block_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `BLK` property."""
 
     obj = unidata.ascii_blocks if mode != MODE_UNICODE else unidata.unicode_blocks
@@ -377,7 +378,7 @@ def get_block_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_bidi_property(value, mode=MODE_UNICODE):
+def get_bidi_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `BC` property."""
 
     obj = unidata.ascii_bidi_classes if mode != MODE_UNICODE else unidata.unicode_bidi_classes
@@ -391,7 +392,7 @@ def get_bidi_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_bidi_paired_bracket_type_property(value, mode=MODE_UNICODE):
+def get_bidi_paired_bracket_type_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `BPT` property."""
 
     obj = unidata.ascii_bidi_paired_bracket_type if mode != MODE_UNICODE else unidata.unicode_bidi_paired_bracket_type
@@ -405,10 +406,13 @@ def get_bidi_paired_bracket_type_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_vertical_orientation_property(value, mode=MODE_UNICODE):
+def get_vertical_orientation_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get `VO` property."""
 
-    obj = unidata.ascii_vertical_orientation if mode != MODE_UNICODE else unidata.unicode_vertical_orientation
+    if mode != MODE_UNICODE:
+        obj = unidata.ascii_vertical_orientation  # type: ignore[attr-defined]
+    else:
+        obj = unidata.unicode_vertical_orientation  # type: ignore[attr-defined]
 
     if value.startswith('^'):
         negated = value[1:]
@@ -419,7 +423,7 @@ def get_vertical_orientation_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_is_property(value, mode=MODE_UNICODE):
+def get_is_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get shortcut for `SC` or `Binary` property."""
 
     if value.startswith('^'):
@@ -448,7 +452,7 @@ def get_is_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def get_in_property(value, mode=MODE_UNICODE):
+def get_in_property(value: str, mode: int = MODE_UNICODE) -> str:
     """Get shortcut for `Block` property."""
 
     if value.startswith('^'):
@@ -469,13 +473,13 @@ def get_in_property(value, mode=MODE_UNICODE):
     return fmt_string(obj[value], mode == MODE_ASCII)
 
 
-def _is_binary(name):
+def _is_binary(name: str) -> bool:
     """Check if name is an enum (not a binary) property."""
 
     return name in unidata.unicode_binary or name in unidata.unicode_alias['binary']
 
 
-def get_unicode_property(prop, value=None, mode=MODE_UNICODE):
+def get_unicode_property(prop: str, value: Optional[str] = None, mode: int = MODE_UNICODE) -> str:
     """Retrieve the Unicode category from the table."""
 
     if value is not None:
