@@ -915,6 +915,11 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(TypeError):
             bre.subf(b'test', br'{[test]}', b'test', bre.FORMAT)
 
+    def test_format_ascii_align(self):
+        """Test format ASCII."""
+
+        self.assertEqual(bre.subf('test', r'{0!a:|^8}', 'test'), "|'test'|")
+
     def test_format_conversions(self):
         """Test string format conversion paths."""
 

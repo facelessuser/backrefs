@@ -1484,10 +1484,11 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
                         obj = m.group(g_index)
                     except IndexError:  # pragma: no cover
                         raise IndexError("'{}' is out of range!".format(g_index))
-                    if isinstance(sep, bytes):
-                        l = _util.format_bytes([] if obj is None else [obj], capture)
-                    else:
-                        l = _util.format_string([] if obj is None else [obj], capture)
+                    l = _util.format_captures(
+                        [] if obj is None else [obj],
+                        capture,
+                        _util._to_bstr if isinstance(sep, bytes) else _util._to_str
+                    )
                 if span_case is not None:
                     if span_case == _LOWER:
                         l = l.lower()
