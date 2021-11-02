@@ -1,9 +1,22 @@
 # Changelog
 
+## 5.2
+
+- **NEW**: Add static typing.
+- **FIX**: Re format replacement captures behave more like Regex in that you can technically index into the captures of
+  a given group in Re, but in Re there is only ever one or zero captures. Documentation was never really explicit on
+  what one should expect if indexing a group in Re occurred. The documentation seemed to vaguely insinuate that it would
+  behave like a Regex capture list, just with one or zero values in the list. In reality, the value was a simple string
+  or `None`. This caused a bug in some cases where you'd have `None` inserted for a group if a group was optional, but
+  referenced in the replacement template. Now the implementation matches the description in the documentation with the
+  documentation now being more explicit about behavior.
+- **FIX**: Match Re and Regex handling when doing a non-format replacement that references a group that is present in
+  the search pattern but has no actual captures. Such a case should not fail, but simply return an empty string for the
+  group.
+
 ## 5.1
 
 - **NEW**: Add support for Python 3.10.
-- **NEW**: Add static typing.
 
 ## 5.0.1
 

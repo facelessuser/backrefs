@@ -695,6 +695,7 @@ class _ReplaceParser(Generic[AnyStr]):
         try:
             if c == '}':
                 value.append((_util.FMT_FIELD, ''))
+                value.append((_util.FMT_INDEX, -1))
             else:
                 # Field
                 temp = []  # type: List[str]
@@ -722,6 +723,7 @@ class _ReplaceParser(Generic[AnyStr]):
                     pass
 
                 # Attributes and indexes
+                count = 0
                 while c in ('[', '.'):
                     if c == '[':
                         findex = []
@@ -734,18 +736,21 @@ class _ReplaceParser(Generic[AnyStr]):
                         except StopIteration:
                             raise SyntaxError("Unmatched '[' at {}".format(sindex - 1))
                         idx = self.parse_format_index(''.join(findex))
-                        if isinstance(idx, int):
-                            value.append((_util.FMT_INDEX, idx))
-                        else:
-                            value.append((_util.FMT_INDEX, idx))
+                        value.append((_util.FMT_INDEX, idx))
                         c = self.format_next(i)
                     else:
+                        if count == 0:
+                            value.append((_util.FMT_INDEX, -1))
                         findex = []
                         c = self.format_next(i)
                         while c in _WORD:
                             findex.append(c)
                             c = self.format_next(i)
                         value.append((_util.FMT_ATTR, ''.join(findex)))
+                    count += 1
+
+                if count == 0:
+                    value.append((_util.FMT_INDEX, -1))
 
                 # Conversion
                 if c == '!':
@@ -1470,21 +1475,19 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
                     try:
                         l = m.group(g_index)
                         if l is None:
-                            raise TypeError("Index '{}' returned None type instead of str".format(g_index))
+                            l = sep
                     except IndexError:  # pragma: no cover
                         raise IndexError("'{}' is out of range!".format(g_index))
                 else:
                     # String format replace
                     try:
                         obj = m.group(g_index)
-                        if obj is None:
-                            raise TypeError("Index '{}' returned None type instead of str".format(g_index))
                     except IndexError:  # pragma: no cover
                         raise IndexError("'{}' is out of range!".format(g_index))
                     if isinstance(sep, bytes):
-                        l = _util.format_bytes(obj, capture)
+                        l = _util.format_bytes([] if obj is None else [obj], capture)
                     else:
-                        l = _util.format_string(obj, capture)
+                        l = _util.format_string([] if obj is None else [obj], capture)
                 if span_case is not None:
                     if span_case == _LOWER:
                         l = l.lower()

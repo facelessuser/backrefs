@@ -581,10 +581,7 @@ class _ReplaceParser(Generic[AnyStr]):
                         except StopIteration:
                             raise SyntaxError("Unmatched '[' at {}".format(sindex - 1))
                         idx = self.parse_format_index(''.join(findex))
-                        if isinstance(idx, int):
-                            value.append((_util.FMT_INDEX, idx))
-                        else:
-                            value.append((_util.FMT_INDEX, idx))
+                        value.append((_util.FMT_INDEX, idx))
                         c = self.format_next(i)
                     else:
                         if count == 0:
@@ -1349,15 +1346,13 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
                     try:
                         l = cast(Optional[AnyStr], m.group(g_index))
                         if l is None:
-                            raise TypeError("Index '{}' returned None type instead of str".format(g_index))
+                            l = sep
                     except IndexError:  # pragma: no cover
                         raise IndexError("'{}' is out of range!".format(g_index))
                 else:
                     # String format replace
                     try:
                         obj = cast(List[AnyStr], m.captures(g_index))
-                        if not obj:
-                            raise TypeError("Index '{}' returned no captures".format(g_index))
                     except IndexError:  # pragma: no cover
                         raise IndexError("'{}' is out of range!".format(g_index))
                     if isinstance(sep, bytes):

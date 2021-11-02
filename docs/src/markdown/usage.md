@@ -64,81 +64,37 @@ capitalized. Traditionally, `\U` and `\E` is used, but since `\U` is a Unicode e
 
 ## Format Replacements
 
-The Regex library has a feature where you can use format strings to implement replacements. This is useful for Regex as
-it provides a way to access different captures when multiple are captured by a single group. Most likely it was born
-from the need to provide an easy way to access multiple captures as Regex stores all captures while Re stores only the
-last.
+Backrefs allows for replacement string templates to use a format string format in both Re and Regex. This feature is a
+Regex library specific feature that we mimic in Re, but [enhance in both](#enhancements).
+
+Originally, this feature was developed in Regex to allow accessing specific captures of a group when multiple captures
+are made. For Regex, this makes a lot of sense as the library actually tracks all captures for a group. Each capture
+can be indexed individually using the format string format.
 
 ```pycon3
->>> regex.subf(r"(\w+) (\w+)", "{0} => {2} {1}", "foo bar")
-'foo bar => bar foo'
->>> regex.subf(r"(?P<word1>\w+) (?P<word2>\w+)", "{word2} {word1}", "foo bar")
-'bar foo'
+>>> regex.subf(r"(?:(\w+) ){2}(\w+)", "{0} => {1[0]} {1[1]} {2}", "foo bar baz")
+'foo bar baz => foo bar baz'
+>>> regex.subf(r"(?:(?P<word1>\w+) ){2}(?P<word2>\w+)", "{0} => {word1[0]} {word1[1]} {word2}", "foo bar baz")
+'foo bar baz => foo bar baz'
 ```
+
+The Re engine does not track multiple captures for a single group -- something we cannot change -- and instead only
+captures the last capture. Format strings in Re will only provide the last capture in Re. If you were to try and index
+into different captures instead of accepting the default, you will only be able to reference the last one. If at some
+point in the future, Re begins to track all captures, then this feature will be updated to reflect such changes.
 
 ```pycon3
->>> regex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
-'foo bar => bar f'
+>>> bre.subf(r"(?:(\w+) ){2}(\w+)", "{0} => {1[0]} {1[-1]} {2}", "foo bar baz")
+'foo bar baz => bar bar baz'
 ```
 
-Backrefs implements format string replacements in a way that is similar to Regex's so that format replacements can be
-done in Re just like it can with Regex and provide additional features to both Re and Regex. While it is similar to
-Regex's implementation, there are some differences.
+While Re does not really expose multiple captures, this doesn't mean the format string is of no use to Re. For one, the
+format string syntax may be generally preferred as a less cumbersome format for specifying groups by index or by name.
+By default, Python's Re requires groups to be specified via `\1` or `\g<name>`, while the format syntax simply requires
+  `{1}` or `{name}`. Escaping braces is the same as in any format string and requires the user to use two `{{` or `}}`.
 
-
-```pycon3
->>> bre.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
-'foo bar => BAR FOO'
->>> bre.subf(r"(?P<word1>\w+) (?P<word2>\w+)", r"\c{word2} \c{word1}", "foo bar")
-'Bar Foo'
-```
-
-1. Though you can use normal strings with Backrefs' format templates, it is recommended to use raw strings for format
-  replacements as back slashes are handled special to implement lower casing and upper casing via the replace back
-  references. In Backrefs, a template would look like `#!py r'\L{1}{2}\E'`, and if you used a normal string it would
-  look like `#!py '\\L{1}{2}\\E'`.  Backrefs also uses escapes in this manner to allow Unicode references in raw string
-  format templates as well.
-
-    Here we center the replacement, padding it out to 8 characters, using `|` (Unicode `\u007c`) for the padding. We
-    also use casing references (`\C...\E`) to capitalize the replacement group.
-
-    ```pycon3
-    >>> bregex.subf(r'(test)', r'\C{0:\u007c^8}\E', 'test')
-    '||TEST||'
-    ```
-
-2. Backrefs implements a subset of the [Format Specification Mini-Language][format-spec] (`format_spec`) that allows for
-  a few more additional features that Regex doesn't. As regular expression replacements are only working with
-  string replacements (or byte strings), only string features are available with the `format_spec`.
-
-    ```
-    replacement_field ::=  "{" [field_name] ["!" conversion] [":" format_spec] "}"
-    field_name        ::=  arg_name ("." attribute_name | "[" element_index "]")*
-    arg_name          ::=  [identifier | integer]
-    attribute_name    ::=  identifier
-    element_index     ::=  integer | index_string
-    index_string      ::=  <any source character except "]"> +
-    conversion        ::=  "r" | "s" | "a"
-    format_spec       ::=  <described in the next section>
-    ```
-
-    ```
-    format_spec ::=  [[fill]align][0][width][type]
-    fill        ::=  <any character>
-    align       ::=  "<" | ">" | "^"
-    width       ::=  integer
-    type        ::=  "s"
-    ```
-
-    Note that in situations such as `{:030}`, where a width has a leading zero and no alignment specified, this would
-    normally trigger the integer alignment `=`, but since integer features are not implemented, this would fail.
-
-3. Backrefs allows format strings to work for byte strings as well. In almost all instances, using conversion types
-  won't make sense in a regular expression replace as the objects will already be strings in the needed format, but if
-  you were to use a conversion, ASCII would be assumed, and the object or Unicode string would be encoded with
-  `backslashreplace`.
-
-When using Backrefs' format replace, it should feel similar to Regex's format replace, except you will use raw strings:
+When using Backrefs' format replace, it should feel similar to Regex's format replace, except you will generally use raw
+strings to allow for back slash references.
 
 ```pycon3
 >>> bregex.subf(r"(\w+) (\w+)", r"{0} => {2} {1}", "foo bar")
@@ -147,7 +103,8 @@ When using Backrefs' format replace, it should feel similar to Regex's format re
 'bar foo'
 ```
 
-If using `bregex`, you can even index into groups that have multiple captures.
+You can index into groups that have multiple captures, and while it works for both Re and Regex, it is only useful when
+using `bregex`.
 
 ```pycon3
 >>> bregex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
@@ -169,6 +126,69 @@ Backrefs also provides an `expand` variant for format templates called `expandf`
 >>> bre.expandf(m, r"{0} => {2} {1}")
 'foo bar => bar foo'
 ```
+
+### Enhancements
+
+Backrefs' implementation is a little different than Regex's default implementation. Below we cover what is different and
+why.
+
+1. Regex's original implementation is very much like it's non-format style replacement accept for two differences: you
+  can access individual captures and you cannot use Python string back references such as specifying Unicode via
+  `\u<code>`, etc. In Backrefs, we've enhanced the syntax -- for both Re and Regex -- to allow back references to work
+  along side brace replacements. This means you can use string back references and and built-in Backrefs features like
+  `\C...\E` or `\L...\E`.
+
+    ```pycon3
+    >>> bre.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
+    'foo bar => BAR FOO'
+    >>> bregex.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
+    'foo bar => BAR FOO'
+    ```
+
+2. The second enhancement that Backrefs adds is the ability to use format string alignment features. Here we center the
+  replacement, padding it out to 8 characters using `|` for the padding. We also use casing references (`\C...\E`) to
+  capitalize the replacement group.
+
+    ```pycon3
+    >>> bregex.subf(r'(test)', r'\C{0:|^8}\E', 'test')
+    '||TEST||'
+    ```
+
+    Backrefs implements a subset of the [Format Specification Mini-Language][format-spec] (`format_spec`) that allows
+    for these features. As regular expression replacements are only working with string replacements (or byte strings),
+    only string features are available with the `format_spec`, and only a subset of those are particularly useful.
+
+    ```
+    replacement_field ::=  "{" [field_name] ["!" conversion] [":" format_spec] "}"
+    field_name        ::=  arg_name ("." attribute_name | "[" element_index "]")*
+    arg_name          ::=  [identifier | integer]
+    attribute_name    ::=  identifier
+    element_index     ::=  integer | index_string
+    index_string      ::=  <any source character except "]"> +
+    conversion        ::=  "r" | "s" | "a"
+    format_spec       ::=  <described in the next section>
+    ```
+
+    ```
+    format_spec ::=  [[fill]align][0][width][type]
+    fill        ::=  <any character>
+    align       ::=  "<" | ">" | "^"
+    width       ::=  integer
+    type        ::=  "s"
+    ```
+
+    !!! note "Conversion Syntax"
+        In almost all instances, using conversion types won't make sense in a regular expression replace as the objects
+        will already be strings in the needed format, but if you were to use a conversion, ASCII would be assumed, and
+        the object or Unicode string would be encoded with `backslashreplace`.
+
+3. Lastly, Backrefs allows format strings to work for byte strings as well as Unicode strings. This is something that
+   Regex did not allow.
+
+    ```pycon3
+    >>> bre.subf(br'(test)', br'\C{0:|^8}\E', b'test')
+    b'||TEST||'
+    ```
 
 ## Advanced Usage
 
