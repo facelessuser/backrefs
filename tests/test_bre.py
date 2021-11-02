@@ -841,6 +841,11 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_existing_group_no_match(self):
+        """Test existing group with no match."""
+
+        self.assertEqual(bre.compile(r'(test)|(what)').sub(r'\2', 'test'), '')
+
     def test_hash(self):
         """Test hashing of replace."""
 
@@ -909,6 +914,11 @@ class TestReplaceTemplate(unittest.TestCase):
 
         with pytest.raises(TypeError):
             bre.subf(b'test', br'{[test]}', b'test', bre.FORMAT)
+
+    def test_format_ascii_align(self):
+        """Test format ASCII."""
+
+        self.assertEqual(bre.subf('test', r'{0!a:|^8}', 'test'), "|'test'|")
 
     def test_format_conversions(self):
         """Test string format conversion paths."""
@@ -1712,7 +1722,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
         results = expand(pattern.match(text))
         self.assertEqual(
-            'ba',
+            'ababababab',
             results
         )
 
@@ -1744,7 +1754,7 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
         results = expand(pattern.match(text))
-        self.assertEqual(b'989898', results)
+        self.assertEqual(b'bbb', results)
 
     def test_format_escapes(self):
         """Test format escapes."""
@@ -1970,16 +1980,10 @@ class TestReplaceTemplate(unittest.TestCase):
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
 
-    def test_bad_group(self):
-        """Test bad group."""
-
-        with pytest.raises(TypeError):
-            bre.compile(r'(test)|(what)').sub(r'\2', 'test')
-
     def test_bad_format_group(self):
         """Test bad format group."""
 
-        with pytest.raises(TypeError):
+        with pytest.raises(IndexError):
             bre.compile(r'(test)|(what)').subf(r'{2}', 'test')
 
     def test_immutable(self):
