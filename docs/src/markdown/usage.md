@@ -145,9 +145,9 @@ why.
     'foo bar => BAR FOO'
     ```
 
-2. The second enhancement that Backrefs adds is the ability to use format string alignment features. Here we center the
-  replacement, padding it out to 8 characters using `|` for the padding. We also use casing references (`\C...\E`) to
-  capitalize the replacement group.
+2. The second enhancement that Backrefs adds is the ability to use format string alignment features. In the following
+  example, we center the replacement and pad it out to 8 characters using `|` for the padding. We also use casing
+  references (`\C...\E`) to capitalize the replacement group.
 
     ```pycon3
     >>> bregex.subf(r'(test)', r'\C{0:|^8}\E', 'test')
@@ -177,18 +177,20 @@ why.
     type        ::=  "s"
     ```
 
-    !!! note "Conversion Syntax"
-        In almost all instances, using conversion types won't make sense in a regular expression replace as the objects
-        will already be strings in the needed format, but if you were to use a conversion, ASCII would be assumed, and
-        the object or Unicode string would be encoded with `backslashreplace`.
-
-3. Lastly, Backrefs allows format strings to work for byte strings as well as Unicode strings. This is something that
-   Regex did not allow.
+3. Lastly, our implementation of the [Format Specification Mini-Language][format-spec] (`format_spec`) allows format
+  strings to work for byte strings as well as Unicode strings. This is something that Regex does not allow without
+  Backrefs.
 
     ```pycon3
     >>> bre.subf(br'(test)', br'\C{0:|^8}\E', b'test')
     b'||TEST||'
     ```
+
+    !!! note "Conversion Syntax and Bytes"
+        In almost all instances, using conversion types (`{!s}`, etc.) won't make sense in a regular expression replace
+        as the objects will already be strings in the needed format, but if you were to use a conversion using byte
+        strings, when converting from `bytes` to `str`, ASCII will be the assumed encoding, and the object or Unicode
+        string would be encoded using the `backslashreplace` option as well.
 
 ## Advanced Usage
 
