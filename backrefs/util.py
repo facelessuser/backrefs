@@ -83,7 +83,8 @@ def _to_str(obj: Any) -> str:
 def format_captures(
     captures: List[AnyStr],
     formatting: Tuple[Tuple[int, Any]],
-    converter: Callable[[Any], AnyStr]
+    converter: Callable[[Any], AnyStr],
+    default: AnyStr
 ) -> AnyStr:
     """Perform a string format on a set of captures."""
 
@@ -97,7 +98,10 @@ def format_captures(
             capture = getattr(capture, value)
         elif fmt_type == FMT_INDEX:
             # Index
-            capture = capture[value]
+            if value is not None:
+                capture = capture[value]
+            else:
+                capture = default if not capture else capture[0]
         elif fmt_type == FMT_CONV:
             # Conversion
             if value == 'a':

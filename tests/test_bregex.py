@@ -610,6 +610,11 @@ class TestSearchTemplate(unittest.TestCase):
 class TestReplaceTemplate(unittest.TestCase):
     """Test replace template."""
 
+    def test_format_existing_group_no_match(self):
+        """Test format replacement with existing group with no match."""
+
+        self.assertEqual(bregex.compile(r'(test)|(what)').subf(r'{1}{2}', 'test'), 'test')
+
     def test_existing_group_no_match(self):
         """Test existing group with no match."""
 
@@ -1688,11 +1693,11 @@ class TestReplaceTemplate(unittest.TestCase):
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
 
-    def test_bad_format_group(self):
-        """Test bad format group."""
+    def test_format_existing_group_no_match_with_index(self):
+        """Test format group with no match and attempt at indexing."""
 
         with pytest.raises(IndexError):
-            bregex.compile(r'(test)|(what)').subf(r'{2}', 'test')
+            bregex.compile(r'(test)|(what)').subf(r'{2[0]}', 'test')
 
     def test_immutable(self):
         """Test immutable object."""
