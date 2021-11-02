@@ -13,6 +13,10 @@
 - **FIX**: Match Re and Regex handling when doing a non-format replacement that references a group that is present in
   the search pattern but has no actual captures. Such a case should not fail, but simply return an empty string for the
   group.
+- **FIX**: Format replacements that that have groups with no captures will yield an empty string as the only capture as
+  long as the user does not try to index into any captures as there are no actual captures. This behavior was a bug in
+  Regex that we duplicated and should now be fixed in the latest Regex (mrabarnett/mrab-regex#439) as well as in
+  Backrefs.
 
 ## 5.1
 

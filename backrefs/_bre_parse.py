@@ -722,8 +722,10 @@ class _ReplaceParser(Generic[AnyStr]):
                     value = [(_util.FMT_FIELD, field)]
                     pass
 
+                if c != '[':
+                    value.append((_util.FMT_INDEX, None))
+
                 # Attributes and indexes
-                count = 0
                 while c in ('[', '.'):
                     if c == '[':
                         findex = []
@@ -739,18 +741,12 @@ class _ReplaceParser(Generic[AnyStr]):
                         value.append((_util.FMT_INDEX, idx))
                         c = self.format_next(i)
                     else:
-                        if count == 0:
-                            value.append((_util.FMT_INDEX, -1))
                         findex = []
                         c = self.format_next(i)
                         while c in _WORD:
                             findex.append(c)
                             c = self.format_next(i)
                         value.append((_util.FMT_ATTR, ''.join(findex)))
-                    count += 1
-
-                if count == 0:
-                    value.append((_util.FMT_INDEX, -1))
 
                 # Conversion
                 if c == '!':
@@ -1487,7 +1483,8 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
                     l = _util.format_captures(
                         [] if obj is None else [obj],
                         capture,
-                        _util._to_bstr if isinstance(sep, bytes) else _util._to_str
+                        _util._to_bstr if isinstance(sep, bytes) else _util._to_str,
+                        sep
                     )
                 if span_case is not None:
                     if span_case == _LOWER:
