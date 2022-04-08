@@ -56,13 +56,13 @@ jobs:
       - name: Package sdist
         if: matrix.distribution == 'sdist'
         run: |
-          pip install --upgrade setuptools wheel
-          python setup.py ${{ matrix.distribution }}
+          pip install --upgrade setuptools wheel build
+          python -m build -s
       - name: Package bdist_wheel
         if: matrix.distribution == 'bdist_wheel'
         run: |
-          pip install --upgrade setuptools wheel
-          python setup.py ${{ matrix.distribution }} --python-tag py3${{ matrix.python-3-version}}
+          pip install --upgrade setuptools wheel build
+          python -m build -w
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
@@ -81,7 +81,7 @@ jobs:
         path: dist
 
     - name: Publish
-      uses: pypa/gh-action-pypi-publish@v1.4.1
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         password: ${{ secrets.PYPI_PWD }}

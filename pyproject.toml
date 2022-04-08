@@ -1,14 +1,73 @@
 [build-system]
 requires = [
-    "setuptools>=42",
-    "wheel"
+    "hatchling>=0.21.1",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "backrefs"
+description = "A wrapper around re and regex that adds additional back references.'"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.6"
+authors = [
+    { name = "Isaac Muse", email = "Isaac.Muse@gmail.com" },
+]
+keywords = [
+    "regex",
+    "re"
+]
+dynamic = [
+    "classifiers",
+    "dependencies",
+    "version",
+    "optional-dependencies"
 ]
 
-build-backend = "setuptools.build_meta"
+[project.urls]
+Homepage = "https://github.com/facelessuser/backrefs"
+
+[tool.hatch.version]
+source = "code"
+path = "backrefs/__meta__.py"
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "/backrefs",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/docs/src/markdown/**/*.md",
+    "/docs/src/markdown/**/*.gif",
+    "/docs/src/markdown/**/*.png",
+    "/docs/src/markdown/dictionary/*.txt",
+    "/docs/theme/**/*.css",
+    "/docs/theme/**/*.js",
+    "/docs/theme/**/*.html",
+    "/requirements/*.txt",
+    "/backrefs/**/*.py",
+    "/backrefs/py.typed",
+    "/tests/**/*.py",
+    "/tools/**/*.py",
+    "/tools/unicodedata/*.zip",
+    "/tools/unicodedata/LICENSE",
+    "/.pyspelling.yml",
+    "/.coveragerc",
+    "/mkdocs.yml",
+    "/tox.ini",
+]
+
+exclude = [
+    "backrefs/uniprops/unidata/*"
+]
+
+[tool.hatch.build.hooks.custom]
+[tool.hatch.metadata.hooks.custom]
 
 [tool.mypy]
 files = [
-    "backrefs/*.py"
+    "backrefs"
 ]
 strict = true
 show_error_codes = true
