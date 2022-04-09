@@ -1622,25 +1622,6 @@ class TestReplaceTemplate(unittest.TestCase):
         results = expandf(pattern.match('Test'))
         self.assertEqual('\u0108\nWw\u0108', results)
 
-        # Bytes doesn't care about Unicode, but should evaluate bytes
-        # pattern = regex.compile(b'Test')
-        # expand = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
-        # results = expand(pattern.match(b'Test'))
-        # self.assertEqual(b'\\U0109\nWw\\u0109', results)
-
-        # expandf = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bregex.FORMAT)
-        # results = expandf(pattern.match(b'Test'))
-        # self.assertEqual(b'\\U0109\nWw\\u0109', results)
-
-        # pattern = regex.compile(b'Test')
-        # expand = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
-        # results = expand(pattern.match(b'Test'))
-        # self.assertEqual(b'\U00000109\nWw\U00000109', results)
-
-        # expandf = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bregex.FORMAT)
-        # results = expandf(pattern.match(b'Test'))
-        # self.assertEqual(b'\U00000109\nWw\U00000109', results)
-
         # Format doesn't care about groups
         pattern = regex.compile('Test')
         expand = bregex.compile_replace(pattern, r'\127\666\C\167\666\n\E\l\127\c\666', bregex.FORMAT)
