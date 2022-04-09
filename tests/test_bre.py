@@ -1464,7 +1464,7 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual(r'\\test: \This is a test of escaped slash backrefs!', results)
 
-    def test_normal_escaping(self):
+    def test_normal_escaping_replace(self):
         """Test normal escaped slash."""
 
         text = "This is a test of normal escaping!"
@@ -1478,7 +1478,7 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(results2, results)
         self.assertEqual('\t \\t \\\t \\\\t \\\\\t', results)
 
-    def test_bytes_normal_escaping(self):
+    def test_bytes_normal_escaping_replace(self):
         """Test bytes normal escaped slash."""
 
         text = b"This is a test of normal escaping!"

@@ -801,12 +801,10 @@ class TestReplaceTemplate(unittest.TestCase):
         )
 
     def test_line_break_in_group(self):
-        """Test that line break in group matches a normal R."""
+        """Test that line break in group fails."""
 
-        self.assertEqual(
-            bregex.sub(r"[\R]", 'l', 'Rine\r\nRine\nRine\r'),
-            'line\r\nline\nline\r'
-        )
+        with self.assertRaises(_regex_core.error):
+            bregex.sub(r"[\R]", 'l', 'Rine\r\nRine\nRine\r')
 
     def test_replace_unicode_name_ascii_range(self):
         """Test replacing Unicode names in the ASCII range."""
@@ -1176,33 +1174,33 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual(r'\\test: \This is a test of escaped slash backrefs!', results)
 
-    def test_normal_escaping(self):
+    def test_normal_escaping_replace(self):
         """Test normal escaped slash."""
 
         text = "This is a test of normal escaping!"
         pattern = regex.compile(r"(.+)")
-        repl_pattern = r'\e \\e \\\e \\\\e \\\\\e'
+        repl_pattern = r'\t \\t \\\t \\\\t \\\\\t'
         expand = bregex.compile_replace(pattern, repl_pattern)
         m = pattern.match(text)
         results = expand(m)
         results2 = pattern.sub(repl_pattern, text)
 
         self.assertEqual(results2, results)
-        self.assertEqual('\\e \\e \\\\e \\\\e \\\\\\e', results)
+        self.assertEqual('\t \\t \\\t \\\\t \\\\\t', results)
 
-    def test_bytes_normal_escaping(self):
+    def test_bytes_normal_escaping_replace(self):
         """Test bytes normal escaped slash."""
 
         text = b"This is a test of normal escaping!"
         pattern = regex.compile(br"(.+)")
-        repl_pattern = br'\e \\e \\\e \\\\e \\\\\e'
+        repl_pattern = br'\t \\t \\\t \\\\t \\\\\t'
         expand = bregex.compile_replace(pattern, repl_pattern)
         m = pattern.match(text)
         results = expand(m)
         results2 = pattern.sub(repl_pattern, text)
 
         self.assertEqual(results2, results)
-        self.assertEqual(b'\\e \\e \\\\e \\\\e \\\\\\e', results)
+        self.assertEqual(b'\t \\t \\\t \\\\t \\\\\t', results)
 
     def test_escaped_slash_at_eol(self):
         """Test escaped slash at end of line."""
@@ -1214,15 +1212,12 @@ class TestReplaceTemplate(unittest.TestCase):
 
         self.assertEqual('\\\\', results)
 
-    def test_unrecognized_backrefs(self):
+    def test_unrecognized_backrefs2(self):
         """Test unrecognized backrefs, or literal backslash before a char."""
 
-        text = "This is a test of unrecognized backrefs!"
         pattern = regex.compile(r"(.+)")
-        expand = bregex.compile_replace(pattern, r'\k\1')
-        results = expand(pattern.match(text))
-
-        self.assertEqual(r'\kThis is a test of unrecognized backrefs!', results)
+        with self.assertRaises(_regex_core.error):
+            bregex.compile_replace(pattern, r'\k\1')
 
     def test_ignore_group(self):
         """Test that backrefs inserted by matching groups are passed over."""
@@ -1628,23 +1623,23 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual('\u0108\nWw\u0108', results)
 
         # Bytes doesn't care about Unicode, but should evaluate bytes
-        pattern = regex.compile(b'Test')
-        expand = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
-        results = expand(pattern.match(b'Test'))
-        self.assertEqual(b'\\U0109\nWw\\u0109', results)
+        # pattern = regex.compile(b'Test')
+        # expand = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
+        # results = expand(pattern.match(b'Test'))
+        # self.assertEqual(b'\\U0109\nWw\\u0109', results)
 
-        expandf = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bregex.FORMAT)
-        results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'\\U0109\nWw\\u0109', results)
+        # expandf = bregex.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bregex.FORMAT)
+        # results = expandf(pattern.match(b'Test'))
+        # self.assertEqual(b'\\U0109\nWw\\u0109', results)
 
-        pattern = regex.compile(b'Test')
-        expand = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
-        results = expand(pattern.match(b'Test'))
-        self.assertEqual(b'\U00000109\nWw\U00000109', results)
+        # pattern = regex.compile(b'Test')
+        # expand = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
+        # results = expand(pattern.match(b'Test'))
+        # self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
-        expandf = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bregex.FORMAT)
-        results = expandf(pattern.match(b'Test'))
-        self.assertEqual(b'\U00000109\nWw\U00000109', results)
+        # expandf = bregex.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bregex.FORMAT)
+        # results = expandf(pattern.match(b'Test'))
+        # self.assertEqual(b'\U00000109\nWw\U00000109', results)
 
         # Format doesn't care about groups
         pattern = regex.compile('Test')
@@ -2184,4 +2179,5 @@ class TestConvenienceFunctions(unittest.TestCase):
         replace = p.compile(r'{1}', bregex.FORMAT)
         self.assertEqual(p.subf(replace, 'tests'), 'test')
 
-        self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')
+        with self.assertRaises(_regex_core.error):
+            self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')
