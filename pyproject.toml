@@ -31,11 +31,6 @@ Homepage = "https://github.com/facelessuser/backrefs"
 source = "code"
 path = "backrefs/__meta__.py"
 
-[tool.hatch.build.targets.wheel]
-include = [
-    "/backrefs",
-]
-
 [tool.hatch.build.targets.sdist]
 include = [
     "/docs/src/markdown/**/*.md",
@@ -60,6 +55,12 @@ include = [
 
 exclude = [
     "backrefs/uniprops/unidata/*"
+]
+
+[tool.hatch.build.targets.wheel]
+ignore-vcs = true
+include = [
+    "/backrefs"
 ]
 
 [tool.hatch.build.hooks.custom]
