@@ -65,6 +65,9 @@ class CustomBuildHook(BuildHookInterface):
     def initialize(self, version, build_data):
         """Setup the build tag."""
 
+        if self.target_name != 'wheel':
+            return
+
         build_data['tag'] = f'py{"".join([str(x) for x in sys.version_info[:2]])}-none-any'
         generate_unicode_table()
 
