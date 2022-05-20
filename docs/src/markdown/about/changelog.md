@@ -3,7 +3,6 @@
 ## 5.3
 
 - **NEW**: Drop Python 3.6 support.
-- **NEW**: Add Python 3.11 support.
 - **NEW**: Update build backend to use Hatch.
 
 ## 5.2
