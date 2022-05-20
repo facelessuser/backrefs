@@ -358,7 +358,7 @@ class _SearchParser(Generic[AnyStr]):
                     toggle = False
                 elif scoped and c == '-':
                     toggle = True
-                elif not _util.PY37 and scoped and c in _GLOBAL_FLAGS:
+                elif scoped and c in _GLOBAL_FLAGS:
                     raise ValueError("Bad flag")
                 elif c not in _GLOBAL_FLAGS and c not in _SCOPED_FLAGS:
                     raise ValueError("Bad flag")
@@ -593,7 +593,7 @@ class _SearchParser(Generic[AnyStr]):
         self.verbose = bool(self.re_verbose)
         self.unicode = bool(self.re_unicode)
         self.global_flag_swap = {
-            "unicode": ((self.re_unicode is not None) if not _util.PY37 else False),
+            "unicode": False,
             "verbose": False
         }
         self.temp_global_flag_swap = {

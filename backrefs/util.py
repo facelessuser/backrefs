@@ -4,11 +4,8 @@ Utilities and compatibility abstraction.
 Licensed under MIT
 Copyright (c) 2015 - 2020 Isaac Muse <isaacmuse@gmail.com>
 """
-import sys
 import warnings
 from typing import Tuple, Any, List, Callable, AnyStr
-
-PY37 = (3, 7) <= sys.version_info
 
 FMT_FIELD = 0
 FMT_INDEX = 1

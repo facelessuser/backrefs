@@ -2,12 +2,8 @@
 import unittest
 from backrefs import uniprops
 import re
-import sys
-
-PY37 = (3, 7) <= sys.version_info
 
 
-@unittest.skipUnless(PY37, "Requires at least Unicode 11.0 for Vertical Orientation")
 class TestVerticalOrientation(unittest.TestCase):
     """Test `Vertical Orientation` access."""
 
