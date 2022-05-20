@@ -1,8 +1,14 @@
 # Changelog
 
+## 5.3
+
+- **NEW**: Drop Python 3.6 support.
+- **NEW**: Add Python 3.11 support.
+- **NEW**: Update build backend to use Hatch.
+
 ## 5.2
 
-- **NEW**: Add static typing.
+- **NEW**: Add type annotations.
 - **FIX**: Re format replacement captures behave more like Regex in that you can technically index into the captures of
   a given group in Re, but in Re there is only ever one or zero captures. Documentation was never really explicit on
   what one should expect if indexing a group in Re occurred. The documentation seemed to vaguely insinuate that it would
