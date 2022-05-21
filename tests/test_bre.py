@@ -10,7 +10,6 @@ import random
 from backrefs import _bre_parse
 import copy
 
-PY37_PLUS = (3, 7) <= sys.version_info
 PY39_PLUS = (3, 9) <= sys.version_info
 
 
@@ -104,10 +103,6 @@ class TestSearchTemplate(unittest.TestCase):
 
         with pytest.raises(sre_constants.error):
             bre.compile(r'(?-q:test)')
-
-        if not PY37_PLUS:
-            with pytest.raises(sre_constants.error):
-                bre.compile(r'(?a:test)')
 
     def test_comment_failures(self):
         """Test comment failures."""
@@ -214,11 +209,10 @@ class TestSearchTemplate(unittest.TestCase):
     def test_unicode_ascii_swap(self):
         """Test Unicode ASCII swapping."""
 
-        if PY37_PLUS:
-            pattern = bre.compile_search(r'(?u:\w{2})(?a:\w{2})(?u:\w{2})')
-            self.assertTrue(pattern.match('ÀÀAAÀÀ') is not None)
-            self.assertTrue(pattern.match('ÀÀAÀÀÀ') is None)
-            self.assertTrue(pattern.match('ÀÀÀAÀÀ') is None)
+        pattern = bre.compile_search(r'(?u:\w{2})(?a:\w{2})(?u:\w{2})')
+        self.assertTrue(pattern.match('ÀÀAAÀÀ') is not None)
+        self.assertTrue(pattern.match('ÀÀAÀÀÀ') is None)
+        self.assertTrue(pattern.match('ÀÀÀAÀÀ') is None)
 
     def test_comments_with_scoped_verbose(self):
         """Test scoped verbose with comments (Python 3.6+)."""
@@ -844,7 +838,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_format_existing_group_no_match(self):
         """Test format replacement with existing group with no match."""
 
-        self.assertEqual(bre.compile(r'(test)|(what)').subf(r'{1}{2}', 'test'), 'test')
+        self.assertEqual(bre.compile(r'(test)|(what)').subf(R'{1}{2}', 'test'), 'test')
 
     def test_existing_group_no_match(self):
         """Test existing group with no match."""
@@ -1916,28 +1910,6 @@ class TestReplaceTemplate(unittest.TestCase):
         results = expandf(pattern.match('Test'))
         self.assertEqual('\u0108\nWw\u0108', results)
 
-        # Python 3.7 will choke on \U and \u as invalid escapes, so
-        # don't bother running these tests there.
-        if not PY37_PLUS:
-            # Bytes doesn't care about Unicode, but should evaluate bytes
-            pattern = re.compile(b'Test')
-            expand = bre.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109')
-            results = expand(pattern.match(b'Test'))
-            self.assertEqual(b'\\U0109\nWw\\u0109', results)
-
-            expandf = bre.compile_replace(pattern, br'\C\u0109\n\x77\E\l\x57\c\u0109', bre.FORMAT)
-            results = expandf(pattern.match(b'Test'))
-            self.assertEqual(b'\\U0109\nWw\\u0109', results)
-
-            pattern = re.compile(b'Test')
-            expand = bre.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109')
-            results = expand(pattern.match(b'Test'))
-            self.assertEqual(b'\U00000109\nWw\U00000109', results)
-
-            expandf = bre.compile_replace(pattern, br'\C\U00000109\n\x77\E\l\x57\c\U00000109', bre.FORMAT)
-            results = expandf(pattern.match(b'Test'))
-            self.assertEqual(b'\U00000109\nWw\U00000109', results)
-
         # Format doesn't care about groups
         pattern = re.compile('Test')
         expand = bre.compile_replace(pattern, r'\127\666\C\167\666\n\E\l\127\c\666', bre.FORMAT)
@@ -2453,11 +2425,11 @@ class TestConvenienceFunctions(unittest.TestCase):
         pattern = bre.compile_search(r'(This is a test for )(m[[:lower:]]+!)')
         m = bre.match(pattern, "This is a test for match!")
         self.assertEqual(
-            bre.expand(m, r'\1\C\2\E'),
+            bre.expand(m, R'\1\C\2\E'),
             'This is a test for MATCH!'
         )
 
-        replace = bre.compile_replace(pattern, r'\1\C\2\E')
+        replace = bre.compile_replace(pattern, R'\1\C\2\E')
         self.assertEqual(
             bre.expand(m, replace),
             'This is a test for MATCH!'
@@ -2469,11 +2441,11 @@ class TestConvenienceFunctions(unittest.TestCase):
         pattern = bre.compile_search(r'(This is a test for )(match!)')
         m = bre.match(pattern, "This is a test for match!")
         self.assertEqual(
-            bre.expandf(m, r'{1}\C{2}\E'),
+            bre.expandf(m, R'{1}\C{2}\E'),
             'This is a test for MATCH!'
         )
 
-        replace = bre.compile_replace(pattern, r'{1}\C{2}\E', bre.FORMAT)
+        replace = bre.compile_replace(pattern, R'{1}\C{2}\E', bre.FORMAT)
         self.assertEqual(
             bre.expandf(m, replace),
             'This is a test for MATCH!'
@@ -2486,18 +2458,15 @@ class TestConvenienceFunctions(unittest.TestCase):
         self.assertTrue(p.match('tests') is not None)
 
         with pytest.raises(AttributeError):
-            p.subf(r'{1}', 'tests')
+            p.subf('{1}', 'tests')
 
-        replace = p.compile(r'{1}')
+        replace = p.compile('{1}')
         with pytest.raises(ValueError):
             p.subf(replace, 'tests')
 
-        replace = p.compile(r'{1}', bre.FORMAT)
+        replace = p.compile('{1}', bre.FORMAT)
         self.assertEqual(p.subf(replace, 'tests'), 'test')
 
-        if PY37_PLUS:
-            # Fail due to `\l` being an invalid escape.
-            with pytest.raises(re.error):
-                p.sub(r'\ltest', 'tests')
-        else:
-            self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')
+        # Fail due to `\l` being an invalid escape.
+        with pytest.raises(re.error):
+            p.sub(r'\ltest', 'tests')

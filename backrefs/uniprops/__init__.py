@@ -1,12 +1,9 @@
 """Unicode Properties."""
 from . import unidata
-import sys
 from typing import Optional
 
 UNICODE_RANGE = '\u0000-\U0010ffff'
 ASCII_RANGE = '\x00-\xff'
-
-PY37 = sys.version_info >= (3, 7)
 
 MODE_NORMAL = 0
 MODE_ASCII = 1
@@ -555,7 +552,7 @@ def get_unicode_property(prop: str, value: Optional[str] = None, mode: int = MOD
                 return get_nfkc_quick_check_property(value, mode)
             elif name == 'nfkdquickcheck':
                 return get_nfkd_quick_check_property(value, mode)
-            elif PY37 and name == 'verticalorientation':
+            elif name == 'verticalorientation':
                 return get_vertical_orientation_property(value, mode)
             else:
                 raise ValueError("'{}={}' does not have a valid property name".format(prop, value))
