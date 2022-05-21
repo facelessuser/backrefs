@@ -241,5 +241,3 @@ Pre-compiled pattern objects can also create a compiled format replace object us
 >>> pattern.subf(replace, "foo bar")
 'Bar Foo'
 ```
-
---8<-- "links.txt"

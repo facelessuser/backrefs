@@ -311,5 +311,3 @@ In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
 `Upper`       | `\p{Uppercase}`
 `Word`        | `[\p{Alnum}\p{M}\p{Pc}\p{JoinControl}]`
 `XDigit`      | `[\p{Nd}\p{HexDigit}]`
-
---8<-- "links.txt"

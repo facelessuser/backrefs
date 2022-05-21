@@ -39,5 +39,3 @@ There are a couple of recommended ways to install Backrefs.
     ```
 
     This method will allow you to instantly see your changes without reinstalling which is great for developing.
-
---8<-- "links.txt"

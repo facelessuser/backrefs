@@ -82,7 +82,11 @@ markdown_extensions:
   - pymdownx.mark:
   - pymdownx.striphtml:
   - pymdownx.snippets:
-      base_path: docs/src/markdown/_snippets
+      base_path:
+      - docs/src/markdown/.snippets
+      - LICENSE.md
+      auto_append:
+      - links.md
   - pymdownx.keys:
       separator: "\uff0b"
   - pymdownx.details:

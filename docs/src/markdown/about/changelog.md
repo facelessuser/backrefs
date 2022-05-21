@@ -249,5 +249,3 @@ to work even when the Re or Regex API changes. Change was made to support new Re
 ## 1.0
 
 - **NEW**: Initial release.
-
---8<-- "links.txt"

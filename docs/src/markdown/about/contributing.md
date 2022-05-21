@@ -81,5 +81,3 @@ You don't have to render the docs locally before pull requesting, but if you wis
 [MkDocs][mkdocs], the [Material theme][mkdocs-material], and [PyMdown Extensions][pymdown-extensions] to render the
 docs. You can preview the docs if you install these two packages.  The command for previewing the docs is `mkdocs serve`
 from the root directory. You can then view the documents at `localhost:8000`.
-
---8<-- "links.txt"
