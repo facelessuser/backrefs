@@ -11,6 +11,12 @@ from backrefs import _bre_parse
 import copy
 
 PY39_PLUS = (3, 9) <= sys.version_info
+PY311_PLUS = (3, 11) <= sys.version_info
+
+if PY311_PLUS:
+    import re._constants as _constants
+else:
+    import sre_constants as _constants
 
 
 class TestSearchTemplate(unittest.TestCase):
@@ -101,7 +107,7 @@ class TestSearchTemplate(unittest.TestCase):
     def test_not_flags(self):
         """Test invalid flags."""
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             bre.compile(r'(?-q:test)')
 
     def test_comment_failures(self):

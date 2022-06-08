@@ -5,12 +5,17 @@ Licensed under MIT
 Copyright (c) 2011 - 2020 Isaac Muse <isaacmuse@gmail.com>
 """
 import re as _re
+import sys
 import copyreg as _copyreg
 from . import util as _util
-import sre_parse as _sre_parse
 import unicodedata as _unicodedata
 from . import uniprops as _uniprops
 from typing import Generic, Tuple, AnyStr, Optional, Match, List, Any, Dict, Union, Pattern
+
+if sys.version_info >= (3, 11):
+    import re._parser as _parser  # type: ignore[import]
+else:
+    import sre_parse as _parser
 
 __all__ = ("ReplaceTemplate",)
 
@@ -1182,7 +1187,7 @@ class _ReplaceParser(Generic[AnyStr]):
         else:
             self._template = self._parse_template(self._original)
 
-        self.groups, self.literals = _sre_parse.parse_template(self._template, self.pattern)
+        self.groups, self.literals = _parser.parse_template(self._template, self.pattern)
 
     def span_case(self, i: _util.StringIter, case: int) -> None:
         """Uppercase or lowercase the next range of characters until end marker is found."""
