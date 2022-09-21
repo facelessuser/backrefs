@@ -4,12 +4,13 @@ Backrefs Regex parser.
 Licensed under MIT
 Copyright (c) 2011 - 2020 Isaac Muse <isaacmuse@gmail.com>
 """
+from __future__ import annotations
 import unicodedata as _unicodedata
 import copyreg as _copyreg
 from . import util as _util
 import regex as _regex  # type: ignore[import]
 from regex.regex import _compile_replacement_helper  # type: ignore[import]
-from typing import Generic, AnyStr, Tuple, Optional, Any, Dict, List, Union, cast
+from typing import Generic, AnyStr, Optional, Any, cast
 from ._bregex_typing import Pattern, Match
 
 _ASCII_LETTERS = frozenset(
@@ -72,8 +73,8 @@ class _SearchParser(Generic[AnyStr]):
 
     verbose: bool
     version: int
-    global_flag_swap: Dict[str, bool]
-    temp_global_flag_swap: Dict[str, bool]
+    global_flag_swap: dict[str, bool]
+    temp_global_flag_swap: dict[str, bool]
     is_bytes: bool
     search: AnyStr
 
@@ -99,7 +100,7 @@ class _SearchParser(Generic[AnyStr]):
         escaped = False
         in_quotes = False
         current = []
-        quoted = []  # type: List[str]
+        quoted = []  # type: list[str]
         i = _util.StringIter(text)
 
         for t in i:
@@ -133,7 +134,7 @@ class _SearchParser(Generic[AnyStr]):
 
         return "".join(current)
 
-    def verbose_comment(self, t: str, i: _util.StringIter) -> List[str]:
+    def verbose_comment(self, t: str, i: _util.StringIter) -> list[str]:
         """Handle verbose comments."""
 
         current = []
@@ -183,7 +184,7 @@ class _SearchParser(Generic[AnyStr]):
         if global_retry:
             raise GlobalRetryException('Global Retry')
 
-    def reference(self, t: str, i: _util.StringIter, in_group: bool = False) -> List[str]:
+    def reference(self, t: str, i: _util.StringIter, in_group: bool = False) -> list[str]:
         """Handle references."""
 
         current = []
@@ -297,7 +298,7 @@ class _SearchParser(Generic[AnyStr]):
 
         return ''.join(value) if value else None
 
-    def subgroup(self, t: str, i: _util.StringIter) -> List[str]:
+    def subgroup(self, t: str, i: _util.StringIter) -> list[str]:
         """Handle parenthesis."""
 
         # (?flags)
@@ -319,7 +320,7 @@ class _SearchParser(Generic[AnyStr]):
             t = flags
             self.flags(flags[2:-1], scoped=True)
 
-        current = []  # type: List[str]
+        current = []  # type: list[str]
         try:
             while t != ')':
                 if not current:
@@ -336,7 +337,7 @@ class _SearchParser(Generic[AnyStr]):
             current.append(t)
         return current
 
-    def char_groups(self, t: str, i: _util.StringIter) -> List[str]:
+    def char_groups(self, t: str, i: _util.StringIter) -> list[str]:
         """Handle character groups."""
 
         current = []
@@ -402,7 +403,7 @@ class _SearchParser(Generic[AnyStr]):
             current.append(t)
         return current
 
-    def normal(self, t: str, i: _util.StringIter) -> List[str]:
+    def normal(self, t: str, i: _util.StringIter) -> list[str]:
         """Handle normal chars."""
 
         current = []
@@ -423,7 +424,7 @@ class _SearchParser(Generic[AnyStr]):
             current.append(t)
         return current
 
-    def main_group(self, i: _util.StringIter) -> List[str]:
+    def main_group(self, i: _util.StringIter) -> list[str]:
         """The main group: group 0."""
 
         current = []
@@ -498,20 +499,20 @@ class _ReplaceParser(Generic[AnyStr]):
         self._template = template  # type: AnyStr
         self.use_format = use_format
         self.end_found = False
-        self.group_slots = []  # type: List[Tuple[int, Tuple[Optional[int], Optional[int], Any]]]
-        self.literal_slots = []  # type: List[str]
-        self.result = []  # type: List[str]
-        self.span_stack = []  # type: List[int]
-        self.single_stack = []  # type: List[int]
-        self.literals = []  # type: List[Optional[AnyStr]]
-        self.groups = []  # type: List[Tuple[int, int]]
+        self.group_slots = []  # type: list[tuple[int, tuple[Optional[int], Optional[int], Any]]]
+        self.literal_slots = []  # type: list[str]
+        self.result = []  # type: list[str]
+        self.span_stack = []  # type: list[int]
+        self.single_stack = []  # type: list[int]
+        self.literals = []  # type: list[Optional[AnyStr]]
+        self.groups = []  # type: list[tuple[int, int]]
         self.slot = 0
         self.manual = False
         self.auto = False
         self.auto_index = 0
         self.is_bytes = isinstance(self._original, bytes)
 
-    def parse_format_index(self, text: str) -> Union[int, str]:
+    def parse_format_index(self, text: str) -> int | str:
         """Parse format index."""
 
         base = 10
@@ -525,17 +526,17 @@ class _ReplaceParser(Generic[AnyStr]):
             elif char == "x":
                 base = 16
         try:
-            idx = int(text, base)  # type: Union[int, str]
+            idx = int(text, base)  # type: int | str
         except Exception:
             idx = text
         return idx
 
-    def get_format(self, c: str, i: _util.StringIter) -> Tuple[str, List[Tuple[int, Any]]]:
+    def get_format(self, c: str, i: _util.StringIter) -> tuple[str, list[tuple[int, Any]]]:
         """Get format group."""
 
         index = i.index
         field = ''
-        value = []  # type: List[Tuple[int, Any]]
+        value = []  # type: list[tuple[int, Any]]
 
         try:
             if c == '}':
@@ -543,7 +544,7 @@ class _ReplaceParser(Generic[AnyStr]):
                 value.append((_util.FMT_INDEX, None))
             else:
                 # Field
-                temp = []  # type: List[str]
+                temp = []  # type: list[str]
                 if c in _LETTERS_UNDERSCORE:
                     # Handle name
                     temp.append(c)
@@ -990,7 +991,7 @@ class _ReplaceParser(Generic[AnyStr]):
         self,
         template: AnyStr,
         pattern: Pattern[AnyStr]
-    ) -> Tuple[List[Tuple[int, int]], List[Optional[AnyStr]]]:
+    ) -> tuple[list[tuple[int, int]], list[Optional[AnyStr]]]:
         """
         Parse template for the regex module.
 
@@ -1000,9 +1001,9 @@ class _ReplaceParser(Generic[AnyStr]):
         instead.
         """
 
-        groups = []  # type: List[Tuple[int, int]]
-        literals = []  # type: List[Optional[AnyStr]]
-        replacements = _compile_replacement_helper(pattern, template)  # type: List[Union[int, AnyStr]]
+        groups = []  # type: list[tuple[int, int]]
+        literals = []  # type: list[Optional[AnyStr]]
+        replacements = _compile_replacement_helper(pattern, template)  # type: list[int | AnyStr]
         count = 0
         for part in replacements:
             if isinstance(part, int):
@@ -1136,7 +1137,7 @@ class _ReplaceParser(Generic[AnyStr]):
             single = self.single_stack.pop()
         return single
 
-    def handle_format_group(self, field: str, text: List[Tuple[int, Any]]) -> None:
+    def handle_format_group(self, field: str, text: list[tuple[int, Any]]) -> None:
         """Handle format group."""
 
         # Handle auto incrementing group indexes
@@ -1162,7 +1163,7 @@ class _ReplaceParser(Generic[AnyStr]):
     def handle_group(
         self,
         text: str,
-        capture: Optional[Tuple[Tuple[int, Any], ...]] = None,
+        capture: Optional[tuple[tuple[int, Any], ...]] = None,
         is_format: bool = False
     ) -> None:
         """Handle groups."""
@@ -1221,9 +1222,9 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
 
     __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format", "_hash", "_bytes")
 
-    groups: Tuple[Tuple[int, int], ...]
-    group_slots: Tuple[Tuple[int, Tuple[Optional[int], Optional[int], Any]], ...]
-    literals: Tuple[Optional[AnyStr], ...]
+    groups: tuple[tuple[int, int], ...]
+    group_slots: tuple[tuple[int, tuple[Optional[int], Optional[int], Any]], ...]
+    literals: tuple[Optional[AnyStr], ...]
     pattern_hash: int
     use_format: bool
     _hash: int
@@ -1231,9 +1232,9 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
 
     def __init__(
         self,
-        groups: Tuple[Tuple[int, int], ...],
-        group_slots: Tuple[Tuple[int, Tuple[Optional[int], Optional[int], Any]], ...],
-        literals: Tuple[Optional[AnyStr], ...],
+        groups: tuple[tuple[int, int], ...],
+        group_slots: tuple[tuple[int, tuple[Optional[int], Optional[int], Any]], ...],
+        literals: tuple[Optional[AnyStr], ...],
         pattern_hash: int,
         use_format: bool,
         is_bytes: bool
@@ -1311,10 +1312,10 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
                 break
         return g_index
 
-    def _get_group_attributes(self, index: int) -> Tuple[Optional[int], Optional[int], Any]:
+    def _get_group_attributes(self, index: int) -> tuple[Optional[int], Optional[int], Any]:
         """Find and return the appropriate group case."""
 
-        g_case = (None, None, -1)  # type: Tuple[Optional[int], Optional[int], Any]
+        g_case = (None, None, -1)  # type: tuple[Optional[int], Optional[int], Any]
         for group in self.group_slots:
             if group[0] == index:
                 g_case = group[1]
@@ -1348,7 +1349,7 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
                 else:
                     # String format replace
                     try:
-                        obj = cast(List[AnyStr], m.captures(g_index))
+                        obj = cast('list[AnyStr]', m.captures(g_index))
                     except IndexError:  # pragma: no cover
                         raise IndexError("'{}' is out of range!".format(g_index))
                     l = _util.format_captures(

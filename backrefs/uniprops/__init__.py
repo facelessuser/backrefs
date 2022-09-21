@@ -1,4 +1,5 @@
 """Unicode Properties."""
+from __future__ import annotations
 from . import unidata
 from typing import Optional
 

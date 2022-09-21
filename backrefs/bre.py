@@ -26,15 +26,14 @@ Add the ability to use the following backrefs with re:
 Licensed under MIT
 Copyright (c) 2011 - 2020 Isaac Muse <isaacmuse@gmail.com>
 """
+from __future__ import annotations
 import re as _re
 import copyreg as _copyreg
 from functools import lru_cache as _lru_cache
 from . import util as _util
 from . import _bre_parse
 from ._bre_parse import ReplaceTemplate
-from typing import (
-    AnyStr, Pattern, Match, Union, Type, Callable, Any, Optional, Generic, Mapping, Tuple, List, Iterator, cast
-)
+from typing import AnyStr, Pattern, Match, Callable, Any, Optional, Generic, Mapping, Iterator, cast
 
 __all__ = (
     "expand", "expandf", "search", "match", "fullmatch", "split", "findall", "finditer", "sub", "subf",
@@ -76,7 +75,7 @@ def _cached_search_compile(
     pattern: AnyStr,
     re_verbose: bool,
     re_unicode: bool,
-    pattern_type: Type[AnyStr]
+    pattern_type: type[AnyStr]
 ) -> AnyStr:
     """Cached search compile."""
 
@@ -88,7 +87,7 @@ def _cached_replace_compile(
     pattern: Pattern[AnyStr],
     repl: AnyStr,
     flags: int,
-    pattern_type: Type[AnyStr]
+    pattern_type: type[AnyStr]
 ) -> ReplaceTemplate[AnyStr]:
     """Cached replace compile."""
 
@@ -120,7 +119,7 @@ def _is_replace(obj: Any) -> bool:
 
 def _apply_replace_backrefs(
     m: Optional[Match[AnyStr]],
-    repl: Union[ReplaceTemplate[AnyStr], AnyStr],
+    repl: ReplaceTemplate[AnyStr] | AnyStr,
     flags: int = 0
 ) -> AnyStr:
     """Expand with either the `ReplaceTemplate` or compile on the fly, or return None."""
@@ -134,9 +133,9 @@ def _apply_replace_backrefs(
 
 
 def _apply_search_backrefs(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     flags: int = 0
-) -> Union[AnyStr, Pattern[AnyStr]]:
+) -> AnyStr | Pattern[AnyStr]:
     """Apply the search backrefs to the search pattern."""
 
     if isinstance(pattern, (str, bytes)):
@@ -149,7 +148,7 @@ def _apply_search_backrefs(
         if not (flags & DEBUG):
             p = _cached_search_compile(
                 pattern, re_verbose, re_unicode, type(pattern)
-            )  # type: Union[AnyStr, Pattern[AnyStr]]
+            )  # type: AnyStr | Pattern[AnyStr]
         else:  # pragma: no cover
             p = _bre_parse._SearchParser(pattern, re_verbose, re_unicode).parse()
     elif isinstance(pattern, Bre):
@@ -218,10 +217,10 @@ class Bre(_util.Immutable, Generic[AnyStr]):
         return self._pattern.groupindex
 
     @property
-    def groups(self) -> Tuple[Optional[AnyStr], ...]:
+    def groups(self) -> tuple[Optional[AnyStr], ...]:
         """Return groups."""
 
-        return cast(Tuple[Optional[AnyStr], ...], self._pattern.groups)
+        return cast('tuple[Optional[AnyStr], ...]', self._pattern.groups)
 
     @property
     def scanner(self) -> Any:
@@ -261,9 +260,9 @@ class Bre(_util.Immutable, Generic[AnyStr]):
 
     def _auto_compile(
         self,
-        template: Union[AnyStr, Callable[..., AnyStr]],
+        template: AnyStr | Callable[..., AnyStr],
         use_format: bool = False
-    ) -> Union[AnyStr, Callable[..., AnyStr]]:
+    ) -> AnyStr | Callable[..., AnyStr]:
         """Compile replacements."""
 
         if isinstance(template, ReplaceTemplate):
@@ -280,7 +279,7 @@ class Bre(_util.Immutable, Generic[AnyStr]):
 
     def compile(  # noqa A001
         self,
-        repl: Union[AnyStr, Callable[..., AnyStr]],
+        repl: AnyStr | Callable[..., AnyStr],
         flags: int = 0
     ) -> Callable[..., AnyStr]:
         """Compile replace."""
@@ -322,7 +321,7 @@ class Bre(_util.Immutable, Generic[AnyStr]):
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> List[AnyStr]:
+    ) -> list[AnyStr]:
         """Apply `split`."""
 
         return self._pattern.split(string, *args, **kwargs)
@@ -332,7 +331,7 @@ class Bre(_util.Immutable, Generic[AnyStr]):
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> Union[List[AnyStr], List[Tuple[AnyStr, ...]]]:
+    ) -> list[AnyStr] | list[tuple[AnyStr, ...]]:
         """Apply `findall`."""
 
         return self._pattern.findall(string, *args, **kwargs)
@@ -349,7 +348,7 @@ class Bre(_util.Immutable, Generic[AnyStr]):
 
     def sub(
         self,
-        repl: Union[AnyStr, Callable[..., AnyStr]],
+        repl: AnyStr | Callable[..., AnyStr],
         string: AnyStr,
         *args: Any,
         **kwargs: Any
@@ -360,7 +359,7 @@ class Bre(_util.Immutable, Generic[AnyStr]):
 
     def subf(  # noqa A002
         self,
-        repl: Union[AnyStr, Callable[..., AnyStr]],
+        repl: AnyStr | Callable[..., AnyStr],
         string: AnyStr,
         *args: Any,
         **kwargs: Any
@@ -371,29 +370,29 @@ class Bre(_util.Immutable, Generic[AnyStr]):
 
     def subn(
         self,
-        repl: Union[AnyStr, Callable[..., AnyStr]],
+        repl: AnyStr | Callable[..., AnyStr],
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> Tuple[AnyStr, int]:
+    ) -> tuple[AnyStr, int]:
         """Apply `subn` with format style replace."""
 
         return self._pattern.subn(self._auto_compile(repl), string, *args, **kwargs)
 
     def subfn(  # noqa A002
         self,
-        repl: Union[AnyStr, Callable[..., AnyStr]],
+        repl: AnyStr | Callable[..., AnyStr],
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> Tuple[AnyStr, int]:
+    ) -> tuple[AnyStr, int]:
         """Apply `subn` after applying backrefs."""
 
         return self._pattern.subn(self._auto_compile(repl, True), string, *args, **kwargs)
 
 
 def compile(  # noqa A001
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     flags: int = 0,
     auto_compile: Optional[bool] = None
 ) -> 'Bre[AnyStr]':
@@ -413,7 +412,7 @@ def compile(  # noqa A001
 
 
 def compile_search(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     flags: int = 0
 ) -> Pattern[AnyStr]:
     """Compile with extended search references."""
@@ -423,7 +422,7 @@ def compile_search(
 
 def compile_replace(
     pattern: Pattern[AnyStr],
-    repl: Union[AnyStr, Callable[..., AnyStr]],
+    repl: AnyStr | Callable[..., AnyStr],
     flags: int = 0
 ) -> Callable[..., AnyStr]:
     """Construct a method that can be used as a replace method for `sub`, `subn`, etc."""
@@ -454,14 +453,14 @@ def purge() -> None:
     _re.purge()
 
 
-def expand(m: Optional[Match[AnyStr]], repl: Union[ReplaceTemplate[AnyStr], AnyStr]) -> AnyStr:
+def expand(m: Optional[Match[AnyStr]], repl: ReplaceTemplate[AnyStr] | AnyStr) -> AnyStr:
     """Expand the string using the replace pattern or function."""
 
     _assert_expandable(repl)
     return _apply_replace_backrefs(m, repl)
 
 
-def expandf(m: Optional[Match[AnyStr]], repl: Union[ReplaceTemplate[AnyStr], AnyStr]) -> AnyStr:
+def expandf(m: Optional[Match[AnyStr]], repl: ReplaceTemplate[AnyStr] | AnyStr) -> AnyStr:
     """Expand the string using the format replace pattern or function."""
 
     _assert_expandable(repl, True)
@@ -469,7 +468,7 @@ def expandf(m: Optional[Match[AnyStr]], repl: Union[ReplaceTemplate[AnyStr], Any
 
 
 def search(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -481,7 +480,7 @@ def search(
 
 
 def match(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -493,7 +492,7 @@ def match(
 
 
 def fullmatch(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -505,11 +504,11 @@ def fullmatch(
 
 
 def split(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> List[AnyStr]:
+) -> list[AnyStr]:
     """Apply `split` after applying backrefs."""
 
     flags = args[3] if len(args) > 3 else kwargs.get('flags', 0)
@@ -517,11 +516,11 @@ def split(
 
 
 def findall(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> Union[List[AnyStr], List[Tuple[AnyStr, ...]]]:
+) -> list[AnyStr] | list[tuple[AnyStr, ...]]:
     """Apply `findall` after applying backrefs."""
 
     flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
@@ -529,7 +528,7 @@ def findall(
 
 
 def finditer(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -541,8 +540,8 @@ def finditer(
 
 
 def sub(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
-    repl: Union[AnyStr, Callable[..., AnyStr]],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
+    repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -562,8 +561,8 @@ def sub(
 
 
 def subf(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
-    repl: Union[AnyStr, Callable[..., AnyStr]],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
+    repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -585,12 +584,12 @@ def subf(
 
 
 def subn(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
-    repl: Union[AnyStr, Callable[..., AnyStr]],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
+    repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> Tuple[AnyStr, int]:
+) -> tuple[AnyStr, int]:
     """Apply `subn` with format style replace."""
 
     flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
@@ -606,12 +605,12 @@ def subn(
 
 
 def subfn(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bre[AnyStr]'],
-    repl: Union[AnyStr, Callable[..., AnyStr]],
+    pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
+    repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> Tuple[AnyStr, int]:
+) -> tuple[AnyStr, int]:
     """Apply `subn` after applying backrefs."""
 
     flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)

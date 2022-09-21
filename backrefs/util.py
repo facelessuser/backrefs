@@ -4,9 +4,10 @@ Utilities and compatibility abstraction.
 Licensed under MIT
 Copyright (c) 2015 - 2020 Isaac Muse <isaacmuse@gmail.com>
 """
+from __future__ import annotations
 import warnings
 import sys
-from typing import Tuple, Any, List, Callable, AnyStr
+from typing import Any, Callable, AnyStr
 
 PY311 = (3, 11) <= sys.version_info
 
@@ -81,8 +82,8 @@ def _to_str(obj: Any) -> str:
 
 
 def format_captures(
-    captures: List[AnyStr],
-    formatting: Tuple[Tuple[int, Any]],
+    captures: list[AnyStr],
+    formatting: tuple[tuple[int, Any]],
     converter: Callable[[Any], AnyStr],
     default: AnyStr
 ) -> AnyStr:
@@ -137,7 +138,7 @@ def format_captures(
 class Immutable(object):
     """Immutable."""
 
-    __slots__: Tuple[Any, ...] = tuple()
+    __slots__: tuple[Any, ...] = tuple()
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize."""
