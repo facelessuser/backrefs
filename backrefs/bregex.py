@@ -14,13 +14,14 @@ Add the ability to use the following backrefs with re:
 Licensed under MIT
 Copyright (c) 2015 - 2020 Isaac Muse <isaacmuse@gmail.com>
 """
+from __future__ import annotations
 import regex as _regex  # type: ignore[import]
 import copyreg as _copyreg
 from functools import lru_cache as _lru_cache
 from . import util as _util
 from . import _bregex_parse
 from ._bregex_parse import ReplaceTemplate
-from typing import AnyStr, Union, Type, Callable, Any, Optional, Generic, Mapping, Tuple, List, Iterator, Set, cast
+from typing import AnyStr, Callable, Any, Optional, Generic, Mapping, Iterator, cast
 from ._bregex_typing import Pattern, Match
 
 __all__ = (
@@ -87,7 +88,7 @@ def _cached_search_compile(
     pattern: AnyStr,
     re_verbose: bool,
     re_version: bool,
-    pattern_type: Type[AnyStr]
+    pattern_type: type[AnyStr]
 ) -> AnyStr:
     """Cached search compile."""
 
@@ -99,7 +100,7 @@ def _cached_replace_compile(
     pattern: Pattern[AnyStr],
     repl: AnyStr,
     flags: int,
-    pattern_type: Type[AnyStr]
+    pattern_type: type[AnyStr]
 ) -> ReplaceTemplate[AnyStr]:
     """Cached replace compile."""
 
@@ -131,7 +132,7 @@ def _is_replace(obj: Any) -> bool:
 
 def _apply_replace_backrefs(
     m: Optional[Match[AnyStr]],
-    repl: Union[ReplaceTemplate[AnyStr], AnyStr],
+    repl: ReplaceTemplate[AnyStr] | AnyStr,
     flags: int = 0
 ) -> AnyStr:
     """Expand with either the `ReplaceTemplate` or compile on the fly, or return None."""
@@ -145,9 +146,9 @@ def _apply_replace_backrefs(
 
 
 def _apply_search_backrefs(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     flags: int = 0
-) -> Union[AnyStr, Pattern[AnyStr]]:
+) -> AnyStr | Pattern[AnyStr]:
     """Apply the search backrefs to the search pattern."""
 
     if isinstance(pattern, (str, bytes)):
@@ -161,7 +162,7 @@ def _apply_search_backrefs(
         if not (flags & DEBUG):
             p = _cached_search_compile(
                 pattern, re_verbose, re_version, type(pattern)
-            )  # type: Union[AnyStr, Pattern[AnyStr]]
+            )  # type: AnyStr | Pattern[AnyStr]
         else:  # pragma: no cover
             p = _bregex_parse._SearchParser(cast(AnyStr, pattern), re_verbose, re_version).parse()
     elif isinstance(pattern, Bregex):
@@ -230,10 +231,10 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
         return cast(Mapping[str, int], self._pattern.groupindex)
 
     @property
-    def groups(self) -> Tuple[Optional[AnyStr], ...]:
+    def groups(self) -> tuple[Optional[AnyStr], ...]:
         """Return groups."""
 
-        return cast(Tuple[Optional[AnyStr], ...], self._pattern.groups)
+        return cast('tuple[Optional[AnyStr], ...]', self._pattern.groups)
 
     @property
     def scanner(self) -> Any:
@@ -273,9 +274,9 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
 
     def _auto_compile(
         self,
-        template: Union[AnyStr, Callable[..., AnyStr]],
+        template: AnyStr | Callable[..., AnyStr],
         use_format: bool = False
-    ) -> Union[AnyStr, Callable[..., AnyStr]]:
+    ) -> AnyStr | Callable[..., AnyStr]:
         """Compile replacements."""
 
         if isinstance(template, ReplaceTemplate):
@@ -292,7 +293,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
 
     def compile(  # noqa A001
         self,
-        repl: Union[AnyStr, Callable[..., AnyStr]],
+        repl: AnyStr | Callable[..., AnyStr],
         flags: int = 0
     ) -> Callable[..., AnyStr]:
         """Compile replace."""
@@ -300,10 +301,10 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
         return compile_replace(self._pattern, repl, flags)
 
     @property
-    def named_lists(self) -> Mapping[str, Set[Union[str, bytes]]]:
+    def named_lists(self) -> Mapping[str, set[str | bytes]]:
         """Returned named lists."""
 
-        return cast(Mapping[str, Set[Union[str, bytes]]], self._pattern.named_lists)
+        return cast('Mapping[str, set[str | bytes]]', self._pattern.named_lists)
 
     def search(
         self,
@@ -340,10 +341,10 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> List[AnyStr]:
+    ) -> list[AnyStr]:
         """Apply `split`."""
 
-        return cast(List[AnyStr], self._pattern.split(string, *args, **kwargs))
+        return cast('list[AnyStr]', self._pattern.split(string, *args, **kwargs))
 
     def splititer(
         self,
@@ -360,10 +361,10 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> Union[List[AnyStr], List[Tuple[AnyStr, ...]]]:
+    ) -> list[AnyStr] | list[tuple[AnyStr, ...]]:
         """Apply `findall`."""
 
-        return cast(Union[List[AnyStr], List[Tuple[AnyStr, ...]]], self._pattern.findall(string, *args, **kwargs))
+        return cast('list[AnyStr] | list[tuple[AnyStr, ...]]', self._pattern.findall(string, *args, **kwargs))
 
     def finditer(
         self,
@@ -377,7 +378,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
 
     def sub(
         self,
-        repl: Union[AnyStr, Callable[..., AnyStr]],
+        repl: AnyStr | Callable[..., AnyStr],
         string: AnyStr,
         *args: Any,
         **kwargs: Any
@@ -388,7 +389,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
 
     def subf(
         self,
-        repl: Union[AnyStr, Callable[..., AnyStr]],
+        repl: AnyStr | Callable[..., AnyStr],
         string: AnyStr,
         *args: Any,
         **kwargs: Any
@@ -399,29 +400,29 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
 
     def subn(
         self,
-        repl: Union[AnyStr, Callable[..., AnyStr]],
+        repl: AnyStr | Callable[..., AnyStr],
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> Tuple[AnyStr, int]:
+    ) -> tuple[AnyStr, int]:
         """Apply `subn` with format style replace."""
 
-        return cast(Tuple[AnyStr, int], self._pattern.subn(self._auto_compile(repl), string, *args, **kwargs))
+        return cast('tuple[AnyStr, int]', self._pattern.subn(self._auto_compile(repl), string, *args, **kwargs))
 
     def subfn(
         self,
-        repl: Union[AnyStr, Callable[..., AnyStr]],
+        repl: AnyStr | Callable[..., AnyStr],
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> Tuple[AnyStr, int]:  # noqa A002
+    ) -> tuple[AnyStr, int]:  # noqa A002
         """Apply `subn` after applying backrefs."""
 
-        return cast(Tuple[AnyStr, int], self._pattern.subfn(self._auto_compile(repl, True), string, *args, **kwargs))
+        return cast('tuple[AnyStr, int]', self._pattern.subfn(self._auto_compile(repl, True), string, *args, **kwargs))
 
 
 def compile(  # noqa A001
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     flags: int = 0,
     auto_compile: Optional[bool] = None,
     **kwargs: Any
@@ -442,7 +443,7 @@ def compile(  # noqa A001
 
 
 def compile_search(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     flags: int = 0,
     **kwargs: Any
 ) -> Pattern[AnyStr]:
@@ -453,7 +454,7 @@ def compile_search(
 
 def compile_replace(
     pattern: Pattern[AnyStr],
-    repl: Union[AnyStr, Callable[..., AnyStr]],
+    repl: AnyStr | Callable[..., AnyStr],
     flags: int = 0
 ) -> Callable[..., AnyStr]:
     """Construct a method that can be used as a replace method for `sub`, `subn`, etc."""
@@ -484,14 +485,14 @@ def purge() -> None:
     _regex.purge()
 
 
-def expand(m: Optional[Match[AnyStr]], repl: Union[ReplaceTemplate[AnyStr], AnyStr]) -> AnyStr:
+def expand(m: Optional[Match[AnyStr]], repl: ReplaceTemplate[AnyStr] | AnyStr) -> AnyStr:
     """Expand the string using the replace pattern or function."""
 
     _assert_expandable(repl)
     return _apply_replace_backrefs(m, repl)
 
 
-def expandf(m: Optional[Match[AnyStr]], repl: Union[ReplaceTemplate[AnyStr], AnyStr]) -> AnyStr:
+def expandf(m: Optional[Match[AnyStr]], repl: ReplaceTemplate[AnyStr] | AnyStr) -> AnyStr:
     """Expand the string using the format replace pattern or function."""
 
     _assert_expandable(repl, True)
@@ -499,7 +500,7 @@ def expandf(m: Optional[Match[AnyStr]], repl: Union[ReplaceTemplate[AnyStr], Any
 
 
 def match(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -514,7 +515,7 @@ def match(
 
 
 def fullmatch(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -529,7 +530,7 @@ def fullmatch(
 
 
 def search(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -544,8 +545,8 @@ def search(
 
 
 def sub(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
-    repl: Union[AnyStr, Callable[..., AnyStr]],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
+    repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -569,8 +570,8 @@ def sub(
 
 
 def subf(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
-    repl: Union[AnyStr, Callable[..., AnyStr]],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
+    repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -595,12 +596,12 @@ def subf(
 
 
 def subn(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
-    repl: Union[AnyStr, Callable[..., AnyStr]],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
+    repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> Tuple[AnyStr, int]:
+) -> tuple[AnyStr, int]:
     """Wrapper for `subn`."""
 
     flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
@@ -611,7 +612,7 @@ def subn(
 
     pattern = compile_search(pattern, flags)
     return cast(
-        Tuple[AnyStr, int],
+        'tuple[AnyStr, int]',
         _regex.subn(
             pattern, (compile_replace(pattern, repl) if is_replace or is_string else repl), string,
             *args, **kwargs
@@ -620,12 +621,12 @@ def subn(
 
 
 def subfn(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
-    repl: Union[AnyStr, Callable[..., AnyStr]],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
+    repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> Tuple[AnyStr, int]:
+) -> tuple[AnyStr, int]:
     """Wrapper for `subfn`."""
 
     flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
@@ -637,7 +638,7 @@ def subfn(
     pattern = compile_search(pattern, flags)
     rflags = FORMAT if is_string else 0
     return cast(
-        Tuple[AnyStr, int],
+        'tuple[AnyStr, int]',
         _regex.subn(
             pattern, (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl), string,
             *args, **kwargs
@@ -646,22 +647,22 @@ def subfn(
 
 
 def split(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> List[AnyStr]:
+) -> list[AnyStr]:
     """Wrapper for `split`."""
 
     flags = args[3] if len(args) > 3 else kwargs.get('flags', 0)
     return cast(
-        List[AnyStr],
+        'list[AnyStr]',
         _regex.split(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
     )
 
 
 def splititer(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
@@ -676,22 +677,22 @@ def splititer(
 
 
 def findall(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> Union[List[AnyStr], List[Tuple[AnyStr, ...]]]:
+) -> list[AnyStr] | list[tuple[AnyStr, ...]]:
     """Wrapper for `findall`."""
 
     flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return cast(
-        Union[List[AnyStr], List[Tuple[AnyStr, ...]]],
+        'list[AnyStr] | list[tuple[AnyStr, ...]]',
         _regex.findall(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
     )
 
 
 def finditer(
-    pattern: Union[AnyStr, Pattern[AnyStr], 'Bregex[AnyStr]'],
+    pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
     *args: Any,
     **kwargs: Any

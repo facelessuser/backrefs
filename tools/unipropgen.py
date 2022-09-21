@@ -25,7 +25,7 @@ ALL_ASCII = frozenset([x for x in range(ASCII_RANGE[0], ASCII_RANGE[1] + 1)])
 HEADER = '''\
 """Unicode Properties from Unicode version {} (autogen)."""
 {}'''
-TYPING = 'from typing import Dict\n\n'
+TYPING = 'from __future__ import annotations\n\n'
 
 
 def uniformat(value):
@@ -249,7 +249,7 @@ def gen_blocks(output, ascii_props=False, append=False, prefix="", aliases=None)
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
             f.write(HEADER.format(UNIVERSION, TYPING))
-        f.write('%s_blocks: Dict[str, str] = {' % prefix)
+        f.write('%s_blocks: dict[str, str] = {' % prefix)
         no_block = []
         last = -1
         found = set(['noblock'])
@@ -355,7 +355,7 @@ def gen_ccc(output, ascii_props=False, append=False, prefix="", aliases=None):
         if not append:
             f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_canonical_combining_class: Dict[str, str] = {\n' % prefix)
+        f.write('%s_canonical_combining_class: dict[str, str] = {\n' % prefix)
         count = len(obj) - 1
         i = 0
         for k1, v1 in sorted(obj.items()):
@@ -444,7 +444,7 @@ def gen_scripts(
         if not append:
             f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_%s: Dict[str, str] = {\n' % (prefix, obj_name))
+        f.write('%s_%s: dict[str, str] = {\n' % (prefix, obj_name))
         count = len(obj) - 1
         i = 0
         for k1, v1 in sorted(obj.items()):
@@ -459,7 +459,7 @@ def gen_scripts(
         if not append:
             f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_%s: Dict[str, str] = {\n' % (prefix, obj_ext_name))
+        f.write('%s_%s: dict[str, str] = {\n' % (prefix, obj_ext_name))
         count = len(obj2) - 1
         i = 0
         for k1, v1 in sorted(obj2.items()):
@@ -513,7 +513,7 @@ def gen_enum(
         if not append:
             f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_%s: Dict[str, str] = {\n' % (prefix, obj_name))
+        f.write('%s_%s: dict[str, str] = {\n' % (prefix, obj_name))
         count = len(obj) - 1
         i = 0
         for k1, v1 in sorted(obj.items()):
@@ -569,7 +569,7 @@ def gen_age(output, ascii_props=False, append=False, prefix="", aliases=None):
         if not append:
             f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_age: Dict[str, str] = {\n' % prefix)
+        f.write('%s_age: dict[str, str] = {\n' % prefix)
         count = len(obj) - 1
         i = 0
         for k1, v1 in sorted(obj.items()):
@@ -632,7 +632,7 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix="", alias
             f.write(HEADER.format(UNIVERSION, TYPING))
         for key, value in sorted(nf.items()):
             # Write out the Unicode properties
-            f.write('%s_%s: Dict[str, str] = {\n' % (prefix, key.replace('quickcheck', '_quick_check')))
+            f.write('%s_%s: dict[str, str] = {\n' % (prefix, key.replace('quickcheck', '_quick_check')))
             count = len(value) - 1
             i = 0
             for k1, v1 in sorted(value.items()):
@@ -751,7 +751,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
         if not append:
             f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_binary: Dict[str, str] = {\n' % prefix)
+        f.write('%s_binary: dict[str, str] = {\n' % prefix)
         count = len(binary) - 1
         i = 0
         for k1, v1 in sorted(binary.items()):
@@ -801,7 +801,7 @@ def gen_bidi(output, ascii_props=False, append=False, prefix="", aliases=None):
     with codecs.open(output, 'a' if append else 'w', 'utf-8') as f:
         if not append:
             f.write(HEADER.format(UNIVERSION, TYPING))
-        f.write('%s_bidi_classes: Dict[str, str] = {\n' % prefix)
+        f.write('%s_bidi_classes: dict[str, str] = {\n' % prefix)
         count = len(bidi_class) - 1
         i = 0
         for k1, v1 in sorted(bidi_class.items()):
@@ -979,7 +979,7 @@ def gen_alias(nonbinary, binary, output):
 
     with codecs.open(output, 'w', 'utf-8') as f:
         f.write(HEADER.format(UNIVERSION, TYPING))
-        f.write('%s_alias: Dict[str, Dict[str, str]] = {\n' % prefix)
+        f.write('%s_alias: dict[str, dict[str, str]] = {\n' % prefix)
         count = len(alias) - 1
         i = 0
         for k1, v1 in sorted(alias.items()):
@@ -1183,7 +1183,7 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
         if not append:
             f.write(HEADER.format(UNIVERSION, TYPING))
         # Write out the Unicode properties
-        f.write('%s_properties: Dict[str, Dict[str, str]] = {\n' % prefix)
+        f.write('%s_properties: dict[str, dict[str, str]] = {\n' % prefix)
         count = len(table) - 1
         i = 0
         for k1, v1 in sorted(table.items()):
