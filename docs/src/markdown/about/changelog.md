@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.4
+
+- **NEW**: Officially support Python 3.11.
+
 ## 5.3
 
 - **NEW**: Drop Python 3.6 support.
