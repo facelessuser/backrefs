@@ -160,6 +160,9 @@ a boolean value. True values can be `Yes`, `Y`, `True`, or `T`. False values can
 example, to specify characters that are "alphabetic", we can use `\p{Alphabetic: Y}`. To specify characters that are
 **not** "alphabetic": `\p{Alphabetic: N}`.
 
+!!! new "New 5.4 Custom Binary properties"
+    In 5.4, the new custom binary properties `Vert_space` and `Horiz_Space` were added.
+
 ### Property Short Names
 
 General Category, Script Extensions, Blocks, and Binary all can be specified in a short form using just their name or

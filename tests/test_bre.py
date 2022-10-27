@@ -5,7 +5,6 @@ from backrefs import bre
 import re
 import sys
 import pytest
-import sre_constants
 import random
 from backrefs import _bre_parse
 import copy
@@ -21,6 +20,21 @@ else:
 
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
+
+    def test_custom_binary_properties(self):
+        """Test new custom binary properties."""
+
+        self.assertEqual(
+            bool(
+                bre.fullmatch(
+                    r'\p{HorizSpace}+',
+                    '\t \xA0\u1680\u180E\u2000\u2001\u2002\u2003\u2004'
+                    '\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000'
+                )
+            ),
+            True
+        )
+        self.assertEqual(bool(bre.fullmatch(r'\p{VertSpace}+', '\n\v\f\r\x85\u2028\u2029')), True)
 
     def test_posix_unicode_and_range(self):
         """POSIX and Unicode classes should not be part of a range."""
@@ -181,7 +195,7 @@ class TestSearchTemplate(unittest.TestCase):
             r"test\b(?<=\w)"
         )
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             bre.compile_search(r'[\m]test')
 
     def test_cache(self):
@@ -319,13 +333,13 @@ class TestSearchTemplate(unittest.TestCase):
     def test_trailing_bslash(self):
         """Test trailing back slash."""
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             pattern = bre.compile_search('test\\', re.UNICODE)
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             pattern = bre.compile_search('test[\\', re.UNICODE)
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             pattern = bre.compile_search('test(\\', re.UNICODE)
 
         pattern = bre.compile_search('\\Qtest\\', re.UNICODE)
@@ -875,7 +889,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_format_failures(self):
         """Test format parsing failures."""
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             bre.subf('test', r'{1.}', 'test', bre.FORMAT)
 
         with pytest.raises(IndexError):
@@ -896,7 +910,7 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(SyntaxError):
             bre.subf('test', r'test { test', 'test', bre.FORMAT)
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             bre.subf(b'test', br'{1.}', b'test', bre.FORMAT)
 
         with pytest.raises(IndexError):
@@ -1011,13 +1025,13 @@ class TestReplaceTemplate(unittest.TestCase):
         """Test cases where there is an unexpected end to the replace string."""
 
         pattern = re.compile(r"(some)(.+?)(pattern)(!)")
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             _bre_parse._ReplaceParser(pattern, '\\1\\l\\').parse()
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             _bre_parse._ReplaceParser(pattern, '\\1\\L\\').parse()
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             _bre_parse._ReplaceParser(pattern, '\\1\\').parse()
 
     def test_line_break(self):
@@ -1039,7 +1053,7 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_line_break_in_group(self):
         """Test that line break in group matches a normal R."""
 
-        with pytest.raises(sre_constants.error):
+        with pytest.raises(_constants.error):
             bre.sub(r"[\R]", 'l', 'Rine\r\nRine\nRine\r')
 
     def test_horizontal_ws(self):
@@ -1980,7 +1994,7 @@ class TestExceptions(unittest.TestCase):
     def test_not_posix_at_end_group(self):
         """Test a situation that is not a POSIX at the end of a group."""
 
-        with pytest.raises(sre_constants.error) as excinfo:
+        with pytest.raises(_constants.error) as excinfo:
             bre.compile_search(r'Test [[:graph:]')
         self.assertTrue(excinfo is not None)
 

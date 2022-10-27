@@ -3,6 +3,8 @@
 ## 5.4
 
 - **NEW**: Officially support Python 3.11.
+- **NEW**: Add to Bre compatible custom Unicode properties `\p{Vert_Space}` and `\p{Horiz_Space}` that match Regex's new
+  custom properties. This helps to expose vertical space shorthand that was not previously present.
 
 ## 5.3
 
