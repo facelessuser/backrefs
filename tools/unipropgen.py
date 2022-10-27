@@ -55,7 +55,7 @@ def create_span(unirange, is_bytes=False):
         unirange.append(unirange[0])
     if is_bytes:
         if unirange[0] > MAXVALIDASCII:
-            return None
+            return []
         if unirange[1] > MAXVALIDASCII:
             unirange[1] = MAXVALIDASCII
     return [x for x in range(unirange[0], unirange[1] + 1)]
@@ -165,13 +165,12 @@ def get_files(output):
         'nv': os.path.join(output, 'numericvalue.py'),
         'ccc': os.path.join(output, 'canonicalcombiningclass.py'),
         'qc': os.path.join(output, 'quickcheck.py'),
-        'alias': os.path.join(output, 'alias.py')
+        'alias': os.path.join(output, 'alias.py'),
+        'scx': os.path.join(output, 'scriptextensions.py'),
+        'insc': os.path.join(output, 'indicsyllabiccategory.py'),
+        'bpt': os.path.join(output, 'bidipairedbrackettype.py'),
+        'inpc': os.path.join(output, 'indicpositionalcategory.py')
     }
-
-    files['scx'] = os.path.join(output, 'scriptextensions.py')
-    files['insc'] = os.path.join(output, 'indicsyllabiccategory.py')
-    files['bpt'] = os.path.join(output, 'bidipairedbrackettype.py')
-    files['inpc'] = os.path.join(output, 'indicpositionalcategory.py')
 
     if UNIVERSION_INFO >= (11, 0, 0):
         files['vo'] = os.path.join(output, 'verticalorientation.py')
@@ -211,7 +210,7 @@ def discover_categories():
                 if not data[1].strip().lower().endswith('_qc'):
                     continue
                 span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=False)
-                if span is None:
+                if not span:
                     continue
                 name = format_name(data[1][:-3] + 'quickcheck')
 
@@ -329,7 +328,7 @@ def gen_ccc(output, ascii_props=False, append=False, prefix="", aliases=None):
                 if len(data) < 2:
                     continue
                 span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=ascii_props)
-                if span is None:
+                if not span:
                     continue
                 name = format_name(data[1])
 
@@ -400,7 +399,7 @@ def gen_scripts(
                 for ext in exts:
                     if ext not in obj2:
                         obj2[ext] = []
-                    if span is None:
+                    if not span:
                         continue
 
                     obj2[ext].extend(span)
@@ -418,7 +417,7 @@ def gen_scripts(
                 if name not in obj2:
                     obj2[name] = []
 
-                if span is None:
+                if not span:
                     continue
 
                 obj[name].extend(span)
@@ -494,7 +493,7 @@ def gen_enum(
                 if name not in obj:
                     obj[name] = []
 
-                if span is None:
+                if not span:
                     continue
 
                 obj[name].extend(span)
@@ -548,7 +547,7 @@ def gen_age(output, ascii_props=False, append=False, prefix="", aliases=None):
                 if name not in obj:
                     obj[name] = []
 
-                if span is None:
+                if not span:
                     continue
 
                 obj[name].extend(span)
@@ -608,7 +607,7 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix="", alias
 
                 if subvalue not in nf[name]:
                     nf[name][subvalue] = []
-                if span is None:
+                if not span:
                     continue
 
                 nf[name][subvalue].extend(span)
@@ -647,6 +646,8 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix="", alias
 def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliases=None):
     """Generate binary properties."""
 
+    max_range = MAXVALIDASCII if ascii_props else MAXUNICODE
+
     binary_props = [
         ('DerivedCoreProperties.txt', None),
         ('PropList.txt', None),
@@ -656,7 +657,18 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
     if UNIVERSION_INFO >= (13, 0, 0):
         binary_props.append(('emoji-data.txt', None))
 
-    binary = {}
+    # Custom binary properties
+    binary = {
+        'horizspace': (
+            [0x09, 0x20, 0xA0, 0x1680, 0x180E] +
+            create_span([0x2000, 0x200A], is_bytes=ascii_props) +
+            [0x202F, 0x205F, 0x3000]
+        ),
+        'vertspace': create_span([0x0A, 0x0D], is_bytes=ascii_props) + [0x85, 0x2028, 0x2029]
+    }
+    binary['horizspace'] = [x for x in binary['horizspace'] if x <= max_range]
+    binary['vertspace'] = [x for x in binary['vertspace'] if x <= max_range]
+
     for filename, include in binary_props:
         with codecs.open(os.path.join(HOME, 'unicodedata', UNIVERSION, filename), 'r', 'utf-8') as uf:
             for line in uf:
@@ -671,7 +683,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
 
                     if name not in binary:
                         binary[name] = []
-                    if span is None:
+                    if not span:
                         continue
                     binary[name].extend(span)
 
@@ -683,7 +695,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
                 if not data:
                     continue
                 span = create_span([int(data[0], 16)], is_bytes=ascii_props)
-                if span is None:
+                if not span:
                     continue
 
                 if name not in binary:
@@ -701,7 +713,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
                 if not data[1].strip().lower() == 'Full_Composition_Exclusion':
                     continue
                 span = create_span([int(i, 16) for i in data[0].strip().split('..')], is_bytes=False)
-                if span is None:
+                if not span:
                     continue
 
                 if name not in binary:
@@ -716,7 +728,7 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
                 if data[9].strip().lower() != 'y':
                     continue
                 span = create_span([int(data[0].strip(), 16)], is_bytes=ascii_props)
-                if span is None:
+                if not span:
                     continue
 
                 if name not in binary:
@@ -976,6 +988,9 @@ def gen_alias(nonbinary, binary, output):
     for k, v in posix_props.items():
         if k not in alias['binary']:
             alias['binary'][k] = v
+
+    alias['binary']['h'] = 'horizspace'
+    alias['binary']['v'] = 'vertspace'
 
     with codecs.open(output, 'w', 'utf-8') as f:
         f.write(HEADER.format(UNIVERSION, TYPING))
