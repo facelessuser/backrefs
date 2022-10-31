@@ -77,7 +77,7 @@ class _SearchParser(Generic[AnyStr]):
     _re_start_wb = r"\b(?=\w)"
     _re_end_wb = r"\b(?<=\w)"
     _line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])'
-    _bytes_line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85])'
+    _bytes_line_break = r'(?>\r\n|[\n\v\f\r\x85])' if _util.PY311 else r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85])'
     _grapheme_cluster = r'(?:{}{}*(?!{}))'
 
     verbose: bool
