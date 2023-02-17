@@ -1,5 +1,10 @@
 # Changelog
 
+## 6.0
+
+- **NEW**: `\e` and `\h` have both been deprecated in 6.0. Please migrate to using `\x1b` and `\p{Horiz_Space}` in their
+  respective place.
+
 ## 5.4
 
 - **NEW**: Officially support Python 3.11.

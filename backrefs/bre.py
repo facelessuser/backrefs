@@ -16,11 +16,9 @@ Add the ability to use the following backrefs with re:
  - `\PL`, `\P{Lu}`, `\p{^Lu}`                                    - Inverse Unicode properties (search Unicode)
  - `\N{Black Club Suit}`                                         - Unicode character by name (search & replace)
  - `\u0000` and `\U00000000`                                     - Unicode characters (replace)
- - `\e`                                                          - Escape character (search)
  - `\m`                                                          - Starting word boundary (search)
  - `\M`                                                          - Ending word boundary (search)
  - `\R`                                                          - Generic line breaks (search)
- - `\h`                                                          - Horizontal whitespace (search)
  - `\X`                                                          - Simplified grapheme clusters (search)
 
 Licensed under MIT
