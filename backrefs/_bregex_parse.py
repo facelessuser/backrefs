@@ -988,33 +988,6 @@ class _ReplaceParser(Generic[AnyStr]):
                 value = self.convert_case(value, self.span_stack[-1])
             self.result.append(value)
 
-    def regex_parse_template(
-        self,
-        template: AnyStr,
-        pattern: Pattern[AnyStr]
-    ) -> tuple[list[tuple[int, int]], list[AnyStr | None]]:
-        """
-        Parse template for the regex module.
-
-        Do NOT edit the literal list returned by
-        _compile_replacement_helper as you will edit
-        the original cached value.  Copy the values
-        instead.
-        """
-
-        groups = []  # type: list[tuple[int, int]]
-        literals = []  # type: list[AnyStr | None]
-        replacements = _compile_replacement_helper(pattern, template)  # type: list[int | AnyStr]
-        count = 0
-        for part in replacements:
-            if isinstance(part, int):
-                literals.append(None)
-                groups.append((count, part))
-            else:
-                literals.append(part)
-            count += 1
-        return groups, literals
-
     def _parse_template(self, template: str) -> str:
         """Parse template."""
 
@@ -1056,7 +1029,14 @@ class _ReplaceParser(Generic[AnyStr]):
         else:
             self._template = self._parse_template(self._original)
 
-        self.groups, self.literals = self.regex_parse_template(self._template, self.pattern)
+        count = 0
+        for part in _compile_replacement_helper(self.pattern, self._template):
+            if isinstance(part, int):
+                self.literals.append(None)
+                self.groups.append((count, part))
+            else:
+                self.literals.append(cast(AnyStr, part))
+            count += 1
 
     def span_case(self, i: _util.StringIter, case: int) -> None:
         """Uppercase or lowercase the next range of characters until end marker is found."""

@@ -1191,16 +1191,16 @@ class _ReplaceParser(Generic[AnyStr]):
             self._template = self._parse_template(self._original)
 
         if _util.PY312:
-            index = 0
-            for l in _parser.parse_template(self._template, self.pattern):
-                if isinstance(l, int):
-                    self.groups.append((index, l))
+            count = 0
+            for part in _parser.parse_template(self._template, self.pattern):
+                if isinstance(part, int):
+                    self.groups.append((count, part))
                     self.literals.append(None)
-                elif l:
-                    self.literals.append(cast(AnyStr, l))
+                elif part:
+                    self.literals.append(cast(AnyStr, part))
                 else:
                     continue
-                index += 1
+                count += 1
         else:
             self.groups, self.literals = _parser.parse_template(self._template, self.pattern)
 
