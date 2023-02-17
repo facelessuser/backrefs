@@ -11,7 +11,7 @@ import copyreg as _copyreg
 from . import util as _util
 import unicodedata as _unicodedata
 from . import uniprops as _uniprops
-from typing import Generic, AnyStr, Match, Any, Pattern
+from typing import Generic, AnyStr, Match, Any, Pattern, cast
 
 if sys.version_info >= (3, 11):
     import re._parser as _parser  # type: ignore[import]
@@ -1197,7 +1197,7 @@ class _ReplaceParser(Generic[AnyStr]):
                     self.groups.append((index, l))
                     self.literals.append(None)
                 elif l:
-                    self.literals.append(l)
+                    self.literals.append(cast(AnyStr, l))
                 else:
                     continue
                 index += 1
