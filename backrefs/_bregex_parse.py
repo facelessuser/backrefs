@@ -10,7 +10,7 @@ import copyreg as _copyreg
 from . import util as _util
 import regex as _regex  # type: ignore[import]
 from regex.regex import _compile_replacement_helper  # type: ignore[import]
-from typing import Generic, AnyStr, Optional, Any, cast
+from typing import Generic, AnyStr, Any, cast
 from ._bregex_typing import Pattern, Match
 
 _ASCII_LETTERS = frozenset(
@@ -197,7 +197,7 @@ class _SearchParser(Generic[AnyStr]):
             current.extend(["\\", t])
         return current
 
-    def get_posix(self, i: _util.StringIter) -> Optional[str]:
+    def get_posix(self, i: _util.StringIter) -> str | None:
         """Get POSIX."""
 
         index = i.index
@@ -228,7 +228,7 @@ class _SearchParser(Generic[AnyStr]):
             value = []
         return ''.join(value) if value else None
 
-    def get_comments(self, i: _util.StringIter) -> Optional[str]:
+    def get_comments(self, i: _util.StringIter) -> str | None:
         """Get comments."""
 
         index = i.index
@@ -259,7 +259,7 @@ class _SearchParser(Generic[AnyStr]):
 
         return ''.join(value) if value else None
 
-    def get_flags(self, i: _util.StringIter, version0: bool, scoped: bool = False) -> Optional[str]:
+    def get_flags(self, i: _util.StringIter, version0: bool, scoped: bool = False) -> str | None:
         """Get flags."""
 
         index = i.index
@@ -499,12 +499,12 @@ class _ReplaceParser(Generic[AnyStr]):
         self._template = template  # type: AnyStr
         self.use_format = use_format
         self.end_found = False
-        self.group_slots = []  # type: list[tuple[int, tuple[Optional[int], Optional[int], Any]]]
+        self.group_slots = []  # type: list[tuple[int, tuple[int | None, int | None, Any]]]
         self.literal_slots = []  # type: list[str]
         self.result = []  # type: list[str]
         self.span_stack = []  # type: list[int]
         self.single_stack = []  # type: list[int]
-        self.literals = []  # type: list[Optional[AnyStr]]
+        self.literals = []  # type: list[AnyStr | None]
         self.groups = []  # type: list[tuple[int, int]]
         self.slot = 0
         self.manual = False
@@ -604,7 +604,7 @@ class _ReplaceParser(Generic[AnyStr]):
 
                 # Format spec
                 if c == ':':
-                    fill = None  # type: Optional[str]
+                    fill = None  # type: str | None
                     width = []
                     align = None
                     convert = None
@@ -694,7 +694,7 @@ class _ReplaceParser(Generic[AnyStr]):
             else:
                 raise SyntaxError("Unmatched '}}' at {}!".format(i.index - 2))
 
-    def get_octal(self, c: str, i: _util.StringIter) -> Optional[str]:
+    def get_octal(self, c: str, i: _util.StringIter) -> str | None:
         """Get octal."""
 
         index = i.index
@@ -896,7 +896,7 @@ class _ReplaceParser(Generic[AnyStr]):
 
         return ''.join(value)
 
-    def get_group(self, t: str, i: _util.StringIter) -> Optional[str]:
+    def get_group(self, t: str, i: _util.StringIter) -> str | None:
         """Get group number."""
 
         value = []
@@ -991,7 +991,7 @@ class _ReplaceParser(Generic[AnyStr]):
         self,
         template: AnyStr,
         pattern: Pattern[AnyStr]
-    ) -> tuple[list[tuple[int, int]], list[Optional[AnyStr]]]:
+    ) -> tuple[list[tuple[int, int]], list[AnyStr | None]]:
         """
         Parse template for the regex module.
 
@@ -1002,7 +1002,7 @@ class _ReplaceParser(Generic[AnyStr]):
         """
 
         groups = []  # type: list[tuple[int, int]]
-        literals = []  # type: list[Optional[AnyStr]]
+        literals = []  # type: list[AnyStr | None]
         replacements = _compile_replacement_helper(pattern, template)  # type: list[int | AnyStr]
         count = 0
         for part in replacements:
@@ -1129,7 +1129,7 @@ class _ReplaceParser(Generic[AnyStr]):
         except StopIteration:
             pass
 
-    def get_single_stack(self) -> Optional[int]:
+    def get_single_stack(self) -> int | None:
         """Get the correct single stack item to use."""
 
         single = None
@@ -1163,7 +1163,7 @@ class _ReplaceParser(Generic[AnyStr]):
     def handle_group(
         self,
         text: str,
-        capture: Optional[tuple[tuple[int, Any], ...]] = None,
+        capture: tuple[tuple[int, Any], ...] | None = None,
         is_format: bool = False
     ) -> None:
         """Handle groups."""
@@ -1223,8 +1223,8 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
     __slots__ = ("groups", "group_slots", "literals", "pattern_hash", "use_format", "_hash", "_bytes")
 
     groups: tuple[tuple[int, int], ...]
-    group_slots: tuple[tuple[int, tuple[Optional[int], Optional[int], Any]], ...]
-    literals: tuple[Optional[AnyStr], ...]
+    group_slots: tuple[tuple[int, tuple[int | None, int | None, Any]], ...]
+    literals: tuple[AnyStr | None, ...]
     pattern_hash: int
     use_format: bool
     _hash: int
@@ -1233,8 +1233,8 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
     def __init__(
         self,
         groups: tuple[tuple[int, int], ...],
-        group_slots: tuple[tuple[int, tuple[Optional[int], Optional[int], Any]], ...],
-        literals: tuple[Optional[AnyStr], ...],
+        group_slots: tuple[tuple[int, tuple[int | None, int | None, Any]], ...],
+        literals: tuple[AnyStr | None, ...],
         pattern_hash: int,
         use_format: bool,
         is_bytes: bool
@@ -1257,7 +1257,7 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
             )
         )
 
-    def __call__(self, m: Optional[Match[AnyStr]]) -> AnyStr:
+    def __call__(self, m: Match[AnyStr] | None) -> AnyStr:
         """Call."""
 
         return self.expand(m)
@@ -1312,17 +1312,17 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
                 break
         return g_index
 
-    def _get_group_attributes(self, index: int) -> tuple[Optional[int], Optional[int], Any]:
+    def _get_group_attributes(self, index: int) -> tuple[int | None, int | None, Any]:
         """Find and return the appropriate group case."""
 
-        g_case = (None, None, -1)  # type: tuple[Optional[int], Optional[int], Any]
+        g_case = (None, None, -1)  # type: tuple[int | None, int | None, Any]
         for group in self.group_slots:
             if group[0] == index:
                 g_case = group[1]
                 break
         return g_case
 
-    def expand(self, m: Optional[Match[AnyStr]]) -> AnyStr:
+    def expand(self, m: Match[AnyStr] | None) -> AnyStr:
         """Using the template, expand the string."""
 
         if m is None:
@@ -1334,14 +1334,14 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
         text = []
         # Expand string
         for index in range(0, len(self.literals)):
-            l = self.literals[index]  # type: Optional[AnyStr]
+            l = self.literals[index]  # type: AnyStr | None
             if l is None:
                 g_index = self._get_group_index(index)
                 span_case, single_case, capture = self._get_group_attributes(index)
                 if not self.use_format:
                     # Non format replace
                     try:
-                        l = cast(Optional[AnyStr], m.group(g_index))
+                        l = cast('AnyStr | None', m.group(g_index))
                         if l is None:
                             l = sep
                     except IndexError:  # pragma: no cover
