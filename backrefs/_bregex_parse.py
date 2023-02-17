@@ -192,6 +192,7 @@ class _SearchParser(Generic[AnyStr]):
         if not in_group and t == "R":
             current.append(self._re_line_break)
         elif t == 'e':
+            _util.warn_deprecated(R"The \e reference has been deprecated, please use \x1b instead")
             current.extend(self._re_escape)
         else:
             current.extend(["\\", t])

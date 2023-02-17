@@ -147,9 +147,10 @@ class TestSearchTemplate(unittest.TestCase):
     def test_escape_char(self):
         """Test escape char."""
 
-        pattern = bregex.compile_search(
-            r'test\etest[\e]{2}'
-        )
+        with pytest.warns(DeprecationWarning):
+            pattern = bregex.compile_search(
+                r'test\etest[\e]{2}'
+            )
 
         self.assertEqual(
             pattern.pattern,

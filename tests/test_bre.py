@@ -69,9 +69,9 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(bre.match(r'[0-\p{upper}]', 'A') is not None)
         self.assertTrue(bre.match(r'[0-\p{upper}]', 'D') is not None)
 
-        self.assertTrue(bre.match(r'[\h-Z]', 'Z') is not None)
-        self.assertTrue(bre.match(r'[\h-Z]', '\x20') is not None)
-        self.assertTrue(bre.match(r'[\h-Z]', '-') is not None)
+        self.assertTrue(bre.match(r'[\p{HorizSpace}-Z]', 'Z') is not None)
+        self.assertTrue(bre.match(r'[\p{HorizSpace}-Z]', '\x20') is not None)
+        self.assertTrue(bre.match(r'[\p{HorizSpace}-Z]', '-') is not None)
 
     def test_non_raw_string_unicode(self):
         """Test non raw string Unicode notation."""
@@ -138,9 +138,12 @@ class TestSearchTemplate(unittest.TestCase):
     def test_posix_property_bad_syntax(self):
         """Test that we ignore an incomplete POSIX syntax."""
 
-        self.assertTrue(bre.compile(r'[[:a]]').match('a]') is not None)
-        self.assertTrue(bre.compile(r'[[:a]').match('a') is not None)
-        self.assertTrue(bre.compile(r'[[:graph:a]').match('a') is not None)
+        with pytest.warns(FutureWarning):
+            self.assertTrue(bre.compile(r'[[:a]]').match('a]') is not None)
+        with pytest.warns(FutureWarning):
+            self.assertTrue(bre.compile(r'[[:a]').match('a') is not None)
+        with pytest.warns(FutureWarning):
+            self.assertTrue(bre.compile(r'[[:graph:a]').match('a') is not None)
 
     def test_unicode_property_failures(self):
         """Test Unicode property."""
@@ -238,23 +241,23 @@ class TestSearchTemplate(unittest.TestCase):
         """Test scoped verbose with comments (Python 3.6+)."""
 
         pattern = bre.compile_search(
-            r'''(?u)Test # \e(?#\e)(?x:
-            Test #\e(?#\e)
-            (Test # \e
-            )Test #\e
-            )Test # \e'''
+            r'''(?u)Test # \R(?#\R)(?x:
+            Test #\R(?#\R)
+            (Test # \R
+            )Test #\R
+            )Test # \R'''
         )
 
         self.assertEqual(
             pattern.pattern,
-            r'''(?u)Test # \x1b(?#\e)(?x:
-            Test #\\e(?#\\e)
-            (Test # \\e
-            )Test #\\e
-            )Test # \x1b'''
+            r'''(?u)Test # (?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])(?#\R)(?x:
+            Test #\\R(?#\\R)
+            (Test # \\R
+            )Test #\\R
+            )Test # (?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])'''
         )
 
-        self.assertTrue(pattern.match('Test # \x1bTestTestTestTest # \x1b') is not None)
+        self.assertTrue(pattern.match('Test # \nTestTestTestTest # \r\n') is not None)
 
     def test_byte_string_named_chars(self):
         """Test byte string named char."""
@@ -297,9 +300,10 @@ class TestSearchTemplate(unittest.TestCase):
     def test_escape_char(self):
         """Test escape char."""
 
-        pattern = bre.compile_search(
-            r'test\etest[\e]{2}'
-        )
+        with pytest.warns(DeprecationWarning):
+            pattern = bre.compile_search(
+                r'test\etest[\e]{2}'
+            )
 
         self.assertEqual(
             pattern.pattern,
@@ -354,7 +358,8 @@ class TestSearchTemplate(unittest.TestCase):
     def test_char_group_nested_opening(self):
         """Test char group with nested opening [."""
 
-        pattern = bre.compile_search(r'test [[] \N{black club suit}', re.UNICODE)
+        with pytest.warns(FutureWarning):
+            pattern = bre.compile_search(r'test [[] \N{black club suit}', re.UNICODE)
         self.assertEqual(pattern.pattern, 'test [[] \u2663', re.UNICODE)
 
     def test_inline_comments(self):
@@ -1059,34 +1064,38 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_horizontal_ws(self):
         """Test horizontal whitespace."""
 
-        self.assertEqual(
-            bre.sub(r'\h*', '', '    \t\ttest    \t'),
-            'test'
-        )
+        with pytest.warns(DeprecationWarning):
+            self.assertEqual(
+                bre.sub(r'\h*', '', '    \t\ttest    \t'),
+                'test'
+            )
 
     def test_horizontal_ws_in_group(self):
         """Test horizontal whitespace."""
 
-        self.assertEqual(
-            bre.sub(r'[\ht]*', '', '    \t\ttest    \t'),
-            'es'
-        )
+        with pytest.warns(DeprecationWarning):
+            self.assertEqual(
+                bre.sub(r'[\ht]*', '', '    \t\ttest    \t'),
+                'es'
+            )
 
     def test_horizontal_ws_in_inverse_group(self):
         """Test horizontal whitespace."""
 
-        self.assertEqual(
-            bre.sub(r'[^\ht]*', '', '    \t\ttest    \t'),
-            '    \t\ttt    \t'
-        )
+        with pytest.warns(DeprecationWarning):
+            self.assertEqual(
+                bre.sub(r'[^\ht]*', '', '    \t\ttest    \t'),
+                '    \t\ttt    \t'
+            )
 
     def test_horizontal_ws_bytes(self):
         """Test horizontal whitespace as byte string."""
 
-        self.assertEqual(
-            bre.sub(br'\h*', b'', b'    \t\ttest    \t'),
-            b'test'
-        )
+        with pytest.warns(DeprecationWarning):
+            self.assertEqual(
+                bre.sub(br'\h*', b'', b'    \t\ttest    \t'),
+                b'test'
+            )
 
     def test_grapheme_cluster(self):
         """Test simple grapheme cluster."""
@@ -2293,13 +2302,16 @@ class TestConvenienceFunctions(unittest.TestCase):
         """Test incomplete POSIX value."""
 
         with pytest.raises(re.error):
-            bre.match(r'This is a test for m[[:lower=t', "This is a test for m[[:lower=t")
+            with pytest.warns(FutureWarning):
+                bre.match(r'This is a test for m[[:lower=t', "This is a test for m[[:lower=t")
 
         with pytest.raises(re.error):
-            bre.match(r'This is a test for m[[:lower=t:', "This is a test for m[[:lower=t:")
+            with pytest.warns(FutureWarning):
+                bre.match(r'This is a test for m[[:lower=t:', "This is a test for m[[:lower=t:")
 
         with pytest.raises(re.error):
-            bre.match(r'This is a test for m[[:lower=t: ', "This is a test for m[[:lower=t: ")
+            with pytest.warns(FutureWarning):
+                bre.match(r'This is a test for m[[:lower=t: ', "This is a test for m[[:lower=t: ")
 
     def test_fullmatch(self):
         """Test that `fullmatch` works."""

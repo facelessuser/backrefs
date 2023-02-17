@@ -4,7 +4,7 @@ repo_url: https://github.com/facelessuser/backrefs
 edit_uri: tree/master/docs/src/markdown
 site_description: A library to add additional back references to regular expressions.
 copyright: |
-  Copyright &copy; 2015 - 2022 <a href="https://github.com/facelessuser"  target="_blank" rel="noopener">Isaac Muse</a>
+  Copyright &copy; 2015 - 2023 <a href="https://github.com/facelessuser"  target="_blank" rel="noopener">Isaac Muse</a>
 
 docs_dir: docs/src/markdown
 theme:
@@ -20,9 +20,16 @@ theme:
     code: Roboto Mono
   features:
     - navigation.tabs
-    - navigation.sections
     - navigation.top
     - navigation.instant
+    - navigation.sections
+    - navigation.indexes
+    - toc.follow
+    - content.code.copy
+    - navigation.footer
+    - search.share
+    - search.highlight
+    - search.suggest
   pymdownx:
     sponsor: "https://github.com/sponsors/facelessuser"
 

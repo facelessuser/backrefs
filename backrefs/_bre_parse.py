@@ -288,8 +288,10 @@ class _SearchParser(Generic[AnyStr]):
             mark = self.unicode_props("m", None, in_group=False)[0]
             current.extend(self._grapheme_cluster.format(no_mark, mark, mark))
         elif t == "e":
+            _util.warn_deprecated(R"The \e reference has been deprecated, please use \x1b instead")
             current.append(self._re_escape)
         elif t == "h":
+            _util.warn_deprecated(R"The \h reference has been deprecated, please use \p{Horiz_Space} instead")
             current.extend(self.unicode_props('blank', None, in_group=in_group))
             if in_group:
                 self.found_property = True

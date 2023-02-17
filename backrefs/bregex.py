@@ -9,7 +9,6 @@ Add the ability to use the following backrefs with re:
  - `\N{Black Club Suit}`                                        - Unicode character by name (replace)
  - `\u0000` and `\U00000000`                                    - Unicode characters (replace)
  - `\R`                                                         - Generic line breaks (search)
- - `\e`                                                         - Escape character (search)
 
 Licensed under MIT
 Copyright (c) 2015 - 2020 Isaac Muse <isaacmuse@gmail.com>
