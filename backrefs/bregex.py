@@ -21,7 +21,7 @@ from functools import lru_cache as _lru_cache
 from . import util as _util
 from . import _bregex_parse
 from ._bregex_parse import ReplaceTemplate
-from typing import AnyStr, Callable, Any, Optional, Generic, Mapping, Iterator, cast
+from typing import AnyStr, Callable, Any, Generic, Mapping, Iterator, cast
 from ._bregex_typing import Pattern, Match
 
 __all__ = (
@@ -131,7 +131,7 @@ def _is_replace(obj: Any) -> bool:
 
 
 def _apply_replace_backrefs(
-    m: Optional[Match[AnyStr]],
+    m: Match[AnyStr] | None,
     repl: ReplaceTemplate[AnyStr] | AnyStr,
     flags: int = 0
 ) -> AnyStr:
@@ -231,10 +231,10 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
         return cast(Mapping[str, int], self._pattern.groupindex)
 
     @property
-    def groups(self) -> tuple[Optional[AnyStr], ...]:
+    def groups(self) -> tuple[AnyStr | None, ...]:
         """Return groups."""
 
-        return cast('tuple[Optional[AnyStr], ...]', self._pattern.groups)
+        return cast('tuple[AnyStr | None, ...]', self._pattern.groups)
 
     @property
     def scanner(self) -> Any:
@@ -311,7 +311,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> Optional[Match[AnyStr]]:
+    ) -> Match[AnyStr] | None:
         """Apply `search`."""
 
         return self._pattern.search(string, *args, **kwargs)
@@ -321,20 +321,20 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> Optional[Match[AnyStr]]:
+    ) -> Match[AnyStr] | None:
         """Apply `match`."""
 
-        return cast(Optional[Match[AnyStr]], self._pattern.match(string, *args, **kwargs))
+        return cast('Match[AnyStr] | None', self._pattern.match(string, *args, **kwargs))
 
     def fullmatch(
         self,
         string: AnyStr,
         *args: Any,
         **kwargs: Any
-    ) -> Optional[Match[AnyStr]]:
+    ) -> Match[AnyStr] | None:
         """Apply `fullmatch`."""
 
-        return cast(Optional[Match[AnyStr]], self._pattern.fullmatch(string, *args, **kwargs))
+        return cast('Match[AnyStr] | None', self._pattern.fullmatch(string, *args, **kwargs))
 
     def split(
         self,
@@ -424,7 +424,7 @@ class Bregex(_util.Immutable, Generic[AnyStr]):
 def compile(  # noqa A001
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     flags: int = 0,
-    auto_compile: Optional[bool] = None,
+    auto_compile: bool | None = None,
     **kwargs: Any
 ) -> 'Bregex[AnyStr]':
     """Compile both the search or search and replace into one object."""
@@ -485,14 +485,14 @@ def purge() -> None:
     _regex.purge()
 
 
-def expand(m: Optional[Match[AnyStr]], repl: ReplaceTemplate[AnyStr] | AnyStr) -> AnyStr:
+def expand(m: Match[AnyStr] | None, repl: ReplaceTemplate[AnyStr] | AnyStr) -> AnyStr:
     """Expand the string using the replace pattern or function."""
 
     _assert_expandable(repl)
     return _apply_replace_backrefs(m, repl)
 
 
-def expandf(m: Optional[Match[AnyStr]], repl: ReplaceTemplate[AnyStr] | AnyStr) -> AnyStr:
+def expandf(m: Match[AnyStr] | None, repl: ReplaceTemplate[AnyStr] | AnyStr) -> AnyStr:
     """Expand the string using the format replace pattern or function."""
 
     _assert_expandable(repl, True)
@@ -504,12 +504,12 @@ def match(
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> Optional[Match[AnyStr]]:
+) -> Match[AnyStr] | None:
     """Wrapper for `match`."""
 
     flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return cast(
-        Optional[Match[AnyStr]],
+        'Match[AnyStr] | None',
         _regex.match(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
     )
 
@@ -519,12 +519,12 @@ def fullmatch(
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> Optional[Match[AnyStr]]:
+) -> Match[AnyStr] | None:
     """Wrapper for `fullmatch`."""
 
     flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return cast(
-        Optional[Match[AnyStr]],
+        'Match[AnyStr] | None',
         _regex.fullmatch(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
     )
 
@@ -534,12 +534,12 @@ def search(
     string: AnyStr,
     *args: Any,
     **kwargs: Any
-) -> Optional[Match[AnyStr]]:
+) -> Match[AnyStr] | None:
     """Wrapper for `search`."""
 
     flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return cast(
-        Optional[Match[AnyStr]],
+        'Match[AnyStr] | None',
         _regex.search(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
     )
 

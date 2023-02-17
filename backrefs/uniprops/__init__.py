@@ -1,7 +1,6 @@
 """Unicode Properties."""
 from __future__ import annotations
 from . import unidata
-from typing import Optional
 
 UNICODE_RANGE = '\u0000-\U0010ffff'
 ASCII_RANGE = '\x00-\xff'
@@ -477,7 +476,7 @@ def _is_binary(name: str) -> bool:
     return name in unidata.unicode_binary or name in unidata.unicode_alias['binary']
 
 
-def get_unicode_property(prop: str, value: Optional[str] = None, mode: int = MODE_UNICODE) -> str:
+def get_unicode_property(prop: str, value: str | None = None, mode: int = MODE_UNICODE) -> str:
     """Retrieve the Unicode category from the table."""
 
     if value is not None:
