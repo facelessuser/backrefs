@@ -10,6 +10,7 @@ import sys
 from typing import Any, Callable, AnyStr
 
 PY311 = (3, 11) <= sys.version_info
+PY312 = (3, 12) <= sys.version_info
 
 FMT_FIELD = 0
 FMT_INDEX = 1

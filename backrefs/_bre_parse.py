@@ -11,7 +11,7 @@ import copyreg as _copyreg
 from . import util as _util
 import unicodedata as _unicodedata
 from . import uniprops as _uniprops
-from typing import Generic, AnyStr, Match, Any, Pattern
+from typing import Generic, AnyStr, Match, Any, Pattern, cast
 
 if sys.version_info >= (3, 11):
     import re._parser as _parser  # type: ignore[import]
@@ -1190,7 +1190,19 @@ class _ReplaceParser(Generic[AnyStr]):
         else:
             self._template = self._parse_template(self._original)
 
-        self.groups, self.literals = _parser.parse_template(self._template, self.pattern)
+        if _util.PY312:
+            index = 0
+            for l in _parser.parse_template(self._template, self.pattern):
+                if isinstance(l, int):
+                    self.groups.append((index, l))
+                    self.literals.append(None)
+                elif l:
+                    self.literals.append(cast(AnyStr, l))
+                else:
+                    continue
+                index += 1
+        else:
+            self.groups, self.literals = _parser.parse_template(self._template, self.pattern)
 
     def span_case(self, i: _util.StringIter, case: int) -> None:
         """Uppercase or lowercase the next range of characters until end marker is found."""
