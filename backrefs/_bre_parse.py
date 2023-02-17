@@ -1190,7 +1190,19 @@ class _ReplaceParser(Generic[AnyStr]):
         else:
             self._template = self._parse_template(self._original)
 
-        self.groups, self.literals = _parser.parse_template(self._template, self.pattern)
+        if _util.PY312:
+            index = 0
+            for l in _parser.parse_template(self._template, self.pattern):
+                if isinstance(l, int):
+                    self.groups.append((index, l))
+                    self.literals.append(None)
+                elif l:
+                    self.literals.append(l)
+                else:
+                    continue
+                index += 1
+        else:
+            self.groups, self.literals = _parser.parse_template(self._template, self.pattern)
 
     def span_case(self, i: _util.StringIter, case: int) -> None:
         """Uppercase or lowercase the next range of characters until end marker is found."""
