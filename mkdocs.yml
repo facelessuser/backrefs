@@ -40,6 +40,7 @@ nav:
     - Supported References: refs.md
   - About:
     - Contributing &amp; Support: about/contributing.md
+    - Security Vulnerabilities: about/security.md
     - Changelog: about/changelog.md
     - License: about/license.md
 
@@ -92,6 +93,7 @@ markdown_extensions:
       base_path:
       - docs/src/markdown/.snippets
       - LICENSE.md
+      - SECURITY.md
       auto_append:
       - links.md
   - pymdownx.keys:
