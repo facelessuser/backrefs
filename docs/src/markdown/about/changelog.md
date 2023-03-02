@@ -1,9 +1,9 @@
 # Changelog
 
-## 5.5
+<!-- ## 5.5
 
 - **NEW**: `\e` and `\h` have both been deprecated in 6.0. Please migrate to using `\x1b` and `\p{Horiz_Space}` in their
-  respective place.
+  respective place. -->
 
 ## 5.4
 
