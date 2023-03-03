@@ -23,6 +23,7 @@ PyPI
 Regex
 Regex's
 Sep
+Tidelift
 Tox
 Twemoji
 accessor
