@@ -501,45 +501,45 @@ def expandf(m: Match[AnyStr] | None, repl: ReplaceTemplate[AnyStr] | AnyStr) -> 
 def match(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> Match[AnyStr] | None:
     """Wrapper for `match`."""
 
-    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return cast(
         'Match[AnyStr] | None',
-        _regex.match(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+        _regex.match(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
     )
 
 
 def fullmatch(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> Match[AnyStr] | None:
     """Wrapper for `fullmatch`."""
 
-    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return cast(
         'Match[AnyStr] | None',
-        _regex.fullmatch(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+        _regex.fullmatch(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
     )
 
 
 def search(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> Match[AnyStr] | None:
     """Wrapper for `search`."""
 
-    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return cast(
         'Match[AnyStr] | None',
-        _regex.search(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+        _regex.search(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
     )
 
 
@@ -547,12 +547,13 @@ def sub(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
+    count: int = 0,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> AnyStr:
     """Wrapper for `sub`."""
 
-    flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (str, bytes))
     if is_replace and cast(ReplaceTemplate[AnyStr], repl).use_format:
@@ -563,6 +564,8 @@ def sub(
         AnyStr,
         _regex.sub(
             pattern, (compile_replace(pattern, repl) if is_replace or is_string else repl), string,
+            count,
+            0,
             *args, **kwargs
         )
     )
@@ -572,6 +575,8 @@ def subf(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
+    count: int = 0,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> AnyStr:
@@ -589,6 +594,8 @@ def subf(
         AnyStr,
         _regex.sub(
             pattern, (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl), string,
+            count,
+            0,
             *args, **kwargs
         )
     )
@@ -598,12 +605,13 @@ def subn(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
+    count: int = 0,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> tuple[AnyStr, int]:
     """Wrapper for `subn`."""
 
-    flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (str, bytes))
     if is_replace and cast(ReplaceTemplate[AnyStr], repl).use_format:
@@ -614,6 +622,8 @@ def subn(
         'tuple[AnyStr, int]',
         _regex.subn(
             pattern, (compile_replace(pattern, repl) if is_replace or is_string else repl), string,
+            count,
+            0,
             *args, **kwargs
         )
     )
@@ -623,12 +633,13 @@ def subfn(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
+    count: int = 0,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> tuple[AnyStr, int]:
     """Wrapper for `subfn`."""
 
-    flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (str, bytes))
     if is_replace and not cast(ReplaceTemplate[AnyStr], repl).use_format:
@@ -640,6 +651,8 @@ def subfn(
         'tuple[AnyStr, int]',
         _regex.subn(
             pattern, (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl), string,
+            count,
+            0,
             *args, **kwargs
         )
     )
@@ -648,6 +661,8 @@ def subfn(
 def split(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
+    maxsplit: int = 0,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> list[AnyStr]:
@@ -656,49 +671,50 @@ def split(
     flags = args[3] if len(args) > 3 else kwargs.get('flags', 0)
     return cast(
         'list[AnyStr]',
-        _regex.split(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+        _regex.split(_apply_search_backrefs(pattern, flags), string, maxsplit, flags, *args, **kwargs)
     )
 
 
 def splititer(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
+    maxsplit: int = 0,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> Iterator[AnyStr]:
     """Wrapper for `splititer`."""
 
-    flags = args[3] if len(args) > 3 else kwargs.get('flags', 0)
     return cast(
         Iterator[AnyStr],
-        _regex.splititer(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+        _regex.splititer(_apply_search_backrefs(pattern, flags), string, maxsplit, flags, *args, **kwargs)
     )
 
 
 def findall(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> list[AnyStr] | list[tuple[AnyStr, ...]]:
     """Wrapper for `findall`."""
 
-    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return cast(
         'list[AnyStr] | list[tuple[AnyStr, ...]]',
-        _regex.findall(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+        _regex.findall(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
     )
 
 
 def finditer(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
+    flags: int = 0,
     *args: Any,
     **kwargs: Any
 ) -> Iterator[Match[AnyStr]]:
     """Wrapper for `finditer`."""
 
-    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
     return cast(
         Iterator[Match[AnyStr]],
         _regex.finditer(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
