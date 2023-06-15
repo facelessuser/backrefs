@@ -132,11 +132,11 @@ Backrefs also provides an `expand` variant for format templates called `expandf`
 Backrefs' implementation is a little different than Regex's default implementation. Below we cover what is different and
 why.
 
-1. Regex's original implementation is very much like it's non-format style replacement accept for two differences: you
-  can access individual captures and you cannot use Python string back references such as specifying Unicode via
-  `\u<code>`, etc. In Backrefs, we've enhanced the syntax -- for both Re and Regex -- to allow back references to work
-  along side brace replacements. This means you can use string back references and and built-in Backrefs features like
-  `\C...\E` or `\L...\E`.
+1.  Regex's original implementation is very much like it's non-format style replacement accept for two differences: you
+    can access individual captures and you cannot use Python string back references such as specifying Unicode via
+    `\u<code>`, etc. In Backrefs, we've enhanced the syntax -- for both Re and Regex -- to allow back references to work
+    along side brace replacements. This means you can use string back references and and built-in Backrefs features like
+    `\C...\E` or `\L...\E`.
 
     ```pycon3
     >>> bre.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
@@ -145,9 +145,9 @@ why.
     'foo bar => BAR FOO'
     ```
 
-2. The second enhancement that Backrefs adds is the ability to use format string alignment features. In the following
-  example, we center the replacement and pad it out to 8 characters using `|` for the padding. We also use casing
-  references (`\C...\E`) to capitalize the replacement group.
+2.  The second enhancement that Backrefs adds is the ability to use format string alignment features. In the following
+    example, we center the replacement and pad it out to 8 characters using `|` for the padding. We also use casing
+    references (`\C...\E`) to capitalize the replacement group.
 
     ```pycon3
     >>> bregex.subf(r'(test)', r'\C{0:|^8}\E', 'test')
@@ -177,20 +177,21 @@ why.
     type        ::=  "s"
     ```
 
-3. Lastly, our implementation of the [Format Specification Mini-Language][format-spec] (`format_spec`) allows format
-  strings to work for byte strings as well as Unicode strings. This is something that Regex does not allow without
-  Backrefs.
+3.  Lastly, our implementation of the [Format Specification Mini-Language][format-spec] (`format_spec`) allows format
+    strings to work for byte strings as well as Unicode strings. This is something that Regex does not allow without
+    Backrefs.
 
     ```pycon3
     >>> bre.subf(br'(test)', br'\C{0:|^8}\E', b'test')
     b'||TEST||'
     ```
 
-    !!! note "Conversion Syntax and Bytes"
-        In almost all instances, using conversion types (`{!s}`, etc.) won't make sense in a regular expression replace
-        as the objects will already be strings in the needed format, but if you were to use a conversion using byte
-        strings, when converting from `bytes` to `str`, ASCII will be the assumed encoding, and the object or Unicode
-        string would be encoded using the `backslashreplace` option as well.
+    /// note | Conversion Syntax and Bytes
+    In almost all instances, using conversion types (`{!s}`, etc.) won't make sense in a regular expression replace
+    as the objects will already be strings in the needed format, but if you were to use a conversion using byte
+    strings, when converting from `bytes` to `str`, ASCII will be the assumed encoding, and the object or Unicode
+    string would be encoded using the `backslashreplace` option as well.
+    ///
 
 ## Advanced Usage
 
