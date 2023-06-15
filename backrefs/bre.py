@@ -468,85 +468,87 @@ def expandf(m: Match[AnyStr] | None, repl: ReplaceTemplate[AnyStr] | AnyStr) -> 
 def search(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
+    flags: int | _re.RegexFlag = 0,
     *args: Any,
     **kwargs: Any
 ) -> Match[AnyStr] | None:
     """Apply `search` after applying backrefs."""
 
-    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
-    return _re.search(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+    return _re.search(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
 
 
 def match(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
+    flags: int | _re.RegexFlag = 0,
     *args: Any,
     **kwargs: Any
 ) -> Match[AnyStr] | None:
     """Apply `match` after applying backrefs."""
 
-    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
-    return _re.match(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+    return _re.match(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
 
 
 def fullmatch(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
+    flags: int | _re.RegexFlag = 0,
     *args: Any,
     **kwargs: Any
 ) -> Match[AnyStr] | None:
     """Apply `fullmatch` after applying backrefs."""
 
-    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
-    return _re.fullmatch(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+    return _re.fullmatch(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
 
 
 def split(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
+    maxsplit: int = 0,
+    flags: int | _re.RegexFlag = 0,
     *args: Any,
     **kwargs: Any
 ) -> list[AnyStr]:
     """Apply `split` after applying backrefs."""
 
-    flags = args[3] if len(args) > 3 else kwargs.get('flags', 0)
-    return _re.split(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+    return _re.split(_apply_search_backrefs(pattern, flags), string, maxsplit, flags, *args, **kwargs)
 
 
 def findall(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
+    flags: int | _re.RegexFlag = 0,
     *args: Any,
     **kwargs: Any
 ) -> list[AnyStr] | list[tuple[AnyStr, ...]]:
     """Apply `findall` after applying backrefs."""
 
-    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
-    return _re.findall(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+    return _re.findall(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
 
 
 def finditer(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
+    flags: int | _re.RegexFlag = 0,
     *args: Any,
     **kwargs: Any
 ) -> Iterator[Match[AnyStr]]:
     """Apply `finditer` after applying backrefs."""
 
-    flags = args[2] if len(args) > 2 else kwargs.get('flags', 0)
-    return _re.finditer(_apply_search_backrefs(pattern, flags), string, *args, **kwargs)
+    return _re.finditer(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
 
 
 def sub(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
+    count: int = 0,
+    flags: int | _re.RegexFlag = 0,
     *args: Any,
     **kwargs: Any
 ) -> AnyStr:
     """Apply `sub` after applying backrefs."""
 
-    flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (str, bytes))
     if is_replace and cast(ReplaceTemplate[AnyStr], repl).use_format:
@@ -554,7 +556,13 @@ def sub(
 
     pattern = compile_search(pattern, flags)
     return _re.sub(
-        pattern, (compile_replace(pattern, repl) if is_replace or is_string else repl), string, *args, **kwargs
+        pattern,
+        (compile_replace(pattern, repl) if is_replace or is_string else repl),
+        string,
+        count,
+        0,
+        *args,
+        **kwargs
     )
 
 
@@ -562,12 +570,13 @@ def subf(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
+    count: int = 0,
+    flags: int | _re.RegexFlag = 0,
     *args: Any,
     **kwargs: Any
 ) -> AnyStr:
     """Apply `sub` with format style replace."""
 
-    flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (str, bytes))
     if is_replace and not cast(ReplaceTemplate[AnyStr], repl).use_format:
@@ -576,8 +585,13 @@ def subf(
     pattern = compile_search(pattern, flags)
     rflags = FORMAT if is_string else 0
     return _re.sub(
-        pattern, (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl), string,
-        *args, **kwargs
+        pattern,
+        (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl),
+        string,
+        count,
+        0,
+        *args,
+        **kwargs
     )
 
 
@@ -585,12 +599,13 @@ def subn(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
+    count: int = 0,
+    flags: int | _re.RegexFlag = 0,
     *args: Any,
     **kwargs: Any
 ) -> tuple[AnyStr, int]:
     """Apply `subn` with format style replace."""
 
-    flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (str, bytes))
     if is_replace and cast(ReplaceTemplate[AnyStr], repl).use_format:
@@ -598,7 +613,13 @@ def subn(
 
     pattern = compile_search(pattern, flags)
     return _re.subn(
-        pattern, (compile_replace(pattern, repl) if is_replace or is_string else repl), string, *args, **kwargs
+        pattern,
+        (compile_replace(pattern, repl) if is_replace or is_string else repl),
+        string,
+        count,
+        0,
+        *args,
+        **kwargs
     )
 
 
@@ -606,12 +627,13 @@ def subfn(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     repl: AnyStr | Callable[..., AnyStr],
     string: AnyStr,
+    count: int = 0,
+    flags: int | _re.RegexFlag = 0,
     *args: Any,
     **kwargs: Any
 ) -> tuple[AnyStr, int]:
     """Apply `subn` after applying backrefs."""
 
-    flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (str, bytes))
     if is_replace and not cast(ReplaceTemplate[AnyStr], repl).use_format:
@@ -620,8 +642,13 @@ def subfn(
     pattern = compile_search(pattern, flags)
     rflags = FORMAT if is_string else 0
     return _re.subn(
-        pattern, (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl), string,
-        *args, **kwargs
+        pattern,
+        (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl),
+        string,
+        count,
+        0,
+        *args,
+        **kwargs
     )
 
 

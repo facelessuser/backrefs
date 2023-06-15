@@ -1,9 +1,10 @@
 # Changelog
 
-<!-- ## 5.5
+## 5.5
 
 - **NEW**: `\e` and `\h` have both been deprecated in 6.0. Please migrate to using `\x1b` and `\p{Horiz_Space}` in their
-  respective place. -->
+  respective place.
+- **FIX**: Fix flag issue with `sub` functions.
 
 ## 5.4
 
