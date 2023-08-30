@@ -582,7 +582,6 @@ def subf(
 ) -> AnyStr:
     """Wrapper for `subf`."""
 
-    flags = args[4] if len(args) > 4 else kwargs.get('flags', 0)
     is_replace = _is_replace(repl)
     is_string = isinstance(repl, (str, bytes))
     if is_replace and not cast(ReplaceTemplate[AnyStr], repl).use_format:
@@ -668,7 +667,6 @@ def split(
 ) -> list[AnyStr]:
     """Wrapper for `split`."""
 
-    flags = args[3] if len(args) > 3 else kwargs.get('flags', 0)
     return cast(
         'list[AnyStr]',
         _regex.split(_apply_search_backrefs(pattern, flags), string, maxsplit, flags, *args, **kwargs)
