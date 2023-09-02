@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.6.post1
+
+-   **NEW**: Update project metadata to indicate Python 3.12 support.
+
 ## 5.6
 
 -   **NEW**: Officially support Python 3.12.
