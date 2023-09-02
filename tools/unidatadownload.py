@@ -17,7 +17,7 @@ def zip_unicode(output, version):
 
     print('Zipping %s.zip...' % version)
 
-    for root, dirs, files in os.walk(target):
+    for root, _, files in os.walk(target):
         for file in files:
             if file.endswith('.txt'):
                 zipper.write(os.path.join(root, file), arcname=file)

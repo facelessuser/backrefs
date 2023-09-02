@@ -425,7 +425,7 @@ def compile(  # noqa A001
     flags: int = 0,
     auto_compile: bool | None = None,
     **kwargs: Any
-) -> 'Bregex[AnyStr]':
+) -> Bregex[AnyStr]:
     """Compile both the search or search and replace into one object."""
 
     if isinstance(pattern, Bregex):

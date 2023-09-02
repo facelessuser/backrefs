@@ -255,8 +255,8 @@ class _SearchParser(Generic[AnyStr]):
                 value.append(c)
                 c = next(i)
             value.append(c)
-        except StopIteration:
-            raise SyntaxError("Unmatched '(' at {}!".format(index - 1))
+        except StopIteration as e:
+            raise SyntaxError(f"Unmatched '(' at {index - 1}!") from e
 
         return ''.join(value) if value else None
 
@@ -429,12 +429,12 @@ class _SearchParser(Generic[AnyStr]):
         """The main group: group 0."""
 
         current = []
-        while True:
-            try:
+        try:
+            while True:
                 t = next(i)
                 current.extend(self.normal(t, i))
-            except StopIteration:
-                break
+        except StopIteration:
+            pass
         return current
 
     def _parse(self, search: str) -> str:
@@ -459,17 +459,17 @@ class _SearchParser(Generic[AnyStr]):
             retry = False
             try:
                 new_pattern = self.main_group(i)
-            except GlobalRetryException:
+            except GlobalRetryException as e:
                 # Prevent a loop of retry over and over for a pattern like ((?V0)(?V1))
                 # or on V0 (?-x:(?x))
                 if self.temp_global_flag_swap['version']:
                     if self.global_flag_swap['version']:
-                        raise LoopException('Global version flag recursion.')
+                        raise LoopException('Global version flag recursion.') from e
                     else:
                         self.global_flag_swap["version"] = True
                 if self.temp_global_flag_swap['verbose']:
                     if self.global_flag_swap['verbose']:
-                        raise LoopException('Global verbose flag recursion.')
+                        raise LoopException('Global verbose flag recursion.') from e
                     else:
                         self.global_flag_swap['verbose'] = True
                 self.temp_global_flag_swap = {
@@ -582,8 +582,8 @@ class _ReplaceParser(Generic[AnyStr]):
                             while c != ']':
                                 findex.append(c)
                                 c = self.format_next(i)
-                        except StopIteration:
-                            raise SyntaxError("Unmatched '[' at {}".format(sindex - 1))
+                        except StopIteration as e:
+                            raise SyntaxError(f"Unmatched '[' at {sindex - 1}") from e
                         idx = self.parse_format_index(''.join(findex))
                         value.append((_util.FMT_INDEX, idx))
                         c = self.format_next(i)
@@ -599,7 +599,7 @@ class _ReplaceParser(Generic[AnyStr]):
                 if c == '!':
                     c = self.format_next(i)
                     if c not in _FMT_CONV_TYPE:
-                        raise SyntaxError("Invalid conversion type at {}!".format(i.index - 1))
+                        raise SyntaxError(f"Invalid conversion type at {i.index - 1}!")
                     value.append((_util.FMT_CONV, c))
                     c = self.format_next(i)
 
@@ -637,7 +637,7 @@ class _ReplaceParser(Generic[AnyStr]):
                             fill = None
                         if fill is not None:
                             if c not in ('<', '>', '^'):
-                                raise SyntaxError('Invalid format spec char at {}!'.format(i.index - 1))
+                                raise SyntaxError(f'Invalid format spec char at {i.index - 1}!')
                             align = c
                             c = self.format_next(i)
 
@@ -670,9 +670,9 @@ class _ReplaceParser(Generic[AnyStr]):
                     )
 
             if c != '}':
-                raise SyntaxError("Unmatched '{{' at {}".format(index - 1))
-        except StopIteration:
-            raise SyntaxError("Unmatched '{{' at {}!".format(index - 1))
+                raise SyntaxError(f"Unmatched '{{' at {index - 1}")
+        except StopIteration as e:
+            raise SyntaxError(f"Unmatched '{{' at {index - 1}!") from e
 
         return field, value
 
@@ -693,7 +693,7 @@ class _ReplaceParser(Generic[AnyStr]):
                 self.get_single_stack()
                 self.result.append(t)
             else:
-                raise SyntaxError("Unmatched '}}' at {}!".format(i.index - 2))
+                raise SyntaxError(f"Unmatched '}}' at {i.index - 2}!")
 
     def get_octal(self, c: str, i: _util.StringIter) -> str | None:
         """Get octal."""
@@ -703,14 +703,14 @@ class _ReplaceParser(Generic[AnyStr]):
         zero_count = 0
         try:
             if c == '0':
-                for x in range(3):
+                for _ in range(3):
                     if c != '0':
                         break
                     value.append(c)
                     c = next(i)
             zero_count = len(value)
             if zero_count < 3:
-                for x in range(3 - zero_count):
+                for _ in range(3 - zero_count):
                     if c not in _OCTAL:
                         break
                     value.append(c)
@@ -743,7 +743,7 @@ class _ReplaceParser(Generic[AnyStr]):
             if self.use_format and value in _CURLY_BRACKETS_ORD:
                 self.handle_format(chr(value), i)
             elif value <= 0xFF:
-                self.result.append('\\{:03o}'.format(value))
+                self.result.append(f'\\{value:03o}')
             else:
                 self.result.append(chr(value))
 
@@ -754,13 +754,13 @@ class _ReplaceParser(Generic[AnyStr]):
         value = []
         try:
             if next(i) != '{':
-                raise SyntaxError("Named Unicode missing '{{' at {}!".format(i.index - 1))
+                raise SyntaxError(f"Named Unicode missing '{{' at {i.index - 1}!")
             c = next(i)
             while c != '}':
                 value.append(c)
                 c = next(i)
-        except StopIteration:
-            raise SyntaxError("Unmatched '{{' at {}!".format(index))
+        except StopIteration as e:
+            raise SyntaxError(f"Unmatched '{{' at {index}!") from e
 
         return ''.join(value)
 
@@ -777,7 +777,7 @@ class _ReplaceParser(Generic[AnyStr]):
         if self.use_format and value in _CURLY_BRACKETS_ORD:
             self.handle_format(chr(value), i)
         elif value <= 0xFF:
-            self.result.append('\\{:03o}'.format(value))
+            self.result.append(f'\\{value:03o}')
         else:
             self.result.append(chr(value))
 
@@ -785,37 +785,37 @@ class _ReplaceParser(Generic[AnyStr]):
         """Get narrow Unicode."""
 
         value = []
-        for x in range(3):
+        for _ in range(3):
             c = next(i)
             if c == '0':
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError('Invalid wide Unicode character at {}!'.format(i.index - 1))
+                raise SyntaxError(f'Invalid wide Unicode character at {i.index - 1}!')
 
         c = next(i)
         if c in ('0', '1'):
             value.append(c)
         else:  # pragma: no cover
-            raise SyntaxError('Invalid wide Unicode character at {}!'.format(i.index - 1))
+            raise SyntaxError(f'Invalid wide Unicode character at {i.index - 1}!')
 
-        for x in range(4):
+        for _ in range(4):
             c = next(i)
             if c.lower() in _HEX:
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError('Invalid wide Unicode character at {}!'.format(i.index - 1))
+                raise SyntaxError(f'Invalid wide Unicode character at {i.index - 1}!')
         return ''.join(value)
 
     def get_narrow_unicode(self, i: _util.StringIter) -> str:
         """Get narrow Unicode."""
 
         value = []
-        for x in range(4):
+        for _ in range(4):
             c = next(i)
             if c.lower() in _HEX:
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError('Invalid Unicode character at {}!'.format(i.index - 1))
+                raise SyntaxError(f'Invalid Unicode character at {i.index - 1}!')
         return ''.join(value)
 
     def parse_unicode(self, i: _util.StringIter, wide: bool = False) -> None:
@@ -832,7 +832,7 @@ class _ReplaceParser(Generic[AnyStr]):
         if self.use_format and value in _CURLY_BRACKETS_ORD:
             self.handle_format(chr(value), i)
         elif value <= 0xFF:
-            self.result.append('\\{:03o}'.format(value))
+            self.result.append(f'\\{value:03o}')
         else:
             self.result.append(chr(value))
 
@@ -840,12 +840,12 @@ class _ReplaceParser(Generic[AnyStr]):
         """Get byte."""
 
         value = []
-        for x in range(2):
+        for _ in range(2):
             c = next(i)
             if c.lower() in _HEX:
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError('Invalid byte character at {}!'.format(i.index - 1))
+                raise SyntaxError(f'Invalid byte character at {i.index - 1}!')
         return ''.join(value)
 
     def parse_bytes(self, i: _util.StringIter) -> None:
@@ -861,7 +861,7 @@ class _ReplaceParser(Generic[AnyStr]):
         if self.use_format and value in _CURLY_BRACKETS_ORD:
             self.handle_format(chr(value), i)
         else:
-            self.result.append('\\{:03o}'.format(value))
+            self.result.append(f'\\{value:03o}')
 
     def get_named_group(self, t: str, i: _util.StringIter) -> str:
         """Get group number."""
@@ -871,7 +871,7 @@ class _ReplaceParser(Generic[AnyStr]):
         try:
             c = next(i)
             if c != "<":
-                raise SyntaxError("Group missing '<' at {}!".format(i.index - 1))
+                raise SyntaxError(f"Group missing '<' at {i.index - 1}!")
             value.append(c)
             c = next(i)
             if c in _DIGIT:
@@ -891,9 +891,9 @@ class _ReplaceParser(Generic[AnyStr]):
                     c = next(i)
                 value.append(c)
             else:
-                raise SyntaxError("Invalid group character at {}!".format(i.index - 1))
-        except StopIteration:
-            raise SyntaxError("Unmatched '<' at {}!".format(index))
+                raise SyntaxError(f"Invalid group character at {i.index - 1}!")
+        except StopIteration as e:
+            raise SyntaxError(f"Unmatched '<' at {index}!") from e
 
         return ''.join(value)
 
@@ -995,8 +995,8 @@ class _ReplaceParser(Generic[AnyStr]):
 
         i = _util.StringIter(template)
 
-        while True:
-            try:
+        try:
+            while True:
                 t = next(i)
                 if self.use_format and t in _CURLY_BRACKETS:
                     self.handle_format(t, i)
@@ -1009,9 +1009,8 @@ class _ReplaceParser(Generic[AnyStr]):
                         raise
                 else:
                     self.result.append(t)
-
-            except StopIteration:
-                break
+        except StopIteration:
+            pass
 
         if len(self.result) > 1:
             self.literal_slots.append("".join(self.result))
@@ -1169,7 +1168,7 @@ class _ReplaceParser(Generic[AnyStr]):
                 (
                     (self.span_stack[-1] if self.span_stack else None),
                     self.get_single_stack(),
-                    (tuple() if self.is_bytes else '') if capture is None else capture
+                    (() if self.is_bytes else '') if capture is None else capture
                 )
             )
         )
@@ -1180,7 +1179,7 @@ class _ReplaceParser(Generic[AnyStr]):
 
         return self._original
 
-    def parse(self) -> 'ReplaceTemplate[AnyStr]':
+    def parse(self) -> ReplaceTemplate[AnyStr]:
         """Parse template."""
 
         if not isinstance(self.pattern.pattern, type(self._original)):
@@ -1325,14 +1324,14 @@ class ReplaceTemplate(_util.Immutable, Generic[AnyStr]):
                         l = cast('AnyStr | None', m.group(g_index))
                         if l is None:
                             l = sep
-                    except IndexError:  # pragma: no cover
-                        raise IndexError("'{}' is out of range!".format(g_index))
+                    except IndexError as e:  # pragma: no cover
+                        raise IndexError(f"'{g_index}' is out of range!") from e
                 else:
                     # String format replace
                     try:
                         obj = cast('list[AnyStr]', m.captures(g_index))
-                    except IndexError:  # pragma: no cover
-                        raise IndexError("'{}' is out of range!".format(g_index))
+                    except IndexError as e:  # pragma: no cover
+                        raise IndexError(f"'{g_index}' is out of range!") from e
                     l = _util.format_captures(
                         obj,
                         capture,
