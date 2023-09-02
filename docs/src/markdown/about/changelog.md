@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.6
+
+-   **NEW**: Officially support Python 3.12.
+
 ## 5.5.1
 
 -   **FIX**: Fix some flag issues in `bregex`.

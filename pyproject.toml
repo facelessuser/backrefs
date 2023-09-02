@@ -9,7 +9,7 @@ name = "backrefs"
 description = "A wrapper around re and regex that adds additional back references."
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 authors = [
     { name = "Isaac Muse", email = "Isaac.Muse@gmail.com" },
 ]
@@ -19,9 +19,12 @@ keywords = [
 ]
 dynamic = [
     "classifiers",
-    "dependencies",
-    "version",
-    "optional-dependencies"
+    "version"
+]
+
+[project.optional-dependencies]
+extras = [
+    "regex"
 ]
 
 [project.urls]
@@ -49,8 +52,7 @@ include = [
     "/tools/unicodedata/LICENSE",
     "/.pyspelling.yml",
     "/.coveragerc",
-    "/mkdocs.yml",
-    "/tox.ini",
+    "/mkdocs.yml"
 ]
 
 exclude = [
@@ -84,3 +86,83 @@ warn_unused_ignores = false
 [[tool.mypy.overrides]]
 module = 'backrefs.uniprops.*'
 implicit_reexport = true
+
+[tool.ruff]
+line-length = 120
+
+extend-exclude = [
+    "backrefs/uniprops/unidata/*"
+]
+
+select = [
+    "A",    # flake8-builtins
+    "B",    # flake8-bugbear
+    "D",    # pydocstyle
+    "C4",   # flake8-comprehensions
+    "N",    # pep8-naming
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "PGH",  # pygrep-hooks
+    "RUF",  # ruff
+    # "UP",   # pyupgrade
+    "W",    # pycodestyle
+    "YTT",  # flake8-2020,
+    "PERF"  # Perflint
+]
+
+ignore = [
+    "B034",
+    "E741",
+    "D202",
+    "D401",
+    "D212",
+    "D203",
+    "N802",
+    "N801",
+    "N803",
+    "N806",
+    "N818",
+    "RUF012",
+    "RUF005",
+    "PGH004",
+    "RUF100"
+]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = true
+envlist =
+    py38,py39,py310,py311,py312,
+    lint
+
+[testenv]
+passenv = *
+deps=
+    .[extras]
+    -r requirements/test.txt
+commands=
+    {envpython} tools/unidatadownload.py
+    {envpython} tools/unipropgen.py backrefs/uniprops/unidata
+    {envpython} -m mypy
+    {envpython} -m pytest --cov backrefs --cov-append tests
+    {envpython} -m coverage html -d {envtmpdir}/coverage
+    {envpython} -m coverage xml
+    {envpython} -m coverage report --show-missing
+
+[testenv:documents]
+passenv = *
+deps=
+    -r requirements/docs.txt
+commands=
+    {envpython} -m mkdocs build --clean --verbose --strict
+    {envbindir}/pyspelling
+
+[testenv:lint]
+passenv = *
+deps=
+    .
+    -r requirements/lint.txt
+commands=
+    "{envbindir}"/ruff check .
+"""

@@ -19,9 +19,9 @@ UNICODE_RANGE = (0x0000, 0x10FFFF)
 ASCII_RANGE = (0x00, 0xFF)
 ASCII_LIMIT = (0x00, 0x7F)
 
-ALL_CHARS = frozenset([x for x in range(UNICODE_RANGE[0], UNICODE_RANGE[1] + 1)])
-ASCII_UNUSED = frozenset([x for x in range(0x80, UNICODE_RANGE[1] + 1)])
-ALL_ASCII = frozenset([x for x in range(ASCII_RANGE[0], ASCII_RANGE[1] + 1)])
+ALL_CHARS = frozenset(list(range(UNICODE_RANGE[0], UNICODE_RANGE[1] + 1)))
+ASCII_UNUSED = frozenset(list(range(0x80, UNICODE_RANGE[1] + 1)))
+ALL_ASCII = frozenset(list(range(ASCII_RANGE[0], ASCII_RANGE[1] + 1)))
 HEADER = '''\
 """Unicode Properties from Unicode version {} (autogen)."""
 {}'''
@@ -58,7 +58,7 @@ def create_span(unirange, is_bytes=False):
             return []
         if unirange[1] > MAXVALIDASCII:
             unirange[1] = MAXVALIDASCII
-    return [x for x in range(unirange[0], unirange[1] + 1)]
+    return list(range(unirange[0], unirange[1] + 1))
 
 
 def not_explicitly_defined(table, name, is_bytes=False):
@@ -67,7 +67,7 @@ def not_explicitly_defined(table, name, is_bytes=False):
     name = name.lower()
     all_chars = ALL_CHARS
     s = set()
-    for k, v in table.items():
+    for v in table.values():
         s.update(v)
     if name in table:
         table[name] = list(set(table[name]) | (all_chars - s))
@@ -251,7 +251,7 @@ def gen_blocks(output, ascii_props=False, append=False, prefix="", aliases=None)
         f.write('%s_blocks: dict[str, str] = {' % prefix)
         no_block = []
         last = -1
-        found = set(['noblock'])
+        found = {'noblock'}
 
         max_limit = MAXVALIDASCII if ascii_props else MAXUNICODE
         max_range = MAXUNICODE
@@ -612,7 +612,7 @@ def gen_nf_quick_check(output, ascii_props=False, append=False, prefix="", alias
 
                 nf[name][subvalue].extend(span)
 
-    for k1, v1 in nf.items():
+    for v1 in nf.values():
         temp = set()
         for k2 in list(v1.keys()):
             temp |= set(v1[k2])
@@ -838,7 +838,7 @@ def gen_uposix(table, posix_table, ascii_props):
     posix_table["posixpunct"] = list(s)
 
     # `Digit: [0-9]`
-    s = set([x for x in range(0x30, 0x39 + 1)])
+    s = set(range(0x30, 0x39 + 1))
     posix_table["posixdigit"] = list(s)
 
     # `XDigit: [\p{Nd}\p{HexDigit}]`
@@ -846,9 +846,9 @@ def gen_uposix(table, posix_table, ascii_props):
     posix_table["xdigit"] = list(s)
 
     # `XDigit: [A-Fa-f0-9]`
-    s = set([x for x in range(0x30, 0x39 + 1)])
-    s |= set([x for x in range(0x41, 0x46 + 1)])
-    s |= set([x for x in range(0x61, 0x66 + 1)])
+    s = set(range(0x30, 0x39 + 1))
+    s |= set(range(0x41, 0x46 + 1))
+    s |= set(range(0x61, 0x66 + 1))
     posix_table["posixxdigit"] = list(s)
 
     # `Alnum: [\p{PosixAlpha}\p{PosixDigit}]`
@@ -883,7 +883,7 @@ def gen_uposix(table, posix_table, ascii_props):
     posix_table["posixprint"] = list(s)
 
     # `ASCII: [\x00-\x7F]`
-    s = set([x for x in range(0, 0x7F + 1)])
+    s = set(range(0, 0x7F + 1))
     posix_table["posixascii"] = list(s)
 
 
@@ -1056,15 +1056,15 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
                     table['l']['c'].append(i)
 
     s = set()
-    for k, v in table.items():
-        for k2, v2 in v.items():
+    for v in table.values():
+        for v2 in v.values():
             s.update(v2)
     table['c']['n'] = list(all_chars - s)
 
     # Create inverse of each category
     for k1, v1 in table.items():
         inverse_category = set()
-        for k2, v2 in v1.items():
+        for v2 in v1.values():
             s = set(v2)
             inverse_category |= s
         itable[k1]['^'] = list(all_chars - inverse_category)

@@ -122,7 +122,7 @@ class TestSearchTemplate(unittest.TestCase):
         bregex.purge()
         self.assertEqual(bregex._get_cache_size(), 0)
         self.assertEqual(bregex._get_cache_size(True), 0)
-        for x in range(1000):
+        for _ in range(1000):
             value = str(random.randint(1, 10000))
             p = bregex.compile(value)
             p.sub('', value)
@@ -1996,16 +1996,12 @@ class TestConvenienceFunctions(unittest.TestCase):
     def test_splititer(self):
         """Test that `split` works."""
 
-        array = []
-        for x in bregex.splititer(r'\W+', "This is a test for split!"):
-            array.append(x)
-
+        array = list(bregex.splititer(r'\W+', "This is a test for split!"))
         self.assertEqual(array, ["This", "is", "a", "test", "for", "split", ""])
 
         array = []
         p = bregex.compile(r'\W+')
-        for x in p.splititer("This is a test for split!"):
-            array.append(x)
+        array = list(p.splititer("This is a test for split!"))
 
         self.assertEqual(array, ["This", "is", "a", "test", "for", "split", ""])
 
@@ -2101,14 +2097,14 @@ class TestConvenienceFunctions(unittest.TestCase):
         """Test that `finditer` works."""
 
         count = 0
-        for m in bregex.finditer(r'\w+', 'This is a test for finditer!'):
+        for _ in bregex.finditer(r'\w+', 'This is a test for finditer!'):
             count += 1
 
         self.assertEqual(count, 6)
 
         count = 0
         p = bregex.compile(r'\w+')
-        for m in p.finditer('This is a test for finditer!'):
+        for _ in p.finditer('This is a test for finditer!'):
             count += 1
 
         self.assertEqual(count, 6)

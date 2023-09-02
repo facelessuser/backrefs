@@ -490,7 +490,7 @@ def get_unicode_property(prop: str, value: str | None = None, mode: int = MODE_U
             if value in ('n', 'no', 'f', 'false'):
                 negate = not negate
             elif value not in ('y', 'yes', 't', 'true'):
-                raise ValueError("'{}' is not a valid value for the binary property '{}'".format(value, prop))
+                raise ValueError(f"'{value}' is not a valid value for the binary property '{prop}'")
 
             return get_binary_property('^' + name if negate else name, mode)
         else:
@@ -555,9 +555,9 @@ def get_unicode_property(prop: str, value: str | None = None, mode: int = MODE_U
             elif name == 'verticalorientation':
                 return get_vertical_orientation_property(value, mode)
             else:
-                raise ValueError("'{}={}' does not have a valid property name".format(prop, value))
-        except Exception:
-            raise ValueError("'{}={}' does not appear to be a valid property".format(prop, value))
+                raise ValueError(f"'{prop}={value}' does not have a valid property name")
+        except Exception as e:
+            raise ValueError(f"'{prop}={value}' does not appear to be a valid property") from e
 
     try:
         return get_gc_property(prop, mode)
@@ -589,4 +589,4 @@ def get_unicode_property(prop: str, value: str | None = None, mode: int = MODE_U
     except Exception:
         pass
 
-    raise ValueError("'{}' does not appear to be a valid property".format(prop))
+    raise ValueError(f"'{prop}' does not appear to be a valid property")

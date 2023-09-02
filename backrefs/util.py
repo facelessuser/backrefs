@@ -28,7 +28,7 @@ class StringIter:
         self._string = text
         self._index = 0
 
-    def __iter__(self) -> "StringIter":
+    def __iter__(self) -> StringIter:
         """Iterate."""
 
         return self
@@ -58,8 +58,8 @@ class StringIter:
         try:
             char = self._string[self._index]
             self._index += 1
-        except IndexError:
-            raise StopIteration
+        except IndexError as e:
+            raise StopIteration from e
 
         return char
 
@@ -136,16 +136,16 @@ def format_captures(
     return converter(capture)
 
 
-class Immutable(object):
+class Immutable:
     """Immutable."""
 
-    __slots__: tuple[Any, ...] = tuple()
+    __slots__: tuple[Any, ...] = ()
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize."""
 
         for k, v in kwargs.items():
-            super(Immutable, self).__setattr__(k, v)
+            super().__setattr__(k, v)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Prevent mutability."""

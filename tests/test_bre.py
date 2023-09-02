@@ -207,7 +207,7 @@ class TestSearchTemplate(unittest.TestCase):
         bre.purge()
         self.assertEqual(bre._get_cache_size(), 0)
         self.assertEqual(bre._get_cache_size(True), 0)
-        for x in range(1000):
+        for _ in range(1000):
             value = str(random.randint(1, 10000))
             p = bre.compile(value)
             p.sub('', value)
@@ -2439,14 +2439,14 @@ class TestConvenienceFunctions(unittest.TestCase):
         """Test that `finditer` works."""
 
         count = 0
-        for m in bre.finditer(r'\w+', 'This is a test for finditer!'):
+        for _ in bre.finditer(r'\w+', 'This is a test for finditer!'):
             count += 1
 
         self.assertEqual(count, 6)
 
         count = 0
         p = bre.compile(r'\w+')
-        for m in p.finditer('This is a test for finditer!'):
+        for _ in p.finditer('This is a test for finditer!'):
             count += 1
 
         self.assertEqual(count, 6)
