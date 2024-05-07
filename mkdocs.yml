@@ -157,7 +157,9 @@ extra:
 
 plugins:
   - search
-  - git-revision-date-localized
+  - git-revision-date-localized:
+      fallback_to_build_date: true
+      strict: false
   - minify:
       minify_html: true
   - mkdocs_pymdownx_material_extras
