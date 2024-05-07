@@ -94,7 +94,7 @@ extend-exclude = [
     "backrefs/uniprops/unidata/*"
 ]
 
-select = [
+lint.select = [
     "A",    # flake8-builtins
     "B",    # flake8-bugbear
     "D",    # pydocstyle
@@ -110,7 +110,7 @@ select = [
     "PERF"  # Perflint
 ]
 
-ignore = [
+lint.ignore = [
     "B034",
     "E741",
     "D202",
