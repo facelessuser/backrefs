@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.7
+
+-   **NEW**: Add support for Python 3.13 beta.
+
 ## 5.6.post1
 
 -   **Fix**: Update project metadata to indicate Python 3.12 support.
