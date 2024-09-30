@@ -23,7 +23,7 @@ Back\ References      | Description
 `\P{UnicodeProperty}` | Inverse Unicode property character class. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
 `\PX`                 | Inverse Unicode property character class where `X` is the uppercase letter that represents the General Category property. For instance, `\PL` would be equivalent to `\P{L}` or `\P{Letter}`.
 `[[:alnum:]]`         | Though not really a back reference, support for POSIX style character classes is available. See [POSIX Style Properties](#posix-style-properties) for more info.
-`\N{UnicodeName}`     | Named characters are are normally ignored in Re, but Backrefs adds support for them.
+`\N{UnicodeName}`     | Named characters are normally ignored in Re, but Backrefs adds support for them.
 `\m`                  | Start word boundary. Translates to `\b(?=\w)`.
 `\M`                  | End word boundary. Translates to `\b(?<=\w)`.
 `\h`                  | **Deprecated: Use `\p{Horiz_Space}` instead.** Horizontal whitespace. Equivalent to using `[[:blank:]]` or `[\t\p{Zs}]`.
@@ -73,7 +73,7 @@ Back\ References     | Description
 `\U`                 | Wide Unicode character `\U00000057`. Re doesn't translate this notation in raw strings (`#!py3 r"..."`), and Regex doesn't in format templates in raw strings (`#!py3 r"{} {}"`).  This adds support for them.
 `\u`                 | Narrow Unicode character `\u0057`. Re doesn't translate this notation in raw strings (`#!py3 r"..."`), and Regex doesn't in format templates in raw strings (`#!py3 r"{} {}"`).  This adds support for them.
 `\x`                 | Byte character `\x57`. Re doesn't translate this notation in raw strings (`#!py3 r"..."`), and Regex doesn't in format templates in raw strings (`#!py3 r"{} {}"`).  This adds support for them.
-`\N{UnicodeName}`    | Named characters are are normally ignored in Re, but Backrefs adds support for them.
+`\N{UnicodeName}`    | Named characters are normally ignored in Re, but Backrefs adds support for them.
 
 /// tip
 Complex configurations of casing should work fine.

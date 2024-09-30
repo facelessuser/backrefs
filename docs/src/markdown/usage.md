@@ -135,7 +135,7 @@ why.
 1.  Regex's original implementation is very much like it's non-format style replacement accept for two differences: you
     can access individual captures and you cannot use Python string back references such as specifying Unicode via
     `\u<code>`, etc. In Backrefs, we've enhanced the syntax -- for both Re and Regex -- to allow back references to work
-    along side brace replacements. This means you can use string back references and and built-in Backrefs features like
+    along side brace replacements. This means you can use string back references and built-in Backrefs features like
     `\C...\E` or `\L...\E`.
 
     ```pycon3
