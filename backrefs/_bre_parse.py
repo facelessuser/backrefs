@@ -204,7 +204,7 @@ class _SearchParser(Generic[AnyStr]):
             c = next(i)
             if c.upper() in _ASCII_LETTERS:
                 prop.append(c)
-            elif not brackets and c != '{' or brackets and c != ':':
+            elif (not brackets and c != '{') or (brackets and c != ':'):
                 raise SyntaxError(f"Unicode property missing '{{' at {i.index - 1}!")
             else:
                 c = next(i)
