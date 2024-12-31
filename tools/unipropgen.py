@@ -744,9 +744,9 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
     # One off Unicode property found under https://unicode.org/reports/tr18/#Compatibility_Properties
     # `Word: [\p{alnum}\p{M}\p{Pc}\p{JoinControl}]`
     s = set(binary["alnum"])
-    s |= set(table['m']['c'])
-    s |= set(table['m']['e'])
-    s |= set(table['m']['n'])
+    for k, v in table['m'].items():
+        if not k.startswith('^'):
+            s |= set(v)
     s |= set(table["p"]["c"])
     s |= set(binary["joincontrol"])
     binary["word"] = list(s)
