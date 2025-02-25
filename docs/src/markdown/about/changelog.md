@@ -1,5 +1,10 @@
 # Changelog
 
+## 5.8
+
+-   **NEW**: Drop Python 3.8.
+-   **FIX**: Deprecation warnings.
+
 ## 5.7
 
 -   **NEW**: Add support for Python 3.13 beta.
