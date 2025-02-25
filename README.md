@@ -15,7 +15,7 @@ Python's Re and/or Regex.  The supported back references actually vary depending
 used as the engine may already have support for some.
 
 ```python
-from backrefs import bre
+>>> from backrefs import bre
 >>> pattern = bre.compile(r'(\p{Letter}+)')
 >>> pattern.sub(r'\C\1\E', 'sometext')
 'SOMETEXT'
