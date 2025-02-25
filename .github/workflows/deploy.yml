@@ -41,9 +41,6 @@ jobs:
       matrix:
         distribution: [bdist_wheel]
         python-3-version: [9, '10', '11', '12', '13']
-        include:
-          - distribution: sdist
-            python-3-version: '13'
 
     name: Build Python 3.${{ matrix.python-3-version }} ${{ matrix.distribution }}
     runs-on: ubuntu-latest
