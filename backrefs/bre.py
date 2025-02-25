@@ -481,24 +481,22 @@ def match(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     flags: int | _re.RegexFlag = 0,
-    *args: Any,
     **kwargs: Any
 ) -> Match[AnyStr] | None:
     """Apply `match` after applying backrefs."""
 
-    return _re.match(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
+    return _re.match(_apply_search_backrefs(pattern, flags), string, flags=flags, **kwargs)
 
 
 def fullmatch(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     flags: int | _re.RegexFlag = 0,
-    *args: Any,
     **kwargs: Any
 ) -> Match[AnyStr] | None:
     """Apply `fullmatch` after applying backrefs."""
 
-    return _re.fullmatch(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
+    return _re.fullmatch(_apply_search_backrefs(pattern, flags), string, flags=flags, **kwargs)
 
 
 def split(
@@ -506,36 +504,39 @@ def split(
     string: AnyStr,
     maxsplit: int = 0,
     flags: int | _re.RegexFlag = 0,
-    *args: Any,
     **kwargs: Any
 ) -> list[AnyStr]:
     """Apply `split` after applying backrefs."""
 
-    return _re.split(_apply_search_backrefs(pattern, flags), string, maxsplit, flags, *args, **kwargs)
+    return _re.split(
+        _apply_search_backrefs(pattern, flags),
+        string,
+        maxsplit=maxsplit,
+        flags=flags,
+        **kwargs
+    )
 
 
 def findall(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     flags: int | _re.RegexFlag = 0,
-    *args: Any,
     **kwargs: Any
 ) -> list[AnyStr] | list[tuple[AnyStr, ...]]:
     """Apply `findall` after applying backrefs."""
 
-    return _re.findall(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
+    return _re.findall(_apply_search_backrefs(pattern, flags), string, flags=flags, **kwargs)
 
 
 def finditer(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     flags: int | _re.RegexFlag = 0,
-    *args: Any,
     **kwargs: Any
 ) -> Iterator[Match[AnyStr]]:
     """Apply `finditer` after applying backrefs."""
 
-    return _re.finditer(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
+    return _re.finditer(_apply_search_backrefs(pattern, flags), string, flags=flags, **kwargs)
 
 
 def sub(
@@ -544,7 +545,6 @@ def sub(
     string: AnyStr,
     count: int = 0,
     flags: int | _re.RegexFlag = 0,
-    *args: Any,
     **kwargs: Any
 ) -> AnyStr:
     """Apply `sub` after applying backrefs."""
@@ -559,9 +559,8 @@ def sub(
         pattern,
         (compile_replace(pattern, repl) if is_replace or is_string else repl),
         string,
-        count,
-        0,
-        *args,
+        count=count,
+        flags=0,
         **kwargs
     )
 
@@ -572,7 +571,6 @@ def subf(
     string: AnyStr,
     count: int = 0,
     flags: int | _re.RegexFlag = 0,
-    *args: Any,
     **kwargs: Any
 ) -> AnyStr:
     """Apply `sub` with format style replace."""
@@ -588,9 +586,8 @@ def subf(
         pattern,
         (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl),
         string,
-        count,
-        0,
-        *args,
+        count=count,
+        flags=0,
         **kwargs
     )
 
@@ -601,7 +598,6 @@ def subn(
     string: AnyStr,
     count: int = 0,
     flags: int | _re.RegexFlag = 0,
-    *args: Any,
     **kwargs: Any
 ) -> tuple[AnyStr, int]:
     """Apply `subn` with format style replace."""
@@ -616,9 +612,8 @@ def subn(
         pattern,
         (compile_replace(pattern, repl) if is_replace or is_string else repl),
         string,
-        count,
-        0,
-        *args,
+        count=count,
+        flags=0,
         **kwargs
     )
 
@@ -629,7 +624,6 @@ def subfn(
     string: AnyStr,
     count: int = 0,
     flags: int | _re.RegexFlag = 0,
-    *args: Any,
     **kwargs: Any
 ) -> tuple[AnyStr, int]:
     """Apply `subn` after applying backrefs."""
@@ -645,9 +639,8 @@ def subfn(
         pattern,
         (compile_replace(pattern, repl, flags=rflags) if is_replace or is_string else repl),
         string,
-        count,
-        0,
-        *args,
+        count=count,
+        flags=0,
         **kwargs
     )
 
