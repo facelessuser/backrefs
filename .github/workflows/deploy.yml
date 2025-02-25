@@ -78,7 +78,7 @@ jobs:
       with:
         path: dist
         pattern: artifact-*
-+       merge-multiple: true
+        merge-multiple: true
 
     - name: Publish
       uses: pypa/gh-action-pypi-publish@release/v1
