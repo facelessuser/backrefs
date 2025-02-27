@@ -199,7 +199,7 @@ Block properties have a similar short form as Script and Binary properties.  For
 a block. If we wanted to match characters in the `Basic_Latin` block, we could use the syntax `\p{InBasic_Latin}`. This
 would be the same as `\p{Block: Basic_Latin}` or `\p{Basic_Latin}`.
 
-/// warn | Short Name Conflicts
+/// warning | Short Name Conflicts
 When it comes to short names, each new Unicode version, there is a risk that new properties could cause conflicts
 with existing names and/or aliases. Currently, most of the conflicts involve the Block properties. To reduce
 friction, they are evaluated last.
