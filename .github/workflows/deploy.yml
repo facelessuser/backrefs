@@ -36,11 +36,11 @@ jobs:
         python -m mkdocs gh-deploy -v --clean --remote-name gh-token
         git push gh-token gh-pages
 
-  pypi:
+  build:
     strategy:
       matrix:
         distribution: [bdist_wheel]
-        python-3-version: [9, '10', '11', '12', '13']
+        python-3-version: [9, '10', '11', '12', '13', '14']
         include:
           - distribution: sdist
             python-3-version: '13'
@@ -73,11 +73,16 @@ jobs:
 
   upload_all:
     name: Upload files to PyPI
-    needs: [pypi]
+    needs: build
     runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      # IMPORTANT: this permission is mandatory for Trusted Publishing
+      id-token: write
 
     steps:
-    - uses: actions/download-artifact@v4.1.7
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
       with:
         path: dist
         pattern: artifact-*
@@ -86,5 +91,4 @@ jobs:
     - name: Publish
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        user: __token__
-        password: ${{ secrets.PYPI_PWD }}
+          print-hash: true
