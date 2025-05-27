@@ -157,7 +157,7 @@ passenv = *
 deps=
     -r requirements/docs.txt
 commands=
-    {envpython} -m mkdocs build --clean --verbose --strict
+    {envbindir}/mkdocs build --clean --verbose --strict
     {envbindir}/pyspelling
 
 [testenv:lint]
