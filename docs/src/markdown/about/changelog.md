@@ -1,5 +1,10 @@
 # Changelog
 
+## 5.9
+
+-   **NEW**: Add support for Python 3.14.
+-   **ENHANCE**: Switch to deploying with PyPI's "Trusted Publisher".
+
 ## 5.8
 
 -   **NEW**: Drop Python 3.8.

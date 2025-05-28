@@ -20,6 +20,7 @@ NONINFRINGEMENT
 Posix
 PyMdown
 PyPI
+PyPI's
 Regex
 Regex's
 Sep

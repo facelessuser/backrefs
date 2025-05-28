@@ -135,7 +135,7 @@ legacy_tox_ini = """
 [tox]
 isolated_build = true
 envlist =
-    py39,py310,py311,py312,py313,
+    py39,py310,py311,py312,py313,py314,
     lint
 
 [testenv]
@@ -157,7 +157,7 @@ passenv = *
 deps=
     -r requirements/docs.txt
 commands=
-    {envpython} -m mkdocs build --clean --verbose --strict
+    {envbindir}/mkdocs build --clean --verbose --strict
     {envbindir}/pyspelling
 
 [testenv:lint]
