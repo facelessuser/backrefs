@@ -33,7 +33,7 @@ jobs:
         git config user.email "${{ secrets.GH_EMAIL }}"
         git remote add gh-token "https://${{ secrets.GH_TOKEN }}@github.com/facelessuser/backrefs.git"
         git fetch gh-token && git fetch gh-token gh-pages:gh-pages
-        python -m mkdocs gh-deploy -v --clean --remote-name gh-token
+        mkdocs gh-deploy -v --clean --remote-name gh-token
         git push gh-token gh-pages
 
   build:
