@@ -4,7 +4,7 @@
 [![PyPI Version][pypi-image]][pypi-link]
 [![PyPI Downloads][pypi-down]][pypi-link]
 [![PyPI - Python Version][python-image]][pypi-link]
-![License][license-image-mit]
+[![License][license-image-mit]][license-link]
 
 # Backrefs
 
@@ -37,6 +37,7 @@ MIT
 [pypi-link]: https://pypi.python.org/pypi/backrefs
 [python-image]: https://img.shields.io/pypi/pyversions/backrefs?logo=python&logoColor=aaaaaa&labelColor=333333
 [license-image-mit]: https://img.shields.io/badge/license-MIT-blue.svg?labelColor=333333
+[license-link]: https://github.com/facelessuser/backrefs/blob/main/LICENSE.md
 [donate-image]: https://img.shields.io/badge/Donate-PayPal-3fabd1?logo=paypal
 [donate-link]: https://www.paypal.me/facelessuser
 
