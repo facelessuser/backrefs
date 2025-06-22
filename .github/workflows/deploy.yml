@@ -68,7 +68,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: artifact-3.${{ matrix.python-3-version }}
+          name: artifact-${{ matrix.distribution }}-3.${{ matrix.python-3-version }}
           path: dist/*
 
   upload_all:
