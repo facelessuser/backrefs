@@ -204,7 +204,7 @@ When it comes to short names, each new Unicode version, there is a risk that new
 with existing names and/or aliases. Currently, most of the conflicts involve the Block properties. To reduce
 friction, they are evaluated last.
 
-Generally, it is discouraged to use short names for Block properties. But the option is still supported, but Block 
+Generally, it is discouraged to use short names for Block properties. But the option is still supported, but Block
 properties will be evaluated last. There are currently no known conflicts with `In*` properties, but in future
 Unicode versions there could.
 
@@ -259,67 +259,18 @@ Verbose\ Property\ Form            | Terse\ Property\ Form
  `Line_Separator`                  | `Zl`
  `Paragraph_Separator`             | `Z`
 
-### POSIX Style Properties
-
-/// new | New in 5.0
-5.0 brings significant improvements and bug fixes to Unicode property handling. Properties are sensitive to the
-`ASCII` flag along with more extensive testing and bug fixes. Additionally, POSIX style properties are now just
-an extension of normal Unicode properties. All the POSIX names are available and now conform to
-the [Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties).
-Read on to learn more.
-///
-
-Backrefs allows for POSIX style properties in the form `[:name:]`. These properties can only be used inside character
-classes and are another form for expressing Unicode properties. Any Unicode property that can be expressed via the
-`\p{name}` form can also be expressed in the `[:name:]` form. To illustrate, the following are all the same:
-
--   `[[:upper:]]` == `[\p{upper}]`
--   `[[:^upper:]]` == `[\p{^upper}]`
--   `[[:alpha=yes:]]` == `[\p{alpha=yes}]`
-
-A number of POSIX property names are available via compatibility properties as outlined in the
-[Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties). These
-properties will operate in the Unicode range and the ASCII range depending on the regular expression mode. These
-patterns, like all Unicode properties, are sensitive to the `ASCII` flag (or `LOCALE` which will treat them as `ASCII`).
-
-It is important to note that whether used in the form `[[:name:]]` or `\p{name}`, each POSIX name is available both with
-and without the `posix` prefix, but it is recommended to use the `posix` prefix to get the POSIX definition of the
-pattern as number of patterns have both a POSIX and Unicode definition that differ. The
-[Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties) outlines all
-the POSIX compatible properties and the ones which have dual definitions: `punct`, `alnum`, `digit`, and `xdigit` all
-have a Unicode standard and a POSIX compatibility variant and must be accessed with the `posix` prefix to get the POSIX
-form.
-
-In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
-
-\[:posix:] | \\p\{Posix}   | ASCII                                             | Unicode
----------- | ------------- | ------------------------------------------------- | -------
-`alpha`    | `Alpha`       | `[a-zA-Z]`                                        | `\p{Alphabetic}`
-`alnum`    | `PosixAlnum`  | `[[:alpha:][:digit:]]`                            | `[[:alpha:][:digit:]]`
-`blank`    | `Blank`       | `[ \t]`                                           | `[\p{Zs}\t]`
-`cntrl`    | `Cntrl`       | `[\x00-\x1F\x7F]`                                 | `\p{Cc}`
-`digit`    | `PosixDigit`  | `[0-9]`                                           | `[0-9]`
-`graph`    | `Graph`       | `[^ [:cntrl:]]`                                   | `[^[:space:][:cntrl:]\p{Cn}\p{Cs}]`
-`lower`    | `Lower`       | `[a-z]`                                           | `[\p{Lowercase}]`
-`print`    | `Print`       | `[[:graph:] ]`                                    | `[[\p{P}\p{S}]--[\p{alpha}]]`
-`punct`    | `PosixPunct`  | ``[!\"\#$%&'()*+,\-./:;&lt;=&gt;?@\[\\\]^_`{}~]`` | `[[[:graph:][:blank:]]--[[:cntrl:]]]`
-`space`    | `Space`       | `[ \t\r\n\v\f]`                                   | `[\p{Whitespace}]`
-`upper`    | `Upper`       | `[A-Z]`                                           | `[\p{Uppercase}]`
-`xdigit`   | `PosixXDigit` | `[A-Fa-f0-9]`                                     | `[A-Fa-f0-9]`
-
 ### Compatibility Properties
 
 /// new | New in 5.0
 While many of the properties were available before 5.0, `word` is newly available. And all the properties now
-conform to the [Unicode specification for POSIX compatibility](https://unicode.org/reports/tr18/#Compatibility_Properties).
+conform to the [Unicode specification for compatibility properties](https://unicode.org/reports/tr18/#Compatibility_Properties).
 ///
 
-[Unicode specification for POSIX compatibility][unicode-posix] defines a number of properties, many of which double as
-[Posix properties](#posix-style-properties). These properties can be accessed via `\p{name}` or `[[:name:]]`.
+[Unicode specification for compatibility properties][unicode-posix] defines a number of properties for use in regular
+expressions. The table below shows the names of these properties along with their standard rules as implmented in
+Backrefs. Patterns with `--` mean `[[in this] -- [but not this]]`.
 
-In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
-
-\\p\{Posix}   | Unicode
+\\p\{name}    | Unicode
 ------------- | -------
 `Alpha`       | `\p{Alphabetic}`
 `Alnum`       | `[\p{Alpha}\p{Digit}]`
@@ -328,9 +279,84 @@ In the table below, patterns with `--` mean `[[in this] -- [but not this]]`.
 `Digit`       | `\p{Nd}`
 `Graph`       | `[^\p{Space}\p{Cntrl}\p{Cn}\p{Cs}]`
 `Lower`       | `\p{Lowercase}`
-`Print`       | `[[\p{P}\p{S}]--[\p{Alpha}]]`
+`Print`       | `[\p{graph}\p{blank}--\p{cntrl}]`
 `Punct`       | `\p{P}`
 `Space`       | `\p{Whitespace}`
 `Upper`       | `\p{Uppercase}`
 `Word`        | `[\p{Alnum}\p{M}\p{Pc}\p{JoinControl}]`
 `XDigit`      | `[\p{Nd}\p{HexDigit}]`
+
+The [Unicode specification for compatibility properties](https://unicode.org/reports/tr18/#Compatibility_Properties)
+also defines rules for POSIX compatibility which provides modifications to the standard recommendation required to meet
+the formal requirements of POSIX, and also to maintain (as much as possible) compatibility with the POSIX usage in
+practice.
+
+To accomdate these POSIX compatible rules, Backrefs defines POSIX property names for all the compatibility properties.
+For any that do not have special accomodations, the POSIX property name will act as an alias for the standard Unicode
+name. In all, four properties are specifically affected with POSIX specific accomodations: `Alnum`, `Digit`, `Punct`,
+and `XDigit`.
+
+\\p\{name}    | Unicode
+------------- | -------
+`PosixAlpha`  | `\p{Alpha}`
+`PosixAlnum`  | `[\p{Alpha}\p{PosixDigit}]`
+`PosixBlank`  | `\p{Blank}`
+`PosixCntrl`  | `\p{Cntrl}`
+`PosixDigit`  | `[0-9]`
+`PosixGraph`  | `\p{Graph}`
+`PosixLower`  | `\p{Lower}`
+`PosixPrint`  | `\p{Print}`
+`PosixPunct`  | `[[\p{P}\p{S}]--[\p{alpha}]]`
+`PosixSpace`  | `\p{Space}`
+`PosixUpper`  | `\p{Uppper}`
+`PosixWord`   | `\p{Word}`
+`PosixXDigit` | `[A-Fa-f0-9]`
+
+### POSIX Character Classes
+
+/// new | New in 6.0
+POSIX character classes in the form of `[:name:]` are now forced to always use POSIX compatible rules if available.
+These rules are defined in the [Unicode specification for compatibility properties]
+(https://unicode.org/reports/tr18/#Compatibility_Properties).
+///
+
+Backrefs allows for POSIX style character classes in the form of `[:name:]`. These properties can only be used inside
+character classes, e.g. `[[:name:]]`.
+
+When using POSIX character classes, all character classes will use the matching rules as stated in the
+[Unicode specification for compatibility properties](https://unicode.org/reports/tr18/#Compatibility_Properties). If
+there are specific rules for POSIX compatibility, those will be used in the bracket expression instead of the Unicode
+standard form. For all others, the Unicode standard form will be used.
+
+The table below outlines the supported POSIX names that can be used in the form `[:name:]` and details the differences
+in rules if using ASCII mode or Unicode mode.
+
+\[:posix:] | ASCII                                                         | Unicode
+---------- | ------------------------------------------------------------- | -------
+`alpha`    | `[a-zA-Z]`                                                    | `\p{Alphabetic}`
+`alnum`    | `[[:alpha:][:digit:]]`                                        | `[[:alpha:][:digit:]]`
+`blank`    | `[ \t]`                                                       | `[\p{Zs}\t]`
+`cntrl`    | `[\x00-\x1F\x7F]`                                             | `\p{Cc}`
+`digit`    | `[0-9]`                                                       | `[0-9]`
+`graph`    | `[^ [:cntrl:]]`                                               | `[^[:space:][:cntrl:]\p{Cn}\p{Cs}]`
+`lower`    | `[a-z]`                                                       | `[\p{Lowercase}]`
+`print`    | `[[:graph:] ]`                                                | `[[[:graph:][:blank:]]--[[:cntrl:]]]`
+`punct`    | ``[!"#$%&'()*+,\-./:;<=>?@[\]^_`{|}~]``                       | `[[\p{P}\p{S}]--[\p{alpha}]]`
+`space`    | `[ \t\r\n\v\f]`                                   			   | `[\p{Whitespace}]`
+`upper`    | `[A-Z]`                                           			   | `[\p{Uppercase}]`
+`word`     | `[A-Za-z0-9_]`												   | `[\p{Alnum}\p{M}\p{Pc}\p{JoinControl}]`
+`xdigit`   | `[A-Fa-f0-9]`                                     			   | `[A-Fa-f0-9]`
+
+/// Tip
+Using POSIX character classes is equivalent to using Unicode compatibility properties for POSIX, e.g. `[[:punct:]]`
+== `\p{Posix Punct}`.
+///
+
+POSIX style character classes have also been extended to allow for specifying normal Unicode properties as well. Any
+Unicode property, outside the compatibility properties, will be accepted in the bracket extension form and behave just
+like normal Unicode properities. To illustrate, the following are equivalent:
+
+-   `[[:math:]]` == `[\p{math}]`
+-   `[[:scx=latin:]]` == `[\p{scx: latin}]`
+-   `[[:^scx=latin:]]` == `[\P{scx: latin}]`
+

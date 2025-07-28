@@ -740,16 +740,6 @@ def gen_binary(table, output, ascii_props=False, append=False, prefix="", aliase
 
     gen_uposix(table, binary, ascii_props)
 
-    # One off Unicode property found under https://unicode.org/reports/tr18/#Compatibility_Properties
-    # `Word: [\p{alnum}\p{M}\p{Pc}\p{JoinControl}]`
-    s = set(binary["alnum"])
-    for k, v in table['m'].items():
-        if not k.startswith('^'):
-            s |= set(v)
-    s |= set(table["p"]["c"])
-    s |= set(binary["joincontrol"])
-    binary["word"] = list(s)
-
     if aliases:
         for v in aliases.get('binary', {}).values():
             if v not in binary and '^' + v not in binary:
@@ -881,9 +871,14 @@ def gen_uposix(table, posix_table, ascii_props):
     s -= set(posix_table["posixcntrl"])
     posix_table["posixprint"] = list(s)
 
-    # `ASCII: [\x00-\x7F]`
-    s = set(range(0, 0x7F + 1))
-    posix_table["posixascii"] = list(s)
+    # `Word: [\p{alnum}\p{M}\p{Pc}\p{JoinControl}]`
+    s = set(posix_table["alnum"])
+    for k, v in table['m'].items():
+        if not k.startswith('^'):
+            s |= set(v)
+    s |= set(table["p"]["c"])
+    s |= set(posix_table["joincontrol"])
+    posix_table['posixword'] = list(s)
 
 
 def gen_alias(nonbinary, binary, output):
@@ -904,9 +899,11 @@ def gen_alias(nonbinary, binary, output):
         'posixlower': 'lowercase',
         'posixupper': 'uppercase',
         'posixspace': 'whitespace',
+        'posixascii': 'basiclatin',
         'blank': 'posixblank',
         'graph': 'posixgraph',
-        'print': 'posixprint'
+        'print': 'posixprint',
+        'word': 'posixword'
     }
     toplevel = (
         'catalog', 'enumerated', 'numeric', 'miscellaneous'

@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.0
+
+-   **NEW**: POSIX character classes will now always use POSIX compatibility rules instead of Unicode standard rules,
+    if any are specified in the Unicode specification. The affected character classes are: `[[:alnum:]]`, `[[:digit:]]`,
+    `[[:xdigit:]]`, and  `[[:punct:]]`. To explicitly use standard Unicode rules for these compatibility properties, use
+    the Unicode property form instead: `[\p{Alnum}]`, `[\p{Digit}]`, `[\p{Punct}]`, or `[\p{XDigit}]`. This has changed
+    to ensure no confusion for users expecting compatible POSIX style character class properties.
+
 ## 5.9
 
 -   **NEW**: Add support for Python 3.14.
@@ -28,8 +36,8 @@
 
 ## 5.5
 
--   **NEW**: `\e` and `\h` have both been deprecated in 6.0. Please migrate to using `\x1b` and `\p{Horiz_Space}` in
-    their respective place.
+-   **NEW**: `\e` and `\h` have both been deprecated. Please migrate to using `\x1b` and `\p{Horiz_Space}` in their
+    respective place.
 -   **FIX**: Fix flag issue with `sub` functions.
 
 ## 5.4
