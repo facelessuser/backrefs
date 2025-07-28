@@ -263,8 +263,8 @@ class _SearchParser(Generic[AnyStr]):
         p = ''.join(prop).lower()
         v = ''.join(value).lower()
 
-        # Ensure when using POSIX form, that any property considered a compatibility propterty uses the POSIX form.
-        # POSIX form is not guarunteed to be diffrent from standard form and sometimes is just an alias for standard.
+        # Ensure when using POSIX form, that any property considered a compatibility property uses the POSIX form.
+        # POSIX form is not guaranteed to be different from standard form and sometimes is just an alias for standard.
         if brackets and p in _COMPATIBILITY_PROPERTIES:
             p = 'posix' + p
 

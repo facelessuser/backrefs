@@ -267,7 +267,7 @@ conform to the [Unicode specification for compatibility properties](https://unic
 ///
 
 [Unicode specification for compatibility properties][unicode-posix] defines a number of properties for use in regular
-expressions. The table below shows the names of these properties along with their standard rules as implmented in
+expressions. The table below shows the names of these properties along with their standard rules as implemented in
 Backrefs. Patterns with `--` mean `[[in this] -- [but not this]]`.
 
 \\p\{name}    | Unicode
@@ -291,9 +291,9 @@ also defines rules for POSIX compatibility which provides modifications to the s
 the formal requirements of POSIX, and also to maintain (as much as possible) compatibility with the POSIX usage in
 practice.
 
-To accomdate these POSIX compatible rules, Backrefs defines POSIX property names for all the compatibility properties.
-For any that do not have special accomodations, the POSIX property name will act as an alias for the standard Unicode
-name. In all, four properties are specifically affected with POSIX specific accomodations: `Alnum`, `Digit`, `Punct`,
+To accommodate these POSIX compatible rules, Backrefs defines POSIX property names for all the compatibility properties.
+For any that do not have special accommodations, the POSIX property name will act as an alias for the standard Unicode
+name. In all, four properties are specifically affected with POSIX specific accommodations: `Alnum`, `Digit`, `Punct`,
 and `XDigit`.
 
 \\p\{name}    | Unicode
@@ -354,7 +354,7 @@ Using POSIX character classes is equivalent to using Unicode compatibility prope
 
 POSIX style character classes have also been extended to allow for specifying normal Unicode properties as well. Any
 Unicode property, outside the compatibility properties, will be accepted in the bracket extension form and behave just
-like normal Unicode properities. To illustrate, the following are equivalent:
+like normal Unicode properties. To illustrate, the following are equivalent:
 
 -   `[[:math:]]` == `[\p{math}]`
 -   `[[:scx=latin:]]` == `[\p{scx: latin}]`
