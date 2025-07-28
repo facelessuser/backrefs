@@ -21,6 +21,14 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_inline_unicode(self):
+        """Test inline Unicode/ASCII cases."""
+
+        self.assertTrue(bre.match(r'\p{N}', '\uff19', flags=bre.ASCII) is None)
+        self.assertTrue(bre.match(r'(?u:\p{N})', '\uff19', flags=bre.ASCII) is not None)
+        self.assertTrue(bre.match(r'\p{N}', '\uff19', flags=bre.UNICODE) is not None)
+        self.assertTrue(bre.match(r'(?a:\p{N})', '\uff19', flags=bre.UNICODE) is None)
+
     def test_custom_binary_properties(self):
         """Test new custom binary properties."""
 
