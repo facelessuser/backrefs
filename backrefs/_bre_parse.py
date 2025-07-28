@@ -42,6 +42,13 @@ _SCOPED_FLAGS = frozenset(('i', 'm', 's', 'u', 'x'))
 
 _CURLY_BRACKETS_ORD = frozenset((0x7b, 0x7d))
 
+_COMPATIBILITY_PROPERTIES = frozenset(
+    (
+        'alpha', 'lower', 'upper', 'punct', 'digit', 'xdigit', 'alnum',
+        'space', 'blank', 'cntrl', 'graph', 'print', 'word'
+    )
+)
+
 # Case upper or lower
 _UPPER = 1
 _LOWER = 2
@@ -253,7 +260,15 @@ class _SearchParser(Generic[AnyStr]):
             else:
                 raise SyntaxError(f"Missing or unmatched '{{' at {index}!") from e
 
-        return ''.join(prop).lower(), ''.join(value).lower()
+        p = ''.join(prop).lower()
+        v = ''.join(value).lower()
+
+        # Ensure when using POSIX form, that any property considered a compatibility property uses the POSIX form.
+        # POSIX form is not guaranteed to be different from standard form and sometimes is just an alias for standard.
+        if brackets and p in _COMPATIBILITY_PROPERTIES:
+            p = 'posix' + p
+
+        return p, v
 
     def get_named_unicode(self, i: _util.StringIter) -> str:
         """Get Unicode name."""
