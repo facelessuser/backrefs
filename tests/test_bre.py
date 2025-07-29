@@ -22,6 +22,12 @@ else:
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_multi_disable_flag(self):
+        """Test when multiple flags are disabled."""
+
+        self.assertTrue(bre.match(r'(?-ix:Test Test)', 'Test Test', flags=bre.IGNORECASE | bre.VERBOSE))
+        self.assertTrue(bre.match(r'(?s-ix:Test Test)', 'Test Test', flags=bre.IGNORECASE | bre.VERBOSE))
+
     def test_inline_unicode(self):
         """Test inline Unicode/ASCII cases."""
 

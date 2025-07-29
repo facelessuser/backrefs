@@ -20,6 +20,12 @@ PY39_PLUS = (3, 9) <= sys.version_info
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
 
+    def test_multi_disable_flag(self):
+        """Test when multiple flags are disabled."""
+
+        self.assertTrue(bregex.match(r'(?-ix:Test Test)', 'Test Test', flags=bregex.IGNORECASE | bregex.VERBOSE))
+        self.assertTrue(bregex.match(r'(?s-ix:Test Test)', 'Test Test', flags=bregex.IGNORECASE | bregex.VERBOSE))
+
     def test_named_lists_attribute(self):
         """Test named list attribute."""
 

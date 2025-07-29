@@ -8,8 +8,8 @@
     the Unicode property form instead: `[\p{Alnum}]`, `[\p{Digit}]`, `[\p{Punct}]`, or `[\p{XDigit}]`. This has changed
     to ensure no confusion for users expecting compatible POSIX style character class properties.
 -   **FIX**: Scoped ASCII/Unicode flags (`(?a:pattern)`/`(?u:pattern)`) should be respected for Unicode properties in
-    `bre`.
--   **FIX**: Fix issues with disabled scoped flags.
+    `bre` and will ensure ASCII or Unicode range if used.
+-   **FIX**: Fix issues related to detecting disabled scoped flags.
 
 ## 5.9
 
