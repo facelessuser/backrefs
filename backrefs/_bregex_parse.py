@@ -265,8 +265,19 @@ class _SearchParser(Generic[AnyStr]):
 
         return ''.join(value) if value else None
 
-    def get_flags(self, i: _util.StringIter, version0: bool) -> tuple[str | None, bool]:
-        """Get flags."""
+    def get_flags(self, i: _util.StringIter) -> tuple[str | None, bool]:
+        """
+        Get flags.
+
+        Regex is more difficult to determine when flags are used in a global and scoped context.
+        There is a specific list of global flags, but they can be used in scoped notation and will still
+        be considered global, but that does not mean other flags are global. Additionally, flags that can be
+        scoped can also used be used in global syntax, but can be disabled with a minus unlike in RE.
+
+        Bregex only cares about capturing the "verbose" flag and the version flags. Version flags are always
+        global and verbose flags will be scoped based on whether they are in a scoped group. The returned
+        "scoped" parameter only refers to "verbose".
+        """
 
         index = i.index
         value = ['(']
@@ -292,7 +303,7 @@ class _SearchParser(Generic[AnyStr]):
                     toggle = True
                 elif c == 'V':
                     version = True
-                elif c not in _SCOPED_FLAGS and c not in _GLOBAL_FLAGS:
+                elif c not in _GLOBAL_FLAGS and c not in _SCOPED_FLAGS:
                     raise ValueError("Bad flag")
                 value.append(c)
                 c = next(i)
@@ -318,7 +329,7 @@ class _SearchParser(Generic[AnyStr]):
 
         # (?flags:pattern) or (?flags)
         # "scoped" only refers to verbose
-        flags, scoped = self.get_flags(i, self.version == _regex.V0)
+        flags, scoped = self.get_flags(i)
         if flags:
             t = flags
             self.flags(flags[2:-1], scoped=scoped)

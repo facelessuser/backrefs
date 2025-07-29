@@ -37,8 +37,8 @@ _STANDARD_ESCAPES = frozenset(('a', 'b', 'f', 'n', 'r', 't', 'v'))
 _CURLY_BRACKETS = frozenset(('{', '}'))
 _PROPERTY_STRIP = frozenset((' ', '-', '_'))
 _PROPERTY = _WORD | _DIGIT | _PROPERTY_STRIP
-_SCOPED_FLAGS_POSITIVE = frozenset(('a', 'i', 'L', 'm', 's', 'u', 'x'))
-_SCOPED_FLAGS_NEGATIVE = frozenset(('i', 'm', 's', 'x'))
+_GLOBAL_FLAGS = frozenset(('a', 'i', 'L', 'm', 's', 'u', 'x'))
+_SCOPED_FLAGS = frozenset(('i', 'm', 's', 'x'))
 _SCOPED_END = frozenset((':', ')'))
 
 _CURLY_BRACKETS_ORD = frozenset((0x7b, 0x7d))
@@ -366,7 +366,16 @@ class _SearchParser(Generic[AnyStr]):
         return ''.join(value)
 
     def get_flags(self, i: _util.StringIter) -> tuple[str | None, bool]:
-        """Get flags."""
+        """
+        Get flags.
+
+        In Re, flags are quite predictable when global or scoped.
+        Global can never be disabled with minus, and never have a `:` after them.
+        The global flag set is also very specific, but can be used as enablers in scoped.
+
+        The returned scoped status will indicate whether flags are generally considered
+        scoped flags or global flags.
+        """
 
         index = i.index
         value = ['(']
@@ -381,12 +390,12 @@ class _SearchParser(Generic[AnyStr]):
             c = next(i)
             while c not in _SCOPED_END:
                 if toggle:
-                    if c not in _SCOPED_FLAGS_NEGATIVE:
+                    if c not in _SCOPED_FLAGS:
                         raise ValueError('Bad scope')
                 elif c == '-':
                     smells_scoped = True
                     toggle = True
-                elif c not in _SCOPED_FLAGS_POSITIVE:
+                elif c not in _GLOBAL_FLAGS:
                     raise ValueError("Bad flag")
                 value.append(c)
                 c = next(i)
