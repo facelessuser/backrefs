@@ -11,6 +11,7 @@ import copy
 
 PY39_PLUS = (3, 9) <= sys.version_info
 PY311_PLUS = (3, 11) <= sys.version_info
+PY313_PLUS = (3, 13) <= sys.version_info
 
 if PY311_PLUS:
     import re._constants as _constants
@@ -1997,8 +1998,12 @@ class TestExceptions(unittest.TestCase):
     def test_bad_flag(self):
         """Test bad flag."""
 
-        with self.assertRaises(re.PatternError):
-            bre.compile(r'(?-i)')
+        if PY313_PLUS:
+            with self.assertRaises(re.PatternError):
+                bre.compile(r'(?-i)')
+        else:
+            with self.assertRaises(re.error):
+                bre.compile(r'(?-i)')
 
     def test_format_existing_group_no_match_with_index(self):
         """Test format group with no match and attempt at indexing."""
