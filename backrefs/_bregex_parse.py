@@ -30,9 +30,10 @@ _STANDARD_ESCAPES = frozenset(('a', 'b', 'f', 'n', 'r', 't', 'v'))
 _CURLY_BRACKETS = frozenset(('{', '}'))
 _PROPERTY_STRIP = frozenset((' ', '-', '_'))
 _PROPERTY = _WORD | _DIGIT | _PROPERTY_STRIP
-_GLOBAL_FLAGS = frozenset(('L', 'a', 'b', 'e', 'r', 'u', 'p'))
-_SCOPED_FLAGS = frozenset(('i', 'm', 's', 'f', 'w', 'x'))
+_GLOBAL_FLAGS = frozenset(('b', 'e', 'p', 'r', 'u'))
+_SCOPED_FLAGS = frozenset(('a', 'f', 'i', 'L', 'm', 's', 'u', 'w', 'x'))
 _VERSIONS = frozenset(('0', '1'))
+_SCOPED_END = frozenset((':', ')'))
 
 _CURLY_BRACKETS_ORD = frozenset((0x7b, 0x7d))
 
@@ -260,53 +261,49 @@ class _SearchParser(Generic[AnyStr]):
 
         return ''.join(value) if value else None
 
-    def get_flags(self, i: _util.StringIter, version0: bool, scoped: bool = False) -> str | None:
+    def get_flags(self, i: _util.StringIter, version0: bool) -> tuple[str | None, bool]:
         """Get flags."""
 
         index = i.index
         value = ['(']
         version = False
         toggle = False
-        end = ':' if scoped else ')'
+        smells_scoped = False
         try:
             c = next(i)
             if c != '?':
                 i.rewind(1)
-                return None
+                return None, False
             value.append(c)
             c = next(i)
-            while c != end:
+            while c not in _SCOPED_END:
                 if toggle:
                     if c not in _SCOPED_FLAGS:
                         raise ValueError('Bad scope')
-                    toggle = False
-                elif (not version0 or scoped) and c == '-':
-                    toggle = True
                 elif version:
                     if c not in _VERSIONS:
                         raise ValueError('Bad version')
                     version = False
+                elif c == '-':
+                    toggle = True
                 elif c == 'V':
                     version = True
-                elif c not in _GLOBAL_FLAGS and c not in _SCOPED_FLAGS:
+                elif c not in _SCOPED_FLAGS and c not in _GLOBAL_FLAGS:
                     raise ValueError("Bad flag")
                 value.append(c)
                 c = next(i)
+            if c == ':':
+                smells_scoped = True
+
             value.append(c)
         except Exception:
             i.rewind(i.index - index)
             value = []
 
-        return ''.join(value) if value else None
+        return ''.join(value) if value else None, smells_scoped
 
     def subgroup(self, t: str, i: _util.StringIter) -> list[str]:
         """Handle parenthesis."""
-
-        # (?flags)
-        flags = self.get_flags(i, self.version == _regex.V0)
-        if flags:
-            self.flags(flags[2:-1])
-            return [flags]
 
         # (?#comment)
         comments = self.get_comments(i)
@@ -315,11 +312,14 @@ class _SearchParser(Generic[AnyStr]):
 
         verbose = self.verbose
 
-        # (?flags:pattern)
-        flags = self.get_flags(i, (self.version == _regex.V0), True)
+        # (?flags:pattern) or (?flags)
+        # "scoped" only refers to verbose
+        flags, scoped = self.get_flags(i, self.version == _regex.V0)
         if flags:
             t = flags
-            self.flags(flags[2:-1], scoped=True)
+            self.flags(flags[2:-1], scoped=scoped)
+            if not scoped:
+                return [flags]
 
         current = []  # type: list[str]
         try:

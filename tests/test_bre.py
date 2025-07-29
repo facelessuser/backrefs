@@ -11,6 +11,7 @@ import copy
 
 PY39_PLUS = (3, 9) <= sys.version_info
 PY311_PLUS = (3, 11) <= sys.version_info
+PY313_PLUS = (3, 13) <= sys.version_info
 
 if PY311_PLUS:
     import re._constants as _constants
@@ -20,6 +21,14 @@ else:
 
 class TestSearchTemplate(unittest.TestCase):
     """Search template tests."""
+
+    def test_inline_unicode(self):
+        """Test inline Unicode/ASCII cases."""
+
+        self.assertTrue(bre.match(r'\p{N}', '\uff19', flags=bre.ASCII) is None)
+        self.assertTrue(bre.match(r'(?u:\p{N})', '\uff19', flags=bre.ASCII) is not None)
+        self.assertTrue(bre.match(r'\p{N}', '\uff19', flags=bre.UNICODE) is not None)
+        self.assertTrue(bre.match(r'(?a:\p{N})', '\uff19', flags=bre.UNICODE) is None)
 
     def test_custom_binary_properties(self):
         """Test new custom binary properties."""
@@ -1985,6 +1994,16 @@ class TestReplaceTemplate(unittest.TestCase):
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
+
+    def test_bad_flag(self):
+        """Test bad flag."""
+
+        if PY313_PLUS:
+            with self.assertRaises(re.PatternError):
+                bre.compile(r'(?-i)')
+        else:
+            with self.assertRaises(re.error):
+                bre.compile(r'(?-i)')
 
     def test_format_existing_group_no_match_with_index(self):
         """Test format group with no match and attempt at indexing."""
