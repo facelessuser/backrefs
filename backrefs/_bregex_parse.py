@@ -269,7 +269,6 @@ class _SearchParser(Generic[AnyStr]):
         version = False
         toggle = False
         smells_scoped = False
-        smells_global = False
         try:
             c = next(i)
             if c != '?':
@@ -281,31 +280,19 @@ class _SearchParser(Generic[AnyStr]):
                 if toggle:
                     if c not in _SCOPED_FLAGS:
                         raise ValueError('Bad scope')
-                elif not smells_scoped and version:
+                elif version:
                     if c not in _VERSIONS:
                         raise ValueError('Bad version')
                     version = False
-                elif not version0 and c == '-':
-                    toggle = True
-                elif version0 and not smells_global and c == '-':
-                    smells_scoped = True
+                elif c == '-':
                     toggle = True
                 elif c == 'V':
                     version = True
-                    smells_global = True
-                elif c in _GLOBAL_FLAGS:
-                    smells_global = True
-                elif c not in _SCOPED_FLAGS:
+                elif c not in _SCOPED_FLAGS and c not in _GLOBAL_FLAGS:
                     raise ValueError("Bad flag")
                 value.append(c)
                 c = next(i)
-            if (
-                (smells_global and smells_scoped) or
-                (smells_scoped and c != ':') or
-                (smells_global and c != ')')
-            ):
-                raise ValueError('Bad flag')
-            elif c == ':':
+            if c == ':':
                 smells_scoped = True
 
             value.append(c)
@@ -326,6 +313,7 @@ class _SearchParser(Generic[AnyStr]):
         verbose = self.verbose
 
         # (?flags:pattern) or (?flags)
+        # "scoped" only refers to verbose
         flags, scoped = self.get_flags(i, self.version == _regex.V0)
         if flags:
             t = flags
