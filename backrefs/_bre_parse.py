@@ -181,20 +181,24 @@ class _SearchParser(Generic[AnyStr]):
     def flags(self, text: str, scoped: bool = False) -> None:
         """Analyze flags."""
 
+        flags = text.split('-')
+        enable = flags[0]
+        disable = flags[1] if len(flags) > 1 else ''
+
         global_retry = False
-        if ('a' in text or 'L' in text) and self.unicode:
+        if ('a' in enable or 'L' in enable) and self.unicode:
             self.unicode = False
             if not scoped:
                 self.temp_global_flag_swap["unicode"] = True
                 global_retry = True
-        elif 'u' in text and not self.unicode and not self.is_bytes:
+        elif 'u' in enable and not self.unicode and not self.is_bytes:
             self.unicode = True
             if not scoped:
                 self.temp_global_flag_swap["unicode"] = True
                 global_retry = True
-        if '-x' in text and self.verbose:
+        if 'x' in disable and self.verbose:
             self.verbose = False
-        elif 'x' in text and not self.verbose:
+        elif 'x' in enable and not self.verbose:
             self.verbose = True
             if not scoped:
                 self.temp_global_flag_swap["verbose"] = True

@@ -164,21 +164,25 @@ class _SearchParser(Generic[AnyStr]):
     def flags(self, text: str, scoped: bool = False) -> None:
         """Analyze flags."""
 
+        flags = text.split('-')
+        enable = flags[0]
+        disable = flags[1] if len(flags) > 1 else ''
+
         global_retry = False
-        if (self.version == _regex.V1 or scoped) and '-x' in text and self.verbose:
+        if (self.version == _regex.V1 or scoped) and 'x' in disable and self.verbose:
             self.verbose = False
-        elif 'x' in text and not self.verbose:
+        elif 'x' in enable and not self.verbose:
             self.verbose = True
             if not scoped and self.version == _regex.V0:
                 self.temp_global_flag_swap['verbose'] = True
                 global_retry = True
-        if 'V0' in text and self.version == _regex.V1:  # pragma: no cover
+        if 'V0' in enable and self.version == _regex.V1:  # pragma: no cover
             # Default is V0 if none is selected,
             # so it is unlikely that this will be selected.
             self.temp_global_flag_swap['version'] = True
             self.version = _regex.V0
             global_retry = True
-        elif "V1" in text and self.version == _regex.V0:
+        elif "V1" in enable and self.version == _regex.V0:
             self.temp_global_flag_swap['version'] = True
             self.version = _regex.V1
             global_retry = True
