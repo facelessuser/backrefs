@@ -281,7 +281,7 @@ class _SearchParser(Generic[AnyStr]):
                 if toggle:
                     if c not in _SCOPED_FLAGS:
                         raise ValueError('Bad scope')
-                elif version:
+                elif not smells_scoped and version:
                     if c not in _VERSIONS:
                         raise ValueError('Bad version')
                     version = False
@@ -290,10 +290,6 @@ class _SearchParser(Generic[AnyStr]):
                 elif version0 and not smells_global and c == '-':
                     smells_scoped = True
                     toggle = True
-                elif not smells_scoped and version:
-                    if c not in _VERSIONS:
-                        raise ValueError('Bad version')
-                    version = False
                 elif c == 'V':
                     version = True
                     smells_global = True

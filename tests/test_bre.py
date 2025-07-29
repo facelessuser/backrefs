@@ -1994,6 +1994,12 @@ class TestReplaceTemplate(unittest.TestCase):
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
 
+    def test_bad_flag(self):
+        """Test bad flag."""
+
+        with self.assertRaises(re.PatternError):
+            bre.compile(r'(?-i)')
+
     def test_format_existing_group_no_match_with_index(self):
         """Test format group with no match and attempt at indexing."""
 
