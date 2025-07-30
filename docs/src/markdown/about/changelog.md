@@ -2,7 +2,7 @@
 
 ## 6.0.1
 
--   **FIX**: Fix a regression that created a ASCII binary property that override the ASCII block property. 
+-   **FIX**: Fix a regression that created an ASCII binary property that would override the ASCII block property.
 
 ## 6.0
 
