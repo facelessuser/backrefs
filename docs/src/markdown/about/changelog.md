@@ -1,5 +1,9 @@
 # Changelog
 
+## 6.0.1
+
+-   **FIX**: Fix a regression that created a ASCII binary property that override the ASCII block property. 
+
 ## 6.0
 
 -   **NEW**: POSIX character classes will now always use POSIX compatibility rules instead of Unicode standard rules,

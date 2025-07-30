@@ -871,6 +871,10 @@ def gen_uposix(table, posix_table, ascii_props):
     s -= set(posix_table["posixcntrl"])
     posix_table["posixprint"] = list(s)
 
+    # `ASCII: [\x00-\x7F]`
+    s = set(range(0, 0x7F + 1))
+    posix_table["posixascii"] = list(s)
+
     # `Word: [\p{alnum}\p{M}\p{Pc}\p{JoinControl}]`
     s = set(posix_table["alnum"])
     for k, v in table['m'].items():
@@ -899,7 +903,6 @@ def gen_alias(nonbinary, binary, output):
         'posixlower': 'lowercase',
         'posixupper': 'uppercase',
         'posixspace': 'whitespace',
-        'posixascii': 'basiclatin',
         'blank': 'posixblank',
         'graph': 'posixgraph',
         'print': 'posixprint',
