@@ -871,10 +871,6 @@ def gen_uposix(table, posix_table, ascii_props):
     s -= set(posix_table["posixcntrl"])
     posix_table["posixprint"] = list(s)
 
-    # `ASCII: [\x00-\x7F]`
-    s = set(range(0, 0x7F + 1))
-    posix_table["posixascii"] = list(s)
-
     # `Word: [\p{alnum}\p{M}\p{Pc}\p{JoinControl}]`
     s = set(posix_table["alnum"])
     for k, v in table['m'].items():
@@ -899,14 +895,19 @@ def gen_alias(nonbinary, binary, output):
     alias_header_re = re.compile(r'^#\s+(\w+)\s+Properties\s*$')
     divider_re = re.compile(r'#\s*=+\s*$')
     posix_props = {
-        'posixalpha': 'alphabetic',
-        'posixlower': 'lowercase',
-        'posixupper': 'uppercase',
-        'posixspace': 'whitespace',
-        'blank': 'posixblank',
-        'graph': 'posixgraph',
-        'print': 'posixprint',
-        'word': 'posixword'
+        'binary': {
+            'posixalpha': 'alphabetic',
+            'posixlower': 'lowercase',
+            'posixupper': 'uppercase',
+            'posixspace': 'whitespace',
+            'blank': 'posixblank',
+            'graph': 'posixgraph',
+            'print': 'posixprint',
+            'word': 'posixword'
+        },
+        'block': {
+            'posixascii': 'basiclatin'
+        }
     }
     toplevel = (
         'catalog', 'enumerated', 'numeric', 'miscellaneous'
@@ -985,8 +986,8 @@ def gen_alias(nonbinary, binary, output):
             alias[x] = {}
 
     for k, v in posix_props.items():
-        if k not in alias['binary']:
-            alias['binary'][k] = v
+        for k1, v1 in v.items():
+            alias[k][k1] = v1
 
     alias['binary']['h'] = 'horizspace'
     alias['binary']['v'] = 'vertspace'
