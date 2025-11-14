@@ -9,7 +9,10 @@ import unicodedata as _unicodedata
 import copyreg as _copyreg
 from . import util as _util
 import regex as _regex  # type: ignore[import]
-from regex.regex import _compile_replacement_helper  # type: ignore[import]
+try:  # pragma: no cover
+    from regex.regex import _compile_replacement_helper  # type: ignore[import]
+except ImportError:  # pragma: no cover
+    from regex._main import _compile_replacement_helper  # type: ignore[import]
 from typing import Generic, AnyStr, Any, cast
 from ._bregex_typing import Pattern, Match
 

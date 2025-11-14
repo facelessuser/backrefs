@@ -123,7 +123,10 @@ class TestSearchTemplate(unittest.TestCase):
         try:
             from regex import _cache
         except ImportError:
-            from regex.regex import _cache
+            try:
+                from regex.regex import _cache
+            except ImportError:
+                from regex._main import _cache
 
         bregex.purge()
         self.assertEqual(bregex._get_cache_size(), 0)

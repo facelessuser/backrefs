@@ -1,5 +1,10 @@
 # Changelog
 
+## 6.1
+
+-   **NEW**: Include Unicode 17 zip for early Python 3.15 usage, though Python 3.15 functionality is not guaranteed.
+-   **FIX**: Fix issues with regex imports in later versions.
+
 ## 6.0.1
 
 -   **FIX**: Fix a regression that created an ASCII binary property that would override the ASCII block property.
