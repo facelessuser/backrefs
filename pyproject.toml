@@ -157,7 +157,7 @@ passenv = *
 deps=
     -r requirements/docs.txt
 commands=
-    {envbindir}/mkdocs build --clean --verbose --strict
+    {envbindir}/zensical build -f zensical.yml --clean --strict
     {envbindir}/pyspelling
 
 [testenv:lint]

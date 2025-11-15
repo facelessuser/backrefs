@@ -1,3 +1,6 @@
+---
+icon: lucide/users
+---
 # Contributing &amp; Support
 
 ## Overview

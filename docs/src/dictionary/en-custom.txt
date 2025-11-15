@@ -27,6 +27,7 @@ Sep
 Tidelift
 Tox
 Twemoji
+Zensical
 accessor
 backend
 boolean
