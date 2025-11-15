@@ -1,3 +1,6 @@
+---
+icon: lucide/hand
+---
 # Introduction
 
 ## Importing

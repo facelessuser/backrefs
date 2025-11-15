@@ -1,3 +1,6 @@
+---
+icon: lucide/regex
+---
 # Supported References
 
 ## Search Back References
@@ -359,4 +362,3 @@ like normal Unicode properties. To illustrate, the following are equivalent:
 -   `[[:math:]]` == `[\p{math}]`
 -   `[[:scx=latin:]]` == `[\p{scx: latin}]`
 -   `[[:^scx=latin:]]` == `[\P{scx: latin}]`
-
