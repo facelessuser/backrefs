@@ -1,5 +1,4 @@
 [![Donate via PayPal][donate-image]][donate-link]
-[![Build][github-ci-image]][github-ci-link]
 [![Coverage Status][codecov-image]][codecov-link]
 [![PyPI Version][pypi-image]][pypi-link]
 [![PyPI Downloads][pypi-down]][pypi-link]
@@ -28,8 +27,6 @@ https://facelessuser.github.io/backrefs/
 
 MIT
 
-[github-ci-image]: https://github.com/facelessuser/backrefs/workflows/build/badge.svg
-[github-ci-link]: https://github.com/facelessuser/backrefs/actions?query=workflow%3Abuild+branch%3Amaster
 [codecov-image]: https://img.shields.io/codecov/c/github/facelessuser/backrefs/master.svg?logo=codecov&logoColor=aaaaaa&labelColor=333333
 [codecov-link]: https://codecov.io/github/facelessuser/backrefs
 [pypi-image]: https://img.shields.io/pypi/v/backrefs.svg?logo=pypi&logoColor=aaaaaa&labelColor=333333
