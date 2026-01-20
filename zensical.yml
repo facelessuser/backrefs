@@ -4,7 +4,7 @@ repo_url: https://github.com/facelessuser/backrefs
 edit_uri: tree/master/docs/src/markdown
 site_description: A library to add additional back references to regular expressions.
 copyright: |
-  Copyright &copy; 2015 - 2025 <a href="https://github.com/facelessuser"  target="_blank" rel="noopener">Isaac Muse</a>
+  Copyright &copy; 2015 - 2026 <a href="https://github.com/facelessuser"  target="_blank" rel="noopener">Isaac Muse</a>
 
 docs_dir: docs/src/markdown
 theme:
@@ -80,6 +80,9 @@ markdown_extensions:
   - markdown.extensions.md_in_html:
   - pymdownx.superfences:
   - pymdownx.highlight:
+      line_spans: __codeline
+      line_anchors: __codelineno
+      anchor_linenums: True
       extend_pygments_lang:
         - name: php-inline
           lang: php
@@ -170,6 +173,8 @@ markdown_extensions:
   - pymdownx.blocks.definition:
   - pymdownx.blocks.tab:
       alternate_style: True
+  - pymdownx.quotes:
+      callouts: true
 
 extra:
   social:
@@ -177,6 +182,6 @@ extra:
       link: https://github.com/facelessuser
 
 extra_css:
-  - assets/pymdownx-extras/extra-835c322b67.css
+  - assets/pymdownx-extras/extra-95634471d6.css
 extra_javascript:
   - assets/pymdownx-extras/extra-loader-Ccztcqfq.js
