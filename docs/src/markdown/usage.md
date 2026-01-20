@@ -189,12 +189,11 @@ why.
     b'||TEST||'
     ```
 
-    /// note | Conversion Syntax and Bytes
-    In almost all instances, using conversion types (`{!s}`, etc.) won't make sense in a regular expression replace
-    as the objects will already be strings in the needed format, but if you were to use a conversion using byte
-    strings, when converting from `bytes` to `str`, ASCII will be the assumed encoding, and the object or Unicode
-    string would be encoded using the `backslashreplace` option as well.
-    ///
+    > [!note] Conversion Syntax and Bytes
+    > In almost all instances, using conversion types (`{!s}`, etc.) won't make sense in a regular expression replace
+    > as the objects will already be strings in the needed format, but if you were to use a conversion using byte
+    > strings, when converting from `bytes` to `str`, ASCII will be the assumed encoding, and the object or Unicode
+    > string would be encoded using the `backslashreplace` option as well.
 
 ## Advanced Usage
 

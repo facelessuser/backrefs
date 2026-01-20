@@ -11,11 +11,10 @@ support.
 
 ### Re
 
-/// info | LOCALE and Character Properties
-Backrefs does not consider `LOCALE` when inserting POSIX or Unicode properties. When forced int ASCII mode, either
-by  the `ASCII` (or `LOCALE`) flag or when operating on a byte string, Unicode properties are restricted to the
-ASCII range.
-///
+> [!info] LOCALE and Character Properties
+> Backrefs does not consider `LOCALE` when inserting POSIX or Unicode properties. When forced int ASCII mode, either
+> by  the `ASCII` (or `LOCALE`) flag or when operating on a byte string, Unicode properties are restricted to the
+> ASCII range.
 
 Back\ References      | Description
 --------------------- |------------
@@ -40,10 +39,9 @@ respectively.
 
 ### Regex
 
-/// note
-Regex already natively supports `\p{...}`, `\P{...}`, `\pX`, `\PX`, `\N{...}`, `\X`, `\h`, `\m`, and `\M` so
-Backrefs does not attempt to add this to search patterns.
-///
+> [!note]
+> Regex already natively supports `\p{...}`, `\P{...}`, `\pX`, `\PX`, `\N{...}`, `\X`, `\h`, `\m`, and `\M` so
+> Backrefs does not attempt to add this to search patterns.
 
 Back\ References | Description
 ---------------- | -----------
@@ -51,9 +49,8 @@ Back\ References | Description
 `\Q...\E`        | Quotes (escapes) text for regular expression.  `\E` signifies the end of the quoting. Affects any and all characters no matter where in the regular expression pattern it is placed.
 `\R`             | Generic line breaks. When searching a Unicode string, this will use the pattern `(?>\r\n|[\n\v\f\r\x85\u2028\u2029])`, and when applied to byte strings, the pattern `(?>\r\n|[\n\v\f\r\x85])` will be used.
 
-/// warning | Deprecated 6.0
-`\e` has been deprecated in 6.0. Please migrate to using `\x1b` in its place.
-///
+> [!warning] Deprecated 6.0
+> `\e` has been deprecated in 6.0. Please migrate to using `\x1b` in its place.
 
 ## Replace Back References
 
@@ -62,10 +59,9 @@ expression engine being used.  Casing is applied to both the literal text and th
 template.  In most cases you'd only need to wrap the groups, but it may be useful to apply casing to the literal
 portions if you are dynamically assembling replacement patterns.
 
-/// info | LOCALE and Casing
-`LOCALE` is not considered when applying character casing. Unicode casing is applied in Unicode strings and ASCII
-casing is applied to byte strings.
-///
+> [!info] LOCALE and Casing
+> `LOCALE` is not considered when applying character casing. Unicode casing is applied in Unicode strings and ASCII
+> casing is applied to byte strings.
 
 Back\ References     | Description
 ---------------------|-------------
@@ -78,20 +74,18 @@ Back\ References     | Description
 `\x`                 | Byte character `\x57`. Re doesn't translate this notation in raw strings (`#!py3 r"..."`), and Regex doesn't in format templates in raw strings (`#!py3 r"{} {}"`).  This adds support for them.
 `\N{UnicodeName}`    | Named characters are normally ignored in Re, but Backrefs adds support for them.
 
-/// tip
-Complex configurations of casing should work fine.
-
--   `\L\cTEST\E` --> `Test`
--   `\c\LTEST\E` --> `test`
--   `\L\cTEST \cTEST\E` --> `Test Test`
-///
+> [!tip]
+> Complex configurations of casing should work fine.
+> 
+> -   `\L\cTEST\E` --> `Test`
+> -   `\c\LTEST\E` --> `test`
+> -   `\L\cTEST \cTEST\E` --> `Test Test`
 
 ## Unicode Properties
 
-/// new | New in 5.0
-5.0 brings significant improvements and bug fixes to Unicode property handling. Properties are sensitive to the
-`ASCII` flag along with more extensive testing and bug fixes.
-///
+> [!new] New in 5.0
+> 5.0 brings significant improvements and bug fixes to Unicode property handling. Properties are sensitive to the
+> `ASCII` flag along with more extensive testing and bug fixes.
 
 A number of various Unicode properties are supported in Backrefs, but only for Re as Regex already has its own
 implementation of Unicode properties. Some properties may not be available on certain Python versions due to the
@@ -137,16 +131,14 @@ Supported\ Properties                       | Aliases
 `Vertical_Orientation`\ (Python\ 3.7+)      | `vt`
 `Word_Break`                                | `wb`
 
-/// note
-The Binary property is not actually a property, but more a type of Unicode property.  The available binary
-properties may differ from Unicode version to Unicode version.
-///
+> [!note]
+> The Binary property is not actually a property, but more a type of Unicode property.  The available binary
+> properties may differ from Unicode version to Unicode version.
 
-/// new | New 4.4.0
-Python 3.9 now uses Unicode 13, and with that comes various new binary properties: `emoji`, `emojicomponent`,
-`emojimodifier`, `emojimodifierbase`, and `emojipresentation`. Associated aliases are also included: `ecomp`,
-`emod`, `ebase`, and `epres`.
-///
+> [!new] New 4.4.0
+> Python 3.9 now uses Unicode 13, and with that comes various new binary properties: `emoji`, `emojicomponent`,
+> `emojimodifier`, `emojimodifierbase`, and `emojipresentation`. Associated aliases are also included: `ecomp`,
+> `emod`, `ebase`, and `epres`.
 
 Exhaustive documentation on all these properties and their values is not currently provided. In general, we'll cover the
 syntax rules, and [special short name handling](#property-short-names) to those rules for specific properties.
@@ -179,9 +171,8 @@ a boolean value. True values can be `Yes`, `Y`, `True`, or `T`. False values can
 example, to specify characters that are "alphabetic", we can use `\p{Alphabetic: Y}`. To specify characters that are
 **not** "alphabetic": `\p{Alphabetic: N}`.
 
-/// new | New 5.4 Custom Binary properties
-In 5.4, the new custom binary properties `Vert_space` and `Horiz_Space` were added.
-///
+> [!new] New 5.4 Custom Binary properties
+> In 5.4, the new custom binary properties `Vert_space` and `Horiz_Space` were added.
 
 ### Property Short Names
 
@@ -202,18 +193,17 @@ Block properties have a similar short form as Script and Binary properties.  For
 a block. If we wanted to match characters in the `Basic_Latin` block, we could use the syntax `\p{InBasic_Latin}`. This
 would be the same as `\p{Block: Basic_Latin}` or `\p{Basic_Latin}`.
 
-/// warning | Short Name Conflicts
-When it comes to short names, each new Unicode version, there is a risk that new properties could cause conflicts
-with existing names and/or aliases. Currently, most of the conflicts involve the Block properties. To reduce
-friction, they are evaluated last.
-
-Generally, it is discouraged to use short names for Block properties. But the option is still supported, but Block
-properties will be evaluated last. There are currently no known conflicts with `In*` properties, but in future
-Unicode versions there could.
-
-As for short names for scripts, Binary, or General Categories, there is always the possibility that these could
-break in the future as well. Generally, more explicit is better and probably safer.
-///
+> [!warning] Short Name Conflicts
+> When it comes to short names, each new Unicode version, there is a risk that new properties could cause conflicts
+> with existing names and/or aliases. Currently, most of the conflicts involve the Block properties. To reduce
+> friction, they are evaluated last.
+>
+> Generally, it is discouraged to use short names for Block properties. But the option is still supported, but Block
+> properties will be evaluated last. There are currently no known conflicts with `In*` properties, but in future
+> Unicode versions there could.
+>
+> As for short names for scripts, Binary, or General Categories, there is always the possibility that these could
+> break in the future as well. Generally, more explicit is better and probably safer.
 
 Lastly, you can specify general category properties in the form `\pX` where `X` is the single letter terse property
 form. In this form, you can only use the single character values. So you could specify `Letter`, whose terse form is `L`
@@ -264,10 +254,9 @@ Verbose\ Property\ Form            | Terse\ Property\ Form
 
 ### Compatibility Properties
 
-/// new | New in 5.0
-While many of the properties were available before 5.0, `word` is newly available. And all the properties now
-conform to the [Unicode specification for compatibility properties](https://unicode.org/reports/tr18/#Compatibility_Properties).
-///
+> [!new] New in 5.0
+> While many of the properties were available before 5.0, `word` is newly available. And all the properties now
+> conform to the [Unicode specification for compatibility properties](https://unicode.org/reports/tr18/#Compatibility_Properties).
 
 [Unicode specification for compatibility properties][unicode-posix] defines a number of properties for use in regular
 expressions. The table below shows the names of these properties along with their standard rules as implemented in
@@ -317,11 +306,10 @@ and `XDigit`.
 
 ### POSIX Character Classes
 
-/// new | New in 6.0
-POSIX character classes in the form of `[:name:]` are now forced to always use POSIX compatible rules if available.
-These rules are defined in the [Unicode specification for compatibility properties]
-(https://unicode.org/reports/tr18/#Compatibility_Properties).
-///
+> [!new] New in 6.0
+> POSIX character classes in the form of `[:name:]` are now forced to always use POSIX compatible rules if available.
+> These rules are defined in the [Unicode specification for compatibility properties]
+> (https://unicode.org/reports/tr18/#Compatibility_Properties).
 
 Backrefs allows for POSIX style character classes in the form of `[:name:]`. These properties can only be used inside
 character classes, e.g. `[[:name:]]`.
@@ -350,10 +338,9 @@ in rules if using ASCII mode or Unicode mode.
 `word`     | `[A-Za-z0-9_]`												   | `[\p{Alnum}\p{M}\p{Pc}\p{JoinControl}]`
 `xdigit`   | `[A-Fa-f0-9]`                                     			   | `[A-Fa-f0-9]`
 
-/// Tip
-Using POSIX character classes is equivalent to using Unicode compatibility properties for POSIX, e.g. `[[:punct:]]`
-== `\p{Posix Punct}`.
-///
+> [!tip]
+> Using POSIX character classes is equivalent to using Unicode compatibility properties for POSIX, e.g. `[[:punct:]]`
+> == `\p{Posix Punct}`.
 
 POSIX style character classes have also been extended to allow for specifying normal Unicode properties as well. Any
 Unicode property, outside the compatibility properties, will be accepted in the bracket extension form and behave just
