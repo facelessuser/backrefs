@@ -16,16 +16,16 @@ from backrefs import bregex
 ## Searches
 
 Backrefs preprocesses search patterns looking for new syntax that it replaces with compatible regular expressions for
-the given regular expression engine. For instance, Backrefs implements the `\h` reference in Re, and when compiled, we
-get an Re object with a regular expression pattern that captures horizontal whitespace characters:
+the given regular expression engine. For instance, Backrefs implements the `\R` reference in Re, and when compiled, we
+get an Re object with a regular expression pattern that captures various line breaks.
 
 ```pycon3
->>> bre.compile('\h')
-backrefs.bre.Bre(re.compile('[\t \xa0\u1680\u2000-\u200a\u202f\u205f\u3000]'), auto_compile=True)
+>>> bre.compile(r'\R')
+backrefs.bre.Bre(re.compile('(?:\\r\\n|(?!\\r\\n)[\\n\\v\\f\\r\\x85\\u2028\\u2029])'), auto_compile=True)
 ```
 
-It can be seen that the Backrefs object is simply wrapped around an Re compiled pattern, and we see that `\h` was
-replaced with `[\t \xa0\u1680\u2000-\u200a\u202f\u205f\u3000]`.
+It can be seen that the Backrefs object is simply wrapped around an Re compiled pattern, and we see that `\R` was
+replaced with `(?:\\r\\n|(?!\\r\\n)[\\n\\v\\f\\r\\x85\\u2028\\u2029])`.
 
 This basic approach is used to implement all sorts of references from Unicode properties:
 
@@ -43,6 +43,20 @@ backrefs.bre.Bre(re.compile('\\b(?=\\w)test\\b(?<=\\w)'), auto_compile=True)
 
 A compiled Backrefs object has all the same functions as the regular expression's object, so you can use it in the same
 way to perform splits, matches, substitutions, and anything else.
+
+If we wanted to match a line ending, we could call `prefixmatch` (or the legacy alias of `match`) or `search`.
+
+```pycon
+>>> bre.compile(r'\R').prefixmatch('\n')
+<re.Match object; span=(0, 1), match='\n'>
+```
+
+Matches can also be preformed without pre-compiling.
+
+```pycon
+>>> bre.prefixmatch(r'\R', '\n')
+<re.Match object; span=(0, 1), match='\n'>
+```
 
 ## Replacements
 
@@ -125,7 +139,7 @@ Backrefs also provides an `expand` variant for format templates called `expandf`
 
 ```pycon3
 >>> pattern = bre.compile_search(r"(\w+) (\w+)")
->>> m = pattern.match('foo bar')
+>>> m = pattern.prefixmatch('foo bar')
 >>> bre.expandf(m, r"{0} => {2} {1}")
 'foo bar => bar foo'
 ```
@@ -231,7 +245,7 @@ To pre-compile a format replace template, you can use the Backrefs' `compile_rep
 ```pycon3
 >>> pattern = bre.compile_search(r"(\w+) (\w+)")
 >>> replace = bre.compile_replace(pattern, r"{0} => {2} {1}", bre.FORMAT)
->>> m = pattern.match("foo bar")
+>>> m = pattern.prefixmatch("foo bar")
 >>> replace(m)
 'foo bar => bar foo'
 ```

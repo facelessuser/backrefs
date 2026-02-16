@@ -3,6 +3,10 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
+## 6.2
+
+-   **NEW** Add alias `prefixmatch` for `match` in both `bre` and `bregex`.
+
 ## 6.1
 
 -   **NEW**: Include Unicode 17 zip for early Python 3.15 usage, though Python 3.15 functionality is not guaranteed.
