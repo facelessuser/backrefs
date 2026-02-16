@@ -498,7 +498,7 @@ def expandf(m: Match[AnyStr] | None, repl: ReplaceTemplate[AnyStr] | AnyStr) -> 
     return _apply_replace_backrefs(m, repl, flags=FORMAT)
 
 
-def match(
+def prefixmatch(
     pattern: AnyStr | Pattern[AnyStr] | Bregex[AnyStr],
     string: AnyStr,
     flags: int = 0,
@@ -511,6 +511,9 @@ def match(
         'Match[AnyStr] | None',
         _regex.match(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
     )
+
+
+match = prefixmatch
 
 
 def fullmatch(

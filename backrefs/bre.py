@@ -477,7 +477,7 @@ def search(
     return _re.search(_apply_search_backrefs(pattern, flags), string, flags, *args, **kwargs)
 
 
-def match(
+def prefixmatch(
     pattern: AnyStr | Pattern[AnyStr] | Bre[AnyStr],
     string: AnyStr,
     flags: int | _re.RegexFlag = 0,
@@ -486,6 +486,9 @@ def match(
     """Apply `match` after applying backrefs."""
 
     return _re.match(_apply_search_backrefs(pattern, flags), string, flags=flags, **kwargs)
+
+
+match = prefixmatch
 
 
 def fullmatch(
