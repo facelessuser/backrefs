@@ -8,6 +8,7 @@ icon: lucide/scroll-text
 -   **FIX**: Fix bad name for value for Joining Group, which was previously `non_joining`, but should have been
    `no_joining_group`.
 -   **FIX**: Update Unicode script to handle unexpected changes in alias of non-explicit value names.
+-   **FIX**: Age property should include all versions below the selected one.
 
 ## 6.2
 

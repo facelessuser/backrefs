@@ -538,6 +538,7 @@ def gen_age(output, ascii_props=False, append=False, prefix="", aliases=None):
             obj[v] = []
 
     all_chars = (ALL_CHARS - ASCII_UNUSED) if ascii_props else ALL_CHARS
+    last = ''
     with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'DerivedAge.txt'), 'r', encoding='utf-8') as uf:
         for line in uf:
             if not line.startswith('#'):
@@ -549,6 +550,11 @@ def gen_age(output, ascii_props=False, append=False, prefix="", aliases=None):
 
                 if name not in obj:
                     obj[name] = []
+
+                if name != last:
+                    if last:
+                        obj[name] = obj[last][:]
+                    last = name
 
                 if not span:
                     continue
