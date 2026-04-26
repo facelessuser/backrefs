@@ -3,6 +3,12 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
+## 6.2.1
+
+-   **FIX**: Fix bad name for value for Joining Group, which was previously `non_joining`, but should have been
+   `no_joining_group`.
+-   **FIX**: Update Unicode script to handle unexpected changes in alias of non-explicit value names.
+
 ## 6.2
 
 -   **NEW** Add alias `prefixmatch` for `match` in both `bre` and `bregex`.
