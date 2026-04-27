@@ -1,7 +1,9 @@
 """Test `Script Extensions`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import scriptextensions
+from backrefs.uniprops.unidata import alias
 
 
 class TestScriptExtensions(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestScriptExtensions(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_script_extensions.keys())
-        keys2 = set(uniprops.unidata.ascii_script_extensions.keys())
+        keys1 = set(scriptextensions.unicode_script_extensions.keys())
+        keys2 = set(scriptextensions.ascii_script_extensions.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -30,21 +32,21 @@ class TestScriptExtensions(unittest.TestCase):
     def test_scriptextensions(self):
         """Test `Script Extensions` properties."""
 
-        for k, v in uniprops.unidata.unicode_script_extensions.items():
+        for k, v in scriptextensions.unicode_script_extensions.items():
             result = uniprops.get_unicode_property('scriptextensions', k)
             self.assertEqual(result, v)
 
     def test_scriptextensions_ascii(self):
         """Test `Script Extensions` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_script_extensions.items():
+        for k, v in scriptextensions.ascii_script_extensions.items():
             result = uniprops.get_unicode_property('scriptextensions', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
     def test_scriptextensions_binary(self):
         """Test `Script Extensions` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_script_extensions.items():
+        for k, v in scriptextensions.ascii_script_extensions.items():
             result = uniprops.get_unicode_property('scriptextensions', k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
@@ -63,37 +65,37 @@ class TestScriptExtensions(unittest.TestCase):
     def test_alias(self):
         """Test aliases."""
 
-        alias = None
-        for k, v in uniprops.unidata.alias.unicode_alias['_'].items():
+        _alias = None
+        for k, v in alias.unicode_alias['_'].items():
             if v == 'scriptextensions':
-                alias = k
+                _alias = k
                 break
 
-        self.assertTrue(alias is not None)
+        self.assertTrue(_alias is not None)
 
         # Ensure alias works
-        for k, v in uniprops.unidata.unicode_script_extensions.items():
-            result = uniprops.get_unicode_property(alias, k)
+        for k, v in scriptextensions.unicode_script_extensions.items():
+            result = uniprops.get_unicode_property(_alias, k)
             self.assertEqual(result, v)
             break
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['script'].items():
-            result1 = uniprops.get_unicode_property(alias, k)
-            result2 = uniprops.get_unicode_property(alias, v)
+        for k, v in alias.unicode_alias['script'].items():
+            result1 = uniprops.get_unicode_property(_alias, k)
+            result2 = uniprops.get_unicode_property(_alias, v)
             self.assertEqual(result1, result2)
 
     def test_scriptextension_detect(self):
         """Test detection of `Script Extensions` properties."""
 
-        for k, v in uniprops.unidata.unicode_script_extensions.items():
+        for k, v in scriptextensions.unicode_script_extensions.items():
             result = uniprops.get_unicode_property(k)
             self.assertEqual(result, v)
 
     def test_isscript_detect(self):
         """Test detection of `Script Extensions` properties."""
 
-        for k, v in uniprops.unidata.unicode_script_extensions.items():
+        for k, v in scriptextensions.unicode_script_extensions.items():
             if k.startswith('^'):
                 k = '^is' + k[1:]
             else:
@@ -105,7 +107,7 @@ class TestScriptExtensions(unittest.TestCase):
         """Test aliases."""
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['script'].items():
+        for k, v in alias.unicode_alias['script'].items():
             result1 = uniprops.get_unicode_property(k)
             result2 = uniprops.get_unicode_property(v)
             self.assertEqual(result1, result2)
@@ -114,7 +116,7 @@ class TestScriptExtensions(unittest.TestCase):
         """Test aliases."""
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['script'].items():
+        for k, v in alias.unicode_alias['script'].items():
             result1 = uniprops.get_unicode_property('is' + k)
             result2 = uniprops.get_unicode_property('is' + v)
             self.assertEqual(result1, result2)

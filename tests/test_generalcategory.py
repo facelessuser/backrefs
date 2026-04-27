@@ -1,7 +1,9 @@
 """Test `General Category`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import generalcategory
+from backrefs.uniprops.unidata import alias
 
 
 class TestGeneralCategory(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestGeneralCategory(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_properties.keys())
-        keys2 = set(uniprops.unidata.ascii_properties.keys())
+        keys1 = set(generalcategory.unicode_properties.keys())
+        keys2 = set(generalcategory.ascii_properties.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -23,8 +25,8 @@ class TestGeneralCategory(unittest.TestCase):
         self.assertEqual(keys1, keys2)
 
         for key in keys1:
-            k1 = set(uniprops.unidata.unicode_properties[key].keys())
-            k2 = set(uniprops.unidata.ascii_properties[key].keys())
+            k1 = set(generalcategory.unicode_properties[key].keys())
+            k2 = set(generalcategory.ascii_properties[key].keys())
 
             # Ensure each subcategory has a ^ key
             self.assertTrue('^' in k1)
@@ -44,7 +46,7 @@ class TestGeneralCategory(unittest.TestCase):
     def test_gc(self):
         """Test `General Category`."""
 
-        for k1, v1 in uniprops.unidata.unicode_properties.items():
+        for k1, v1 in generalcategory.unicode_properties.items():
             for k2, v2 in v1.items():
                 if k2.startswith('^'):
                     prefix = '^'
@@ -61,7 +63,7 @@ class TestGeneralCategory(unittest.TestCase):
     def test_gc_ascii(self):
         """Test `General Category`."""
 
-        for k1, v1 in uniprops.unidata.ascii_properties.items():
+        for k1, v1 in generalcategory.ascii_properties.items():
             for k2, v2 in v1.items():
                 if k2.startswith('^'):
                     prefix = '^'
@@ -78,7 +80,7 @@ class TestGeneralCategory(unittest.TestCase):
     def test_gc_just_category(self):
         """Test `General Category`."""
 
-        for k1, v1 in uniprops.unidata.unicode_properties.items():
+        for k1, v1 in generalcategory.unicode_properties.items():
             for k2, v2 in v1.items():
                 if k2.startswith('^'):
                     prefix = '^'
@@ -94,7 +96,7 @@ class TestGeneralCategory(unittest.TestCase):
     def test_gc_just_category_ascii(self):
         """Test `General Category`."""
 
-        for k1, v1 in uniprops.unidata.ascii_properties.items():
+        for k1, v1 in generalcategory.ascii_properties.items():
             for k2, v2 in v1.items():
                 if k2.startswith('^'):
                     prefix = '^'
@@ -110,7 +112,7 @@ class TestGeneralCategory(unittest.TestCase):
     def test_gc_just_category_binary(self):
         """Test `General Category` ASCII properties."""
 
-        for k1, v1 in uniprops.unidata.ascii_properties.items():
+        for k1, v1 in generalcategory.ascii_properties.items():
             for k2, v2 in v1.items():
                 if k2.startswith('^'):
                     prefix = '^'
@@ -138,25 +140,25 @@ class TestGeneralCategory(unittest.TestCase):
     def test_alias(self):
         """Test aliases."""
 
-        alias = None
-        for k, v in uniprops.unidata.alias.unicode_alias['_'].items():
+        _alias = None
+        for k, v in alias.unicode_alias['_'].items():
             if v == 'generalcategory':
-                alias = k
+                _alias = k
                 break
 
-        self.assertTrue(alias is not None)
+        self.assertTrue(_alias is not None)
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['generalcategory'].items():
-            result1 = uniprops.get_unicode_property(alias, k)
-            result2 = uniprops.get_unicode_property(alias, v)
+        for k, v in alias.unicode_alias['generalcategory'].items():
+            result1 = uniprops.get_unicode_property(_alias, k)
+            result2 = uniprops.get_unicode_property(_alias, v)
             self.assertEqual(result1, result2)
 
     def test_alias_detect(self):
         """Test aliases."""
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['generalcategory'].items():
+        for k, v in alias.unicode_alias['generalcategory'].items():
             result1 = uniprops.get_unicode_property(k)
             result2 = uniprops.get_unicode_property(v)
             self.assertEqual(result1, result2)

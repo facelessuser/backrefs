@@ -1,7 +1,9 @@
 """Test `Joining Group`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import joininggroup
+from backrefs.uniprops.unidata import alias
 
 
 class TestJoiningGroup(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestJoiningGroup(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_joining_group.keys())
-        keys2 = set(uniprops.unidata.ascii_joining_group.keys())
+        keys1 = set(joininggroup.unicode_joining_group.keys())
+        keys2 = set(joininggroup.ascii_joining_group.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -30,21 +32,21 @@ class TestJoiningGroup(unittest.TestCase):
     def test_joininggroup(self):
         """Test `Joining Group` properties."""
 
-        for k, v in uniprops.unidata.unicode_joining_group.items():
+        for k, v in joininggroup.unicode_joining_group.items():
             result = uniprops.get_unicode_property('joininggroup', k)
             self.assertEqual(result, v)
 
     def test_joininggroup_ascii(self):
         """Test `Joining Group` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_joining_group.items():
+        for k, v in joininggroup.ascii_joining_group.items():
             result = uniprops.get_unicode_property('joininggroup', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
     def test_joininggroup_binary(self):
         """Test `Joining Group` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_joining_group.items():
+        for k, v in joininggroup.ascii_joining_group.items():
             result = uniprops.get_unicode_property('joininggroup', k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
@@ -57,22 +59,22 @@ class TestJoiningGroup(unittest.TestCase):
     def test_alias(self):
         """Test aliases."""
 
-        alias = None
-        for k, v in uniprops.unidata.alias.unicode_alias['_'].items():
+        _alias = None
+        for k, v in alias.unicode_alias['_'].items():
             if v == 'joininggroup':
-                alias = k
+                _alias = k
                 break
 
-        self.assertTrue(alias is not None)
+        self.assertTrue(_alias is not None)
 
         # Ensure alias works
-        for k, v in uniprops.unidata.unicode_joining_group.items():
-            result = uniprops.get_unicode_property(alias, k)
+        for k, v in joininggroup.unicode_joining_group.items():
+            result = uniprops.get_unicode_property(_alias, k)
             self.assertEqual(result, v)
             break
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['joininggroup'].items():
-            result1 = uniprops.get_unicode_property(alias, k)
-            result2 = uniprops.get_unicode_property(alias, v)
+        for k, v in alias.unicode_alias['joininggroup'].items():
+            result1 = uniprops.get_unicode_property(_alias, k)
+            result2 = uniprops.get_unicode_property(_alias, v)
             self.assertEqual(result1, result2)

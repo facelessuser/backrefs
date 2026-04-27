@@ -1,7 +1,9 @@
 """Test `Numeric Value`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import numericvalue
+from backrefs.uniprops.unidata import alias
 
 
 class TestNumericValue(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestNumericValue(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_numeric_values.keys())
-        keys2 = set(uniprops.unidata.ascii_numeric_values.keys())
+        keys1 = set(numericvalue.unicode_numeric_values.keys())
+        keys2 = set(numericvalue.ascii_numeric_values.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -30,21 +32,21 @@ class TestNumericValue(unittest.TestCase):
     def test_numericvalue(self):
         """Test `Numeric Value` properties."""
 
-        for k, v in uniprops.unidata.unicode_numeric_values.items():
+        for k, v in numericvalue.unicode_numeric_values.items():
             result = uniprops.get_unicode_property('numericvalue', k)
             self.assertEqual(result, v)
 
     def test_numericvalue_ascii(self):
         """Test `Numeric Value` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_numeric_values.items():
+        for k, v in numericvalue.ascii_numeric_values.items():
             result = uniprops.get_unicode_property('numericvalue', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
     def test_numericvalue_binary(self):
         """Test `Numeric Value` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_numeric_values.items():
+        for k, v in numericvalue.ascii_numeric_values.items():
             result = uniprops.get_unicode_property('numericvalue', k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
@@ -57,22 +59,22 @@ class TestNumericValue(unittest.TestCase):
     def test_alias(self):
         """Test aliases."""
 
-        alias = None
-        for k, v in uniprops.unidata.alias.unicode_alias['_'].items():
+        _alias = None
+        for k, v in alias.unicode_alias['_'].items():
             if v == 'numericvalue':
-                alias = k
+                _alias = k
                 break
 
-        self.assertTrue(alias is not None)
+        self.assertTrue(_alias is not None)
 
         # Ensure alias works
-        for k, v in uniprops.unidata.unicode_numeric_values.items():
-            result = uniprops.get_unicode_property(alias, k)
+        for k, v in numericvalue.unicode_numeric_values.items():
+            result = uniprops.get_unicode_property(_alias, k)
             self.assertEqual(result, v)
             break
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['numericvalue'].items():
-            result1 = uniprops.get_unicode_property(alias, k)
-            result2 = uniprops.get_unicode_property(alias, v)
+        for k, v in alias.unicode_alias['numericvalue'].items():
+            result1 = uniprops.get_unicode_property(_alias, k)
+            result2 = uniprops.get_unicode_property(_alias, v)
             self.assertEqual(result1, result2)

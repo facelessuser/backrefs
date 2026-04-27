@@ -1,7 +1,9 @@
 """Test `Binary`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import binary
+from backrefs.uniprops.unidata import alias
 
 
 class TestBinary(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestBinary(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_binary.keys())
-        keys2 = set(uniprops.unidata.ascii_binary.keys())
+        keys1 = set(binary.unicode_binary.keys())
+        keys2 = set(binary.ascii_binary.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -30,21 +32,21 @@ class TestBinary(unittest.TestCase):
     def test_binary(self):
         """Test `Binary` properties."""
 
-        for k, v in uniprops.unidata.unicode_binary.items():
+        for k, v in binary.unicode_binary.items():
             result = uniprops.get_unicode_property(k)
             self.assertEqual(result, v)
 
     def test_binary_ascii(self):
         """Test `Binary` properties."""
 
-        for k, v in uniprops.unidata.ascii_binary.items():
+        for k, v in binary.ascii_binary.items():
             result = uniprops.get_unicode_property(k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
     def test_binary_binary(self):
         """Test `Binary` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_binary.items():
+        for k, v in binary.ascii_binary.items():
             result = uniprops.get_unicode_property(k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
@@ -52,61 +54,61 @@ class TestBinary(unittest.TestCase):
         """Test binary Category with a value."""
 
         result = uniprops.get_unicode_property('alphabetic', 'true')
-        self.assertEqual(result, uniprops.unidata.unicode_binary['alphabetic'])
+        self.assertEqual(result, binary.unicode_binary['alphabetic'])
 
     def test_binary_t(self):
         """Test binary Category with a value."""
 
         result = uniprops.get_unicode_property('alphabetic', 't')
-        self.assertEqual(result, uniprops.unidata.unicode_binary['alphabetic'])
+        self.assertEqual(result, binary.unicode_binary['alphabetic'])
 
     def test_binary_yes(self):
         """Test binary Category with a value."""
 
         result = uniprops.get_unicode_property('alphabetic', 'yes')
-        self.assertEqual(result, uniprops.unidata.unicode_binary['alphabetic'])
+        self.assertEqual(result, binary.unicode_binary['alphabetic'])
 
     def test_binary_y(self):
         """Test binary Category with a value."""
 
         result = uniprops.get_unicode_property('alphabetic', 'y')
-        self.assertEqual(result, uniprops.unidata.unicode_binary['alphabetic'])
+        self.assertEqual(result, binary.unicode_binary['alphabetic'])
 
     def test_binary_true_inverted(self):
         """Test binary Category with an inverted value."""
 
         result = uniprops.get_unicode_property('^alphabetic', 'true')
-        self.assertEqual(result, uniprops.unidata.unicode_binary['^alphabetic'])
+        self.assertEqual(result, binary.unicode_binary['^alphabetic'])
 
     def test_binary_false(self):
         """Test false."""
 
         result = uniprops.get_unicode_property('alphabetic', 'false')
-        self.assertEqual(result, uniprops.unidata.unicode_binary['^alphabetic'])
+        self.assertEqual(result, binary.unicode_binary['^alphabetic'])
 
     def test_binary_f(self):
         """Test short false."""
 
         result = uniprops.get_unicode_property('alphabetic', 'f')
-        self.assertEqual(result, uniprops.unidata.unicode_binary['^alphabetic'])
+        self.assertEqual(result, binary.unicode_binary['^alphabetic'])
 
     def test_binary_no(self):
         """Test no."""
 
         result = uniprops.get_unicode_property('alphabetic', 'no')
-        self.assertEqual(result, uniprops.unidata.unicode_binary['^alphabetic'])
+        self.assertEqual(result, binary.unicode_binary['^alphabetic'])
 
     def test_binary_n(self):
         """Test short no."""
 
         result = uniprops.get_unicode_property('alphabetic', 'n')
-        self.assertEqual(result, uniprops.unidata.unicode_binary['^alphabetic'])
+        self.assertEqual(result, binary.unicode_binary['^alphabetic'])
 
     def test_binary_false_inverted(self):
         """Test inverted false."""
 
         result = uniprops.get_unicode_property('^alphabetic', 'false')
-        self.assertEqual(result, uniprops.unidata.unicode_binary['alphabetic'])
+        self.assertEqual(result, binary.unicode_binary['alphabetic'])
 
     def test_bad_binary(self):
         """Test binary property with bad value."""
@@ -118,7 +120,7 @@ class TestBinary(unittest.TestCase):
         """Test aliases."""
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['binary'].items():
+        for k, v in alias.unicode_alias['binary'].items():
             result1 = uniprops.get_unicode_property(k, 't')
             result2 = uniprops.get_unicode_property(v, 't')
             self.assertEqual(result1, result2)
@@ -127,7 +129,7 @@ class TestBinary(unittest.TestCase):
         """Test aliases."""
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['binary'].items():
+        for k, v in alias.unicode_alias['binary'].items():
             result1 = uniprops.get_unicode_property(k)
             result2 = uniprops.get_unicode_property(v)
             self.assertEqual(result1, result2)
@@ -135,7 +137,7 @@ class TestBinary(unittest.TestCase):
     def test_isbinary_detect(self):
         """Test detection of `Binary` properties."""
 
-        for k, v in uniprops.unidata.unicode_binary.items():
+        for k, v in binary.unicode_binary.items():
             if k.startswith('^'):
                 k = '^is' + k[1:]
             else:
@@ -147,7 +149,7 @@ class TestBinary(unittest.TestCase):
         """Test aliases."""
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['binary'].items():
+        for k, v in alias.unicode_alias['binary'].items():
             is_k = 'is' + k
             is_v = 'is' + v
             result1 = uniprops.get_unicode_property(is_k)

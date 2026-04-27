@@ -1,7 +1,9 @@
 """Test `Bidi Class`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import bidiclass
+from backrefs.uniprops.unidata import alias
 
 
 class TestBidiClass(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestBidiClass(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_bidi_classes.keys())
-        keys2 = set(uniprops.unidata.ascii_bidi_classes.keys())
+        keys1 = set(bidiclass.unicode_bidi_classes.keys())
+        keys2 = set(bidiclass.ascii_bidi_classes.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -30,21 +32,21 @@ class TestBidiClass(unittest.TestCase):
     def test_bidiclass(self):
         """Test `Bidi Class` properties."""
 
-        for k, v in uniprops.unidata.unicode_bidi_classes.items():
+        for k, v in bidiclass.unicode_bidi_classes.items():
             result = uniprops.get_unicode_property('bidiclass', k)
             self.assertEqual(result, v)
 
     def test_bidiclass_ascii(self):
         """Test `Bidi Class` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_bidi_classes.items():
+        for k, v in bidiclass.ascii_bidi_classes.items():
             result = uniprops.get_unicode_property('bidiclass', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
     def test_bidiclass_binary(self):
         """Test `Bidi Class` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_bidi_classes.items():
+        for k, v in bidiclass.ascii_bidi_classes.items():
             result = uniprops.get_unicode_property('bidiclass', k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
@@ -57,22 +59,22 @@ class TestBidiClass(unittest.TestCase):
     def test_alias(self):
         """Test aliases."""
 
-        alias = None
-        for k, v in uniprops.unidata.alias.unicode_alias['_'].items():
+        _alias = None
+        for k, v in alias.unicode_alias['_'].items():
             if v == 'bidiclass':
-                alias = k
+                _alias = k
                 break
 
-        self.assertTrue(alias is not None)
+        self.assertTrue(_alias is not None)
 
         # Ensure alias works
-        for k, v in uniprops.unidata.unicode_bidi_classes.items():
-            result = uniprops.get_unicode_property(alias, k)
+        for k, v in bidiclass.unicode_bidi_classes.items():
+            result = uniprops.get_unicode_property(_alias, k)
             self.assertEqual(result, v)
             break
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['bidiclass'].items():
-            result1 = uniprops.get_unicode_property(alias, k)
-            result2 = uniprops.get_unicode_property(alias, v)
+        for k, v in alias.unicode_alias['bidiclass'].items():
+            result1 = uniprops.get_unicode_property(_alias, k)
+            result2 = uniprops.get_unicode_property(_alias, v)
             self.assertEqual(result1, result2)

@@ -7,9 +7,7 @@ icon: lucide/scroll-text
 
 -   **BREAK**: Remove deprecated `\e` and `\h` support.
 -   **NEW**: Drop Python 3.9 support.
-
-## 6.2.1
-
+-   **NEW**: Lazy load Unicode tables as required.
 -   **FIX**: Fix bad name for value for Joining Group, which was previously `non_joining`, but should have been
    `no_joining_group`.
 -   **FIX**: Update Unicode script to handle unexpected changes in alias of non-explicit value names.

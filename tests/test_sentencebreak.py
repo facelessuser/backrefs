@@ -1,7 +1,9 @@
 """Test `Sentence Break`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import sentencebreak
+from backrefs.uniprops.unidata import alias
 
 
 class TestSentenceBreak(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestSentenceBreak(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_sentence_break.keys())
-        keys2 = set(uniprops.unidata.ascii_sentence_break.keys())
+        keys1 = set(sentencebreak.unicode_sentence_break.keys())
+        keys2 = set(sentencebreak.ascii_sentence_break.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -30,21 +32,21 @@ class TestSentenceBreak(unittest.TestCase):
     def test_sentencebreak(self):
         """Test `Sentence Break` properties."""
 
-        for k, v in uniprops.unidata.unicode_sentence_break.items():
+        for k, v in sentencebreak.unicode_sentence_break.items():
             result = uniprops.get_unicode_property('sentencebreak', k)
             self.assertEqual(result, v)
 
     def test_sentencebreak_ascii(self):
         """Test `Sentence Break` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_sentence_break.items():
+        for k, v in sentencebreak.ascii_sentence_break.items():
             result = uniprops.get_unicode_property('sentencebreak', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
     def test_sentencebreak_binary(self):
         """Test `Sentence Break` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_sentence_break.items():
+        for k, v in sentencebreak.ascii_sentence_break.items():
             result = uniprops.get_unicode_property('sentencebreak', k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
@@ -57,22 +59,22 @@ class TestSentenceBreak(unittest.TestCase):
     def test_alias(self):
         """Test aliases."""
 
-        alias = None
-        for k, v in uniprops.unidata.alias.unicode_alias['_'].items():
+        _alias = None
+        for k, v in alias.unicode_alias['_'].items():
             if v == 'sentencebreak':
-                alias = k
+                _alias = k
                 break
 
-        self.assertTrue(alias is not None)
+        self.assertTrue(_alias is not None)
 
         # Ensure alias works
-        for k, v in uniprops.unidata.unicode_sentence_break.items():
-            result = uniprops.get_unicode_property(alias, k)
+        for k, v in sentencebreak.unicode_sentence_break.items():
+            result = uniprops.get_unicode_property(_alias, k)
             self.assertEqual(result, v)
             break
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['sentencebreak'].items():
-            result1 = uniprops.get_unicode_property(alias, k)
-            result2 = uniprops.get_unicode_property(alias, v)
+        for k, v in alias.unicode_alias['sentencebreak'].items():
+            result1 = uniprops.get_unicode_property(_alias, k)
+            result2 = uniprops.get_unicode_property(_alias, v)
             self.assertEqual(result1, result2)
