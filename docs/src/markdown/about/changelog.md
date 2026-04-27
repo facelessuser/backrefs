@@ -3,8 +3,9 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
-## 6.3
+## 7.0
 
+-   **BREAK**: Remove deprecated `\e` and `\h` support.
 -   **NEW**: Drop Python 3.9 support.
 
 ## 6.2.1

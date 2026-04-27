@@ -312,21 +312,6 @@ class TestSearchTemplate(unittest.TestCase):
         )
         self.assertTrue(pattern.match(b'a') is not None)
 
-    def test_escape_char(self):
-        """Test escape char."""
-
-        with pytest.warns(DeprecationWarning):
-            pattern = bre.compile_search(
-                r'test\etest[\e]{2}'
-            )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'test\x1btest[\x1b]{2}'
-        )
-
-        self.assertTrue(pattern.match('test\x1btest\x1b\x1b') is not None)
-
     def test_comments(self):
         """Test comments v0."""
 
@@ -1079,38 +1064,34 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_horizontal_ws(self):
         """Test horizontal whitespace."""
 
-        with pytest.warns(DeprecationWarning):
-            self.assertEqual(
-                bre.sub(r'\h*', '', '    \t\ttest    \t'),
-                'test'
-            )
+        self.assertEqual(
+            bre.sub(r'\p{Horiz_Space}*', '', '    \t\ttest    \t'),
+            'test'
+        )
 
     def test_horizontal_ws_in_group(self):
         """Test horizontal whitespace."""
 
-        with pytest.warns(DeprecationWarning):
-            self.assertEqual(
-                bre.sub(r'[\ht]*', '', '    \t\ttest    \t'),
-                'es'
-            )
+        self.assertEqual(
+            bre.sub(r'[\p{Horiz_Space}t]*', '', '    \t\ttest    \t'),
+            'es'
+        )
 
     def test_horizontal_ws_in_inverse_group(self):
         """Test horizontal whitespace."""
 
-        with pytest.warns(DeprecationWarning):
-            self.assertEqual(
-                bre.sub(r'[^\ht]*', '', '    \t\ttest    \t'),
-                '    \t\ttt    \t'
-            )
+        self.assertEqual(
+            bre.sub(r'[^\p{Horiz_Space}t]*', '', '    \t\ttest    \t'),
+            '    \t\ttt    \t'
+        )
 
     def test_horizontal_ws_bytes(self):
         """Test horizontal whitespace as byte string."""
 
-        with pytest.warns(DeprecationWarning):
-            self.assertEqual(
-                bre.sub(br'\h*', b'', b'    \t\ttest    \t'),
-                b'test'
-            )
+        self.assertEqual(
+            bre.sub(br'\p{Horiz_Space}*', b'', b'    \t\ttest    \t'),
+            b'test'
+        )
 
     def test_grapheme_cluster(self):
         """Test simple grapheme cluster."""

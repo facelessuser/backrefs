@@ -153,21 +153,6 @@ class TestSearchTemplate(unittest.TestCase):
         with pytest.raises(_bregex_parse.LoopException):
             bregex.compile_search(r'(?V1)(?V0)')
 
-    def test_escape_char(self):
-        """Test escape char."""
-
-        with pytest.warns(DeprecationWarning):
-            pattern = bregex.compile_search(
-                r'test\etest[\e]{2}'
-            )
-
-        self.assertEqual(
-            pattern.pattern,
-            r'test\x1btest[\x1b]{2}'
-        )
-
-        self.assertTrue(pattern.match('test\x1btest\x1b\x1b') is not None)
-
     def test_comments_v0(self):
         """Test comments v0."""
 

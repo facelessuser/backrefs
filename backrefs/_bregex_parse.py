@@ -71,7 +71,6 @@ class _SearchParser(Generic[AnyStr]):
     """Search Template."""
 
     _new_refs = ("e", "R", "Q", "E")
-    _re_escape = r"\x1b"
     _line_break = r'(?>\r\n|[\n\v\f\r\x85\u2028\u2029])'
     _bytes_line_break = r'(?>\r\n|[\n\v\f\r\x85])'
 
@@ -199,9 +198,6 @@ class _SearchParser(Generic[AnyStr]):
 
         if not in_group and t == "R":
             current.append(self._re_line_break)
-        elif t == 'e':
-            _util.warn_deprecated(R"The \e reference has been deprecated, please use \x1b instead")
-            current.extend(self._re_escape)
         else:
             current.extend(["\\", t])
         return current
