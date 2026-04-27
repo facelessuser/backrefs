@@ -3,6 +3,10 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
+## 6.3
+
+-   **NEW**: Drop Python 3.9 support.
+
 ## 6.2.1
 
 -   **FIX**: Fix bad name for value for Joining Group, which was previously `non_joining`, but should have been
