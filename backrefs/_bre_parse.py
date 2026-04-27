@@ -81,7 +81,6 @@ class _SearchParser(Generic[AnyStr]):
     """Search Template."""
 
     _new_refs = ("c", "C", "e", "E", "h", "l", "L", "m", "M", "N", "p", "P", "Q", "R", "X")
-    _re_escape = r"\x1b"
     _re_start_wb = r"\b(?=\w)"
     _re_end_wb = r"\b(?<=\w)"
     _line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])'
@@ -307,14 +306,6 @@ class _SearchParser(Generic[AnyStr]):
             no_mark = self.unicode_props("^m", None, in_group=False)[0]
             mark = self.unicode_props("m", None, in_group=False)[0]
             current.extend(self._grapheme_cluster.format(no_mark, mark, mark))
-        elif t == "e":
-            _util.warn_deprecated(R"The \e reference has been deprecated, please use \x1b instead")
-            current.append(self._re_escape)
-        elif t == "h":
-            _util.warn_deprecated(R"The \h reference has been deprecated, please use \p{Horiz_Space} instead")
-            current.extend(self.unicode_props('blank', None, in_group=in_group))
-            if in_group:
-                self.found_property = True
         elif t == 'p':
             prop = self.get_unicode_property(i)
             current.extend(self.unicode_props(prop[0], prop[1], in_group=in_group))
