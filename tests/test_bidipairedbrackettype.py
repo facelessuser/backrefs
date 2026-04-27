@@ -1,7 +1,9 @@
 """Test `Bidi Paired Bracket Type`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import bidipairedbrackettype as bidi
+from backrefs.uniprops.unidata import alias
 
 
 class TestBidiPairedBracketType(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestBidiPairedBracketType(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_bidi_paired_bracket_type.keys())
-        keys2 = set(uniprops.unidata.ascii_bidi_paired_bracket_type.keys())
+        keys1 = set(bidi.unicode_bidi_paired_bracket_type.keys())
+        keys2 = set(bidi.ascii_bidi_paired_bracket_type.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -30,21 +32,21 @@ class TestBidiPairedBracketType(unittest.TestCase):
     def test_bidipairedbrackettype(self):
         """Test `Bidi Paired Bracket Type` properties."""
 
-        for k, v in uniprops.unidata.unicode_bidi_paired_bracket_type.items():
+        for k, v in bidi.unicode_bidi_paired_bracket_type.items():
             result = uniprops.get_unicode_property('bidipairedbrackettype', k)
             self.assertEqual(result, v)
 
     def test_bidipairedbrackettype_ascii(self):
         """Test `Bidi Paired Bracket Type` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_bidi_paired_bracket_type.items():
+        for k, v in bidi.ascii_bidi_paired_bracket_type.items():
             result = uniprops.get_unicode_property('bidipairedbrackettype', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
     def test_bidipairedbrackettype_binary(self):
         """Test `Bidi Paired Bracket Type` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_bidi_paired_bracket_type.items():
+        for k, v in bidi.ascii_bidi_paired_bracket_type.items():
             result = uniprops.get_unicode_property('bidipairedbrackettype', k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
@@ -57,22 +59,22 @@ class TestBidiPairedBracketType(unittest.TestCase):
     def test_alias(self):
         """Test aliases."""
 
-        alias = None
-        for k, v in uniprops.unidata.alias.unicode_alias['_'].items():
+        _alias = None
+        for k, v in alias.unicode_alias['_'].items():
             if v == 'bidipairedbrackettype':
-                alias = k
+                _alias = k
                 break
 
-        self.assertTrue(alias is not None)
+        self.assertTrue(_alias is not None)
 
         # Ensure alias works
-        for k, v in uniprops.unidata.unicode_bidi_paired_bracket_type.items():
-            result = uniprops.get_unicode_property(alias, k)
+        for k, v in bidi.unicode_bidi_paired_bracket_type.items():
+            result = uniprops.get_unicode_property(_alias, k)
             self.assertEqual(result, v)
             break
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['bidipairedbrackettype'].items():
-            result1 = uniprops.get_unicode_property(alias, k)
-            result2 = uniprops.get_unicode_property(alias, v)
+        for k, v in alias.unicode_alias['bidipairedbrackettype'].items():
+            result1 = uniprops.get_unicode_property(_alias, k)
+            result2 = uniprops.get_unicode_property(_alias, v)
             self.assertEqual(result1, result2)

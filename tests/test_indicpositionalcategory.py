@@ -1,7 +1,9 @@
 """Test `Indic Positional Category`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import indicpositionalcategory as ipc
+from backrefs.uniprops.unidata import alias
 
 
 class TestIndicPositionalCategory(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestIndicPositionalCategory(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_indic_positional_category.keys())
-        keys2 = set(uniprops.unidata.ascii_indic_positional_category.keys())
+        keys1 = set(ipc.unicode_indic_positional_category.keys())
+        keys2 = set(ipc.ascii_indic_positional_category.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -30,21 +32,21 @@ class TestIndicPositionalCategory(unittest.TestCase):
     def test_indicpositionalcategory(self):
         """Test `Indic Positional Category` properties."""
 
-        for k, v in uniprops.unidata.unicode_indic_positional_category.items():
+        for k, v in ipc.unicode_indic_positional_category.items():
             result = uniprops.get_unicode_property('indicpositionalcategory', k)
             self.assertEqual(result, v)
 
     def test_indicpositionalcategory_ascii(self):
         """Test `Indic Positional Category` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_indic_positional_category.items():
+        for k, v in ipc.ascii_indic_positional_category.items():
             result = uniprops.get_unicode_property('indicpositionalcategory', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
     def test_indicpositionalcategory_binary(self):
         """Test `Indic Positional Category` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_indic_positional_category.items():
+        for k, v in ipc.ascii_indic_positional_category.items():
             result = uniprops.get_unicode_property('indicpositionalcategory', k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
@@ -57,22 +59,22 @@ class TestIndicPositionalCategory(unittest.TestCase):
     def test_alias(self):
         """Test aliases."""
 
-        alias = None
-        for k, v in uniprops.unidata.alias.unicode_alias['_'].items():
+        _alias = None
+        for k, v in alias.unicode_alias['_'].items():
             if v == 'indicpositionalcategory':
-                alias = k
+                _alias = k
                 break
 
-        self.assertTrue(alias is not None)
+        self.assertTrue(_alias is not None)
 
         # Ensure alias works
-        for k, v in uniprops.unidata.unicode_indic_positional_category.items():
-            result = uniprops.get_unicode_property(alias, k)
+        for k, v in ipc.unicode_indic_positional_category.items():
+            result = uniprops.get_unicode_property(_alias, k)
             self.assertEqual(result, v)
             break
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['indicpositionalcategory'].items():
-            result1 = uniprops.get_unicode_property(alias, k)
-            result2 = uniprops.get_unicode_property(alias, v)
+        for k, v in alias.unicode_alias['indicpositionalcategory'].items():
+            result1 = uniprops.get_unicode_property(_alias, k)
+            result2 = uniprops.get_unicode_property(_alias, v)
             self.assertEqual(result1, result2)

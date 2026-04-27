@@ -1225,8 +1225,6 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
     if not append:
         with open(os.path.join(output, '__init__.py'), 'w') as f:
             f.write(HEADER.format(UNIVERSION, ''))
-            for x in sorted(files):
-                f.write('from .%s import *  # noqa\n' % os.path.basename(files[x])[:-3])
 
 
 def build_unicode_property_table(output, files, aliases):

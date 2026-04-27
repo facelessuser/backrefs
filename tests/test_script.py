@@ -1,7 +1,9 @@
 """Test `Script`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import script
+from backrefs.uniprops.unidata import alias
 
 
 class TestScript(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestScript(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_scripts.keys())
-        keys2 = set(uniprops.unidata.ascii_scripts.keys())
+        keys1 = set(script.unicode_scripts.keys())
+        keys2 = set(script.ascii_scripts.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -30,21 +32,21 @@ class TestScript(unittest.TestCase):
     def test_script(self):
         """Test `Script` properties."""
 
-        for k, v in uniprops.unidata.unicode_scripts.items():
+        for k, v in script.unicode_scripts.items():
             result = uniprops.get_unicode_property('script', k)
             self.assertEqual(result, v)
 
     def test_script_ascii(self):
         """Test `Script` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_scripts.items():
+        for k, v in script.ascii_scripts.items():
             result = uniprops.get_unicode_property('script', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
     def test_script_binary(self):
         """Test `Script` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_scripts.items():
+        for k, v in script.ascii_scripts.items():
             result = uniprops.get_unicode_property('script', k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
@@ -57,22 +59,22 @@ class TestScript(unittest.TestCase):
     def test_alias(self):
         """Test aliases."""
 
-        alias = None
-        for k, v in uniprops.unidata.alias.unicode_alias['_'].items():
+        _alias = None
+        for k, v in alias.unicode_alias['_'].items():
             if v == 'script':
-                alias = k
+                _alias = k
                 break
 
-        self.assertTrue(alias is not None)
+        self.assertTrue(_alias is not None)
 
         # Ensure alias works
-        for k, v in uniprops.unidata.unicode_scripts.items():
-            result = uniprops.get_unicode_property(alias, k)
+        for k, v in script.unicode_scripts.items():
+            result = uniprops.get_unicode_property(_alias, k)
             self.assertEqual(result, v)
             break
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['script'].items():
-            result1 = uniprops.get_unicode_property(alias, k)
-            result2 = uniprops.get_unicode_property(alias, v)
+        for k, v in alias.unicode_alias['script'].items():
+            result1 = uniprops.get_unicode_property(_alias, k)
+            result2 = uniprops.get_unicode_property(_alias, v)
             self.assertEqual(result1, result2)

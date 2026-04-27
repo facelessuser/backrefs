@@ -1,7 +1,9 @@
 """Test `Canonnical Combining Class`."""
 import unittest
-from backrefs import uniprops
 import re
+from backrefs import uniprops
+from backrefs.uniprops.unidata import canonicalcombiningclass as ccc
+from backrefs.uniprops.unidata import alias
 
 
 class TestCanonicalCombiningClass(unittest.TestCase):
@@ -12,8 +14,8 @@ class TestCanonicalCombiningClass(unittest.TestCase):
 
         re_key = re.compile(r'^\^?[a-z0-9./]+$')
 
-        keys1 = set(uniprops.unidata.unicode_canonical_combining_class.keys())
-        keys2 = set(uniprops.unidata.ascii_canonical_combining_class.keys())
+        keys1 = set(ccc.unicode_canonical_combining_class.keys())
+        keys2 = set(ccc.ascii_canonical_combining_class.keys())
 
         # Ensure all keys are lowercase (only need to check Unicode as the ASCII keys must match the Unicode later)
         for k in keys1:
@@ -30,21 +32,21 @@ class TestCanonicalCombiningClass(unittest.TestCase):
     def test_canonicalcombiningclass(self):
         """Test `Canonnical Combining Class` properties."""
 
-        for k, v in uniprops.unidata.unicode_canonical_combining_class.items():
+        for k, v in ccc.unicode_canonical_combining_class.items():
             result = uniprops.get_unicode_property('canonicalcombiningclass', k)
             self.assertEqual(result, v)
 
     def test_canonicalcombiningclass_ascii(self):
         """Test `Canonnical Combining Class` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_canonical_combining_class.items():
+        for k, v in ccc.ascii_canonical_combining_class.items():
             result = uniprops.get_unicode_property('canonicalcombiningclass', k, mode=uniprops.MODE_NORMAL)
             self.assertEqual(result, v)
 
     def test_canonicalcombiningclass_binary(self):
         """Test `Canonnical Combining Class` ASCII properties."""
 
-        for k, v in uniprops.unidata.ascii_canonical_combining_class.items():
+        for k, v in ccc.ascii_canonical_combining_class.items():
             result = uniprops.get_unicode_property('canonicalcombiningclass', k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
@@ -57,22 +59,22 @@ class TestCanonicalCombiningClass(unittest.TestCase):
     def test_alias(self):
         """Test aliases."""
 
-        alias = None
-        for k, v in uniprops.unidata.alias.unicode_alias['_'].items():
+        _alias = None
+        for k, v in alias.unicode_alias['_'].items():
             if v == 'canonicalcombiningclass':
-                alias = k
+                _alias = k
                 break
 
-        self.assertTrue(alias is not None)
+        self.assertTrue(_alias is not None)
 
         # Ensure alias works
-        for k, v in uniprops.unidata.unicode_canonical_combining_class.items():
-            result = uniprops.get_unicode_property(alias, k)
+        for k, v in ccc.unicode_canonical_combining_class.items():
+            result = uniprops.get_unicode_property(_alias, k)
             self.assertEqual(result, v)
             break
 
         # Test aliases for values
-        for k, v in uniprops.unidata.alias.unicode_alias['canonicalcombiningclass'].items():
-            result1 = uniprops.get_unicode_property(alias, k)
-            result2 = uniprops.get_unicode_property(alias, v)
+        for k, v in alias.unicode_alias['canonicalcombiningclass'].items():
+            result1 = uniprops.get_unicode_property(_alias, k)
+            result2 = uniprops.get_unicode_property(_alias, v)
             self.assertEqual(result1, result2)
