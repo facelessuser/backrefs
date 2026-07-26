@@ -8,6 +8,7 @@ from __future__ import annotations
 import unicodedata as _unicodedata
 import copyreg as _copyreg
 from . import util as _util
+from .util import PatternError
 import regex as _regex  # type: ignore[import]
 try:  # pragma: no cover
     from regex.regex import _compile_replacement_helper  # type: ignore[import]
@@ -15,6 +16,8 @@ except ImportError:  # pragma: no cover
     from regex._main import _compile_replacement_helper  # type: ignore[import]
 from typing import Generic, AnyStr, Any, cast
 from ._bregex_typing import Pattern, Match
+
+__all__ = ("ReplaceTemplate", "PatternError")
 
 _ASCII_LETTERS = frozenset(
     (
@@ -33,7 +36,7 @@ _STANDARD_ESCAPES = frozenset(('a', 'b', 'f', 'n', 'r', 't', 'v'))
 _CURLY_BRACKETS = frozenset(('{', '}'))
 _PROPERTY_STRIP = frozenset((' ', '-', '_'))
 _PROPERTY = _WORD | _DIGIT | _PROPERTY_STRIP
-_GLOBAL_FLAGS = frozenset(('b', 'e', 'p', 'r', 'u'))
+_GLOBAL_FLAGS = frozenset(('b', 'e', 'p', 'r', 'V'))
 _SCOPED_FLAGS = frozenset(('a', 'f', 'i', 'L', 'm', 's', 'u', 'w', 'x'))
 _VERSIONS = frozenset(('0', '1'))
 _SCOPED_END = frozenset((':', ')'))
@@ -59,14 +62,6 @@ _BACK_SLASH_TRANSLATION = {
 _FMT_CONV_TYPE = ('a', 'r', 's')
 
 
-class LoopException(Exception):
-    """Loop exception."""
-
-
-class GlobalRetryException(Exception):
-    """Global retry exception."""
-
-
 class _SearchParser(Generic[AnyStr]):
     """Search Template."""
 
@@ -76,8 +71,6 @@ class _SearchParser(Generic[AnyStr]):
 
     verbose: bool
     version: int
-    global_flag_swap: dict[str, bool]
-    temp_global_flag_swap: dict[str, bool]
     is_bytes: bool
     search: AnyStr
 
@@ -93,6 +86,7 @@ class _SearchParser(Generic[AnyStr]):
             self._re_line_break = self._bytes_line_break
         else:
             self._re_line_break = self._line_break
+        self.in_subgroup = False
         self.re_verbose = re_verbose
         self.re_version = re_version
         self.search = search
@@ -163,34 +157,6 @@ class _SearchParser(Generic[AnyStr]):
             current.append(t)
         return current
 
-    def flags(self, text: str, scoped: bool = False) -> None:
-        """Analyze flags."""
-
-        flags = text.split('-')
-        enable = flags[0]
-        disable = flags[1] if len(flags) > 1 else ''
-
-        global_retry = False
-        if (self.version == _regex.V1 or scoped) and 'x' in disable and self.verbose:
-            self.verbose = False
-        elif 'x' in enable and not self.verbose:
-            self.verbose = True
-            if not scoped and self.version == _regex.V0:
-                self.temp_global_flag_swap['verbose'] = True
-                global_retry = True
-        if 'V0' in enable and self.version == _regex.V1:  # pragma: no cover
-            # Default is V0 if none is selected,
-            # so it is unlikely that this will be selected.
-            self.temp_global_flag_swap['version'] = True
-            self.version = _regex.V0
-            global_retry = True
-        elif "V1" in enable and self.version == _regex.V0:
-            self.temp_global_flag_swap['version'] = True
-            self.version = _regex.V1
-            global_retry = True
-        if global_retry:
-            raise GlobalRetryException('Global Retry')
-
     def reference(self, t: str, i: _util.StringIter, in_group: bool = False) -> list[str]:
         """Handle references."""
 
@@ -210,7 +176,7 @@ class _SearchParser(Generic[AnyStr]):
         try:
             c = next(i)
             if c != ':':
-                raise ValueError('Not a valid property!')
+                raise PatternError('Not a valid property!')
             else:
                 value.append(c)
                 c = next(i)
@@ -219,14 +185,14 @@ class _SearchParser(Generic[AnyStr]):
                     c = next(i)
                 while c != ':':
                     if c not in _PROPERTY:
-                        raise ValueError('Not a valid property!')
+                        raise PatternError('Not a valid property!')
                     if c not in _PROPERTY_STRIP:
                         value.append(c)
                     c = next(i)
                 value.append(c)
                 c = next(i)
                 if c != ']' or not value:
-                    raise ValueError('Unmatched ]')
+                    raise PatternError('Unmatched ]')
                 value.append(c)
         except Exception:
             i.rewind(i.index - index)
@@ -260,9 +226,27 @@ class _SearchParser(Generic[AnyStr]):
                 c = next(i)
             value.append(c)
         except StopIteration as e:
-            raise SyntaxError(f"Unmatched '(' at {index - 1}!") from e
+            raise PatternError(f"Unmatched '(' at {index - 1}!") from e
 
         return ''.join(value) if value else None
+
+    def flags(self, text: str, scoped: bool = False) -> None:
+        """Analyze flags."""
+
+        flags = text.split('-')
+        enable = flags[0]
+        disable = flags[1] if len(flags) > 1 else ''
+
+        if 'x' in disable and self.verbose:
+            self.verbose = False
+        elif 'x' in enable and not self.verbose:
+            self.verbose = True
+        if 'V0' in enable and self.version == _regex.V1:  # pragma: no cover
+            # Default is V0 if none is selected,
+            # so it is unlikely that this will be selected.
+            self.version = _regex.V0
+        elif "V1" in enable and self.version == _regex.V0:
+            self.version = _regex.V1
 
     def get_flags(self, i: _util.StringIter) -> tuple[str | None, bool]:
         """
@@ -280,9 +264,8 @@ class _SearchParser(Generic[AnyStr]):
 
         index = i.index
         value = ['(']
-        version = False
-        toggle = False
         smells_scoped = False
+        global_flags = False
         try:
             c = next(i)
             if c != '?':
@@ -291,19 +274,20 @@ class _SearchParser(Generic[AnyStr]):
             value.append(c)
             c = next(i)
             while c not in _SCOPED_END:
-                if toggle:
-                    if c not in _SCOPED_FLAGS:
-                        raise ValueError('Bad scope')
-                elif version:
-                    if c not in _VERSIONS:
-                        raise ValueError('Bad version')
-                    version = False
-                elif c == '-':
-                    toggle = True
+                if c in _GLOBAL_FLAGS:
+                    global_flags = True
+                if c == '-':
+                    c2 = next(i)
+                    if c2 not in _SCOPED_FLAGS:
+                        raise PatternError('Bad scope')
+                    c += c2
                 elif c == 'V':
-                    version = True
+                    c2 = next(i)
+                    if c2 not in _VERSIONS:
+                        raise PatternError('Bad version')
+                    c += c2
                 elif c not in _GLOBAL_FLAGS and c not in _SCOPED_FLAGS:
-                    raise ValueError("Bad flag")
+                    raise PatternError("Bad flag")
                 value.append(c)
                 c = next(i)
             if c == ':':
@@ -311,8 +295,13 @@ class _SearchParser(Generic[AnyStr]):
 
             value.append(c)
         except Exception:
+            global_flags = False
+            smells_scoped = False
             i.rewind(i.index - index)
             value = []
+
+        if global_flags and (index - 1) != 0:
+            raise PatternError(f'Global flags not at the start of the expression at position {index - 1}')
 
         return ''.join(value) if value else None, smells_scoped
 
@@ -325,11 +314,12 @@ class _SearchParser(Generic[AnyStr]):
             return [comments]
 
         verbose = self.verbose
+        pos = i.index - 1
 
         # (?flags:pattern) or (?flags)
         # "scoped" only refers to verbose
         flags, scoped = self.get_flags(i)
-        if flags:
+        if flags and flags != '(?)':
             t = flags
             self.flags(flags[2:-1], scoped=scoped)
             if not scoped:
@@ -344,8 +334,9 @@ class _SearchParser(Generic[AnyStr]):
                     current.extend(self.normal(t, i))
 
                 t = next(i)
-        except StopIteration:
-            pass
+        except StopIteration as e:
+            raise PatternError(f"Missing ')', unterminated subpattern at position {pos}") from e
+
         self.verbose = verbose
 
         if t == ")":
@@ -411,11 +402,9 @@ class _SearchParser(Generic[AnyStr]):
                     current.append(t)
                 pos += 1
                 t = next(i)
-        except StopIteration:
-            pass
+        except StopIteration as e:
+            raise PatternError(f"Missing ']', unterminated character set at position {pos}") from e
 
-        if escaped:
-            current.append(t)
         return current
 
     def normal(self, t: str, i: _util.StringIter) -> list[str]:
@@ -456,42 +445,9 @@ class _SearchParser(Generic[AnyStr]):
 
         self.verbose = bool(self.re_verbose)
         self.version = self.re_version if self.re_version else _regex.DEFAULT_VERSION
-        self.global_flag_swap = {
-            "version": self.re_version != 0,
-            "verbose": False
-        }
-        self.temp_global_flag_swap = {
-            "version": False,
-            "verbose": False
-        }
-
         new_pattern = []
         i = _util.StringIter(self.process_quotes(search))
-
-        retry = True
-        while retry:
-            retry = False
-            try:
-                new_pattern = self.main_group(i)
-            except GlobalRetryException as e:
-                # Prevent a loop of retry over and over for a pattern like ((?V0)(?V1))
-                # or on V0 (?-x:(?x))
-                if self.temp_global_flag_swap['version']:
-                    if self.global_flag_swap['version']:
-                        raise LoopException('Global version flag recursion.') from e
-                    else:
-                        self.global_flag_swap["version"] = True
-                if self.temp_global_flag_swap['verbose']:
-                    if self.global_flag_swap['verbose']:
-                        raise LoopException('Global verbose flag recursion.') from e
-                    else:
-                        self.global_flag_swap['verbose'] = True
-                self.temp_global_flag_swap = {
-                    "version": False,
-                    "verbose": False
-                }
-                i.rewind(i.index)
-                retry = True
+        new_pattern = self.main_group(i)
         return "".join(new_pattern)
 
     def parse(self) -> AnyStr:
@@ -597,7 +553,7 @@ class _ReplaceParser(Generic[AnyStr]):
                                 findex.append(c)
                                 c = self.format_next(i)
                         except StopIteration as e:
-                            raise SyntaxError(f"Unmatched '[' at {sindex - 1}") from e
+                            raise PatternError(f"Unmatched '[' at {sindex - 1}") from e
                         idx = self.parse_format_index(''.join(findex))
                         value.append((_util.FMT_INDEX, idx))
                         c = self.format_next(i)
@@ -613,7 +569,7 @@ class _ReplaceParser(Generic[AnyStr]):
                 if c == '!':
                     c = self.format_next(i)
                     if c not in _FMT_CONV_TYPE:
-                        raise SyntaxError(f"Invalid conversion type at {i.index - 1}!")
+                        raise PatternError(f"Invalid conversion type at {i.index - 1}!")
                     value.append((_util.FMT_CONV, c))
                     c = self.format_next(i)
 
@@ -651,7 +607,7 @@ class _ReplaceParser(Generic[AnyStr]):
                             fill = None
                         if fill is not None:
                             if c not in ('<', '>', '^'):
-                                raise SyntaxError(f'Invalid format spec char at {i.index - 1}!')
+                                raise PatternError(f'Invalid format spec char at {i.index - 1}!')
                             align = c
                             c = self.format_next(i)
 
@@ -684,9 +640,9 @@ class _ReplaceParser(Generic[AnyStr]):
                     )
 
             if c != '}':
-                raise SyntaxError(f"Unmatched '{{' at {index - 1}")
+                raise PatternError(f"Unmatched '{{' at {index - 1}")
         except StopIteration as e:
-            raise SyntaxError(f"Unmatched '{{' at {index - 1}!") from e
+            raise PatternError(f"Unmatched '{{' at {index - 1}!") from e
 
         return field, value
 
@@ -707,7 +663,7 @@ class _ReplaceParser(Generic[AnyStr]):
                 self.get_single_stack()
                 self.result.append(t)
             else:
-                raise SyntaxError(f"Unmatched '}}' at {i.index - 2}!")
+                raise PatternError(f"Unmatched '}}' at {i.index - 2}!")
 
     def get_octal(self, c: str, i: _util.StringIter) -> str | None:
         """Get octal."""
@@ -768,13 +724,13 @@ class _ReplaceParser(Generic[AnyStr]):
         value = []
         try:
             if next(i) != '{':
-                raise SyntaxError(f"Named Unicode missing '{{' at {i.index - 1}!")
+                raise PatternError(f"Named Unicode missing '{{' at {i.index - 1}!")
             c = next(i)
             while c != '}':
                 value.append(c)
                 c = next(i)
         except StopIteration as e:
-            raise SyntaxError(f"Unmatched '{{' at {index}!") from e
+            raise PatternError(f"Unmatched '{{' at {index}!") from e
 
         return ''.join(value)
 
@@ -804,20 +760,20 @@ class _ReplaceParser(Generic[AnyStr]):
             if c == '0':
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError(f'Invalid wide Unicode character at {i.index - 1}!')
+                raise PatternError(f'Invalid wide Unicode character at {i.index - 1}!')
 
         c = next(i)
         if c in ('0', '1'):
             value.append(c)
         else:  # pragma: no cover
-            raise SyntaxError(f'Invalid wide Unicode character at {i.index - 1}!')
+            raise PatternError(f'Invalid wide Unicode character at {i.index - 1}!')
 
         for _ in range(4):
             c = next(i)
             if c.lower() in _HEX:
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError(f'Invalid wide Unicode character at {i.index - 1}!')
+                raise PatternError(f'Invalid wide Unicode character at {i.index - 1}!')
         return ''.join(value)
 
     def get_narrow_unicode(self, i: _util.StringIter) -> str:
@@ -829,7 +785,7 @@ class _ReplaceParser(Generic[AnyStr]):
             if c.lower() in _HEX:
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError(f'Invalid Unicode character at {i.index - 1}!')
+                raise PatternError(f'Invalid Unicode character at {i.index - 1}!')
         return ''.join(value)
 
     def parse_unicode(self, i: _util.StringIter, wide: bool = False) -> None:
@@ -859,7 +815,7 @@ class _ReplaceParser(Generic[AnyStr]):
             if c.lower() in _HEX:
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError(f'Invalid byte character at {i.index - 1}!')
+                raise PatternError(f'Invalid byte character at {i.index - 1}!')
         return ''.join(value)
 
     def parse_bytes(self, i: _util.StringIter) -> None:
@@ -885,7 +841,7 @@ class _ReplaceParser(Generic[AnyStr]):
         try:
             c = next(i)
             if c != "<":
-                raise SyntaxError(f"Group missing '<' at {i.index - 1}!")
+                raise PatternError(f"Group missing '<' at {i.index - 1}!")
             value.append(c)
             c = next(i)
             if c in _DIGIT:
@@ -905,9 +861,9 @@ class _ReplaceParser(Generic[AnyStr]):
                     c = next(i)
                 value.append(c)
             else:
-                raise SyntaxError(f"Invalid group character at {i.index - 1}!")
+                raise PatternError(f"Invalid group character at {i.index - 1}!")
         except StopIteration as e:
-            raise SyntaxError(f"Unmatched '<' at {index}!") from e
+            raise PatternError(f"Unmatched '<' at {index}!") from e
 
         return ''.join(value)
 
@@ -941,7 +897,7 @@ class _ReplaceParser(Generic[AnyStr]):
             o = int(octal, 8)
             if o > 0xFF and self.is_bytes:
                 # Re fails on octal greater than `0o377` or `0xFF`
-                raise ValueError("octal escape value outside of range 0-0o377!")
+                raise PatternError("octal escape value outside of range 0-0o377!")
             value = chr(o)
         elif t in _STANDARD_ESCAPES or t == '\\':
             value = _BACK_SLASH_TRANSLATION['\\' + t]
@@ -1146,11 +1102,11 @@ class _ReplaceParser(Generic[AnyStr]):
                 text[0] = (_util.FMT_FIELD, field)
                 self.auto_index += 1
             else:
-                raise ValueError("Cannot switch to auto format during manual format!")
+                raise PatternError("Cannot switch to auto format during manual format!")
         elif not self.manual and not self.auto:
             self.manual = True
         elif not self.manual:
-            raise ValueError("Cannot switch to manual format during auto format!")
+            raise PatternError("Cannot switch to manual format during auto format!")
 
         self.handle_group(field, tuple(text), True)
 

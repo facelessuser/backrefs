@@ -32,9 +32,20 @@ Back\ References      | Description
 
 ### Regex
 
-> [!note]
+> [!note] Unicode Handling
 > Regex already natively supports `\p{...}`, `\P{...}`, `\pX`, `\PX`, `\N{...}`, `\X`, `\h`, `\m`, and `\M` so
 > Backrefs does not attempt to add this to search patterns.
+
+> [!new] Global Flag Handling (Version 8.0)
+> Unlike Re, Regex allows global syntax for regex flags that are not at the start of a pattern (e.g. `r'test(?i)test'`).
+> Re requires scoped syntax only (e.g. `r'test(?i:test)'`). With that said, truly global flags, while inserted inline,
+> do not apply inline. Instead, whatever the last state of the global flag enablement was, that is what is applied to
+> the entire pattern.
+>
+> Backrefs handles flags exactly like Regex except for one thing: flags that are considered global only (`b`, `e`, `p`,
+> `r`, `V0`, `V1`) must be declared at the start of the pattern in order for Backrefs to avoid reparsing the pattern on
+> every global flag definition that it must be aware of. Global flags not at the beginning of a pattern will cause a
+> `SyntaxError` to be raised.
 
 Back\ References | Description
 ---------------- | -----------

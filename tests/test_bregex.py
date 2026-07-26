@@ -3,6 +3,7 @@
 import unittest
 from backrefs import bregex
 from backrefs import _bregex_parse
+from backrefs.util import PatternError
 import regex
 import pytest
 import random
@@ -101,7 +102,7 @@ class TestSearchTemplate(unittest.TestCase):
     def test_comment_failures(self):
         """Test comment failures."""
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.compile(r'test(?#test')
 
     def test_inverse_posix_property(self):
@@ -144,13 +145,10 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(bregex._get_cache_size(True), 0)
         self.assertEqual(len(_cache), 0)
 
-    def test_infinite_loop_catch(self):
-        """Test infinite loop catch."""
+    def test_global_flags_not_at_start(self):
+        """Test global flags not at the start."""
 
-        with pytest.raises(_bregex_parse.LoopException):
-            bregex.compile_search(r'(?-x:(?x))', regex.V0 | regex.VERBOSE)
-
-        with pytest.raises(_bregex_parse.LoopException):
+        with pytest.raises(PatternError):
             bregex.compile_search(r'(?V1)(?V0)')
 
     def test_comments_v0(self):
@@ -160,8 +158,7 @@ class TestSearchTemplate(unittest.TestCase):
             r'''(?uV0)Test # \R(?#\R\))(?x:
             Test #\R(?#\R\)
             (Test # \R
-            )Test #\R
-            )Test # \R'''
+            )(?-x)Test #\R)Test # \R'''
         )
 
         self.assertEqual(
@@ -169,11 +166,10 @@ class TestSearchTemplate(unittest.TestCase):
             r'''(?uV0)Test # (?>\r\n|[\n\v\f\r\x85\u2028\u2029])(?#\R\))(?x:
             Test #\\R(?#\\R\)
             (Test # \\R
-            )Test #\\R
-            )Test # (?>\r\n|[\n\v\f\r\x85\u2028\u2029])'''
+            )(?-x)Test #(?>\r\n|[\n\v\f\r\x85\u2028\u2029]))Test # (?>\r\n|[\n\v\f\r\x85\u2028\u2029])'''
         )
 
-        self.assertTrue(pattern.match('Test # \nTestTestTestTest # \n') is not None)
+        self.assertTrue(pattern.match('Test # \nTestTestTest #\nTest # \n') is not None)
 
     def test_mid_verbose(self):
         """Test mid verbose."""
@@ -212,17 +208,29 @@ class TestSearchTemplate(unittest.TestCase):
 
         self.assertTrue(pattern.match('TestTest #\nTestTest #\nTest') is not None)
 
+    def test_unterminated_char_set(self):
+        """Test unterminated character set."""
+
+        with pytest.raises(PatternError):
+            bregex.compile_search('test[test', regex.UNICODE)
+
+        pattern = bregex.compile_search('\\Qtest[test', regex.UNICODE)
+        self.assertEqual(pattern.pattern, 'test\\[test')
+
+    def test_unterminated_subpattern(self):
+        """Test unterminated sub-pattern."""
+
+        with pytest.raises(PatternError):
+            bregex.compile_search('test(test', regex.UNICODE)
+
+        pattern = bregex.compile_search('\\Qtest(test', regex.UNICODE)
+        self.assertEqual(pattern.pattern, 'test\\(test')
+
     def test_trailing_bslash(self):
         """Test trailing back slash."""
 
         with pytest.raises(_regex_core.error):
-            pattern = bregex.compile_search('test\\', regex.UNICODE)
-
-        with pytest.raises(_regex_core.error):
-            pattern = bregex.compile_search('test[\\', regex.UNICODE)
-
-        with pytest.raises(_regex_core.error):
-            pattern = bregex.compile_search('test(\\', regex.UNICODE)
+            bregex.compile_search('test\\', regex.UNICODE)
 
         pattern = bregex.compile_search('\\Qtest\\', regex.UNICODE)
         self.assertEqual(pattern.pattern, 'test\\\\')
@@ -347,22 +355,6 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bregex.compile_search(r'Some pattern', flags=bregex.VERBOSE | bregex.UNICODE)
         self.assertTrue(pattern.flags & bregex.UNICODE and pattern.flags & bregex.VERBOSE)
 
-    def test_detect_verbose_string_flag_at_end(self):
-        """Test verbose string flag `(?x)` at end."""
-
-        template = _bregex_parse._SearchParser(
-            r'''
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E (?x)
-            '''
-        )
-        template.parse()
-
-        self.assertTrue(template.verbose)
-
     def test_ignore_verbose_string(self):
         """Test verbose string flag (?x) in char set."""
 
@@ -414,7 +406,7 @@ class TestSearchTemplate(unittest.TestCase):
     def test_version0_string_flag(self):
         """Test finding V0 string flag."""
 
-        template = _bregex_parse._SearchParser(r'Testing for (?V0) version flag.', False, False)
+        template = _bregex_parse._SearchParser(r'(?V0)Testing for version flag.', False, False)
         template.parse()
         self.assertTrue(template.version & bregex.V0)
 
@@ -428,28 +420,28 @@ class TestSearchTemplate(unittest.TestCase):
     def test_version0_string_flag_escaped(self):
         """Test ignoring V0 string flag in group will still use the default."""
 
-        template = _bregex_parse._SearchParser(r'Testing for \(?V0) version flag.', False, False)
+        template = _bregex_parse._SearchParser(r'\(?V0)Testing for version flag.', False, False)
         template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version0_string_flag_unescaped(self):
         """Test unescaped V0 string flag."""
 
-        template = _bregex_parse._SearchParser(r'Testing for \\(?V0) version flag.', False, False)
-        template.parse()
-        self.assertTrue(template.version & bregex.V0)
+        template = _bregex_parse._SearchParser(r'\\(?V0)Testing for version flag.', False, False)
+        with pytest.raises(PatternError):
+            template.parse()
 
     def test_version0_string_flag_escaped_deep(self):
         """Test deep escaped V0 flag will still use the default."""
 
-        template = _bregex_parse._SearchParser(r'Testing for \\\(?V0) version flag.', False, False)
+        template = _bregex_parse._SearchParser(r'\\\(?V0)Testing for version flag.', False, False)
         template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version1_string_flag(self):
         """Test finding V1 string flag."""
 
-        template = _bregex_parse._SearchParser(r'Testing for (?V1) version flag.', False, False)
+        template = _bregex_parse._SearchParser(r'(?V1)Testing for version flag.', False, False)
         template.parse()
         self.assertTrue(template.version & bregex.V1)
 
@@ -463,21 +455,21 @@ class TestSearchTemplate(unittest.TestCase):
     def test_version1_string_flag_escaped(self):
         """Test ignoring V1 string flag in group."""
 
-        template = _bregex_parse._SearchParser(r'Testing for \(?V1) version flag.', False, False)
+        template = _bregex_parse._SearchParser(r'\(?V1)Testing for version flag.', False, False)
         template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
     def test_version1_string_flag_unescaped(self):
         """Test unescaped V1 string flag."""
 
-        template = _bregex_parse._SearchParser(r'Testing for \\(?V1) version flag.', False, False)
-        template.parse()
-        self.assertTrue(template.version & bregex.V1)
+        template = _bregex_parse._SearchParser(r'\\(?V1)Testing for version flag.', False, False)
+        with pytest.raises(PatternError):
+            template.parse()
 
     def test_version1_string_flag_escaped_deep(self):
         """Test deep escaped V1 flag."""
 
-        template = _bregex_parse._SearchParser(r'Testing for \\\(?V1) version flag.', False, False)
+        template = _bregex_parse._SearchParser(r'\\\(?V1)Testing for version flag.', False, False)
         template.parse()
         self.assertTrue(template.version & bregex.DEFAULT_VERSION)
 
@@ -645,19 +637,19 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(IndexError):
             bregex.subf('test', r'{a.}', 'test', bregex.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf('test', r'{1[}', 'test', bregex.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf('test', r'{a[}', 'test', bregex.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf('test', r'test } test', 'test', bregex.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf('test', r'test {test', 'test', bregex.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf('test', r'test { test', 'test', bregex.FORMAT)
 
         with pytest.raises(_regex_core.error):
@@ -666,19 +658,19 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(IndexError):
             bregex.subf(b'test', br'{a.}', b'test', bregex.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf(b'test', br'{1[}', b'test', bregex.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf(b'test', br'{a[}', b'test', bregex.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf(b'test', br'test } test', b'test', bregex.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf(b'test', br'test {test', b'test', bregex.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf(b'test', br'test { test', b'test', bregex.FORMAT)
 
         with pytest.raises(TypeError):
@@ -718,34 +710,34 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_named_unicode_failures(self):
         """Test named Unicode failures."""
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.sub('test', r'\N', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.sub('test', r'\Na', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.sub('test', r'\N{A.', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.sub('test', r'\N{A', 'test')
 
     def test_group_failures(self):
         """Test group failures."""
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.sub('test', r'\g', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.sub('test', r'\ga', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.sub('test', r'\g<.', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.sub('test', r'\g<a.', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.sub('test', r'\g<3', 'test')
 
     def test_double_digit_group(self):
@@ -1525,10 +1517,10 @@ class TestReplaceTemplate(unittest.TestCase):
             "Te-\\\\st\\\\"
         )
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.subf(r'(test)', r'{\g}', 'test')
 
-        with pytest.raises(ValueError):
+        with pytest.raises(PatternError):
             bregex.subf(br'(test)', br'{\777}', b'test')
 
     def test_format_features(self):
@@ -1548,19 +1540,19 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(pattern.subf(r'{1:s}', 'Testing'), 'Te')
         self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'")
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{2!x}', 'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{2$}', 'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{2$}', 'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{a$}', 'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{:ss}', 'Testing')
 
         with pytest.raises(ValueError):
@@ -1580,19 +1572,19 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(pattern.subf(br'{1:s}', b'Testing'), b'Te')
         self.assertEqual(pattern.subf(br'{2!r}', b'Testing'), b"b'st'")
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{2!x}', b'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{2$}', b'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{2$}', b'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{a$}', b'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{:ss}', b'Testing')
 
         with pytest.raises(ValueError):
@@ -1686,7 +1678,7 @@ class TestExceptions(unittest.TestCase):
         """Test incomplete byte group."""
 
         p = bregex.compile_search(r'test')
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bregex.compile_replace(p, r'Replace \x fail!')
 
     def test_switch_from_format_auto(self):
@@ -1695,7 +1687,7 @@ class TestExceptions(unittest.TestCase):
         text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = regex.compile(text_pattern)
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(PatternError) as excinfo:
             bregex.compile_replace(
                 pattern, r'{}{}{manual}', bregex.FORMAT
             )
@@ -1708,7 +1700,7 @@ class TestExceptions(unittest.TestCase):
         text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = regex.compile(text_pattern)
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(PatternError) as excinfo:
             bregex.compile_replace(
                 pattern, r'{manual}{}{}', bregex.FORMAT
             )

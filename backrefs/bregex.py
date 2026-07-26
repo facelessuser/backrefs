@@ -18,6 +18,7 @@ import regex as _regex  # type: ignore[import]
 import copyreg as _copyreg
 from functools import lru_cache as _lru_cache
 from . import util as _util
+from .util import PatternError
 from . import _bregex_parse
 from ._bregex_parse import ReplaceTemplate
 from typing import AnyStr, Callable, Any, Generic, Mapping, Iterator, cast
@@ -29,7 +30,7 @@ __all__ = (
     "E", "ENHANCEMATCH", "F", "FULLCASE", "I", "IGNORECASE", "L", "LOCALE", "M", "MULTILINE", "R", "REVERSE",
     "S", "DOTALL", "U", "UNICODE", "X", "VERBOSE", "V0", "VERSION0", "V1", "VERSION1", "W", "WORD",
     "P", "POSIX", "DEFAULT_VERSION", "FORMAT", "compile", "compile_search", "compile_replace", "Bregex",
-    "ReplaceTemplate"
+    "ReplaceTemplate", "PatternError"
 )
 
 # Expose some common re flags and methods to

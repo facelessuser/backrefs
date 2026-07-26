@@ -9,6 +9,7 @@ import re as _re
 import sys
 import copyreg as _copyreg
 from . import util as _util
+from .util import PatternError
 import unicodedata as _unicodedata
 from . import uniprops as _uniprops
 from typing import Generic, AnyStr, Match, Any, Pattern, cast
@@ -18,7 +19,7 @@ if sys.version_info >= (3, 11):
 else:
     import sre_parse as _parser
 
-__all__ = ("ReplaceTemplate",)
+__all__ = ("ReplaceTemplate", "PatternError")
 
 _ASCII_LETTERS = frozenset(
     (
@@ -37,8 +38,8 @@ _STANDARD_ESCAPES = frozenset(('a', 'b', 'f', 'n', 'r', 't', 'v'))
 _CURLY_BRACKETS = frozenset(('{', '}'))
 _PROPERTY_STRIP = frozenset((' ', '-', '_'))
 _PROPERTY = _WORD | _DIGIT | _PROPERTY_STRIP
-_GLOBAL_FLAGS = frozenset(('a', 'i', 'L', 'm', 's', 'u', 'x'))
-_SCOPED_FLAGS = frozenset(('i', 'm', 's', 'x'))
+_SCOPED_FLAGS = frozenset(('a', 'i', 'L', 'm', 'u', 's', 'x'))
+_SCOPED_INV_FLAGS = frozenset(('i', 'm', 's', 'x'))
 _SCOPED_END = frozenset((':', ')'))
 
 _CURLY_BRACKETS_ORD = frozenset((0x7b, 0x7d))
@@ -69,14 +70,6 @@ _BACK_SLASH_TRANSLATION = {
 _FMT_CONV_TYPE = ('a', 'r', 's')
 
 
-class LoopException(Exception):
-    """Loop exception."""
-
-
-class GlobalRetryException(Exception):
-    """Global retry exception."""
-
-
 class _SearchParser(Generic[AnyStr]):
     """Search Template."""
 
@@ -89,8 +82,6 @@ class _SearchParser(Generic[AnyStr]):
 
     verbose: bool
     unicode: bool
-    global_flag_swap: dict[str, bool]
-    temp_global_flag_swap: dict[str, bool]
     ascii: bool  # noqa: A003
     is_bytes: bool
     search: AnyStr
@@ -177,34 +168,6 @@ class _SearchParser(Generic[AnyStr]):
             current.append(t)
         return current
 
-    def flags(self, text: str, scoped: bool = False) -> None:
-        """Analyze flags."""
-
-        flags = text.split('-')
-        enable = flags[0]
-        disable = flags[1] if len(flags) > 1 else ''
-
-        global_retry = False
-        if ('a' in enable or 'L' in enable) and self.unicode:
-            self.unicode = False
-            if not scoped:
-                self.temp_global_flag_swap["unicode"] = True
-                global_retry = True
-        elif 'u' in enable and not self.unicode and not self.is_bytes:
-            self.unicode = True
-            if not scoped:
-                self.temp_global_flag_swap["unicode"] = True
-                global_retry = True
-        if 'x' in disable and self.verbose:
-            self.verbose = False
-        elif 'x' in enable and not self.verbose:
-            self.verbose = True
-            if not scoped:
-                self.temp_global_flag_swap["verbose"] = True
-                global_retry = True
-        if global_retry:
-            raise GlobalRetryException('Global Retry')
-
     def get_unicode_property(self, i: _util.StringIter, brackets: bool = False) -> tuple[str, str]:
         """Get Unicode property."""
 
@@ -216,7 +179,7 @@ class _SearchParser(Generic[AnyStr]):
             if c.upper() in _ASCII_LETTERS:
                 prop.append(c)
             elif (not brackets and c != '{') or (brackets and c != ':'):
-                raise SyntaxError(f"Unicode property missing '{{' at {i.index - 1}!")
+                raise PatternError(f"Unicode property missing '{{' at {i.index - 1}!")
             else:
                 c = next(i)
                 if c == '^':
@@ -225,7 +188,7 @@ class _SearchParser(Generic[AnyStr]):
 
                 while c not in (':', '=', '}'):
                     if c not in _PROPERTY:
-                        raise SyntaxError(f'Invalid Unicode property character at {i.index - 1}!')
+                        raise PatternError(f'Invalid Unicode property character at {i.index - 1}!')
                     if c not in _PROPERTY_STRIP:
                         prop.append(c)
                     c = next(i)
@@ -247,22 +210,22 @@ class _SearchParser(Generic[AnyStr]):
                     if not skip:
                         while c != end:
                             if c not in _PROPERTY:
-                                raise SyntaxError(f'Invalid Unicode property character at {i.index - 1}!')
+                                raise PatternError(f'Invalid Unicode property character at {i.index - 1}!')
                             if c not in _PROPERTY_STRIP:
                                 value.append(c)
                             c = next(i)
                         if brackets and c == ':':
                             c = next(i)
                             if c != ']':
-                                raise SyntaxError(f'Invalid Unicode property character at {i.index - 1}!')
+                                raise PatternError(f'Invalid Unicode property character at {i.index - 1}!')
                         if not value:
-                            raise SyntaxError('Invalid Unicode property!')
+                            raise PatternError('Invalid Unicode property!')
 
         except StopIteration as e:
             if brackets:
-                raise SyntaxError(f"Missing or unmatched ':]' at {index}!") from e
+                raise PatternError(f"Missing or unmatched ':]' at {index}!") from e
             else:
-                raise SyntaxError(f"Missing or unmatched '{{' at {index}!") from e
+                raise PatternError(f"Missing or unmatched '{{' at {index}!") from e
 
         p = ''.join(prop).lower()
         v = ''.join(value).lower()
@@ -281,13 +244,13 @@ class _SearchParser(Generic[AnyStr]):
         value = []
         try:
             if next(i) != '{':
-                raise ValueError(f"Named Unicode missing '{{' {i.index - 1}!")
+                raise PatternError(f"Named Unicode missing '{{' {i.index - 1}!")
             c = next(i)
             while c != '}':
                 value.append(c)
                 c = next(i)
         except Exception as e:
-            raise SyntaxError(f"Unmatched '{{' at {index}!") from e
+            raise PatternError(f"Unmatched '{{' at {index}!") from e
 
         return ''.join(value)
 
@@ -352,9 +315,25 @@ class _SearchParser(Generic[AnyStr]):
                 c = next(i)
             value.append(c)
         except StopIteration as e:
-            raise SyntaxError(f"Unmatched '(' at {index - 1}!") from e
+            raise PatternError(f"Unmatched '(' at {index - 1}!") from e
 
         return ''.join(value)
+
+    def flags(self, text: str, scoped: bool = False) -> None:
+        """Analyze flags."""
+
+        flags = text.split('-')
+        enable = flags[0]
+        disable = flags[1] if len(flags) > 1 else ''
+
+        if ('a' in enable or 'L' in enable) and self.unicode:
+            self.unicode = False
+        elif 'u' in enable and not self.unicode and not self.is_bytes:
+            self.unicode = True
+        if 'x' in disable and self.verbose:
+            self.verbose = False
+        elif 'x' in enable and not self.verbose:
+            self.verbose = True
 
     def get_flags(self, i: _util.StringIter) -> tuple[str | None, bool]:
         """
@@ -370,7 +349,6 @@ class _SearchParser(Generic[AnyStr]):
 
         index = i.index
         value = ['(']
-        toggle = False
         smells_scoped = False
         try:
             c = next(i)
@@ -380,18 +358,18 @@ class _SearchParser(Generic[AnyStr]):
             value.append(c)
             c = next(i)
             while c not in _SCOPED_END:
-                if toggle:
-                    if c not in _SCOPED_FLAGS:
-                        raise ValueError('Bad scope')
-                elif c == '-':
+                if c == '-':
+                    c2 = next(i)
+                    if c2 not in _SCOPED_INV_FLAGS:
+                        raise PatternError('Bad scope')
+                    c += c2
                     smells_scoped = True
-                    toggle = True
-                elif c not in _GLOBAL_FLAGS:
-                    raise ValueError("Bad flag")
+                elif c not in _SCOPED_FLAGS:
+                    raise PatternError("Bad flag")
                 value.append(c)
                 c = next(i)
             if smells_scoped and c != ':':
-                raise ValueError("Bad flag")
+                raise PatternError("Bad flag")
             elif c == ':':
                 smells_scoped = True
             value.append(c)
@@ -413,13 +391,16 @@ class _SearchParser(Generic[AnyStr]):
 
         verbose = self.verbose
         unicode_flag = self.unicode
+        pos = i.index - 1
 
         # (?flags:pattern) or (?flags)
         flags, scoped = self.get_flags(i)
-        if flags:  # pragma: no cover
+        if flags and flags != '(?)':
             t = flags
             self.flags(flags[2:-1], scoped=scoped)
             if not scoped:
+                if pos != 0:
+                    raise PatternError(f'Global flags not at the start of the expression at position {pos}')
                 return [flags]
 
         current = []
@@ -431,8 +412,8 @@ class _SearchParser(Generic[AnyStr]):
                     current.extend(self.normal(t, i))
 
                 t = next(i)
-        except StopIteration:
-            pass
+        except StopIteration as e:
+            raise PatternError(f"Missing ')', unterminated subpattern at position {pos}") from e
 
         # Restore flags after group
         self.verbose = verbose
@@ -508,11 +489,8 @@ class _SearchParser(Generic[AnyStr]):
                     current.append(t)
                 pos += 1
                 t = next(i)
-        except StopIteration:
-            pass
-
-        if escaped:
-            current.append(t)
+        except StopIteration as e:
+            raise PatternError(f"Missing ']', unterminated character set at position {pos}") from e
 
         # Handle properties that return an empty string.
         # This will occur when a property's values exceed
@@ -523,7 +501,7 @@ class _SearchParser(Generic[AnyStr]):
             if temp == '[]':
                 # We specified some properties, but they are all
                 # out of reach.  Therefore we can match nothing.
-                current = [f'[^{_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE}]']
+                current = ['(?!)']
             elif temp == '[^]':
                 current = [f'[{_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE}]']
             else:
@@ -558,7 +536,7 @@ class _SearchParser(Generic[AnyStr]):
         value = ord(_unicodedata.lookup(name))
         if self.is_bytes and value > 0xFF:
             if not in_group:
-                return [f'[^{_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE}]']
+                return ['(?!)']
             else:
                 return ['']
         return [f'\\{value:03o}' if value <= 0xFF else chr(value)]
@@ -618,14 +596,6 @@ class _SearchParser(Generic[AnyStr]):
 
         self.verbose = bool(self.re_verbose)
         self.unicode = bool(self.re_unicode)
-        self.global_flag_swap = {
-            "unicode": False,
-            "verbose": False
-        }
-        self.temp_global_flag_swap = {
-            "unicode": False,
-            "verbose": False
-        }
         self.ascii = self.re_unicode is not None and not self.re_unicode
         if not self.unicode and not self.ascii:
             self.unicode = True
@@ -633,30 +603,7 @@ class _SearchParser(Generic[AnyStr]):
         new_pattern = []
         i = _util.StringIter(self.process_quotes(search))
 
-        retry = True
-        while retry:
-            retry = False
-            try:
-                new_pattern = self.main_group(i)
-            except GlobalRetryException as e:
-                # Prevent a loop of retry over and over for a pattern like ((?u)(?a))
-                # or (?-x:(?x))
-                if self.temp_global_flag_swap['unicode']:
-                    if self.global_flag_swap['unicode']:
-                        raise LoopException('Global unicode flag recursion.') from e
-                    else:
-                        self.global_flag_swap["unicode"] = True
-                if self.temp_global_flag_swap['verbose']:
-                    if self.global_flag_swap['verbose']:
-                        raise LoopException('Global verbose flag recursion.') from e
-                    else:
-                        self.global_flag_swap['verbose'] = True
-                self.temp_global_flag_swap = {
-                    "unicode": False,
-                    "verbose": False
-                }
-                i.rewind(i.index)
-                retry = True
+        new_pattern = self.main_group(i)
         return "".join(new_pattern)
 
     def parse(self) -> AnyStr:
@@ -762,7 +709,7 @@ class _ReplaceParser(Generic[AnyStr]):
                                 findex.append(c)
                                 c = self.format_next(i)
                         except StopIteration as e:
-                            raise SyntaxError(f"Unmatched '[' at {sindex - 1}") from e
+                            raise PatternError(f"Unmatched '[' at {sindex - 1}") from e
                         idx = self.parse_format_index(''.join(findex))
                         value.append((_util.FMT_INDEX, idx))
                         c = self.format_next(i)
@@ -778,7 +725,7 @@ class _ReplaceParser(Generic[AnyStr]):
                 if c == '!':
                     c = self.format_next(i)
                     if c not in _FMT_CONV_TYPE:
-                        raise SyntaxError(f"Invalid conversion type at {i.index - 1}!")
+                        raise PatternError(f"Invalid conversion type at {i.index - 1}!")
                     value.append((_util.FMT_CONV, c))
                     c = self.format_next(i)
 
@@ -816,7 +763,7 @@ class _ReplaceParser(Generic[AnyStr]):
                             fill = None
                         if fill is not None:
                             if c not in ('<', '>', '^'):
-                                raise SyntaxError(f'Invalid format spec char at {i.index - 1}!')
+                                raise PatternError(f'Invalid format spec char at {i.index - 1}!')
                             align = c
                             c = self.format_next(i)
 
@@ -825,7 +772,7 @@ class _ReplaceParser(Generic[AnyStr]):
                         c = self.format_next(i)
 
                     if not align and len(width) and width[0] == '0':
-                        raise ValueError("'=' alignment is not supported!")
+                        raise PatternError("'=' alignment is not supported!")
                     if align and not fill and len(width) and width[0] == '0':
                         fill = '0'
 
@@ -849,9 +796,9 @@ class _ReplaceParser(Generic[AnyStr]):
                     )
 
             if c != '}':
-                raise SyntaxError(f"Unmatched '{{' at {index - 1}")
+                raise PatternError(f"Unmatched '{{' at {index - 1}")
         except StopIteration as e:
-            raise SyntaxError(f"Unmatched '{{' at {index - 1}!") from e
+            raise PatternError(f"Unmatched '{{' at {index - 1}!") from e
 
         return field, value
 
@@ -872,7 +819,7 @@ class _ReplaceParser(Generic[AnyStr]):
                 self.get_single_stack()
                 self.result.append(t)
             else:
-                raise SyntaxError(f"Unmatched '}}' at {i.index - 2}!")
+                raise PatternError(f"Unmatched '}}' at {i.index - 2}!")
 
     def get_octal(self, c: str, i: _util.StringIter) -> str | None:
         """Get octal."""
@@ -911,7 +858,7 @@ class _ReplaceParser(Generic[AnyStr]):
         value = int(text, 8)
         if value > 0xFF and self.is_bytes:
             # Re fails on octal greater than `0o377` or `0xFF`
-            raise ValueError("octal escape value outside of range 0-0o377!")
+            raise PatternError("Octal escape value outside of range 0-0o377!")
         else:
             single = self.get_single_stack()
             if self.span_stack:
@@ -933,13 +880,13 @@ class _ReplaceParser(Generic[AnyStr]):
         value = []
         try:
             if next(i) != '{':
-                raise SyntaxError(f"Named Unicode missing '{{' at {i.index - 1}!")
+                raise PatternError(f"Named Unicode missing '{{' at {i.index - 1}!")
             c = next(i)
             while c != '}':
                 value.append(c)
                 c = next(i)
         except StopIteration as e:
-            raise SyntaxError(f"Unmatched '}}' at {index}!") from e
+            raise PatternError(f"Unmatched '}}' at {index}!") from e
 
         return ''.join(value)
 
@@ -969,20 +916,20 @@ class _ReplaceParser(Generic[AnyStr]):
             if c == '0':
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError(f'Invalid wide Unicode character at {i.index - 1}!')
+                raise PatternError(f'Invalid wide Unicode character at {i.index - 1}!')
 
         c = next(i)
         if c in ('0', '1'):
             value.append(c)
         else:  # pragma: no cover
-            raise SyntaxError(f'Invalid wide Unicode character at {i.index - 1}!')
+            raise PatternError(f'Invalid wide Unicode character at {i.index - 1}!')
 
         for _ in range(4):
             c = next(i)
             if c.lower() in _HEX:
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError(f'Invalid wide Unicode character at {i.index - 1}!')
+                raise PatternError(f'Invalid wide Unicode character at {i.index - 1}!')
         return ''.join(value)
 
     def get_narrow_unicode(self, i: _util.StringIter) -> str:
@@ -994,7 +941,7 @@ class _ReplaceParser(Generic[AnyStr]):
             if c.lower() in _HEX:
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError(f'Invalid Unicode character at {i.index - 1}!')
+                raise PatternError(f'Invalid Unicode character at {i.index - 1}!')
         return ''.join(value)
 
     def parse_unicode(self, i: _util.StringIter, wide: bool = False) -> None:
@@ -1024,7 +971,7 @@ class _ReplaceParser(Generic[AnyStr]):
             if c.lower() in _HEX:
                 value.append(c)
             else:  # pragma: no cover
-                raise SyntaxError(f'Invalid byte character at {i.index - 1}!')
+                raise PatternError(f'Invalid byte character at {i.index - 1}!')
         return ''.join(value)
 
     def parse_bytes(self, i: _util.StringIter) -> None:
@@ -1050,7 +997,7 @@ class _ReplaceParser(Generic[AnyStr]):
         try:
             c = next(i)
             if c != "<":
-                raise SyntaxError(f"Group missing '<' at {i.index - 1}!")
+                raise PatternError(f"Group missing '<' at {i.index - 1}!")
             value.append(c)
             c = next(i)
             if c in _DIGIT:
@@ -1070,9 +1017,9 @@ class _ReplaceParser(Generic[AnyStr]):
                     c = next(i)
                 value.append(c)
             else:
-                raise SyntaxError(f"Invalid group character at {i.index - 1}!")
+                raise PatternError(f"Invalid group character at {i.index - 1}!")
         except StopIteration as e:
-            raise SyntaxError(f"Unmatched '<' at {index}!") from e
+            raise PatternError(f"Unmatched '<' at {index}!") from e
 
         return ''.join(value)
 
@@ -1106,7 +1053,7 @@ class _ReplaceParser(Generic[AnyStr]):
             o = int(octal, 8)
             if o > 0xFF and self.is_bytes:
                 # Re fails on octal greater than `0o377` or `0xFF`
-                raise ValueError("octal escape value outside of range 0-0o377!")
+                raise PatternError("Octal escape value outside of range 0-0o377!")
             value = chr(o)
         elif t in _STANDARD_ESCAPES or t == '\\':
             value = _BACK_SLASH_TRANSLATION['\\' + t]
@@ -1316,11 +1263,11 @@ class _ReplaceParser(Generic[AnyStr]):
                 text[0] = (_util.FMT_FIELD, field)
                 self.auto_index += 1
             else:
-                raise ValueError("Cannot switch to auto format during manual format!")
+                raise PatternError("Cannot switch to auto format during manual format!")
         elif not self.manual and not self.auto:
             self.manual = True
         elif not self.manual:
-            raise ValueError("Cannot switch to manual format during auto format!")
+            raise PatternError("Cannot switch to manual format during auto format!")
 
         self.handle_group(field, tuple(text), True)
 
