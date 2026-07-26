@@ -34,11 +34,13 @@ boolean
 decrement
 deprecations
 emoji
+enablement
 grapheme
 hashable
 incrementing
 namespaced
 natively
+parsers
 plugin
 posix
 postfix
@@ -51,9 +53,13 @@ prerelease
 prereleases
 refactored
 reinstalling
+reparsing
 requesters
 sublicense
+subpattern
+subpatterns
 tuple
 uncompiled
 unescaped
+unterminated
 whitespace

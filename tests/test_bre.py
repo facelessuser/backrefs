@@ -2,6 +2,7 @@
 """Test `bre` lib."""
 import unittest
 from backrefs import bre
+from backrefs.util import PatternError
 import re
 import sys
 import pytest
@@ -142,7 +143,7 @@ class TestSearchTemplate(unittest.TestCase):
     def test_comment_failures(self):
         """Test comment failures."""
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'test(?#test')
 
     def test_inverse_posix_property(self):
@@ -163,40 +164,40 @@ class TestSearchTemplate(unittest.TestCase):
     def test_unicode_property_failures(self):
         """Test Unicode property."""
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\p')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\p.')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\p{')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\p{A.')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\p{A')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\p{a:}')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\p{a:.')
 
     def test_named_unicode_failures(self):
         """Test named Unicode failures."""
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\N')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\Na')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\N{A.')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile(r'\N{A')
 
     def test_word_boundary(self):
@@ -235,13 +236,13 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(bre._get_cache_size(True), 0)
         self.assertEqual(len(re._cache), 0)
 
-    def test_infinite_loop_catch(self):
-        """Test infinite loop catch."""
+    def test_global_flags_not_at_start(self):
+        """Test global flags not at the start."""
 
-        with pytest.raises(_bre_parse.LoopException):
+        with pytest.raises(PatternError):
             bre.compile_search(r'((?a)(?u))')
 
-        with pytest.raises(_bre_parse.LoopException):
+        with pytest.raises(PatternError):
             bre.compile_search(r'(?-x:(?x))', re.VERBOSE)
 
     def test_unicode_ascii_swap(self):
@@ -294,14 +295,14 @@ class TestSearchTemplate(unittest.TestCase):
         pattern = bre.compile_search(br'\N{black club suit}')
         self.assertEqual(
             pattern.pattern,
-            b'[^\x00-\xff]'
+            b'(?!)'
         )
         self.assertTrue(pattern.match(b'a') is None)
 
         pattern = bre.compile_search(br'[\N{black club suit}]')
         self.assertEqual(
             pattern.pattern,
-            b'[^\x00-\xff]'
+            b'(?!)'
         )
         self.assertTrue(pattern.match(b'a') is None)
 
@@ -334,17 +335,29 @@ class TestSearchTemplate(unittest.TestCase):
 
         self.assertTrue(pattern.match('TestTestTestA') is not None)
 
+    def test_unterminated_char_set(self):
+        """Test unterminated character set."""
+
+        with pytest.raises(PatternError):
+            bre.compile_search('test[test', re.UNICODE)
+
+        pattern = bre.compile_search('\\Qtest[test', re.UNICODE)
+        self.assertEqual(pattern.pattern, 'test\\[test')
+
+    def test_unterminated_subpattern(self):
+        """Test unterminated sub-pattern."""
+
+        with pytest.raises(PatternError):
+            bre.compile_search('test(test', re.UNICODE)
+
+        pattern = bre.compile_search('\\Qtest(test', re.UNICODE)
+        self.assertEqual(pattern.pattern, 'test\\(test')
+
     def test_trailing_bslash(self):
         """Test trailing back slash."""
 
         with pytest.raises(_constants.error):
             pattern = bre.compile_search('test\\', re.UNICODE)
-
-        with pytest.raises(_constants.error):
-            pattern = bre.compile_search('test[\\', re.UNICODE)
-
-        with pytest.raises(_constants.error):
-            pattern = bre.compile_search('test(\\', re.UNICODE)
 
         pattern = bre.compile_search('\\Qtest\\', re.UNICODE)
         self.assertEqual(pattern.pattern, 'test\\\\')
@@ -684,7 +697,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(pattern.pattern, b'EX[\x00-\xff]MPLE')
 
         pattern = bre.compile_search(br'EX[\p{OtherAlphabetic}]MPLE')
-        self.assertEqual(pattern.pattern, b'EX[^\x00-\xff]MPLE')
+        self.assertEqual(pattern.pattern, b'EX(?!)MPLE')
 
         pattern = bre.compile_search(br'EX[\P{OtherAlphabetic}]MPLE')
         self.assertEqual(pattern.pattern, b'EX[\x00-\xff]MPLE')
@@ -712,22 +725,6 @@ class TestSearchTemplate(unittest.TestCase):
 
         pattern = bre.compile_search(r'Some pattern', flags=bre.VERBOSE | bre.UNICODE)
         self.assertTrue(pattern.flags & bre.UNICODE and pattern.flags & bre.VERBOSE)
-
-    def test_detect_verbose_string_flag_at_end(self):
-        """Test verbose string flag `(?x)` at end."""
-
-        template = _bre_parse._SearchParser(
-            r'''
-            This is a # \Qcomment\E
-            This is not a \# \Qcomment\E
-            This is not a [#\ ] \Qcomment\E
-            This is not a [\#] \Qcomment\E
-            This\ is\ a # \Qcomment\E (?x)
-            '''
-        )
-        template.parse()
-
-        self.assertTrue(template.verbose)
 
     def test_ignore_verbose_string(self):
         """Test verbose string flag `(?x)` in character set."""
@@ -780,7 +777,7 @@ class TestSearchTemplate(unittest.TestCase):
     def test_unicode_string_flag(self):
         """Test finding Unicode/ASCII string flag."""
 
-        template = _bre_parse._SearchParser(r'Testing for (?ia) ASCII flag.', False, None)
+        template = _bre_parse._SearchParser(r'(?ia)Testing for ASCII flag.', False, None)
         template.parse()
         self.assertFalse(template.unicode)
 
@@ -794,21 +791,21 @@ class TestSearchTemplate(unittest.TestCase):
     def test_unicode_string_flag_escaped(self):
         """Test ignoring Unicode/ASCII string flag in group."""
 
-        template = _bre_parse._SearchParser(r'Testing for \(?ia) ASCII flag.', False, None)
+        template = _bre_parse._SearchParser(r'\(?ia)Testing for ASCII flag.', False, None)
         template.parse()
         self.assertTrue(template.unicode)
 
     def test_unicode_string_flag_unescaped(self):
         """Test unescaped Unicode string flag."""
 
-        template = _bre_parse._SearchParser(r'Testing for \\(?ia) ASCII flag.', False, None)
-        template.parse()
-        self.assertFalse(template.unicode)
+        template = _bre_parse._SearchParser(r'\\(?ia)Testing for ASCII flag.', False, None)
+        with pytest.raises(PatternError):
+            template.parse()
 
     def test_unicode_string_flag_escaped_deep(self):
         """Test deep escaped Unicode flag."""
 
-        template = _bre_parse._SearchParser(r'Testing for \\\(?ia) ASCII flag.', False, None)
+        template = _bre_parse._SearchParser(r'\\\(?ia)Testing for ASCII flag.', False, None)
         template.parse()
         self.assertTrue(template.unicode)
 
@@ -900,19 +897,19 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(IndexError):
             bre.subf('test', r'{a.}', 'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf('test', r'{1[}', 'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf('test', r'{a[}', 'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf('test', r'test } test', 'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf('test', r'test {test', 'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf('test', r'test { test', 'test', bre.FORMAT)
 
         with pytest.raises(_constants.error):
@@ -921,19 +918,19 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(IndexError):
             bre.subf(b'test', br'{a.}', b'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf(b'test', br'{1[}', b'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf(b'test', br'{a[}', b'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf(b'test', br'test } test', b'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf(b'test', br'test {test', b'test', bre.FORMAT)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf(b'test', br'test { test', b'test', bre.FORMAT)
 
         with pytest.raises(TypeError):
@@ -974,34 +971,34 @@ class TestReplaceTemplate(unittest.TestCase):
     def test_named_unicode_failures(self):
         """Test named Unicode failures."""
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.sub('test', r'\N', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.sub('test', r'\Na', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.sub('test', r'\N{A.', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.sub('test', r'\N{A', 'test')
 
     def test_group_failures(self):
         """Test group failures."""
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.sub('test', r'\g', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.sub('test', r'\ga', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.sub('test', r'\g<.', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.sub('test', r'\g<a.', 'test')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.sub('test', r'\g<3', 'test')
 
     def test_double_digit_group(self):
@@ -1839,10 +1836,10 @@ class TestReplaceTemplate(unittest.TestCase):
             "Te-\\\\st\\\\"
         )
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.subf(r'(test)', r'{\g}', 'test')
 
-        with pytest.raises(ValueError):
+        with pytest.raises(PatternError):
             bre.subf(br'(test)', br'{\777}', b'test')
 
     def test_format_features(self):
@@ -1862,22 +1859,22 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(pattern.subf(r'{1:s}', 'Testing'), 'Te')
         self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'")
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{2!x}', 'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{2$}', 'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{2$}', 'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{a$}', 'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{:ss}', 'Testing')
 
-        with pytest.raises(ValueError):
+        with pytest.raises(PatternError):
             pattern.subf(r'{:030}', 'Testing')
 
         pattern = bre.compile(br'(Te)(st)(?P<group>ing)')
@@ -1894,22 +1891,22 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(pattern.subf(br'{1:s}', b'Testing'), b'Te')
         self.assertEqual(pattern.subf(br'{2!r}', b'Testing'), b"b'st'")
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{2!x}', b'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{2$}', b'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{2$}', b'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{a$}', b'Testing')
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{:ss}', b'Testing')
 
-        with pytest.raises(ValueError):
+        with pytest.raises(PatternError):
             pattern.subf(br'{:030}', b'Testing')
 
     def test_dont_case_special_refs(self):
@@ -2009,15 +2006,14 @@ class TestExceptions(unittest.TestCase):
     def test_not_posix_at_end_group(self):
         """Test a situation that is not a POSIX at the end of a group."""
 
-        with pytest.raises(_constants.error) as excinfo:
+        with pytest.raises(PatternError):
             bre.compile_search(r'Test [[:graph:]')
-        self.assertTrue(excinfo is not None)
 
     def test_incomplete_replace_byte(self):
         """Test incomplete byte group."""
 
         p = bre.compile_search(r'test')
-        with pytest.raises(SyntaxError):
+        with pytest.raises(PatternError):
             bre.compile_replace(p, r'Replace \x fail!')
 
     def test_bad_posix(self):
@@ -2055,7 +2051,7 @@ class TestExceptions(unittest.TestCase):
         text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = re.compile(text_pattern)
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(PatternError) as excinfo:
             bre.compile_replace(
                 pattern, r'{}{}{manual}', bre.FORMAT
             )
@@ -2068,7 +2064,7 @@ class TestExceptions(unittest.TestCase):
         text_pattern = r"(this )(.+?)(format capture )(groups)(!)"
         pattern = re.compile(text_pattern)
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(PatternError) as excinfo:
             bre.compile_replace(
                 pattern, r'{manual}{}{}', bre.FORMAT
             )
@@ -2266,20 +2262,20 @@ class TestExceptions(unittest.TestCase):
 
         pattern = re.compile(b'Test')
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(PatternError) as excinfo:
             bre.compile_replace(pattern, br'\666')
 
-        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
+        assert "Octal escape value outside of range 0-0o377!" in str(excinfo.value)
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(PatternError) as excinfo:
             bre.compile_replace(pattern, br'\C\666\E')
 
-        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
+        assert "Octal escape value outside of range 0-0o377!" in str(excinfo.value)
 
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(PatternError) as excinfo:
             bre.compile_replace(pattern, br'\c\666')
 
-        assert "octal escape value outside of range 0-0o377!" in str(excinfo.value)
+        assert "Octal escape value outside of range 0-0o377!" in str(excinfo.value)
 
 
 class TestConvenienceFunctions(unittest.TestCase):
@@ -2307,17 +2303,14 @@ class TestConvenienceFunctions(unittest.TestCase):
     def test_incomplete_posix_value(self):
         """Test incomplete POSIX value."""
 
-        with pytest.raises(re.error):
-            with pytest.warns(FutureWarning):
-                bre.match(r'This is a test for m[[:lower=t', "This is a test for m[[:lower=t")
+        with pytest.raises(PatternError):
+            bre.match(r'This is a test for m[[:lower=t', "This is a test for m[[:lower=t")
 
-        with pytest.raises(re.error):
-            with pytest.warns(FutureWarning):
-                bre.match(r'This is a test for m[[:lower=t:', "This is a test for m[[:lower=t:")
+        with pytest.raises(PatternError):
+            bre.match(r'This is a test for m[[:lower=t:', "This is a test for m[[:lower=t:")
 
-        with pytest.raises(re.error):
-            with pytest.warns(FutureWarning):
-                bre.match(r'This is a test for m[[:lower=t: ', "This is a test for m[[:lower=t: ")
+        with pytest.raises(PatternError):
+            bre.match(r'This is a test for m[[:lower=t: ', "This is a test for m[[:lower=t: ")
 
     def test_fullmatch(self):
         """Test that `fullmatch` works."""

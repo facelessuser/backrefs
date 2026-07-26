@@ -3,6 +3,27 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
+## 8.0
+
+-   **NEW**: Backrefs will preemptively fail, raising a `PatternError`, if parsing and finding an unterminated character
+    set (`[]`) or an unterminated subpattern (`()`). Both `re` and `regex` already do this (`re` just issues a warning
+    on Python 3.10), but `backrefs` will now terminate parsing early instead of waiting for the underlying regular
+    expression parsers to catch it after the fact. This will occur even on Python 3.10. If Python 3.10 behavior is
+    required, please use Backrefs `7.0` until migration is possible.
+-   **NEW**: Backrefs will now raise a `PatternError` in `bre` if global flag syntax is not used at the start of the
+    pattern. Python `re` already does this, except on Python 3.10 where a warning is raised. Backrefs will now do this
+    in `bre`, even on Python 3.10, to prevent backtracking in Backrefs' parser when global flags are redefined. If the
+    old behavior is required, please use `7.0` until migration is possible.
+-   **NEW**: Backrefs will now raise a `PatternError` in `bregex` if a global flag is not used at the start of the
+    pattern. This does not affect inline flags that use the global syntax (e.g. `(?i)`) as `regex` allows this to be
+    scoped to subpatterns (`(...)`) and affects the pattern after its insertion whether in a subpattern or outside a
+    subpattern. While regex doesn't specifically restrict global flag insertion, only the last instance takes effect,
+    Backrefs requires these global flags to be declared at the beginning of the pattern to prevent backtracking when
+    parsing the pattern. If the old behavior is required, please use `7.0` until migration is possible.
+-   **NEW**: Various `ValueError` and `SyntaxError` that used to be raised by the `bre` or `bregex` parser are now
+    raised as `backrefs.util.PatternError`.
+-   **FIX**: Fixes in `bregex` related to `regex` handling of inline flags using global syntax.
+
 ## 7.0
 
 -   **BREAK**: Remove deprecated `\e` and `\h` support.

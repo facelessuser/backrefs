@@ -29,15 +29,16 @@ import re as _re
 import copyreg as _copyreg
 from functools import lru_cache as _lru_cache
 from . import util as _util
+from .util import PatternError
 from . import _bre_parse
 from ._bre_parse import ReplaceTemplate
 from typing import AnyStr, Pattern, Match, Callable, Any, Generic, Mapping, Iterator, cast
 
 __all__ = (
     "expand", "expandf", "search", "match", "fullmatch", "split", "findall", "finditer", "sub", "subf",
-    "subn", "subfn", "purge", "escape", "fullmatch", "DEBUG", "I", "IGNORECASE", "L", "LOCALE", "M", "MULTILINE",
+    "subn", "subfn", "purge", "escape", "DEBUG", "I", "IGNORECASE", "L", "LOCALE", "M", "MULTILINE",
     "S", "DOTALL", "U", "UNICODE", "X", "VERBOSE", "compile", "compile_search", "compile_replace", "Bre",
-    "ReplaceTemplate", "A", "ASCII"
+    "ReplaceTemplate", "A", "ASCII", "PatternError"
 )
 
 # Expose some common re flags and methods to

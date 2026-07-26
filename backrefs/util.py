@@ -19,6 +19,10 @@ FMT_CONV = 3
 FMT_SPEC = 4
 
 
+class PatternError(Exception):
+    """Pattern error."""
+
+
 class StringIter:
     """Preprocess replace tokens."""
 
