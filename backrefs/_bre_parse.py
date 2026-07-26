@@ -492,9 +492,6 @@ class _SearchParser(Generic[AnyStr]):
         except StopIteration as e:
             raise PatternError(f"Missing ']', unterminated character set at position {pos}") from e
 
-        if escaped:
-            current.append(t)
-
         # Handle properties that return an empty string.
         # This will occur when a property's values exceed
         # either the Unicode char limit on a narrow system,

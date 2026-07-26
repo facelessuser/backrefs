@@ -405,8 +405,6 @@ class _SearchParser(Generic[AnyStr]):
         except StopIteration as e:
             raise PatternError(f"Missing ']', unterminated character set at position {pos}") from e
 
-        if escaped:
-            current.append(t)
         return current
 
     def normal(self, t: str, i: _util.StringIter) -> list[str]:
