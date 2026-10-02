@@ -130,41 +130,70 @@ lint.ignore = [
     "RUF100"
 ]
 
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-isolated_build = true
-envlist =
-    py310,py311,py312,py313,py314,
-    lint
+[tool.hatch.envs.dev]
+dependencies = [
+    "pytest",
+    "pytest-cov",
+    "coverage",
+    "mypy",
+    "ruff",
+    "build",
+    "regex"
+]
 
-[testenv]
-passenv = *
-deps=
-    .[extras]
-    -r requirements/test.txt
-commands=
-    {envpython} tools/unidatadownload.py
-    {envpython} tools/unipropgen.py backrefs/uniprops/unidata
-    {envpython} -m mypy
-    {envpython} -m pytest --cov backrefs --cov-append tests
-    {envpython} -m coverage html -d {envtmpdir}/coverage
-    {envpython} -m coverage xml
-    {envpython} -m coverage report --show-missing
+[tool.hatch.envs.docs]
+dependencies = [
+    "zensical",
+    "markdown",
+    "pymdown-extensions",
+    "zensical-pymdownx @ git+https://github.com/facelessuser/pymdownx-zensical-theme.git",
+    "pymdown_lexers @ git+https://github.com/facelessuser/pymdown-lexers.git",
+    "pyspelling",
+    "build",
+    "python-minifier",
+    "regex"
+]
 
-[testenv:documents]
-passenv = *
-deps=
-    -r requirements/docs.txt
-commands=
-    {envbindir}/zensical build -f zensical.yml --clean
-    {envbindir}/pyspelling
+[[tool.hatch.envs.dev.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
 
-[testenv:lint]
-passenv = *
-deps=
-    .
-    -r requirements/lint.txt
-commands=
-    "{envbindir}"/ruff check .
+[[tool.hatch.envs.dev-stdlib.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+
+[tool.hatch.envs.dev.scripts]
+types = """
+python tools/unidatadownload.py && \
+python tools/unipropgen.py backrefs/uniprops/unidata && \
+mypy
+"""
+tests = """
+python tools/unidatadownload.py && \
+python tools/unipropgen.py backrefs/uniprops/unidata && \
+pytest --cov backrefs --cov-append --cov-report term-missing --cov-report xml --cov-report html:.cov tests
+"""
+lint = 'ruff check .'
+
+[tool.hatch.envs.dev-stdlib.scripts]
+tests = "pytest --cov pymdownx --cov-append --cov-report term-missing --cov-report xml --cov-report html:.cov tests"
+
+[tool.hatch.envs.docs.scripts]
+spellcheck = """
+python tools/unidatadownload.py && \
+python tools/unipropgen.py backrefs/uniprops/unidata && \
+python -m zensical.main build -f zensical.yml --clean --strict; pyspelling -j 8
+"""
+clean = """
+python tools/unidatadownload.py && \
+python tools/unipropgen.py backrefs/uniprops/unidata && \
+python -m zensical.main build -f zensical.yml --clean
+"""
+serve = """
+python tools/unidatadownload.py && \
+python tools/unipropgen.py backrefs/uniprops/unidata && \
+python -m zensical.main serve -f zensical.yml
+"""
+build = """
+python tools/unidatadownload.py && \
+python tools/unipropgen.py backrefs/uniprops/unidata && \
+python -m zensical.main build -f zensical.yml --clean
 """

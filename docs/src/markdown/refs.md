@@ -23,7 +23,7 @@ Back\ References      | Description
 `\pX`                 | Unicode property character class where `X` is the uppercase letter that represents the General Category property.  For instance, `\pL` would be equivalent to `\p{L}` or `\p{Letter}`.
 `\P{UnicodeProperty}` | Inverse Unicode property character class. Can be used in character classes `[]`. See [Unicode Properties](#unicode-properties) for more info.
 `\PX`                 | Inverse Unicode property character class where `X` is the uppercase letter that represents the General Category property. For instance, `\PL` would be equivalent to `\P{L}` or `\P{Letter}`.
-`[[:alnum:]]`         | Though not really a back reference, support for POSIX style character classes is available. See [POSIX Style Properties](#posix-style-properties) for more info.
+`[[:alnum:]]`         | Though not really a back reference, support for POSIX style character classes is available. See [POSIX Style Properties](#posix-character-classes) for more info.
 `\N{UnicodeName}`     | Named characters are normally ignored in Re, but Backrefs adds support for them.
 `\m`                  | Start word boundary. Translates to `\b(?=\w)`.
 `\M`                  | End word boundary. Translates to `\b(?<=\w)`.
