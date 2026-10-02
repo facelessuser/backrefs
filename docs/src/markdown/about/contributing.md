@@ -45,6 +45,12 @@ any tier you feel comfortable with. No amount is too little. We also accept one 
 Take part in reviewing pull requests and/or reviewing direct commits.  Make suggestions to improve the code and discuss
 solutions to overcome weakness in the algorithm.
 
+## Answer Questions in Issues
+
+Take time and answer questions and offer suggestions to people who've created issues in the issue tracker. Often people
+will have questions that you might have an answer for.  Or maybe you know how to help them accomplish a specific task
+they are asking about. Feel free to share your experience to help others.
+
 ## Pull Requests
 
 Pull requests are welcome, and if you plan on contributing directly to the code, there are a couple of things to be
@@ -55,23 +61,28 @@ tests will automatically be run, and the request must pass to be accepted.  You 
 pull requesting.  If it is not possible to run these tests locally, they will be run when the pull request is made, but
 it is strongly suggested that requesters make an effort to verify before requesting to allow for a quick, smooth merge.
 
-Feel free to use a virtual environment if you are concerned about installing any of the Python packages.
-
 ### Running Validation Tests
 
-1.  Make sure that [Tox][tox] is installed:
+In order to preserve good code health, a test suite has been put together with `pytest` (@pytest-dev/pytest). There are
+currently two kinds of tests: syntax and targeted.  To run these tests, you can use the following command:
 
-    ```
-    pip install tox
-    ```
+If you wish to run the tests locally, just run:
 
-2.  Run Tox:
+```console
+$ hatch run +py=3.14 dev:tests
+```
 
-    ```
-    tox
-    ```
+Coding standards are enforced using @astral-sh/ruff. The environment can be setup and run as shown below.
 
-    Tox should install necessary dependencies and run the tests.
+```console
+$ hatch run +py=3.14 dev:lint
+```
+
+We use @python/mypy to enforce typing. It can be run as shown below.
+
+```console
+$ hatch run +py=3.14 dev:mypy
+```
 
 ## Documentation Improvements
 
@@ -80,7 +91,23 @@ you feel it is still lacking, show your appreciation for the plugin by helping t
 documentation is always appreciated and can be done via pull requests.  There shouldn't be any need to run validation
 tests if only updating documentation.
 
-You don't have to render the docs locally before pull requesting, but if you wish to, I currently use a combination of
-[MkDocs][mkdocs], the [Material theme][mkdocs-material], and [PyMdown Extensions][pymdown-extensions] to render the
-docs. You can preview the docs if you install these two packages.  The command for previewing the docs is `mkdocs serve`
-from the root directory. You can then view the documents at `localhost:8000`.
+Documents are in Markdown (with some additional syntax) and converted to HTML via Python Markdown and this extension
+bundle. The documentation site is built with @zensical/zensical.
+
+To build docs:
+
+```console
+$ hatch run docs:build
+```
+
+To serve docs and to live preview in a browser:
+
+```console
+$ hatch run docs:serve
+```
+
+To clean the documents:
+
+```console
+$ hatch run docs:clean
+```

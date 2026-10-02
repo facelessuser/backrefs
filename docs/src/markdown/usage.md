@@ -19,9 +19,8 @@ Backrefs preprocesses search patterns looking for new syntax that it replaces wi
 the given regular expression engine. For instance, Backrefs implements the `\R` reference in Re, and when compiled, we
 get an Re object with a regular expression pattern that captures various line breaks.
 
-```pycon3
->>> bre.compile(r'\R')
-backrefs.bre.Bre(re.compile('(?:\\r\\n|(?!\\r\\n)[\\n\\v\\f\\r\\x85\\u2028\\u2029])'), auto_compile=True)
+```py play
+bre.compile(r'\R')
 ```
 
 It can be seen that the Backrefs object is simply wrapped around an Re compiled pattern, and we see that `\R` was
@@ -29,16 +28,14 @@ replaced with `(?:\\r\\n|(?!\\r\\n)[\\n\\v\\f\\r\\x85\\u2028\\u2029])`.
 
 This basic approach is used to implement all sorts of references from Unicode properties:
 
-```pycon3
->>> bre.compile(r'test \p{Cs}')
-backrefs.bre.Bre(re.compile('test [\ud800\udb7f-\udb80\udbff-\udc00\udfff]'), auto_compile=True)
+```py play
+bre.compile(r'test \p{Cs}')
 ```
 
 To start and end word boundaries:
 
-```pycon3
->>> bre.compile(r'\mtest\M')
-backrefs.bre.Bre(re.compile('\\b(?=\\w)test\\b(?<=\\w)'), auto_compile=True)
+```py play
+bre.compile(r'\mtest\M')
 ```
 
 A compiled Backrefs object has all the same functions as the regular expression's object, so you can use it in the same
@@ -46,16 +43,14 @@ way to perform splits, matches, substitutions, and anything else.
 
 If we wanted to match a line ending, we could call `prefixmatch` (or the legacy alias of `match`) or `search`.
 
-```pycon
->>> bre.compile(r'\R').prefixmatch('\n')
-<re.Match object; span=(0, 1), match='\n'>
+```py play
+bre.compile(r'\R').match('\n')
 ```
 
 Matches can also be preformed without pre-compiling.
 
-```pycon
->>> bre.prefixmatch(r'\R', '\n')
-<re.Match object; span=(0, 1), match='\n'>
+```py play
+bre.match(r'\R', '\n')
 ```
 
 ## Replacements
@@ -73,10 +68,9 @@ replacement and inject new functionality on substitution.
 For instance, here we use the start and end markers of `\C` and `\E` to specify that the content in between should be
 capitalized. Traditionally, `\U` and `\E` is used, but since `\U` is a Unicode escape in Python, we chose to use `\C`.
 
-```pycon3
->>> pattern = bre.compile(r'(\p{Letter}+)')
->>> pattern.sub(r'\C\1\E', 'sometext')
-'SOMETEXT'
+```py play
+pattern = bre.compile(r'(\p{Letter}+)')
+pattern.sub(r'\C\1\E', 'sometext')
 ```
 
 ## Format Replacements
@@ -88,11 +82,9 @@ Originally, this feature was developed in Regex to allow accessing specific capt
 are made. For Regex, this makes a lot of sense as the library actually tracks all captures for a group. Each capture
 can be indexed individually using the format string format.
 
-```pycon3
->>> regex.subf(r"(?:(\w+) ){2}(\w+)", "{0} => {1[0]} {1[1]} {2}", "foo bar baz")
-'foo bar baz => foo bar baz'
->>> regex.subf(r"(?:(?P<word1>\w+) ){2}(?P<word2>\w+)", "{0} => {word1[0]} {word1[1]} {word2}", "foo bar baz")
-'foo bar baz => foo bar baz'
+```py play
+regex.subf(r"(?:(\w+) ){2}(\w+)", "{0} => {1[0]} {1[1]} {2}", "foo bar baz")
+regex.subf(r"(?:(?P<word1>\w+) ){2}(?P<word2>\w+)", "{0} => {word1[0]} {word1[1]} {word2}", "foo bar baz")
 ```
 
 The Re engine does not track multiple captures for a single group -- something we cannot change -- and instead only
@@ -100,9 +92,8 @@ captures the last capture. Format strings in Re will only provide the last captu
 into different captures instead of accepting the default, you will only be able to reference the last one. If at some
 point in the future, Re begins to track all captures, then this feature will be updated to reflect such changes.
 
-```pycon3
->>> bre.subf(r"(?:(\w+) ){2}(\w+)", "{0} => {1[0]} {1[-1]} {2}", "foo bar baz")
-'foo bar baz => bar bar baz'
+```py play
+bre.subf(r"(?:(\w+) ){2}(\w+)", "{0} => {1[0]} {1[-1]} {2}", "foo bar baz")
 ```
 
 While Re does not really expose multiple captures, this doesn't mean the format string is of no use to Re. For one, the
@@ -113,35 +104,30 @@ By default, Python's Re requires groups to be specified via `\1` or `\g<name>`, 
 When using Backrefs' format replace, it should feel similar to Regex's format replace, except you will generally use raw
 strings to allow for back slash references.
 
-```pycon3
->>> bregex.subf(r"(\w+) (\w+)", r"{0} => {2} {1}", "foo bar")
-'foo bar => bar foo'
->>> bregex.subf(r"(?P<word1>\w+) (?P<word2>\w+)", r"{word2} {word1}", "foo bar")
-'bar foo'
+```py play
+bregex.subf(r"(\w+) (\w+)", r"{0} => {2} {1}", "foo bar")
+bregex.subf(r"(?P<word1>\w+) (?P<word2>\w+)", r"{word2} {word1}", "foo bar")
 ```
 
 You can index into groups that have multiple captures, and while it works for both Re and Regex, it is only useful when
 using `bregex`.
 
-```pycon3
->>> bregex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
-'foo bar => bar f'
+```py play
+bregex.subf(r"(\w)+ (\w+)", "{0} => {2} {1[0]}", "foo bar")
 ```
 
 You can also use `{} {}` which is the same as `{0} {1}`.
 
-```pycon3
->>> bre.subf(r"(\w+) (\w+)", r"{} => \C{} {}\E", "foo bar")
-'foo bar => FOO BAR'
+```py play
+bre.subf(r"(\w+) (\w+)", r"{} => \C{} {}\E", "foo bar")
 ```
 
 Backrefs also provides an `expand` variant for format templates called `expandf`.
 
-```pycon3
->>> pattern = bre.compile_search(r"(\w+) (\w+)")
->>> m = pattern.prefixmatch('foo bar')
->>> bre.expandf(m, r"{0} => {2} {1}")
-'foo bar => bar foo'
+```py play
+pattern = bre.compile_search(r"(\w+) (\w+)")
+m = pattern.match('foo bar')
+bre.expandf(m, r"{0} => {2} {1}")
 ```
 
 ### Enhancements
@@ -155,20 +141,17 @@ why.
     along side brace replacements. This means you can use string back references and built-in Backrefs features like
     `\C...\E` or `\L...\E`.
 
-    ```pycon3
-    >>> bre.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
-    'foo bar => BAR FOO'
-    >>> bregex.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
-    'foo bar => BAR FOO'
+    ```py play
+    bre.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
+    bregex.subf(r"(\w+) (\w+)", r"{0} => \C{2} {1}\E", "foo bar")
     ```
 
 2.  The second enhancement that Backrefs adds is the ability to use format string alignment features. In the following
     example, we center the replacement and pad it out to 8 characters using `|` for the padding. We also use casing
     references (`\C...\E`) to capitalize the replacement group.
 
-    ```pycon3
-    >>> bregex.subf(r'(test)', r'\C{0:|^8}\E', 'test')
-    '||TEST||'
+    ```py play
+    bregex.subf(r'(test)', r'\C{0:|^8}\E', 'test')
     ```
 
     Backrefs implements a subset of the [Format Specification Mini-Language][format-spec] (`format_spec`) that allows
@@ -198,9 +181,8 @@ why.
     strings to work for byte strings as well as Unicode strings. This is something that Regex does not allow without
     Backrefs.
 
-    ```pycon3
-    >>> bre.subf(br'(test)', br'\C{0:|^8}\E', b'test')
-    b'||TEST||'
+    ```py play
+    bre.subf(br'(test)', br'\C{0:|^8}\E', b'test')
     ```
 
     > [!note] Conversion Syntax and Bytes
@@ -216,45 +198,40 @@ the replace features seamlessly without the user having to do anything extra. Bu
 features, the `compile_search` method can be used to compile the pattern and directly return the regular expression
 object with no wrapper:
 
-```pycon3
->>> bre.compile_search(r'(\p{ascii}+)')
-re.compile('([\x00-\x7f]+)')
+```py play
+bre.compile_search(r'(\p{ascii}+)')
 ```
 
 Conversely, we could only use the replace features by compiling the pattern normally and giving it to the Backrefs API
 to create a replace object:
 
-```pycon3
->>> pattern = re.compile(r'(\w+)')
->>> replace = bre.compile_replace(pattern, r'\C\1\E')
->>> pattern.sub(replace, 'text')
-'TEXT'
+```py play
+pattern = re.compile(r'(\w+)')
+replace = bre.compile_replace(pattern, r'\C\1\E')
+pattern.sub(replace, 'text')
 ```
 
 You can also compile a replacement object directly from a `backrefs` object:
 
-```pycon3
->>> pattern = bre.compile(r'(\w+)')
->>> replace = pattern.compile(r'\C\1\E')
->>> pattern.sub(replace, 'text')
-'TEXT'
+```py play
+pattern = bre.compile(r'(\w+)')
+replace = pattern.compile(r'\C\1\E')
+pattern.sub(replace, 'text')
 ```
 
 To pre-compile a format replace template, you can use the Backrefs' `compile_replace` method with the `FORMAT` flag.
 
-```pycon3
->>> pattern = bre.compile_search(r"(\w+) (\w+)")
->>> replace = bre.compile_replace(pattern, r"{0} => {2} {1}", bre.FORMAT)
->>> m = pattern.prefixmatch("foo bar")
->>> replace(m)
-'foo bar => bar foo'
+```py play
+pattern = bre.compile_search(r"(\w+) (\w+)")
+replace = bre.compile_replace(pattern, r"{0} => {2} {1}", bre.FORMAT)
+m = pattern.match("foo bar")
+replace(m)
 ```
 
 Pre-compiled pattern objects can also create a compiled format replace object using the `FORMAT` flag.
 
-```pycon3
->>> pattern = bre.compile(r"(?P<word1>\w+) (?P<word2>\w+)")
->>> replace = pattern.compile(r"\c{word2} \c{word1}", bre.FORMAT)
->>> pattern.subf(replace, "foo bar")
-'Bar Foo'
+```py play
+pattern = bre.compile(r"(?P<word1>\w+) (?P<word2>\w+)")
+replace = pattern.compile(r"\c{word2} \c{word1}", bre.FORMAT)
+pattern.subf(replace, "foo bar")
 ```

@@ -3,6 +3,10 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
+## 8.1
+
+-   **NEW**: Add official support for Python 3.15.
+
 ## 8.0
 
 -   **NEW**: Backrefs will preemptively fail, raising a `PatternError`, if parsing and finding an unterminated character
@@ -132,7 +136,7 @@ icon: lucide/scroll-text
     to improve result.
 -   **NEW**: POSIX style properties now handle all existing Unicode properties.
 -   **NEW**: POSIX properties now follow the [Unicode specification for POSIX compatibility][unicode-posix].
-    Read the [documentation](../refs.md#posix-style-properties) to learn more.
+    Read the [documentation](../refs.md#posix-character-classes) to learn more.
 -   **NEW**: Unicode properties are now sensitive to the `ASCII` flag and will properly restrict the range of properties
     to the ASCII range even in Unicode strings.
 -   **NEW**: Removed the old deprecated search references: `\l`, `\L`, `\c`, and `\C`. These are available in various

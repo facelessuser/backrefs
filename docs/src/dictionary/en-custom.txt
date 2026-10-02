@@ -35,6 +35,7 @@ decrement
 deprecations
 emoji
 enablement
+formatter
 grapheme
 hashable
 incrementing
@@ -62,4 +63,5 @@ tuple
 uncompiled
 unescaped
 unterminated
+validator
 whitespace
