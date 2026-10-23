@@ -1909,6 +1909,21 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(PatternError):
             pattern.subf(br'{:030}', b'Testing')
 
+    def test_case_hex_above_byte_range(self):
+        """Test case conversion of hex escapes beyond the byte range."""
+
+        pattern = re.compile('Test')
+        for template, expected in (
+            (r'\c\xb5', '\u039c'),
+            (r'\C\xff\E', '\u0178'),
+            (r'\C\l\xb5\E', '\u03bc'),
+            (r'\C\x5c\E', '\\')
+        ):
+            with self.subTest(template=template):
+                expand = bre.compile_replace(pattern, template)
+                results = expand(pattern.match('Test'))
+                self.assertEqual(expected, results)
+
     def test_dont_case_special_refs(self):
         """Test that we don't case Unicode and bytes tokens, but case the character."""
 

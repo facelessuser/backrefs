@@ -3,6 +3,10 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
+## 8.1.1
+
+-   **FIX**: Fix wrong text or errors when case conversion of a `\x` escape exceeds the byte range in replace templates.
+
 ## 8.1
 
 -   **NEW**: Add official support for Python 3.15.
