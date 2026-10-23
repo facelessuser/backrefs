@@ -830,8 +830,10 @@ class _ReplaceParser(Generic[AnyStr]):
             value = ord(self.convert_case(chr(value), single))
         if self.use_format and value in _CURLY_BRACKETS_ORD:
             self.handle_format(chr(value), i)
-        else:
+        elif value <= 0xFF:
             self.result.append(f'\\{value:03o}')
+        else:
+            self.result.append(chr(value))
 
     def get_named_group(self, t: str, i: _util.StringIter) -> str:
         """Get group number."""
