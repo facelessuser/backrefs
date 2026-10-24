@@ -6,6 +6,7 @@ icon: lucide/scroll-text
 ## 8.1.1
 
 -   **FIX**: Fix wrong text or errors when case conversion of a `\x` escape exceeds the byte range in replace templates.
+-   **FIX**: Fix an empty format specification (`{1:}`) raising an error in format replace templates.
 
 ## 8.1
 

@@ -755,7 +755,7 @@ class _ReplaceParser(Generic[AnyStr]):
                         else:
                             width.append(fill)
                             fill = None
-                    else:
+                    elif c != '}':
                         fill = c
                         c = self.format_next(i)
                         if fill == 's' and c == '}':
