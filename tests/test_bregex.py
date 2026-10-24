@@ -1604,6 +1604,25 @@ class TestReplaceTemplate(unittest.TestCase):
                 results = expand(pattern.match('Test'))
                 self.assertEqual(expected, results)
 
+    def test_case_escape_multiple_chars(self):
+        """Test case conversion of escapes that give more than one character."""
+
+        pattern = regex.compile('Test')
+        for template, expected in (
+            (r'\C\xdf\E', 'SS'),
+            (r'\c\337', 'SS'),
+            (r'\C\N{LATIN SMALL LETTER SHARP S}\E', 'SS'),
+            (r'\C\u00df\E', 'SS'),
+            (r'\L\u0130\E', 'i\u0307'),
+            (r'\C\l\460\E', 'i\u0307'),
+            (r'\C\l\N{LATIN CAPITAL LETTER I WITH DOT ABOVE}\E', 'i\u0307'),
+            (r'\C\l\u0130\E', 'i\u0307')
+        ):
+            with self.subTest(template=template):
+                expand = bregex.compile_replace(pattern, template)
+                results = expand(pattern.match('Test'))
+                self.assertEqual(expected, results)
+
     def test_dont_case_special_refs(self):
         """Test that we don't case Unicode and bytes tokens, but case the character."""
 
