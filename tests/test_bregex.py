@@ -1538,6 +1538,8 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(pattern.subf(r'{1:1^30}', 'Testing'), '11111111111111Te11111111111111')
         self.assertEqual(pattern.subf(r'{1:<30s}', 'Testing'), 'Te                            ')
         self.assertEqual(pattern.subf(r'{1:s}', 'Testing'), 'Te')
+        self.assertEqual(pattern.subf(r'{1:}', 'Testing'), 'Te')
+        self.assertEqual(pattern.subf(r'{1:}-x', 'Testing'), 'Te-x')
         self.assertEqual(pattern.subf(r'{2!r}', 'Testing'), "'st'")
 
         with pytest.raises(PatternError):
@@ -1570,6 +1572,8 @@ class TestReplaceTemplate(unittest.TestCase):
         self.assertEqual(pattern.subf(br'{1:1^30}', b'Testing'), b'11111111111111Te11111111111111')
         self.assertEqual(pattern.subf(br'{1:<30s}', b'Testing'), b'Te                            ')
         self.assertEqual(pattern.subf(br'{1:s}', b'Testing'), b'Te')
+        self.assertEqual(pattern.subf(br'{1:}', b'Testing'), b'Te')
+        self.assertEqual(pattern.subf(br'{1:}-x', b'Testing'), b'Te-x')
         self.assertEqual(pattern.subf(br'{2!r}', b'Testing'), b"b'st'")
 
         with pytest.raises(PatternError):
