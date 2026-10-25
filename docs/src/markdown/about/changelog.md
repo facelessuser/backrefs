@@ -5,6 +5,7 @@ icon: lucide/scroll-text
 
 ## 8.1.1
 
+-   **FIX**: Fix error in replace templates when casing a character escape gives two characters (`\C\xdf\E`).
 -   **FIX**: Fix wrong text or errors when case conversion of a `\x` escape exceeds the byte range in replace templates.
 -   **FIX**: Fix an empty format specification (`{1:}`) raising an error in format replace templates.
 -   **FIX**: Fix Unicode properties, such as general category `\p{L}` and `\p{Bidi_Class=L}`, not matching ideographs,
