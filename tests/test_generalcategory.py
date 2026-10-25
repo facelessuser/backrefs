@@ -125,6 +125,14 @@ class TestGeneralCategory(unittest.TestCase):
                 result = uniprops.get_unicode_property(category, mode=uniprops.MODE_ASCII)
                 self.assertEqual(result, uniprops.fmt_string(v2, True))
 
+    def test_gc_range(self):
+        """Test characters `UnicodeData.txt` defines with a `First` and a `Last` line."""
+
+        for char in ('\uac00', '\u4e16', '\ud55c', '\ud7a3'):
+            for category, match in (('lo', True), ('l', True), ('cn', False), ('^cn', True)):
+                result = re.match('[%s]' % uniprops.get_unicode_property(category), char)
+                self.assertEqual(result is not None, match)
+
     def test_bad_single_subcategory(self):
         """Test `Joining Group` property with bad value."""
 

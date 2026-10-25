@@ -50,6 +50,13 @@ class TestBidiClass(unittest.TestCase):
             result = uniprops.get_unicode_property('bidiclass', k, mode=uniprops.MODE_ASCII)
             self.assertEqual(result, uniprops.fmt_string(v, True))
 
+    def test_bidiclass_range(self):
+        """Test characters `UnicodeData.txt` defines with a `First` and a `Last` line."""
+
+        for char in ('\uac00', '\u4e16', '\ud55c', '\ud7a3'):
+            result = re.match('[%s]' % uniprops.get_unicode_property('bidiclass', 'l'), char)
+            self.assertTrue(result is not None)
+
     def test_bad_bidiclass(self):
         """Test `Bidi Class` property with bad value."""
 
