@@ -7,6 +7,8 @@ icon: lucide/scroll-text
 
 -   **FIX**: Fix wrong text or errors when case conversion of a `\x` escape exceeds the byte range in replace templates.
 -   **FIX**: Fix an empty format specification (`{1:}`) raising an error in format replace templates.
+-   **FIX**: Fix Unicode properties, such as general category `\p{L}` and `\p{Bidi_Class=L}`, not matching ideographs,
+    Hangul syllables, and other characters Unicode defines as ranges.
 
 ## 8.1
 

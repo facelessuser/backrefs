@@ -92,7 +92,7 @@ implementation of Unicode properties. Some properties may not be available on ce
 included Unicode build.
 
 It is important to note that Backrefs handles Unicode properties by transforming them to character classes with all the
-associated characters: `\p{Cs}` --> `[\ud800\udb7f-\udb80\udbff-\udc00\udfff]`.  Because of this, Backrefs can create
+associated characters: `\p{Cs}` --> `[\ud800-\udfff]`.  Because of this, Backrefs can create
 really large regular expressions that the underlying engine must walk through.  In short, Re with Backrefs will never be
 as efficient or fast as using Regex's Unicode properties, but it is very useful when you need or want to use Re.
 

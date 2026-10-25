@@ -60,6 +60,22 @@ def create_span(unirange, is_bytes=False):
     return list(range(unirange[0], unirange[1] + 1))
 
 
+def expand_ranges(lines):
+    """Give each code point in a `First`/`Last` range of `UnicodeData.txt` a line of its own."""
+
+    first = None
+    for line in lines:
+        code, name, fields = line.split(';', 2)
+        if name.endswith(', First>'):
+            first = int(code, 16)
+        elif first is None:
+            yield line
+        else:
+            for i in range(first, int(code, 16) + 1):
+                yield '%04X;%s;%s' % (i, name, fields)
+            first = None
+
+
 def not_explicitly_defined(table, name, is_bytes=False):
     """Compose a table with the specified entry name of values not explicitly defined."""
 
@@ -780,7 +796,7 @@ def gen_bidi(output, ascii_props=False, append=False, prefix="", aliases=None):
 
     max_range = MAXVALIDASCII if ascii_props else MAXUNICODE
     with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'UnicodeData.txt'), 'r', encoding='utf-8') as uf:
-        for line in uf:
+        for line in expand_ranges(uf):
             data = line.strip().split(';')
             if data:
                 bidi = data[4].strip().lower()
@@ -1042,7 +1058,7 @@ def gen_properties(output, files, aliases, ascii_props=False, append=False):
     table = {'l': {'c': []}}
     itable = {'l': {}}
     with open(os.path.join(HOME, 'unicodedata', UNIVERSION, 'UnicodeData.txt'), 'r', encoding='utf-8') as uf:
-        for line in uf:
+        for line in expand_ranges(uf):
             data = line.strip().split(';')
             if data:
                 i = int(data[0], 16)
