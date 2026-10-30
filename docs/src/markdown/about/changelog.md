@@ -11,6 +11,9 @@ icon: lucide/scroll-text
 -   **FIX**: Fix Unicode properties, such as general category `\p{L}` and `\p{Bidi_Class=L}`, not matching ideographs,
     Hangul syllables, and other characters Unicode defines as ranges.
 
+-   **FIX**: Fix `\p{...}` Unicode properties rejecting the canonical dotted value form (e.g. `Age=1.1`),
+    which previously only worked through the alias form (e.g. `V1_1`).
+
 ## 8.1
 
 -   **NEW**: Add official support for Python 3.15.
