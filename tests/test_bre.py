@@ -498,8 +498,8 @@ class TestSearchTemplate(unittest.TestCase):
     def test_age_canonical_value_in_group(self):
         """Test the canonical age value form inside a character group."""
 
-        pattern = bre.compile_search(r'[\p{Age=15.0}]')
-        pattern2 = bre.compile_search(r'[\p{Age=V15_0}]')
+        pattern = bre.compile_search(r'[\p{Age=13.0}]')
+        pattern2 = bre.compile_search(r'[\p{Age=V13_0}]')
         self.assertEqual(pattern.pattern, pattern2.pattern)
 
     def test_age_canonical_value_negated(self):
