@@ -484,6 +484,31 @@ class TestSearchTemplate(unittest.TestCase):
         pattern2 = bre.compile_search('Test [!-\\~]', re.ASCII)
         self.assertEqual(pattern.pattern, pattern2.pattern)
 
+    def test_age_canonical_value(self):
+        """Test the `UCD` canonical age value form (`1.1`, not just the `V1_1` alias)."""
+
+        pattern = bre.compile_search(r'\p{Age=1.1}')
+        pattern2 = bre.compile_search(r'\p{Age=V1_1}')
+        self.assertEqual(pattern.pattern, pattern2.pattern)
+
+        pattern = bre.compile_search(r'\p{Age:1.1}')
+        pattern2 = bre.compile_search(r'\p{Age:V1_1}')
+        self.assertEqual(pattern.pattern, pattern2.pattern)
+
+    def test_age_canonical_value_in_group(self):
+        """Test the canonical age value form inside a character group."""
+
+        pattern = bre.compile_search(r'[\p{Age=13.0}]')
+        pattern2 = bre.compile_search(r'[\p{Age=V13_0}]')
+        self.assertEqual(pattern.pattern, pattern2.pattern)
+
+    def test_age_canonical_value_negated(self):
+        """Test the canonical age value form with a negated property."""
+
+        pattern = bre.compile_search(r'\p{^Age=1.1}')
+        pattern2 = bre.compile_search(r'\p{^Age=V1_1}')
+        self.assertEqual(pattern.pattern, pattern2.pattern)
+
     def test_not_posix_at_start_group(self):
         """Test a situation that is not a POSIX at the start of a group."""
 

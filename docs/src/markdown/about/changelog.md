@@ -13,6 +13,9 @@ icon: lucide/scroll-text
 -   **FIX**: Fix `\g<...>` references in replace templates silently dropping invalid characters in a group name
     instead of raising an error.
 
+-   **FIX**: Fix `\p{...}` Unicode properties rejecting the canonical dotted value form (e.g. `Age=1.1`),
+    which previously only worked through the alias form (e.g. `V1_1`).
+
 ## 8.1
 
 -   **NEW**: Add official support for Python 3.15.
