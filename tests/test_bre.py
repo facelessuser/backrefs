@@ -485,7 +485,7 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(pattern.pattern, pattern2.pattern)
 
     def test_age_canonical_value(self):
-        """Test the UCD canonical age value form (`1.1`, not just the `V1_1` alias)."""
+        """Test the `UCD` canonical age value form (`1.1`, not just the `V1_1` alias)."""
 
         pattern = bre.compile_search(r'\p{Age=1.1}')
         pattern2 = bre.compile_search(r'\p{Age=V1_1}')
