@@ -1006,16 +1006,18 @@ class _ReplaceParser(Generic[AnyStr]):
                 value.append(c)
                 c = next(i)
                 while c != '>':
-                    if c in _DIGIT:
-                        value.append(c)
+                    if c not in _DIGIT:
+                        raise PatternError(f"Bad character in group name at {i.index - 1}!")
+                    value.append(c)
                     c = next(i)
                 value.append(c)
             elif c in _LETTERS_UNDERSCORE:
                 value.append(c)
                 c = next(i)
                 while c != '>':
-                    if c in _WORD:
-                        value.append(c)
+                    if c not in _WORD:
+                        raise PatternError(f"Bad character in group name at {i.index - 1}!")
+                    value.append(c)
                     c = next(i)
                 value.append(c)
             else:

@@ -10,6 +10,8 @@ icon: lucide/scroll-text
 -   **FIX**: Fix an empty format specification (`{1:}`) raising an error in format replace templates.
 -   **FIX**: Fix Unicode properties, such as general category `\p{L}` and `\p{Bidi_Class=L}`, not matching ideographs,
     Hangul syllables, and other characters Unicode defines as ranges.
+-   **FIX**: Fix `\g<...>` references in replace templates silently dropping invalid characters in a group name
+    instead of raising an error.
 
 ## 8.1
 

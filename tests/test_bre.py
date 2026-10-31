@@ -2017,6 +2017,27 @@ class TestReplaceTemplate(unittest.TestCase):
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
 
+    def test_bad_char_in_numeric_group_name(self):
+        """Test bad character in a numeric group name."""
+
+        p = bre.compile_search(r'(a)(b)')
+        with pytest.raises(PatternError):
+            bre.compile_replace(p, r'Replace \g<1X>')
+
+    def test_bad_char_in_group_name(self):
+        """Test bad character in a named group reference."""
+
+        p = bre.compile_search(r'(?P<word>a)(b)')
+        with pytest.raises(PatternError):
+            bre.compile_replace(p, r'Replace \g<w-ord>')
+
+    def test_bad_char_in_group_name_spacing(self):
+        """Test spacing in a group name reference."""
+
+        p = bre.compile_search(r'(?P<word>a)(b)')
+        with pytest.raises(PatternError):
+            bre.compile_replace(p, r'Replace \g<word >')
+
     def test_bad_flag(self):
         """Test bad flag."""
 
