@@ -3,8 +3,9 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
-## 8.1.1
+## 8.2
 
+-   **NEW**: Drop Python 3.10.
 -   **FIX**: Fix error in replace templates when casing a character escape gives two characters (`\C\xdf\E`).
 -   **FIX**: Fix wrong text or errors when case conversion of a `\x` escape exceeds the byte range in replace templates.
 -   **FIX**: Fix an empty format specification (`{1:}`) raising an error in format replace templates.

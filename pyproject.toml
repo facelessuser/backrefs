@@ -9,7 +9,7 @@ name = "backrefs"
 description = "A wrapper around re and regex that adds additional back references."
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     { name = "Isaac Muse", email = "Isaac.Muse@gmail.com" },
 ]
@@ -39,11 +39,10 @@ include = [
     "/docs/src/markdown/**/*.md",
     "/docs/src/markdown/**/*.gif",
     "/docs/src/markdown/**/*.png",
-    "/docs/src/markdown/dictionary/*.txt",
+    "/docs/src/dictionary/*.txt",
     "/docs/theme/**/*.css",
     "/docs/theme/**/*.js",
     "/docs/theme/**/*.html",
-    "/requirements/*.txt",
     "/backrefs/**/*.py",
     "/backrefs/py.typed",
     "/tests/**/*.py",
@@ -52,7 +51,7 @@ include = [
     "/tools/unicodedata/LICENSE",
     "/.pyspelling.yml",
     "/.coveragerc",
-    "/mkdocs.yml"
+    "/zensical.yml"
 ]
 
 exclude = [
@@ -155,10 +154,10 @@ dependencies = [
 ]
 
 [[tool.hatch.envs.dev.matrix]]
-python = ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+python = ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
 [[tool.hatch.envs.dev-stdlib.matrix]]
-python = ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+python = ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
 [tool.hatch.envs.dev.scripts]
 types = """
