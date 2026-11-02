@@ -213,6 +213,12 @@ class TestSearchTemplate(unittest.TestCase):
         with pytest.raises(PatternError):
             bre.compile(r'\N{A')
 
+        with pytest.raises(PatternError):
+            bre.compile(r'\N{Undefined character}')
+
+        with pytest.raises(PatternError):
+            bre.compile_replace(re.compile(r'(a)'), r'\N{Undefined character}')
+
     def test_word_boundary(self):
         """Test word boundary."""
 

@@ -5,7 +5,6 @@ Licensed under MIT
 Copyright (c) 2011 - 2020 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import annotations
-import unicodedata as _unicodedata
 import copyreg as _copyreg
 from . import util as _util
 from .util import PatternError
@@ -746,7 +745,7 @@ class _ReplaceParser(Generic[AnyStr]):
     def parse_named_unicode(self, i: _util.StringIter) -> None:
         """Parse named Unicode."""
 
-        value = ord(_unicodedata.lookup(self.get_named_unicode(i)))
+        value = ord(_util.unicode_char(self.get_named_unicode(i)))
         single = self.get_single_stack()
         if self.span_stack:
             text = self.convert_case(chr(value), self.span_stack[-1])
@@ -910,7 +909,7 @@ class _ReplaceParser(Generic[AnyStr]):
         elif not self.is_bytes and t == "u":
             value = chr(int(self.get_narrow_unicode(i), 16))
         elif not self.is_bytes and t == "N":
-            value = _unicodedata.lookup(self.get_named_unicode(i))
+            value = _util.unicode_char(self.get_named_unicode(i))
         elif t == "x":
             value = chr(int(self.get_byte(i), 16))
         else:
