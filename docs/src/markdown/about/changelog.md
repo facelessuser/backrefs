@@ -17,6 +17,8 @@ icon: lucide/scroll-text
     which previously only worked through the alias form (e.g. `V1_1`).
 -   **FIX**: Fix issue where Unicode properties within character classes (e.g. `[x[:property:]]`) were incorrectly
     detected with `[x[l]]` (@rahul05ranjan).
+-   **FIX**: Fix an undefined Unicode name in `\N{...}` raising a `KeyError` instead of `PatternError`
+    (@rahul05ranjan).
 
 ## 8.1
 

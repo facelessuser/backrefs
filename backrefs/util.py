@@ -29,8 +29,8 @@ def unicode_char(name: str) -> str:
 
     try:
         return _unicodedata.lookup(name)
-    except KeyError:
-        raise PatternError(f"Undefined Unicode character name {name!r}!")
+    except KeyError as e:
+        raise PatternError(f"Undefined Unicode character name {name!r}!") from e
 
 
 class StringIter:
