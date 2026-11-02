@@ -161,6 +161,19 @@ class TestSearchTemplate(unittest.TestCase):
         with pytest.warns(FutureWarning):
             self.assertTrue(bre.compile(r'[[:graph:a]').match('a') is not None)
 
+    def test_bare_letter_after_inner_bracket_is_literal(self):
+        """Test that a letter right after an inner `[` is a literal char, not a property."""
+
+        pattern = bre.compile(r'[x[l]]')
+        self.assertTrue(pattern.match('[]') is not None)
+        self.assertTrue(pattern.match('l]') is not None)
+        self.assertTrue(pattern.match('x]') is not None)
+        self.assertTrue(pattern.match('a]') is None)
+        pattern = bre.compile(r'[}[d]')
+        self.assertTrue(pattern.match('[') is not None)
+        self.assertTrue(pattern.match('d') is not None)
+        self.assertTrue(pattern.match('}') is not None)
+
     def test_unicode_property_failures(self):
         """Test Unicode property."""
 

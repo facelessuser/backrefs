@@ -13,9 +13,10 @@ icon: lucide/scroll-text
     Hangul syllables, and other characters Unicode defines as ranges.
 -   **FIX**: Fix `\g<...>` references in replace templates silently dropping invalid characters in a group name
     instead of raising an error.
-
 -   **FIX**: Fix `\p{...}` Unicode properties rejecting the canonical dotted value form (e.g. `Age=1.1`),
     which previously only worked through the alias form (e.g. `V1_1`).
+-   **FIX**: Fix issue where Unicode properties within character classes (e.g. `[x[:property:]]`) were incorrectly
+    detected with `[x[l]]` (@rahul05ranjan).
 
 ## 8.1
 
