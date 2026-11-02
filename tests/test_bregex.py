@@ -722,6 +722,9 @@ class TestReplaceTemplate(unittest.TestCase):
         with pytest.raises(PatternError):
             bregex.sub('test', r'\N{A', 'test')
 
+        with pytest.raises(PatternError):
+            bregex.sub('test', r'\N{Undefined character}', 'test')
+
     def test_group_failures(self):
         """Test group failures."""
 
