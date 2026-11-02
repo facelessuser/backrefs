@@ -7,6 +7,7 @@ Copyright (c) 2015 - 2020 Isaac Muse <isaacmuse@gmail.com>
 from __future__ import annotations
 import warnings
 import sys
+import unicodedata as _unicodedata
 from typing import Any, Callable, AnyStr
 
 PY311 = (3, 11) <= sys.version_info
@@ -21,6 +22,15 @@ FMT_SPEC = 4
 
 class PatternError(Exception):
     """Pattern error."""
+
+
+def unicode_char(name: str) -> str:
+    """Unicode character by its official name, raising our pattern error when no character has it."""
+
+    try:
+        return _unicodedata.lookup(name)
+    except KeyError:
+        raise PatternError(f"Undefined Unicode character name {name!r}!")
 
 
 class StringIter:
