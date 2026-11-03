@@ -2605,11 +2605,3 @@ class TestConvenienceFunctions(unittest.TestCase):
         with pytest.raises(re.error):
             p.sub(r'\ltest', 'tests')
 
-
-
-
-@pytest.mark.parametrize('method', ['sub', 'subn', 'subf', 'subfn'])
-
-@pytest.mark.parametrize('auto_compile', [False, True])
-
-def t
