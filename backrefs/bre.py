@@ -267,7 +267,8 @@ class Bre(_util.Immutable, Generic[AnyStr]):
         if isinstance(template, ReplaceTemplate):
             if use_format != template.use_format:
                 raise ValueError("Compiled replace cannot be a format object!")
-        elif isinstance(template, ReplaceTemplate) or (isinstance(template, (str, bytes)) and self.auto_compile):
+            return self.compile(template)
+        elif isinstance(template, (str, bytes)) and self.auto_compile:
             return self.compile(template, (FORMAT if use_format and not isinstance(template, ReplaceTemplate) else 0))
         elif isinstance(template, (str, bytes)) and use_format:
             # Reject an attempt to run format replace when auto-compiling
