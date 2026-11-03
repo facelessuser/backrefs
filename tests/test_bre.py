@@ -2604,3 +2604,12 @@ class TestConvenienceFunctions(unittest.TestCase):
         # Fail due to `\l` being an invalid escape.
         with pytest.raises(re.error):
             p.sub(r'\ltest', 'tests')
+
+
+
+
+@pytest.mark.parametrize('method', ['sub', 'subn', 'subf', 'subfn'])
+
+@pytest.mark.parametrize('auto_compile', [False, True])
+
+def t
