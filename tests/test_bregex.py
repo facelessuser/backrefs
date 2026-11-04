@@ -2210,3 +2210,35 @@ class TestConvenienceFunctions(unittest.TestCase):
 
         with self.assertRaises(_regex_core.error):
             self.assertEqual(p.sub(r'\ltest', 'tests'), r'\ltest')
+
+
+@pytest.mark.parametrize('method', ['sub', 'subn', 'subf', 'subfn'])
+@pytest.mark.parametrize('auto_compile', [False, True])
+def test_foreign_compiled_replacement(method, auto_compile):
+    """Reject templates whose named captures belong to another pattern."""
+
+    first = r'(?P<first>a)(?P<second>b)'
+    second = r'(?P<second>b)(?P<first>a)'
+    text = 'ba'
+    template = '{first}' if method in ('subf', 'subfn') else r'\g<first>'
+    source = bregex.compile(first)
+    target = bregex.compile(second, auto_compile=auto_compile)
+    replacement = source.compile(template, bregex.FORMAT if method in ('subf', 'subfn') else 0)
+
+    with pytest.raises(ValueError, match="Pattern hash doesn't match"):
+        getattr(target, method)(replacement, text)
+
+
+@pytest.mark.parametrize('method', ['sub', 'subn', 'subf', 'subfn'])
+@pytest.mark.parametrize('auto_compile', [False, True])
+def test_matching_compiled_replacement(method, auto_compile):
+    """Matching templates still work without automatic string compilation."""
+
+    pattern = r'(?P<first>a)(?P<second>b)'
+    text, expected = 'ab', 'a'
+    template = '{first}' if method in ('subf', 'subfn') else r'\g<first>'
+    target = bregex.compile(pattern, auto_compile=auto_compile)
+    replacement = target.compile(template, bregex.FORMAT if method in ('subf', 'subfn') else 0)
+    if method in ('subn', 'subfn'):
+        expected = (expected, 1)
+    assert getattr(target, method)(replacement, text) == expected

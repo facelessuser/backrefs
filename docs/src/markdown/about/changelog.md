@@ -3,6 +3,11 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
+## Unreleased
+
+-   **FIX**: Reject compiled replace templates from another search pattern in compiled search objects,
+    matching module-level substitutions and preventing incorrect capture references.
+
 ## 8.2
 
 -   **NEW**: Drop Python 3.10.
