@@ -4,20 +4,14 @@ import unittest
 from backrefs import bre
 from backrefs.util import PatternError
 import re
+import re._constants as _constants
 import sys
 import pytest
 import random
 from backrefs import _bre_parse
 import copy
 
-PY39_PLUS = (3, 9) <= sys.version_info
-PY311_PLUS = (3, 11) <= sys.version_info
 PY313_PLUS = (3, 13) <= sys.version_info
-
-if PY311_PLUS:
-    import re._constants as _constants
-else:
-    import sre_constants as _constants
 
 
 class TestSearchTemplate(unittest.TestCase):
@@ -396,6 +390,27 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertEqual(matches(f'[a-c-{big}]'), frozenset(b'-abc'))
         self.assertEqual(matches(rf'[\x21-\x41-{big}]'), frozenset(range(0x21, 0x42)))
 
+    def test_escapes_in_char_groups(self):
+        """Escapes in a character set are single members, so ranges and named characters work with them."""
+
+        esc = '\\'
+        self.assertEqual([c for c in 'ABCD' if bre.fullmatch(f'[{esc}u0041-{esc}u0043]', c)], ['A', 'B', 'C'])
+        self.assertEqual([c for c in 'ABCD' if bre.fullmatch(r'[\U00000041-\U00000043]', c)], ['A', 'B', 'C'])
+
+        # An octal escape ends at the first character that isn't an octal digit.
+        self.assertEqual([c for c in ('\x01', '\x18', '8', '1') if bre.fullmatch(r'[\18]', c)], ['\x01', '8'])
+
+        # The `-` after an octal escape that ends a range is a literal.
+        p = bre.compile(rb'[\041-\101-\N{CJK UNIFIED IDEOGRAPH-4E00}]')
+        self.assertEqual(frozenset(c for c in range(256) if p.fullmatch(bytes([c]))), frozenset(range(0x21, 0x42)))
+
+        # Escapes with too few digits.
+        with pytest.raises(re.error, match='incomplete escape'):
+            bre.compile(r'[\x4]')
+        for pattern in (r'[\x4', f'[{esc}u004', r'[\10'):
+            with pytest.raises(PatternError, match='unterminated character set'):
+                bre.compile(pattern)
+
     def test_caret_after_negation(self):
         """A `^` after the negating `^` is a literal."""
 
@@ -458,6 +473,11 @@ class TestSearchTemplate(unittest.TestCase):
 
         pattern = bre.compile_search(r'(?x)test # \l \p{numbers}', re.UNICODE)
         self.assertEqual(pattern.pattern, r'(?x)test # \\l \\p{numbers}', re.UNICODE)
+
+        # Other escapes are left alone.
+        pattern = bre.compile_search('(?x)test # \\d comment\nok', re.UNICODE)
+        self.assertEqual(pattern.pattern, '(?x)test # \\d comment\nok')
+        self.assertTrue(pattern.fullmatch('testok') is not None)
 
     def test_char_group_nested_opening(self):
         """Test char group with nested opening [."""
@@ -963,7 +983,6 @@ class TestSearchTemplate(unittest.TestCase):
         m = pattern2.match('test')
         self.assertTrue(m is not None)
 
-    @unittest.skipUnless(PY39_PLUS, "Python 3.9 required")
     def test_emoji_property(self):
         """Test new emoji properties."""
 
@@ -2128,6 +2147,12 @@ class TestReplaceTemplate(unittest.TestCase):
         expand = bre.compile_replace(pattern, br'\0\00\000', bre.FORMAT)
         results = expand(pattern.match(b'Test'))
         self.assertEqual(b'\x00\x00\x00', results)
+
+        # An octal escape has at most three digits.
+        pattern = re.compile('Test')
+        for template, expected in ((r'\0000', '\x000'), (r'\0123', '\n3'), (r'\1234', 'S4')):
+            self.assertEqual(bre.compile_replace(pattern, template)(pattern.match('Test')), expected)
+            self.assertEqual(re.sub('Test', template, 'Test'), expected)
 
 
 class TestExceptions(unittest.TestCase):

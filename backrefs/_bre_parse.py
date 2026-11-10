@@ -6,17 +6,12 @@ Copyright (c) 2011 - 2020 Isaac Muse <isaacmuse@gmail.com>
 """
 from __future__ import annotations
 import re as _re
-import sys
+import re._parser as _parser  # type: ignore[import]
 import copyreg as _copyreg
 from . import util as _util
 from .util import PatternError
 from . import uniprops as _uniprops
 from typing import Generic, AnyStr, Match, Any, Pattern, cast
-
-if sys.version_info >= (3, 11):
-    import re._parser as _parser  # type: ignore[import]
-else:
-    import sre_parse as _parser
 
 __all__ = ("ReplaceTemplate", "PatternError")
 
@@ -76,7 +71,7 @@ class _SearchParser(Generic[AnyStr]):
     _re_start_wb = r"\b(?=\w)"
     _re_end_wb = r"\b(?<=\w)"
     _line_break = r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85\u2028\u2029])'
-    _bytes_line_break = r'(?>\r\n|[\n\v\f\r\x85])' if _util.PY311 else r'(?:\r\n|(?!\r\n)[\n\v\f\r\x85])'
+    _bytes_line_break = r'(?>\r\n|[\n\v\f\r\x85])'
     _grapheme_cluster = r'(?:{}{}*(?!{}))'
 
     verbose: bool
@@ -420,8 +415,7 @@ class _SearchParser(Generic[AnyStr]):
         self.verbose = verbose
         self.unicode = unicode_flag
 
-        if t == ")":
-            current.append(t)
+        current.append(t)
         return current
 
     def char_groups(self, t: str, i: _util.StringIter) -> list[str]:
@@ -1300,7 +1294,7 @@ class _ReplaceParser(Generic[AnyStr]):
         count = len(self.span_stack)
         self.end_found = False
         try:
-            while not self.end_found:
+            while True:
                 t = next(i)
                 if self.use_format and t in _CURLY_BRACKETS:
                     self.handle_format(t, i)
@@ -1353,10 +1347,9 @@ class _ReplaceParser(Generic[AnyStr]):
                 except StopIteration:
                     self.result.append(t)
                     raise
-            elif self.single_stack:
-                this_case = self.get_single_stack()
-                if this_case is not None:
-                    self.result.append(self.convert_case(t, this_case))
+            else:
+                # The stack always has the case just added.
+                self.result.append(self.convert_case(t, cast(int, self.get_single_stack())))
         except StopIteration:
             pass
 

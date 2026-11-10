@@ -9,13 +9,10 @@ import pytest
 import random
 import copy
 import time
-import sys
 try:
     import _regex_core
 except ImportError:
     from regex import _regex_core
-
-PY39_PLUS = (3, 9) <= sys.version_info
 
 
 class TestSearchTemplate(unittest.TestCase):
@@ -663,7 +660,6 @@ class TestSearchTemplate(unittest.TestCase):
         m = pattern2.match('test')
         self.assertTrue(m is not None)
 
-    @unittest.skipUnless(PY39_PLUS, "Python 3.9 required")
     def test_emoji_property(self):
         """Test new emoji properties."""
 
