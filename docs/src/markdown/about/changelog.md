@@ -17,6 +17,12 @@ icon: lucide/scroll-text
     everything up to `\xff`, and a range that starts beyond it matches nothing, or is an error if it is reversed.
 -   **FIX**: `bre`: Fix a literal `^` after the negating `^` in a character set (`[^^]`) causing an unterminated
     character set error.
+-   **FIX**: `bregex`: Fix finding the end of character sets, which could cause false errors or wrongly handle what
+    follows a set (such as `\R`, groups, or verbose comments). Character sets now follow Regex's own rules:
+    -   POSIX classes are recognized in byte strings, and with qualified names or values (`[[:script=latin:]]`).
+    -   In V1, a `]` directly after a set operator is a literal (`[\w--]]`).
+    -   A literal `^` after the negating `^` (`[^^]`) no longer causes an unterminated character set error.
+-   **FIX**: `bregex`: POSIX classes in character sets are no longer rewritten before being passed to Regex.
 
 ## 8.2
 

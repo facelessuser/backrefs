@@ -33,8 +33,16 @@ _LETTERS_UNDERSCORE = _ASCII_LETTERS | frozenset(('_',))
 _WORD = _LETTERS_UNDERSCORE | _DIGIT
 _STANDARD_ESCAPES = frozenset(('a', 'b', 'f', 'n', 'r', 't', 'v'))
 _CURLY_BRACKETS = frozenset(('{', '}'))
-_PROPERTY_STRIP = frozenset((' ', '-', '_'))
-_PROPERTY = _WORD | _DIGIT | _PROPERTY_STRIP
+# Character set grammar, as defined by Regex.
+_ALNUM = _ASCII_LETTERS | _DIGIT
+_PROPERTY_NAME = _ALNUM | frozenset((' ', '&', '_', '-', '.'))
+_PROPERTY_VALUE = _ALNUM | frozenset((' ', '&', '_', '-', '.', '/'))
+_NAMED_CHAR = _ALNUM | frozenset((' ', '-'))
+_HEX_DIGITS = _HEX | frozenset(c.upper() for c in _HEX)
+_HEX_ESCAPES = {'x': 2, 'u': 4, 'U': 8}
+_SHORT_PROPERTIES = frozenset(('C', 'L', 'M', 'N', 'P', 'S', 'Z'))
+_CLASS_ESCAPES = frozenset(('d', 'D', 'h', 's', 'S', 'w', 'W'))
+_SET_OPS = frozenset(('||', '~~', '&&', '--'))
 _GLOBAL_FLAGS = frozenset(('b', 'e', 'p', 'r', 'V'))
 _SCOPED_FLAGS = frozenset(('a', 'f', 'i', 'L', 'm', 's', 'u', 'w', 'x'))
 _VERSIONS = frozenset(('0', '1'))
@@ -72,6 +80,7 @@ class _SearchParser(Generic[AnyStr]):
     version: int
     is_bytes: bool
     search: AnyStr
+    text: str
 
     def __init__(self, search: AnyStr, re_verbose: bool = False, re_version: int = 0) -> None:
         """Initialize."""
@@ -166,37 +175,6 @@ class _SearchParser(Generic[AnyStr]):
         else:
             current.extend(["\\", t])
         return current
-
-    def get_posix(self, i: _util.StringIter) -> str | None:
-        """Get POSIX."""
-
-        index = i.index
-        value = ['[']
-        try:
-            c = next(i)
-            if c != ':':
-                raise PatternError('Not a valid property!')
-            else:
-                value.append(c)
-                c = next(i)
-                if c == '^':
-                    value.append(c)
-                    c = next(i)
-                while c != ':':
-                    if c not in _PROPERTY:
-                        raise PatternError('Not a valid property!')
-                    if c not in _PROPERTY_STRIP:
-                        value.append(c)
-                    c = next(i)
-                value.append(c)
-                c = next(i)
-                if c != ']' or not value:
-                    raise PatternError('Unmatched ]')
-                value.append(c)
-        except Exception:
-            i.rewind(i.index - index)
-            value = []
-        return ''.join(value) if value else None
 
     def get_comments(self, i: _util.StringIter) -> str | None:
         """Get comments."""
@@ -342,69 +320,175 @@ class _SearchParser(Generic[AnyStr]):
             current.append(t)
         return current
 
+    @staticmethod
+    def peek(i: _util.StringIter, count: int = 1) -> str:
+        """Get up to the next `count` characters without consuming them."""
+
+        chars = []
+        for _ in range(count):
+            try:
+                chars.append(next(i))
+            except StopIteration:
+                break
+        i.rewind(len(chars))
+        return ''.join(chars)
+
+    @staticmethod
+    def match(i: _util.StringIter, text: str) -> bool:
+        """Consume `text` if it is next."""
+
+        index = i.index
+        for c in text:
+            try:
+                if next(i) == c:
+                    continue
+            except StopIteration:
+                pass
+            i.rewind(i.index - index)
+            return False
+        return True
+
+    @staticmethod
+    def consume(i: _util.StringIter, chars: frozenset[str], limit: int = -1) -> str:
+        """Consume characters while they are in `chars`, up to `limit` characters if given."""
+
+        value = []
+        while limit:
+            try:
+                c = next(i)
+            except StopIteration:
+                break
+            if c not in chars:
+                i.rewind(1)
+                break
+            value.append(c)
+            limit -= 1
+        return ''.join(value)
+
     def char_groups(self, t: str, i: _util.StringIter) -> list[str]:
         """Handle character groups."""
 
-        current = []
-        pos = i.index - 1
-        found = 0
-        sub_first = 0
-        escaped = False
-        first = 0
-
+        start = i.index - 1
         try:
-            while True:
-                if not escaped and t == "\\":
-                    escaped = True
-                elif escaped:
-                    escaped = False
-                    current.extend(self.reference(t, i, True))
-                elif t == "[" and not found:
-                    found += 1
-                    first = pos
-                    current.append(t)
-                elif t == "[" and found and self.version == _regex.V1:
-                    # Start of sub char set found
-                    posix = None if self.is_bytes else self.get_posix(i)
-                    if posix:
-                        current.append(posix)
-                        pos = i.index - 2
-                    else:
-                        found += 1
-                        sub_first = pos
-                        current.append(t)
-                elif t == "[":
-                    posix = None if self.is_bytes else self.get_posix(i)
-                    if posix:
-                        current.append(posix)
-                        pos = i.index - 2
-                    else:
-                        current.append(t)
-                elif t == "^" and found == 1 and (pos == first + 1):
-                    # Found ^ at start of first char set; adjust 1st char position
-                    current.append(t)
-                    first = pos
-                elif self.version == _regex.V1 and t == "^" and found > 1 and (pos == sub_first + 1):
-                    # Found ^ at start of sub char set; adjust 1st char sub position
-                    current.append(t)
-                    sub_first = pos
-                elif t == "]" and found == 1 and (pos != first + 1):
-                    # First char set closed; log range
-                    current.append(t)
-                    found = 0
-                    break
-                elif self.version == _regex.V1 and t == "]" and found > 1 and (pos != sub_first + 1):
-                    # Sub char set closed; decrement depth counter
-                    found -= 1
-                    current.append(t)
-                else:
-                    current.append(t)
-                pos += 1
-                t = next(i)
+            self.parse_set(i)
         except StopIteration as e:
-            raise PatternError(f"Missing ']', unterminated character set at position {pos}") from e
+            raise PatternError(f"Missing ']', unterminated character set at position {start}") from e
 
-        return current
+        return [self.text[start:i.index]]
+
+    def parse_set(self, i: _util.StringIter) -> None:
+        """Parse a character set, starting after its opening `[`, through its closing `]`."""
+
+        self.match(i, '^')
+        while True:
+            self.parse_set_operand(i)
+            if self.version == _regex.V1 and self.peek(i, 2) in _SET_OPS:
+                next(i)
+                next(i)
+                continue
+            # The operand only ends at an operator or `]`.
+            next(i)
+            return
+
+    def parse_set_operand(self, i: _util.StringIter) -> None:
+        """Parse the members of a set (or of an operand in a set operation) up to an operator or `]`."""
+
+        # The first member is always a member, even if it is `]`.
+        self.parse_set_member(i)
+        while True:
+            c = self.peek(i, 2)
+            if not c:
+                raise StopIteration
+            if c[0] == ']' or (self.version == _regex.V1 and c in _SET_OPS):
+                return
+            self.parse_set_member(i)
+
+    def parse_set_member(self, i: _util.StringIter) -> None:
+        """Parse a member of a character set, which may be a range."""
+
+        if not self.parse_set_item(i) or self.peek(i) != '-':
+            return
+
+        after = self.peek(i, 2)
+        if self.version == _regex.V1 and after == '--':
+            # A set difference, not a range.
+            return
+        next(i)
+        if after == '-]':
+            # A literal `-` at the end of the set.
+            return
+        self.parse_set_item(i)
+
+    def parse_set_item(self, i: _util.StringIter) -> bool:
+        """Parse a single item of a character set, and return whether it is a single character."""
+
+        c = next(i)
+        if c == '\\':
+            return self.parse_set_escape(i)
+        if c == '[':
+            if self.parse_posix(i):
+                return False
+            if self.version == _regex.V1:
+                # A nested set.
+                self.parse_set(i)
+                return False
+        return True
+
+    def parse_set_escape(self, i: _util.StringIter) -> bool:
+        """Parse an escape in a character set, and return whether it is a single character."""
+
+        c = next(i)
+        if c in _HEX_ESCAPES:
+            self.consume(i, _HEX_DIGITS, _HEX_ESCAPES[c])
+        elif c == 'N':
+            # A named character, or otherwise a literal `N`.
+            index = i.index
+            if self.match(i, '{'):
+                self.consume(i, _NAMED_CHAR)
+                if self.match(i, '}'):
+                    return True
+            i.rewind(i.index - index)
+        elif c in ('p', 'P'):
+            index = i.index
+            if self.match(i, '{'):
+                self.match(i, '^')
+                self.parse_property_name(i)
+                if self.match(i, '}'):
+                    return False
+                # Not a property, so a literal `p` or `P`.
+                i.rewind(i.index - index)
+            elif self.peek(i) in _SHORT_PROPERTIES:
+                next(i)
+                return False
+        elif c in _CLASS_ESCAPES:
+            return False
+        elif c in _DIGIT:
+            self.consume(i, _OCTAL, 2)
+        return True
+
+    def parse_posix(self, i: _util.StringIter) -> bool:
+        """Parse a POSIX class after an opening `[`, or consume nothing if it isn't one."""
+
+        index = i.index
+        if self.match(i, ':'):
+            self.match(i, '^')
+            self.parse_property_name(i)
+            if self.match(i, ':]'):
+                return True
+        i.rewind(i.index - index)
+        return False
+
+    def parse_property_name(self, i: _util.StringIter) -> None:
+        """Parse a property name, which may be qualified with a value: `name`, `name=value`, or `name:value`."""
+
+        self.consume(i, _PROPERTY_NAME)
+        index = i.index
+        if self.peek(i) in (':', '='):
+            next(i)
+            if self.consume(i, _PROPERTY_VALUE).strip():
+                return
+        # No value, so the name is unqualified.
+        i.rewind(i.index - index)
 
     def normal(self, t: str, i: _util.StringIter) -> list[str]:
         """Handle normal chars."""
@@ -445,7 +529,8 @@ class _SearchParser(Generic[AnyStr]):
         self.verbose = bool(self.re_verbose)
         self.version = self.re_version if self.re_version else _regex.DEFAULT_VERSION
         new_pattern = []
-        i = _util.StringIter(self.process_quotes(search))
+        self.text = self.process_quotes(search)
+        i = _util.StringIter(self.text)
         new_pattern = self.main_group(i)
         return "".join(new_pattern)
 

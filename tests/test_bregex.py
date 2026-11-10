@@ -214,6 +214,11 @@ class TestSearchTemplate(unittest.TestCase):
         with pytest.raises(PatternError):
             bregex.compile_search('test[test', regex.UNICODE)
 
+        # Sets that end within an escape or POSIX class.
+        for pattern in (r'[\x4', r'[\N{LATIN', r'[[:al', r'[[:alpha:', r'[\p{L', '[\\'):
+            with pytest.raises(PatternError, match='unterminated character set'):
+                bregex.compile_search(pattern)
+
         pattern = bregex.compile_search('\\Qtest[test', regex.UNICODE)
         self.assertEqual(pattern.pattern, 'test\\[test')
 
@@ -255,6 +260,77 @@ class TestSearchTemplate(unittest.TestCase):
 
         pattern = bregex.compile_search(r'test [[:graph:]] \R', regex.V1)
         self.assertEqual(pattern.pattern, r'test [[:graph:]] (?>\r\n|[\n\v\f\r\x85\u2028\u2029])')
+
+    def test_char_set_end(self):
+        """Character sets should end exactly where Regex ends them."""
+
+        sets = [
+            # POSIX classes, including in byte strings and with qualified names or values.
+            '[[:digit:]]', '[^[:^alpha:]]', '[[:script=latin:]]', '[[:script:latin:]]', '[[:nv=-1/2:]]',
+            '[[:al pha:]]', '[[:a]]', '[[::]]',
+            # `]` and `^` at the start of a set.
+            '[]]', '[^]]', '[^^]', '[^^^]', '[[]]', '[[^]]]',
+            # Set operations: `]` is a literal at the start of an operand in V1.
+            '[a--]]]', '[\\w&&]]]', '[a||]]]', '[a~~]]]', '[a--[]]]]', '[[a]--[]]]]',
+            # Ranges, which consume the next item even if it looks like an operator.
+            '[!-&&]', '[\\x21-&&]', '[\\N{EXCLAMATION MARK}-&&]', '[\\d-&&]]]', '[\\p{L}-&&]]]', '[\\pL-&&]]]',
+            '[a-]', '[a--b]', '[\\p{L]', '[\\N{]', '[\\101]]', '[\\x5d]]'
+        ]
+        for version in (regex.V0, regex.V1):
+            for is_bytes in (False, True):
+                for text in sets:
+                    if is_bytes and ('\\p' in text or '\\N' in text):
+                        continue
+                    pattern = (text + ']]]').encode('latin-1') if is_bytes else text + ']]]'
+
+                    source = _regex_core.Source(pattern)
+                    source.get()
+                    try:
+                        _regex_core.parse_set(source, _regex_core.Info(version))
+                    except _regex_core.error:
+                        continue
+                    expected = pattern[:source.pos]
+
+                    parser = _bregex_parse._SearchParser(pattern, False, version)
+                    parser.version = version
+                    parser.text = text + ']]]'
+                    i = _bregex_parse._util.StringIter(parser.text)
+                    result = parser.char_groups(next(i), i)[0]
+                    self.assertEqual(
+                        result.encode('latin-1') if is_bytes else result,
+                        expected,
+                        f'{pattern!r} with {"V1" if version == regex.V1 else "V0"}'
+                    )
+
+    def test_char_set_end_symptoms(self):
+        """Finding the wrong end of a character set should not affect what follows it."""
+
+        line_break = r'(?>\r\n|[\n\v\f\r\x85\u2028\u2029])'
+        bytes_line_break = rb'(?>\r\n|[\n\v\f\r\x85])'
+        cases = [
+            (rb'[[:digit:](]', 0, rb'[[:digit:](]', [b'5', b'(', b'a']),
+            (rb'[[:digit:]#]\R', bregex.VERBOSE, rb'[[:digit:]#]' + bytes_line_break, [b'5\n', b'#\n', b'5\\R']),
+            (r'[[:script=latin:](]', 0, r'[[:script=latin:](]', ['a', '(', '1']),
+            (r'[[:script=latin:]#]\R', bregex.VERBOSE, r'[[:script=latin:]#]' + line_break, ['a\n', '#\n', 'a\\R']),
+            (r'[\w--](]', bregex.V1, r'[\w--](]', ['a', '(', ']']),
+            (r'[\W&&]#]\R', bregex.V1 | bregex.VERBOSE, r'[\W&&]#]' + line_break, [']\n', '#\n', '%\n']),
+            (r'[^^]\R', 0, r'[^^]' + line_break, ['a\n', '^\n']),
+            (r'[^^](a)', bregex.V1, r'[^^](a)', ['ba', '^a']),
+        ]
+        for pattern, flags, equivalent, tests in cases:
+            p = bregex.compile(pattern, flags)
+            for s in tests:
+                self.assertEqual(
+                    bool(p.fullmatch(s)),
+                    bool(regex.fullmatch(equivalent, s, flags=flags)),
+                    f'{pattern!r} with {s!r}'
+                )
+
+    def test_posix_not_normalized(self):
+        """POSIX classes should be passed to Regex unchanged."""
+
+        self.assertEqual(bregex.compile_search(r'[[:al_pha:]]').pattern, r'[[:al_pha:]]')
+        self.assertEqual(bregex.compile_search(r'[[:nv=-1/2:]]').pattern, r'[[:nv=-1/2:]]')
 
     def test_inline_comments(self):
         """Test that we properly find inline comments and avoid them."""
