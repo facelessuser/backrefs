@@ -89,6 +89,40 @@ class TestSearchTemplate(unittest.TestCase):
         self.assertTrue(bre.match(r'[\p{HorizSpace}-Z]', '\x20') is not None)
         self.assertTrue(bre.match(r'[\p{HorizSpace}-Z]', '-') is not None)
 
+    def test_posix_followed_by_hyphen(self):
+        """A `-` after a POSIX class whose expansion ends in a single character should not form a range."""
+
+        for pattern in (r'[[:blank:]-z]', r'[[:space:]-~]'):
+            p = bre.compile(pattern)
+            self.assertTrue(p.fullmatch(' ') is not None)
+            self.assertTrue(p.fullmatch('-') is not None)
+            self.assertTrue(p.fullmatch(pattern[-2]) is not None)
+            self.assertTrue(p.fullmatch('a') is None)
+
+        p = bre.compile(r'[[:space:]--]')
+        self.assertTrue(p.fullmatch(' ') is not None)
+        self.assertTrue(p.fullmatch('-') is not None)
+
+    def test_escaped_hyphen_before_property(self):
+        """An escaped `-` before a POSIX or Unicode class is a literal, not a range operator."""
+
+        for pattern in (r'[\-\p{N}]', r'[\-[:digit:]]', r'[\Q-\E\p{N}]'):
+            p = bre.compile(pattern)
+            self.assertTrue(p.fullmatch('-') is not None)
+            self.assertTrue(p.fullmatch('1') is not None)
+            self.assertTrue(p.fullmatch('\\') is None)
+            self.assertTrue(p.fullmatch('A') is None)
+
+    def test_empty_property_before_caret(self):
+        """A `^` after a property that resolves to nothing must not negate the set."""
+
+        for pattern in (rb'[\p{Han}^a]', rb'[\N{CJK UNIFIED IDEOGRAPH-4E00}^a]', rb'[^\p{Han}^a]'):
+            p = bre.compile(pattern)
+            negated = pattern.startswith(b'[^')
+            self.assertEqual(p.fullmatch(b'^') is None, negated)
+            self.assertEqual(p.fullmatch(b'a') is None, negated)
+            self.assertEqual(p.fullmatch(b'b') is not None, negated)
+
     def test_non_raw_string_unicode(self):
         """Test non raw string Unicode notation."""
 

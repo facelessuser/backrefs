@@ -431,6 +431,9 @@ class _SearchParser(Generic[AnyStr]):
         escaped = False
         first = 0
         found_property = False
+        # Index of an unescaped `-` in `current` that would act as a range operator
+        # if followed by a POSIX/Unicode class.
+        range_dash = -1
         self.found_property = False
         self.found_named_unicode = False
 
@@ -454,9 +457,10 @@ class _SearchParser(Generic[AnyStr]):
                     current.extend(self.reference(t, i, True))
                     if self.found_property:
                         # Prevent Unicode class from being part of a range.
-                        if idx >= 0 and current[idx] == '-':
+                        if idx == range_dash:
                             current[idx] = _re.escape('-')
                         found_property = True
+                    range_dash = -1
                 elif t == "[" and not found:
                     found = True
                     first = pos
@@ -470,22 +474,37 @@ class _SearchParser(Generic[AnyStr]):
                         i.rewind(i.index - index)
                     if prop is not None:
                         value = self.unicode_props(prop[0], prop[1], in_group=True)
-                        if current[-1] == '-':
+                        # Prevent POSIX class from being part of a range.
+                        if len(current) - 1 == range_dash:
                             current[-1] = _re.escape('-')
                         current.extend(value)
                         found_property = True
+                        self.found_property = True
                         pos = i.index - 2
                     else:
                         current.append(t)
+                    range_dash = -1
                 elif t == "^" and found and (pos == first + 1):
                     first = pos
                     current.append(t)
+                    range_dash = -1
                 elif t == "]" and found and (pos != first + 1):
                     found = False
                     current.append(t)
                     break
                 else:
-                    current.append(t)
+                    if (
+                        t == '^' and
+                        (found_property or self.found_named_unicode) and
+                        ''.join(current) in ('[', '[^')
+                    ):
+                        # Everything before this was a property that resolved to nothing,
+                        # so escape `^` to prevent it from being treated as a negation.
+                        current.append(_re.escape(t))
+                        range_dash = -1
+                    else:
+                        current.append(t)
+                        range_dash = len(current) - 1 if t == '-' else -1
                 pos += 1
                 t = next(i)
         except StopIteration as e:

@@ -7,6 +7,11 @@ icon: lucide/scroll-text
 
 -   **FIX**: Reject compiled replace templates from another search pattern in compiled search objects,
     matching module-level substitutions and preventing incorrect capture references.
+-   **FIX**: `bre`: Fix a `-` after a POSIX class in a character set sometimes forming a range (`[[:blank:]-z]`).
+-   **FIX**: `bre`: Fix an escaped `-` before a POSIX or Unicode class in a character set being turned into a
+    range operator (`[\-\p{N}]`).
+-   **FIX**: `bre`: Fix `^` being treated as a negation when it follows properties in a character set that match
+    nothing, such as `\p{Han}` in a byte string (`[\p{Han}^a]`).
 
 ## 8.2
 
