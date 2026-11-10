@@ -366,6 +366,44 @@ class TestSearchTemplate(unittest.TestCase):
         )
         self.assertTrue(pattern.match(b'a') is not None)
 
+    def test_byte_string_named_char_ranges(self):
+        """Test ranges in byte strings with named characters beyond the byte range, matching Regex."""
+
+        big = r'\N{CJK UNIFIED IDEOGRAPH-4E00}'
+        big2 = r'\N{CJK UNIFIED IDEOGRAPH-4E01}'
+
+        def matches(pattern):
+            p = bre.compile(pattern.encode('latin-1'))
+            return frozenset(c for c in range(256) if p.fullmatch(bytes([c])))
+
+        # A range that ends beyond the byte range includes everything up to the end of the byte range.
+        self.assertEqual(matches(f'[a-{big}]'), frozenset(range(0x61, 0x100)))
+        self.assertEqual(matches(f'[a-{big}c]'), frozenset(range(0x61, 0x100)))
+        self.assertEqual(matches(f'[^a-{big}]'), frozenset(range(0x61)))
+        self.assertEqual(matches(rf'[\N{{LATIN SMALL LETTER E WITH ACUTE}}-{big}]'), frozenset(range(0xE9, 0x100)))
+
+        # A range that starts beyond the byte range matches nothing, if it is a valid range.
+        self.assertEqual(matches(f'[{big}-{big2}]'), frozenset())
+        self.assertEqual(matches(f'[x{big}-{big2}]'), frozenset(b'x'))
+        for pattern in (f'[{big}-a]', f'[{big2}-{big}]', rf'[{big}-\x41]'):
+            with pytest.raises(PatternError, match='bad character range'):
+                bre.compile(pattern.encode('latin-1'))
+
+        # A `-` that isn't a range operator is a literal, and the named character matches nothing.
+        self.assertEqual(matches(f'[{big}-]'), frozenset(b'-'))
+        self.assertEqual(matches(f'[-{big}]'), frozenset(b'-'))
+        self.assertEqual(matches(f'[x{big}-]'), frozenset(b'-x'))
+        self.assertEqual(matches(f'[a-c-{big}]'), frozenset(b'-abc'))
+        self.assertEqual(matches(rf'[\x21-\x41-{big}]'), frozenset(range(0x21, 0x42)))
+
+    def test_caret_after_negation(self):
+        """A `^` after the negating `^` is a literal."""
+
+        self.assertEqual([c for c in '^]a' if bre.fullmatch(r'[^^]', c)], [']', 'a'])
+        self.assertEqual([c for c in '^]a' if bre.fullmatch(r'[^^^]', c)], [']', 'a'])
+        self.assertEqual([c for c in '^]ab-' if bre.fullmatch(r'[^^-a]', c)], [']', 'b', '-'])
+        self.assertEqual([c for c in '^]ab' if bre.fullmatch(r'[^^]]', c + ']')], [']', 'a', 'b'])
+
     def test_comments(self):
         """Test comments v0."""
 

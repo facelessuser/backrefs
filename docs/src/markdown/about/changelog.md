@@ -12,6 +12,11 @@ icon: lucide/scroll-text
     range operator (`[\-\p{N}]`).
 -   **FIX**: `bre`: Fix `^` being treated as a negation when it follows properties in a character set that match
     nothing, such as `\p{Han}` in a byte string (`[\p{Han}^a]`).
+-   **FIX**: `bre`: Fix ranges in byte string character sets with a named character beyond the byte range
+    (`[a-\N{CJK UNIFIED IDEOGRAPH-4E00}]`). They now match Regex: a range that ends beyond the byte range includes
+    everything up to `\xff`, and a range that starts beyond it matches nothing, or is an error if it is reversed.
+-   **FIX**: `bre`: Fix a literal `^` after the negating `^` in a character set (`[^^]`) causing an unterminated
+    character set error.
 
 ## 8.2
 
