@@ -31,6 +31,59 @@ class TestBlock(unittest.TestCase):
             if not key.startswith('^'):
                 self.assertTrue('^' + key in keys1)
 
+    def test_inverse_is_complement(self):
+        """Test that every inverse block is exactly the code points not in the block."""
+
+        import re._parser as parser
+
+        def ranges(text):
+            """Get the sorted, merged ranges of a property's code points."""
+
+            if not text:
+                return []
+            node = parser.parse(f'[{text}]')[0]
+            items = []
+            for op, av in [node] if node[0] is parser.LITERAL else node[1]:
+                items.append((av, av) if op is parser.LITERAL else av)
+            merged = []  # type: list[tuple[int, int]]
+            for lo, hi in sorted(items):
+                if merged and lo <= merged[-1][1] + 1:
+                    merged[-1] = (merged[-1][0], max(hi, merged[-1][1]))
+                else:
+                    merged.append((lo, hi))
+            return merged
+
+        def complement(values):
+            """Get the ranges of all code points not in the given ranges."""
+
+            result = []
+            start = 0
+            for lo, hi in values:
+                if lo > start:
+                    result.append((start, lo - 1))
+                start = hi + 1
+            if start <= 0x10FFFF:
+                result.append((start, 0x10FFFF))
+            return result
+
+        for table in (block.unicode_blocks, block.ascii_blocks):
+            for key, value in table.items():
+                if not key.startswith('^'):
+                    self.assertEqual(ranges(table['^' + key]), complement(ranges(value)), key)
+
+    def test_no_block_inverse(self):
+        """Test that the inverse of `No_Block` includes the last blocks (Supplementary Private Use Areas)."""
+
+        from backrefs import bre
+
+        not_in_block = bre.compile(r'\p{No_Block}')
+        in_block = bre.compile(r'\P{No_Block}')
+        for c in (0xF0000, 0xFFFFD, 0x100000, 0x10FFFF):
+            self.assertTrue(in_block.fullmatch(chr(c)) is not None, f'U+{c:04X}')
+            self.assertTrue(not_in_block.fullmatch(chr(c)) is None, f'U+{c:04X}')
+        self.assertTrue(not_in_block.fullmatch('\U000effff') is not None)
+        self.assertTrue(in_block.fullmatch('\U000effff') is None)
+
     def test_block(self):
         """Test `Block` properties."""
 

@@ -3,6 +3,11 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
+## Unreleased
+
+-   **FIX**: `bre`: Fix the inverse of the `No_Block` block property (`\P{No_Block}`) not including the
+    Supplementary Private Use Area blocks (`U+F0000` to `U+10FFFF`).
+
 ## 8.2.1
 
 -   **FIX**: Reject compiled replace templates from another search pattern in compiled search objects,

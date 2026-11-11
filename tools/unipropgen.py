@@ -316,6 +316,9 @@ def gen_blocks(output, ascii_props=False, append=False, prefix="", aliases=None)
                     if piece[0] > last + 1:
                         no_block_inverse.append((last + 1, piece[0] - 1))
                     last = piece[1]
+                # Include everything after the last range that is not in a block.
+                if last < max_range:
+                    no_block_inverse.append((last + 1, max_range))
             for block, name in ((no_block, 'noblock'), (no_block_inverse, '^noblock')):
                 f.write('\n    "%s": "' % name)
                 for piece in block:
