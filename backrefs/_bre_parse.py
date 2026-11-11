@@ -77,6 +77,7 @@ class _SearchParser(Generic[AnyStr]):
     verbose: bool
     unicode: bool
     named_unicode: tuple[str, int]
+    negated_members: list[str]
     ascii: bool  # noqa: A003
     is_bytes: bool
     search: AnyStr
@@ -437,6 +438,8 @@ class _SearchParser(Generic[AnyStr]):
         start = ('', 0, None)  # type: tuple[str, int, int | None]
         self.found_property = False
         self.found_named_unicode = False
+        self.negated_members = []
+        negated_set = False
 
         def add_member(raw: str, index: int, value: int | None) -> None:
             """Track a member that was just added, which may start or end a range."""
@@ -522,6 +525,7 @@ class _SearchParser(Generic[AnyStr]):
                     # Only a `^` directly after the opening `[` negates the set.
                     first = pos
                     current.append(t)
+                    negated_set = True
                 elif t == "]" and found and (pos != first + 1):
                     found = False
                     current.append(t)
@@ -552,7 +556,9 @@ class _SearchParser(Generic[AnyStr]):
         # This will occur when a property's values exceed
         # either the Unicode char limit on a narrow system,
         # or the ASCII limit in a byte string pattern.
-        if found_property or self.found_named_unicode:
+        if self.negated_members:
+            current = [self.negated_set_text(''.join(current), negated_set)]
+        elif found_property or self.found_named_unicode:
             temp = "".join(current)
             if temp == '[]':
                 # We specified some properties, but they are all
@@ -564,6 +570,32 @@ class _SearchParser(Generic[AnyStr]):
                 current = [temp]
 
         return current
+
+    def negated_set_text(self, text: str, negated: bool) -> str:
+        r"""
+        Get a character set that contains negated properties, such as `[a\P{Lu}]`.
+
+        Under case-insensitive matching, a negated property must be a negated set of the property's characters
+        (`[^...]`), as a set of the characters outside the property would also match the other case of the
+        characters in it. A set can't contain a negated set, so each part of the set is matched separately:
+        `[R\P{A}\P{B}]` becomes `(?:[R]|[^A]|[^B])`, and `[^R\P{A}\P{B}]` becomes `(?![R])(?=[A])[B]`.
+        """
+
+        members = text[2 if negated else 1:-1]
+        if members.startswith('^'):
+            # A literal `^` after the negating `^` would negate the members' own set.
+            members = '\\' + members
+
+        if not negated:
+            alternatives = [f'[^{m}]' for m in self.negated_members]
+            if members:
+                alternatives.insert(0, f'[{members}]')
+            return alternatives[0] if len(alternatives) == 1 else f"(?:{'|'.join(alternatives)})"
+
+        conditions = [f'(?=[{m}])' for m in self.negated_members[:-1]]
+        if members:
+            conditions.insert(0, f'(?![{members}])')
+        return ''.join(conditions) + f'[{self.negated_members[-1]}]'
 
     def normal(self, t: str, i: _util.StringIter) -> list[str]:
         """Handle normal chars."""
@@ -680,14 +712,23 @@ class _SearchParser(Generic[AnyStr]):
         else:
             mode = _uniprops.MODE_UNICODE
 
-        v = _uniprops.get_unicode_property(props, prop_value, mode)
-        if not in_group:
-            if not v:
-                v = f'^{_uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE}'
-            v = f"[{v}]"
-        properties = [v]
-
-        return properties
+        # Negated properties are expressed as a negated set of the property's characters, so that they work with
+        # case-insensitive matching (see `negated_set_text`).
+        v, negated = _uniprops.get_unicode_property_parts(props, prop_value, mode)
+        everything = _uniprops.ASCII_RANGE if self.is_bytes else _uniprops.UNICODE_RANGE
+        if in_group:
+            if negated:
+                if not v:
+                    # The inverse of a property that matches nothing is everything, which case-insensitive
+                    # matching can't extend, so it can be a member of the set.
+                    return [everything]
+                # Added when the set is complete.
+                self.negated_members.append(v)
+                return ['']
+            return [v]
+        if negated:
+            return [f'[^{v}]' if v else f'[{everything}]']
+        return [f'[{v}]' if v else f'[^{everything}]']
 
     def main_group(self, i: _util.StringIter) -> list[str]:
         """The main group: group 0."""

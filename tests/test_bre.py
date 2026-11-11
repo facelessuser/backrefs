@@ -411,6 +411,55 @@ class TestSearchTemplate(unittest.TestCase):
             with pytest.raises(PatternError, match='unterminated character set'):
                 bre.compile(pattern)
 
+    def test_negated_property_ignorecase(self):
+        """Negated properties should not match the other case of characters in the property."""
+
+        def matches(pattern, chars='Aa1x', flags=re.IGNORECASE):
+            p = bre.compile(pattern, flags)
+            return [c for c in chars if p.fullmatch(c)]
+
+        # On their own
+        for pattern in (r'\P{Lu}', r'\p{^Lu}', r'\PL', r'[\P{Lu}]', r'[[:^upper:]]', r'[^\p{Lu}]'):
+            self.assertEqual(matches(pattern, 'Aa1'), ['1'], pattern)
+        self.assertEqual(matches(r'\P{Lu}', 'Aa1', 0), ['a', '1'])
+
+        # With other members of a set
+        self.assertEqual(matches(r'[\P{Lu}x]'), ['1', 'x'])
+        self.assertEqual(matches(r'[x\P{Lu}\d]'), ['1', 'x'])
+        self.assertEqual(matches(r'[\P{Lu}\P{Ll}]'), ['1'])
+        self.assertEqual(matches(r'[^\P{Lu}x]'), ['A', 'a'])
+        self.assertEqual(matches(r'[^\P{Lu}\P{Ll}]'), ['A', 'a', 'x'])
+        self.assertEqual(matches(r'[^\P{Lu}\d]'), ['A', 'a', 'x'])
+        self.assertEqual(matches(r'[\P{Lu}x]', flags=0), ['a', '1', 'x'])
+        self.assertEqual(matches(r'[^\P{Lu}x]', flags=0), ['A'])
+
+        # A literal `^` after the negating `^`
+        self.assertEqual(matches(r'[^^\P{Nd}]', '^1a'), ['1'])
+
+        # Quantifiers and lookbehinds
+        self.assertTrue(bre.fullmatch(r'[\P{Lu}x]{2}', 'X1', re.IGNORECASE) is not None)
+        self.assertTrue(bre.fullmatch(r'[\P{Lu}x]{2}', 'A1', re.IGNORECASE) is None)
+        self.assertTrue(bre.search(r'(?<=[^\P{Lu}x])b', 'ab', re.IGNORECASE) is not None)
+        self.assertTrue(bre.search(r'(?<=[^\P{Lu}x])b', 'xb', re.IGNORECASE) is None)
+        self.assertTrue(bre.search(r'(?<![\P{Lu}x])b', 'Ab', re.IGNORECASE) is not None)
+
+        # Byte strings
+        self.assertEqual([c for c in b'Aa1' if bre.fullmatch(rb'[\P{Lu}x]', bytes([c]), re.IGNORECASE)], [ord('1')])
+
+    def test_binary_property_false_value(self):
+        """A binary property with a false value is the set of characters with that value, not a negation."""
+
+        # So case-insensitive matching applies to that set, as it does in Regex.
+        p = bre.compile(r'[\p{Lowercase=No}x]', re.IGNORECASE)
+        self.assertEqual([c for c in 'Aa1x' if p.fullmatch(c)], ['A', 'a', '1', 'x'])
+
+        # Negations of a property alias with a value
+        for pattern, expected in (
+            (r'\P{Alpha=No}', ['A', 'a']), (r'\p{^Alpha=No}', ['A', 'a']), (r'\P{Alpha=Yes}', ['1', ' ']),
+            (r'\P{Upper=F}', ['A']), (r'\P{WSpace=No}', [' '])
+        ):
+            self.assertEqual([c for c in 'Aa1 ' if bre.fullmatch(pattern, c)], expected, pattern)
+
     def test_caret_after_negation(self):
         """A `^` after the negating `^` is a literal."""
 

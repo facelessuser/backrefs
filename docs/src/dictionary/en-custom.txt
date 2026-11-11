@@ -39,6 +39,7 @@ formatter
 grapheme
 hashable
 incrementing
+lookbehinds
 namespaced
 natively
 parsers

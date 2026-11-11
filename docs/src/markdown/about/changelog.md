@@ -7,6 +7,10 @@ icon: lucide/scroll-text
 
 -   **FIX**: `bre`: Fix the inverse of the `No_Block` block property (`\P{No_Block}`) not including the
     Supplementary Private Use Area blocks (`U+F0000` to `U+10FFFF`).
+-   **FIX**: `bre`: Fix negated Unicode properties and POSIX classes (`\P{Lu}`, `\p{^Lu}`, `[[:^upper:]]`) matching
+    both cases of the characters in the property when using `IGNORECASE`. Character sets that contain negated
+    properties are now expressed as alternatives (`[a\P{Lu}]` becomes `(?:[a]|[^...])`).
+-   **FIX**: `bre`: Fix an error when negating a binary property alias that has a value (`\P{Alpha=No}`).
 
 ## 8.2.1
 

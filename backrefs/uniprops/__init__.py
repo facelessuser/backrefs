@@ -663,3 +663,21 @@ def get_unicode_property(prop: str, value: str | None = None, mode: int = MODE_U
         pass
 
     raise ValueError(f"'{prop}' does not appear to be a valid property")
+
+
+def get_unicode_property_parts(prop: str, value: str | None = None, mode: int = MODE_UNICODE) -> tuple[str, bool]:
+    """
+    Retrieve the characters of a Unicode property without its negation, and whether it is negated.
+
+    A property is negated when it is an inverse property (`^name`). With the characters of the property itself,
+    a negated property can be expressed as a negated character set (`[^...]`), which case-insensitive matching
+    handles correctly, unlike a set of the characters outside the property.
+
+    A binary property with a false value (`name=no`) is not a negation: it is the set of characters with that
+    value, as it is in Regex.
+    """
+
+    negate = prop.startswith('^')
+    if negate:
+        prop = prop[1:]
+    return get_unicode_property(prop, value, mode), negate
