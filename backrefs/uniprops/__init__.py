@@ -1,5 +1,6 @@
 """Unicode Properties."""
 from __future__ import annotations
+from typing import Callable
 from .unidata import alias
 
 UNICODE_RANGE = '\u0000-\U0010ffff'
@@ -487,7 +488,7 @@ def get_vertical_orientation_property(value: str, mode: int = MODE_UNICODE) -> s
 
 
 def get_is_property(value: str, mode: int = MODE_UNICODE) -> str:
-    """Get shortcut for `SC` or `Binary` property."""
+    """Get shortcut for `GC`, `SC`, or `Binary` property."""
 
     from .unidata import scriptextensions as scx
     from .unidata import binary
@@ -503,6 +504,10 @@ def get_is_property(value: str, mode: int = MODE_UNICODE) -> str:
 
     if prefix != 'is':
         raise ValueError("Does not start with 'is'!")
+
+    category = _general_category_name(temp)
+    if category is not None:
+        return get_gc_property(negate + category, mode)
 
     script_obj = scx.ascii_script_extensions if mode != MODE_UNICODE else scx.unicode_script_extensions
     bin_obj = binary.ascii_binary if mode != MODE_UNICODE else binary.unicode_binary
@@ -549,86 +554,100 @@ def _is_binary(name: str) -> bool:
     return name in prop_table.unicode_binary or name in alias.unicode_alias['binary']
 
 
+def _general_category_name(value: str) -> str | None:
+    """Get the short name of a General Category value, or `None` if it isn't one."""
+
+    from .unidata import generalcategory as prop_table
+
+    name = alias.unicode_alias['generalcategory'].get(value, value)
+    table = prop_table.unicode_properties
+    if len(name) == 1:
+        valid = name in table
+    else:
+        valid = len(name) == 2 and name[0] in table and name[1] in table[name[0]]
+    return name if valid else None
+
+
+def _strip_is(name: str, is_valid: Callable[[str], bool]) -> str:
+    """
+    Remove an initial `is` from a name that isn't valid, if it is valid without it.
+
+    Unicode allows an initial `is` on property names and values (UAX #44, `UAX44-LM3`). The name as written is
+    always preferred, and `is` is only removed once. A negated name (`^name`) keeps its negation.
+    """
+
+    negate = '^' if name.startswith('^') else ''
+    base = name[len(negate):]
+    if not is_valid(base) and base.startswith('is') and is_valid(base[2:]):
+        base = base[2:]
+    return negate + base
+
+
+# Properties that have values, by their normalized name.
+_ENUMERATED_PROPERTIES: dict[str, Callable[[str, int], str]] = {
+    'generalcategory': get_gc_property,
+    'script': get_script_property,
+    'scriptextensions': get_script_extension_property,
+    'block': get_block_property,
+    'bidiclass': get_bidi_property,
+    'bidipairedbrackettype': get_bidi_paired_bracket_type_property,
+    'age': get_age_property,
+    'eastasianwidth': get_east_asian_width_property,
+    'indicpositionalcategory': get_indic_positional_category_property,
+    'indicsyllabiccategory': get_indic_syllabic_category_property,
+    'hangulsyllabletype': get_hangul_syllable_type_property,
+    'decompositiontype': get_decomposition_type_property,
+    'canonicalcombiningclass': get_canonical_combining_class_property,
+    'numerictype': get_numeric_type_property,
+    'numericvalue': get_numeric_value_property,
+    'joiningtype': get_joining_type_property,
+    'joininggroup': get_joining_group_property,
+    'graphemeclusterbreak': get_grapheme_cluster_break_property,
+    'linebreak': get_line_break_property,
+    'sentencebreak': get_sentence_break_property,
+    'wordbreak': get_word_break_property,
+    'nfcquickcheck': get_nfc_quick_check_property,
+    'nfdquickcheck': get_nfd_quick_check_property,
+    'nfkcquickcheck': get_nfkc_quick_check_property,
+    'nfkdquickcheck': get_nfkd_quick_check_property,
+    'verticalorientation': get_vertical_orientation_property,
+}
+
+
+def _is_property_name(name: str) -> bool:
+    """Check if a name is a property that can be given a value (`name=value`)."""
+
+    return _is_binary(name) or alias.unicode_alias['_'].get(name, name) in _ENUMERATED_PROPERTIES
+
+
 def get_unicode_property(prop: str, value: str | None = None, mode: int = MODE_UNICODE) -> str:
     """Retrieve the Unicode category from the table."""
 
     if value is not None:
 
         negate = prop.startswith('^')
+        name = _strip_is(prop[1:] if negate else prop, _is_property_name)
 
         # Normalize binary true/false input so we can handle it properly
-        if _is_binary(prop):
-            name = prop[1:] if negate else prop
-
+        if _is_binary(name):
             if value in ('n', 'no', 'f', 'false'):
                 negate = not negate
             elif value not in ('y', 'yes', 't', 'true'):
                 raise ValueError(f"'{value}' is not a valid value for the binary property '{prop}'")
 
             return get_binary_property('^' + name if negate else name, mode)
-        else:
-            if negate:
-                value = '^' + value
-                name = prop[1:]
-            else:
-                name = prop
+
+        if negate:
+            value = '^' + value
 
         name = alias.unicode_alias['_'].get(name, name)
         try:
             if name == 'generalcategory':
-                return get_gc_property(value, mode)
-            elif name == 'script':
-                return get_script_property(value, mode)
-            elif name == 'scriptextensions':
-                return get_script_extension_property(value, mode)
-            elif name == 'block':
-                return get_block_property(value, mode)
-            elif name == 'bidiclass':
-                return get_bidi_property(value, mode)
-            elif name == 'bidipairedbrackettype':
-                return get_bidi_paired_bracket_type_property(value, mode)
-            elif name == 'age':
-                return get_age_property(value, mode)
-            elif name == 'eastasianwidth':
-                return get_east_asian_width_property(value, mode)
-            elif name == 'indicpositionalcategory':
-                return get_indic_positional_category_property(value, mode)
-            elif name == 'indicsyllabiccategory':
-                return get_indic_syllabic_category_property(value, mode)
-            elif name == 'hangulsyllabletype':
-                return get_hangul_syllable_type_property(value, mode)
-            elif name == 'decompositiontype':
-                return get_decomposition_type_property(value, mode)
-            elif name == 'canonicalcombiningclass':
-                return get_canonical_combining_class_property(value, mode)
-            elif name == 'numerictype':
-                return get_numeric_type_property(value, mode)
-            elif name == 'numericvalue':
-                return get_numeric_value_property(value, mode)
-            elif name == 'joiningtype':
-                return get_joining_type_property(value, mode)
-            elif name == 'joininggroup':
-                return get_joining_group_property(value, mode)
-            elif name == 'graphemeclusterbreak':
-                return get_grapheme_cluster_break_property(value, mode)
-            elif name == 'linebreak':
-                return get_line_break_property(value, mode)
-            elif name == 'sentencebreak':
-                return get_sentence_break_property(value, mode)
-            elif name == 'wordbreak':
-                return get_word_break_property(value, mode)
-            elif name == 'nfcquickcheck':
-                return get_nfc_quick_check_property(value, mode)
-            elif name == 'nfdquickcheck':
-                return get_nfd_quick_check_property(value, mode)
-            elif name == 'nfkcquickcheck':
-                return get_nfkc_quick_check_property(value, mode)
-            elif name == 'nfkdquickcheck':
-                return get_nfkd_quick_check_property(value, mode)
-            elif name == 'verticalorientation':
-                return get_vertical_orientation_property(value, mode)
-            else:
+                value = _strip_is(value, lambda v: _general_category_name(v) is not None)
+            get_property = _ENUMERATED_PROPERTIES.get(name)
+            if get_property is None:
                 raise ValueError(f"'{prop}={value}' does not have a valid property name")
+            return get_property(value, mode)
         except Exception as e:
             raise ValueError(f"'{prop}={value}' does not appear to be a valid property") from e
 

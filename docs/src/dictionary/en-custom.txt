@@ -27,6 +27,8 @@ Sep
 Tidelift
 Tox
 Twemoji
+UAX
+UTS
 Zensical
 accessor
 backend

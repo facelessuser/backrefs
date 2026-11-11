@@ -155,3 +155,44 @@ class TestBinary(unittest.TestCase):
             result1 = uniprops.get_unicode_property(is_k)
             result2 = uniprops.get_unicode_property(is_v)
             self.assertEqual(result1, result2)
+
+    def test_uts18_properties(self):
+        """Test the UTS #18 properties that are not in the Unicode Character Database: `Any`, `Assigned`, `ASCII`."""
+
+        import re._parser as parser
+        from backrefs.uniprops.unidata import generalcategory
+
+        def code_points(text):
+            if not text:
+                return set()
+            node = parser.parse(f'[{text}]')[0]
+            points = set()
+            for op, av in [node] if node[0] is parser.LITERAL else node[1]:
+                points.update([av] if op is parser.LITERAL else range(av[0], av[1] + 1))
+            return points
+
+        everything = set(range(0x110000))
+        ascii_range = set(range(0x80))
+        assigned = everything - code_points(generalcategory.unicode_properties['c']['n'])
+
+        for table, expected in (
+            (binary.unicode_binary, {'any': everything, 'assigned': assigned, 'ascii': ascii_range}),
+            # `Any` is everything even in ASCII mode, as it is in Regex.
+            (binary.ascii_binary, {'any': everything, 'assigned': assigned & ascii_range, 'ascii': ascii_range}),
+        ):
+            for name, points in expected.items():
+                self.assertEqual(code_points(table[name]), points, name)
+                self.assertEqual(code_points(table['^' + name]), everything - points, name)
+
+    def test_uts18_property_forms(self):
+        """Test that the UTS #18 properties can be used like other binary properties."""
+
+        for name in ('any', 'assigned', 'ascii'):
+            positive = uniprops.get_unicode_property(name)
+            negative = uniprops.get_unicode_property('^' + name)
+            for prop, value in (
+                (name, 'yes'), (name, 't'), ('^' + name, 'no'), ('is' + name, None), ('is' + name, 'y')
+            ):
+                self.assertEqual(uniprops.get_unicode_property(prop, value), positive, (prop, value))
+            for prop, value in ((name, 'no'), ('^' + name, None), ('^' + name, 'yes'), ('^is' + name, None)):
+                self.assertEqual(uniprops.get_unicode_property(prop, value), negative, (prop, value))

@@ -5,6 +5,10 @@ icon: lucide/scroll-text
 
 ## Unreleased
 
+-   **NEW**: `bre`: Add the binary properties `Any`, `Assigned`, and `ASCII`, which UTS \#18 requires but the Unicode
+    Character Database does not define. `ASCII` was previously only available as an alias of the `Basic_Latin` block.
+-   **NEW**: `bre`: Allow an initial `Is` on General Category values (`\p{IsLu}` or `\p{gc=IsLu}`) and on property names
+    (`\p{IsGC=Lu}` or `\p{IsAlphabetic=Yes}`), as Unicode allows, per UAX \#44.
 -   **FIX**: `bre`: Fix the inverse of the `No_Block` block property (`\P{No_Block}`) not including the
     Supplementary Private Use Area blocks (`U+F0000` to `U+10FFFF`).
 -   **FIX**: `bre`: Fix negated Unicode properties and POSIX classes (`\P{Lu}`, `\p{^Lu}`, `[[:^upper:]]`) matching

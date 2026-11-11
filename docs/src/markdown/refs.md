@@ -174,6 +174,15 @@ example, to specify characters that are "alphabetic", we can use `\p{Alphabetic:
 > [!new] New 5.4 Custom Binary properties
 > In 5.4, the new custom binary properties `Vert_space` and `Horiz_Space` were added.
 
+The binary properties `Any`, `Assigned`, and `ASCII` are also available. These are not in the Unicode Character
+Database, but are required of regular expression engines by [UTS #18](https://www.unicode.org/reports/tr18/#RL1.2):
+
+Property   | Matches
+---------- | -------
+`Any`      | Every character, even with the `ASCII` flag or in byte strings, as in Regex.
+`Assigned` | Every character that is assigned (everything not in General Category `Cn`).
+`ASCII`    | Every ASCII character (`U+0000` to `U+007F`). This is the same as the `ASCII` alias of the `Basic_Latin` block.
+
 ### Property Short Names
 
 General Category, Script Extensions, Blocks, and Binary all can be specified in a short form using just their name or
@@ -185,9 +194,13 @@ that is used in Script may be used in Blocks etc.
 4.  Binary
 3.  Blocks
 
-Script Extensions and Binary properties can also be defined in the format `IsValue`.  For instance, if we wanted to
-match characters in the `Latin` script, we could use the syntax `\p{IsLatin}`, which would be the same as `\p{Latin}` or
-`\p{scx: Latin}`.  For Binary properties, `\p{IsAlphabetic}` is the same as `\p{Alphabetic: Y}` or `\p{Alphabetic}`.
+General Category, Script Extensions, and Binary properties can also be defined in the format `IsValue`.  For instance,
+if we wanted to match characters in the `Latin` script, we could use the syntax `\p{IsLatin}`, which would be the same as
+`\p{Latin}` or `\p{scx: Latin}`.  For Binary properties, `\p{IsAlphabetic}` is the same as `\p{Alphabetic: Y}` or
+`\p{Alphabetic}`, and for General Category, `\p{IsLu}` is the same as `\p{Lu}`.
+
+As Unicode allows, an initial `Is` is also accepted on property names (`\p{IsGeneral_Category: Lu}` or
+`\p{IsAlphabetic: Yes}`) and on General Category values (`\p{gc: IsLu}`).
 
 Block properties have a similar short form as Script and Binary properties.  For Blocks you can use `InValue` to specify
 a block. If we wanted to match characters in the `Basic_Latin` block, we could use the syntax `\p{InBasic_Latin}`. This
