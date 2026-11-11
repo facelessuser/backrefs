@@ -3,7 +3,7 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
-## Unreleased
+## 8.2.1
 
 -   **FIX**: Reject compiled replace templates from another search pattern in compiled search objects,
     matching module-level substitutions and preventing incorrect capture references.
