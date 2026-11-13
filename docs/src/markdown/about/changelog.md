@@ -3,7 +3,7 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
-## Unreleased
+## 8.3
 
 -   **NEW**: `bre`: Add the binary properties `Any`, `Assigned`, and `ASCII`, which UTS \#18 requires but the Unicode
     Character Database does not define. `ASCII` was previously only available as an alias of the `Basic_Latin` block.
