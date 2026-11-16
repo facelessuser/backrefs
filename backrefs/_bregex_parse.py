@@ -761,8 +761,8 @@ class _ReplaceParser(Generic[AnyStr]):
                     if c != '0':
                         break
                     value.append(c)
+                    zero_count += 1
                     c = next(i)
-            zero_count = len(value)
             if zero_count < 3:
                 for _ in range(3 - zero_count):
                     if c not in _OCTAL:

@@ -3,6 +3,11 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
+## Unreleased
+
+-   **FIX**: Fix a null escape (`\0` or `\00`) at the end of a replace template being treated as a group reference
+    and raising an error.
+
 ## 8.3
 
 -   **NEW**: `bre`: Add the binary properties `Any`, `Assigned`, and `ASCII`, which UTS \#18 requires but the Unicode

@@ -2265,6 +2265,12 @@ class TestReplaceTemplate(unittest.TestCase):
             self.assertEqual(bre.compile_replace(pattern, template)(pattern.match('Test')), expected)
             self.assertEqual(re.sub('Test', template, 'Test'), expected)
 
+        # A null at the end of the template is still a null.
+        pattern = re.compile('(Test)')
+        for template, expected in ((r'\0', '\x00'), (r'\00', '\x00'), (r'\1\0', 'Test\x00')):
+            self.assertEqual(bre.compile_replace(pattern, template)(pattern.match('Test')), expected)
+            self.assertEqual(re.sub(pattern, template, 'Test'), expected)
+
 
 class TestExceptions(unittest.TestCase):
     """Test Exceptions."""
