@@ -160,7 +160,7 @@ properties by using the `^` character (`\p{^property=value}`) or by using a capi
 `\P{property:value}`).
 
 Unicode properties may only have one property specified between the curly braces.  If you want to use multiple
-properties to capture a singe character, create a character class: `[\p{UnicodeProperty}\p{OtherUnicodeProperty}]`.
+properties to capture a single character, create a character class: `[\p{UnicodeProperty}\p{OtherUnicodeProperty}]`.
 
 When specifying a property, the property and value matching is case insensitive and characters like `[ -_]` will be
 stripped out.  So the following are all equivalent: `\p{Uppercase_Letter}`, `\p{Uppercase-letter}`,
@@ -313,7 +313,7 @@ and `XDigit`.
 `PosixPrint`  | `\p{Print}`
 `PosixPunct`  | `[[\p{P}\p{S}]--[\p{alpha}]]`
 `PosixSpace`  | `\p{Space}`
-`PosixUpper`  | `\p{Uppper}`
+`PosixUpper`  | `\p{Upper}`
 `PosixWord`   | `\p{Word}`
 `PosixXDigit` | `[A-Fa-f0-9]`
 
