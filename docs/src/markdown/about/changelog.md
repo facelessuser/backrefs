@@ -3,7 +3,7 @@ icon: lucide/scroll-text
 ---
 # Changelog
 
-## Unreleased
+## 8.3.1
 
 -   **FIX**: Fix a null escape (`\0` or `\00`) at the end of a replace template being treated as a group reference
     and raising an error.
